@@ -9,4 +9,4 @@ ENV BOT_TOKEN=${BOT_TOKEN}
 ARG ADMIN_ID
 ENV ADMIN_ID=${ADMIN_ID}
 
-CMD ["gunicorn", "-b", "0.0.0.0:3478", "run:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:3478", "app:app"]
