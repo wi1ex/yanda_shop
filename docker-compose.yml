@@ -15,6 +15,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
-    environment:
-      - BOT_TOKEN=${BOT_TOKEN}
-      - ADMIN_ID=${ADMIN_ID}
+    env_file:
+      - .env
+#    environment:
+#      - BOT_TOKEN=${BOT_TOKEN}
+#      - ADMIN_ID=${ADMIN_ID}
