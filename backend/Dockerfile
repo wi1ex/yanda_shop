@@ -3,5 +3,5 @@ WORKDIR /backend
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-EXPOSE 5000
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+EXPOSE 8080
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "run:app"]
