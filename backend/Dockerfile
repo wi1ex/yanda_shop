@@ -6,4 +6,4 @@ COPY . .
 EXPOSE 9000
 ENV ADMIN_ID=${ADMIN_ID}
 ENV BOT_TOKEN=${BOT_TOKEN}
-CMD ["gunicorn", "--bind", "0.0.0.0:9000", "run:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:9000", "app:app"]
