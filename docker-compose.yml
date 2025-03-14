@@ -1,14 +1,5 @@
 version: "3.8"
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "3478:80"
-    environment:
-      - BOT_TOKEN=${BOT_TOKEN}
-      - ADMIN_ID=${ADMIN_ID}
   frontend:
     build:
       context: ./frontend
@@ -17,3 +8,12 @@ services:
       - "9000:80"
     depends_on:
       - backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3478:3478"
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - ADMIN_ID=${ADMIN_ID}
