@@ -11,9 +11,11 @@ services:
     build:
       context: ./backend
     command: ["python", "bot.py"]
-    environment:
-      - BOT_TOKEN=${BOT_TOKEN}
-      - ADMIN_ID=${ADMIN_ID}
+    env_file:
+      - .env
+#    environment:
+#      - BOT_TOKEN=${BOT_TOKEN}
+#      - ADMIN_ID=${ADMIN_ID}
     depends_on:
       - backend
 
