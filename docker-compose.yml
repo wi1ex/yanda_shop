@@ -1,13 +1,12 @@
 version: "3.8"
 services:
   backend:
-    image: python:3.11
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "9000:8000"
-    working_dir: /app
-    volumes:
-      - ./backend:/app
-    command: python -m http.server 8000
+    command: python app.py
 #version: "3.8"
 #services:
 #  backend:
