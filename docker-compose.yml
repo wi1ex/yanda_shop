@@ -6,7 +6,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "9000:8000"
-    command: ["gunicorn", "-b", "0.0.0.0:8000", "app:app"]
 
   bot:
     build:
