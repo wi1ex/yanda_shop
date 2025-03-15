@@ -4,8 +4,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "9000:8000"
     command: python app.py
 #version: "3.8"
 #services:
