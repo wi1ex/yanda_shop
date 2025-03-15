@@ -4,7 +4,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: ["python", "app.py"]
     ports:
       - "8000:80"
 
@@ -14,9 +13,6 @@ services:
     command: ["python", "bot.py"]
     env_file:
       - .env
-#    environment:
-#      - BOT_TOKEN=${BOT_TOKEN}
-#      - ADMIN_ID=${ADMIN_ID}
     depends_on:
       - backend
 
