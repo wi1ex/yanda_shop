@@ -4,10 +4,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    environment:
-      - FLASK_APP=app.py
-      - FLASK_RUN_HOST=0.0.0.0
-    command: python app.py
+    ports:
+      - "9000:8000"
 #version: "3.8"
 #services:
 #  backend:
