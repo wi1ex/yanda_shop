@@ -6,30 +6,22 @@ services:
       dockerfile: Dockerfile
     ports:
       - "9000:8000"
-#version: "3.8"
-#services:
-#  backend:
-#    build:
-#      context: ./backend
-#      dockerfile: Dockerfile
-#    ports:
-#      - "9000:8000"
-#
-#  bot:
-#    build:
-#      context: ./backend
-#    command: ["python", "bot.py"]
-#    environment:
-#      BOT_TOKEN: "7925998018:AAF3IonF_5oB6FZUQhzBkblQ8DT1paeUBjA"
-#      ADMIN_ID: "123"
-#    depends_on:
-#      - backend
-#
-#  frontend:
-#    build:
-#      context: ./frontend
-#      dockerfile: Dockerfile
-#    ports:
-#      - "8080:8080"
-#    depends_on:
-#      - backend
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+
+  bot:
+    build:
+      context: ./backend
+    command: ["python", "bot.py"]
+    environment:
+      BOT_TOKEN: "7925998018:AAF3IonF_5oB6FZUQhzBkblQ8DT1paeUBjA"
+      ADMIN_ID: "123"
+    depends_on:
+      - backend
