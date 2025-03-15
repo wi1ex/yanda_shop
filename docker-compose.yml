@@ -4,6 +4,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    command: ["python", "app.py"]
     ports:
       - "8000:80"
 
