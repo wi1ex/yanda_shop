@@ -20,8 +20,8 @@ services:
     build:
       context: ./backend
     command: ["python", "bot.py"]
-    environment:
-      BOT_TOKEN: "7925998018:AAF3IonF_5oB6FZUQhzBkblQ8DT1paeUBjA"
-      ADMIN_ID: "123"
+#    environment:
+#      BOT_TOKEN: "7925998018:AAF3IonF_5oB6FZUQhzBkblQ8DT1paeUBjA"
+#      ADMIN_ID: "123"
     depends_on:
       - backend
