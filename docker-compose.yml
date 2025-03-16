@@ -1,5 +1,9 @@
 version: "3.8"
 services:
+  backend:
+    build: ./backend
+    ports:
+      - "9000:80"
 
   frontend:
     build: ./frontend
@@ -7,10 +11,6 @@ services:
       - "8080:8080"
     depends_on:
       - backend
-  backend:
-    build: ./backend
-    ports:
-      - "9000:8000"
 
   bot:
     build: ./bot
