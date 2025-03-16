@@ -1,28 +1,19 @@
 version: "3.8"
 services:
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    environment:
-      BOT_TOKEN: "7925998018:AAF3IonF_5oB6FZUQhzBkblQ8DT1paeUBjA"
-      ADMIN_ID: "123"
+    build: ./backend
     ports:
       - "9000:8000"
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    build: ./frontend
     ports:
       - "8080:8080"
     depends_on:
       - backend
 
   bot:
-    build:
-      context: ./backend
-    command: ["python", "bot.py"]
+    build: ./bot
     environment:
       BOT_TOKEN: "7925998018:AAF3IonF_5oB6FZUQhzBkblQ8DT1paeUBjA"
       ADMIN_ID: "123"
