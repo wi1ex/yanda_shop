@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request
 
-api = Blueprint("api", __name__, url_prefix="/api")
+api = Blueprint("api", __name__)
 
-@api.route("/")
+@api.route("/api")
 def home():
     return jsonify({"message": "Приложение работает!"})
 

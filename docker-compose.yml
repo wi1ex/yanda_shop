@@ -11,6 +11,8 @@ services:
 
   frontend:
     build: ./frontend
+    volumes:
+      - ./frontend/dist:/frontend/dist
     networks:
       - app-network
     depends_on:
