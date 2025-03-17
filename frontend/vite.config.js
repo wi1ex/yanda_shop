@@ -4,13 +4,17 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [vue()],
-  root: path.resolve(__dirname, 'public'),  // Указываем корень проекта
+  root: path.resolve(__dirname, 'public'),
   server: {
     host: '0.0.0.0',
     port: 8080
   },
   build: {
-    outDir: '../dist',  // Путь относительно корня
-    emptyOutDir: true
+    outDir: path.resolve(__dirname, 'dist'),
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'public/index.html')
+      }
+    }
   }
 });

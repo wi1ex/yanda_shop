@@ -3,14 +3,14 @@ WORKDIR /frontend
 
 # Копируем зависимости
 COPY package.json .
-
-# Установка зависимостей
 RUN npm install
 
-# Копируем ВСЕ файлы
-COPY . .
+# Копируем исходники
+COPY public/ ./public/
+COPY src/ ./src/
+COPY vite.config.js ./
 
-# Сборка проекта
+# Сборка
 RUN npm run build
 
 EXPOSE 8080
