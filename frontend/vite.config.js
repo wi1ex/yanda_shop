@@ -11,7 +11,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     rollupOptions: {
-      input: 'index.html'  // Указываем корневой HTML
+      input: path.resolve(__dirname, 'public/index.html')
     }
   }
 });
