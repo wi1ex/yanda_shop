@@ -9,11 +9,9 @@ export default defineConfig({
     port: 8080
   },
   build: {
-    outDir: path.resolve(__dirname, 'dist'),
+    outDir: 'dist',
     rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, 'public/index.html')
-      }
+      input: 'index.html'  // Указываем корневой HTML
     }
   }
 });
