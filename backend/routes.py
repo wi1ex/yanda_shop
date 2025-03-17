@@ -2,9 +2,9 @@ from flask import Blueprint, jsonify, request
 
 api = Blueprint("api", __name__)
 
-@api.route("/api")
+@api.route("/api/")
 def home():
-    return jsonify({"message": "Приложение работает!"})
+    return jsonify({"message": "App is working!"})
 
 @api.route("/send-data", methods=["POST"])
 def send_data():
