@@ -3,7 +3,6 @@ WORKDIR /frontend
 
 # Копируем зависимости
 COPY package.json .
-COPY package-lock.json .
 
 # Установка зависимостей
 RUN npm install
