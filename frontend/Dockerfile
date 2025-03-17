@@ -1,10 +1,18 @@
 FROM node:18
 WORKDIR /frontend
-COPY package.json ./
+
+# Копируем зависимости
+COPY package.json .
+COPY package-lock.json .
+
+# Установка зависимостей
 RUN npm install
-COPY public/ ./public/
-COPY src/ ./src/
-COPY vite.config.js ./
+
+# Копируем ВСЕ файлы
+COPY . .
+
+# Сборка проекта
 RUN npm run build
+
 EXPOSE 8080
 CMD ["npx", "serve", "-s", "dist", "-l", "8080"]
