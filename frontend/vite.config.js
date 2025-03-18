@@ -7,7 +7,7 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 8080,
   },
-  root: 'frontend/src', // Корневая директория проекта
+  root: 'src', // Корневая директория проекта
   build: {
     outDir: '../../dist', // Выходная директория относительно root
     rollupOptions: {
