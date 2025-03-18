@@ -7,8 +7,11 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 8080
   },
-  root: './frontend/src',
+  root: 'frontend/src',
   build: {
     outDir: 'dist',
+    rollupOptions: {
+      input: './src/index.html',
+    },
   },
 });
