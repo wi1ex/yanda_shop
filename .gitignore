@@ -1,0 +1,17 @@
+# Frontend
+frontend/dist/
+frontend/node_modules/
+frontend/.env
+frontend/.env.local
+frontend/package-lock.json
+
+# Backend
+backend/__pycache__/
+backend/.env
+*.pyc
+
+# Общее
+.env
+.DS_Store
+.idea/
+.vscode/
