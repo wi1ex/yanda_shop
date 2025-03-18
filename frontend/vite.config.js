@@ -1,17 +1,14 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import path from 'path';
 
 export default defineConfig({
   plugins: [vue()],
-  server: {
-    host: '0.0.0.0',
-    port: 8080,
-  },
-  root: 'src', // Корневая директория проекта
+  root: path.resolve(__dirname, 'src'),  // Указываем корнем папку src
   build: {
-    outDir: '../../dist', // Выходная директория относительно root
+    outDir: '../dist',
     rollupOptions: {
-      input: './index.html', // Путь к точке входа относительно root
-    },
-  },
+      input: path.resolve(__dirname, 'src/index.html')  // Новый путь
+    }
+  }
 });
