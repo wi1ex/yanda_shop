@@ -1,9 +1,9 @@
 FROM node:18
 WORKDIR /frontend
-RUN npm cache clean --force
-RUN rm -rf node_modules dist package-lock.json
-COPY package.json .
+COPY package*.json ./
 RUN npm install
-COPY . .
+COPY src/ ./src/
+COPY vite.config.js ./
 RUN npm run build
+EXPOSE 8080
 CMD ["npx", "serve", "-s", "dist", "-l", "8080"]
