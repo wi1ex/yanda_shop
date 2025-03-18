@@ -4,6 +4,7 @@ COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
 RUN npm run build
+
 FROM nginx:latest AS frontend-runtime
 WORKDIR /usr/share/nginx/html
 COPY --from=frontend-build /frontend/dist/ .
