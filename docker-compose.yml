@@ -10,6 +10,8 @@ services:
 
   frontend:
     build: ./frontend
+    volumes:
+      - ./frontend/dist:/frontend/dist
     ports:
       - "8080:8080"
     networks:
@@ -30,6 +32,7 @@ services:
   nginx:
     image: nginx:latest
     volumes:
+      - ./frontend/dist:/frontend/dist
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt
     ports:
