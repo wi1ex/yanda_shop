@@ -5,6 +5,14 @@ export default defineConfig({
   plugins: [vue()],
   root: "/frontend",
   publicDir: "public",
+  resolve: {
+    alias: {
+      '@': '/frontend/src'
+    }
+  },
+  optimizeDeps: {
+    include: ["vue", "vue-router"]
+  },
   build: {
     outDir: "dist",
     rollupOptions: {
