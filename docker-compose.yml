@@ -16,6 +16,7 @@ services:
     networks:
       - app-network
     container_name: frontend-build
+    image: frontend-build:latest
 
   frontend:
     build:
