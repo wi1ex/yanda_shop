@@ -1,5 +1,6 @@
 #!/bin/bash
-set -e  # Прерывать выполнение при ошибках
+# Прерывать выполнение при ошибках
+set -e
 
 # Переход в директорию проекта
 cd /root/app/telegram_test
@@ -14,8 +15,6 @@ docker system prune -af
 
 # Обновление SSL-сертификатов (только если нужно)
 certbot renew --noninteractive --standalone --agree-tos
-# Если нужно принудительное обновление:
-# certbot renew --force-renewal --noninteractive --standalone --agree-tos
 
 # Пересборка и запуск контейнеров
 docker-compose build --no-cache

@@ -1,14 +1,20 @@
 <template>
     <div v-if="!showForm">
-        <h1>Тестовое приложение</h1>
-        <button class="btn" @click="toggleForm">Тест отправки данных</button>
+        <h1>
+          Тестовое приложение
+        </h1>
+        <button class="btn" @click="toggleForm">
+          Тест отправки данных
+        </button>
     </div>
 
     <form v-else>
         <input type="text" placeholder="Введите заголовок" class="title-inp">
         <input type="text" placeholder="Введите описание" class="desc-inp">
         <input type="text" placeholder="Введите текст" class="text-inp">
-        <button class="btn" @click.prevent="sendData">Отправить</button>
+        <button class="btn" @click.prevent="sendData">
+          Отправить
+        </button>
     </form>
 </template>
 
@@ -30,13 +36,11 @@ const sendData = () => {
         desc: document.querySelector(".desc-inp").value,
         text: document.querySelector(".text-inp").value
     };
-
     tg.sendData(JSON.stringify(data));
 };
 
 onMounted(() => {
     let user = tg.initDataUnsafe.user;
-
     if (user) {
         fetch("/save_user", {
             method: "POST",
