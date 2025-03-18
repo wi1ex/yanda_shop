@@ -4,11 +4,12 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [vue()],
-  root: __dirname,
+  root: "./",
+  publicDir: "public",
   build: {
-    outDir: 'dist',
+    outDir: "dist",
     rollupOptions: {
-      input: path.resolve(__dirname, 'index.html')
+      input: path.resolve(__dirname, "public/index.html")
     }
   }
 });

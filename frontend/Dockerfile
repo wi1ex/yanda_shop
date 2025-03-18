@@ -1,11 +1,11 @@
-FROM node:18 AS build
+FROM node:18 AS frontend-build
 WORKDIR /frontend
 COPY package.json package-lock.json ./
 RUN npm install --legacy-peer-deps
-COPY . ./
+COPY . .
 RUN npm run build
-FROM nginx:latest AS runtime
+FROM nginx:latest AS frontend-runtime
 WORKDIR /usr/share/nginx/html
-COPY --from=build /frontend/dist/ .
+COPY --from=frontend-build /frontend/dist/ .
 EXPOSE 80 443
 CMD ["nginx", "-g", "daemon off;"]

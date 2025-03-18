@@ -12,14 +12,14 @@ services:
   frontend-build:
     build:
       context: ./frontend
-      target: build
+      target: frontend-build
     networks:
       - app-network
 
   frontend:
     build:
       context: ./frontend
-      target: runtime
+      target: frontend-runtime
     ports:
       - "8080:8080"
     networks:
@@ -43,7 +43,6 @@ services:
   nginx:
     image: nginx:latest
     volumes:
-      - ./frontend/dist:/usr/share/nginx/html/dist
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt
     ports:
@@ -59,4 +58,3 @@ services:
 networks:
   app-network:
     driver: bridge
-    name: telegram_app_network
