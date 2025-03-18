@@ -1,7 +1,7 @@
 FROM node:18 AS frontend-build
 WORKDIR /frontend
 COPY package.json package-lock.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install
 COPY . .
 RUN npm run build
 FROM nginx:latest AS frontend-runtime
