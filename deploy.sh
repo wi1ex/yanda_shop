@@ -1,17 +1,27 @@
 #!/bin/bash
+set -e  # Прерывать выполнение при ошибках
 
-# Переход в директорию проекта (если скрипт запускается из другой папки)
-cd /root/app/telegram_test  # Укажите полный путь к папке с docker-compose.yml
+# Переход в директорию проекта
+cd /root/app/telegram_test
 
 # Обновление кода из репозитория
-git pull origin main
+git fetch --all
+git reset --hard origin/main
 
-# Пересборка контейнеров
+# Остановка контейнеров и освобождение портов
 docker-compose down
+
+# Обновление SSL-сертификатов (только если нужно)
+certbot renew --noninteractive --standalone --agree-tos
+# Если нужно принудительное обновление:
+# certbot renew --force-renewal --noninteractive --standalone --agree-tos
+
+# Пересборка и запуск контейнеров
 docker-compose build --no-cache
 docker-compose up -d
 
-# Опционально: очистка старых образов
+# Очистка старых образов
 docker image prune -f
 
-curl -s "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=Deploy+successful"
+# Проверка статуса
+docker-compose ps
