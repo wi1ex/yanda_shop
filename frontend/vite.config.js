@@ -7,11 +7,11 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 8080,
   },
-  root: 'src',
+  root: 'frontend/src', // Корневая директория проекта
   build: {
-    outDir: 'dist',
+    outDir: '../../dist', // Выходная директория относительно root
     rollupOptions: {
-      input: './src/index.html',
+      input: './index.html', // Путь к точке входа относительно root
     },
   },
 });
