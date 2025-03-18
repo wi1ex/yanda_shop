@@ -27,6 +27,8 @@ services:
     depends_on:
       - backend
       - frontend-build
+    volumes:
+      - telegram_test_frontend_data:/usr/share/nginx/html # 📌 Теперь frontend записывает в volume
     restart: always
 
   bot:
@@ -45,7 +47,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt
-      - frontend:/usr/share/nginx/html
+      - telegram_test_frontend_data:/usr/share/nginx/html # 📌 Теперь nginx читает из volume
     ports:
       - "80:80"
       - "443:443"
@@ -59,3 +61,6 @@ services:
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  telegram_test_frontend_data: # 📌 Объявляем volume
