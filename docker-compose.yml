@@ -56,5 +56,9 @@ services:
       - frontend
     restart: always
 
+networks:
+  app-network:
+    driver: bridge
+
 volumes:
   telegram_test_frontend_data:
