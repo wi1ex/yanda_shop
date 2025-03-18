@@ -3,12 +3,12 @@ import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
   plugins: [vue()],
-  base: "/",
+  root: "/frontend",
   publicDir: "public",
   build: {
     outDir: "dist",
     rollupOptions: {
-      input: "index.html"
+      input: "/frontend/public/index.html"
     }
   }
 });
