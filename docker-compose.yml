@@ -2,24 +2,22 @@ version: "3.8"
 
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
     networks:
       - app-network
-    # # Порт нужен только для отладки:
-    # ports:
-    #   - "8000:8000"
 
   frontend:
-    build: ./frontend
-    volumes:
-      - ./frontend/dist:/frontend/dist
+    build:
+      context: ./frontend
+    ports:
+      - "8080:8080"
     networks:
       - app-network
     depends_on:
       - backend
-    # # Порт нужен только для отладки:
-    # ports:
-    #   - "8080:8080"
 
   bot:
     build: ./bot
