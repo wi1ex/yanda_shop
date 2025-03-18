@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/vue@3.3.0/dist/vue.global.prod.js"></script>
     <link rel="icon" href="favicon.ico">
 </head>
 <body>
     <div id="app"></div>
     <script type="module">
-        import { createApp } from 'vue';
+        const { createApp } = Vue;
         import App from '@/App.vue';
         createApp(App).mount('#app');
     </script>
