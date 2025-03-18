@@ -1,15 +1,11 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import path from 'path';
 
 export default defineConfig({
   plugins: [vue()],
-  root: "./",
-  publicDir: "public",
+  root: ".", // Корень проекта
+  publicDir: "public", // Папка со статическими файлами (index.html)
   build: {
-    outDir: "dist",
-    rollupOptions: {
-      input: path.resolve(__dirname, "public/index.html")
-    }
+    outDir: "dist", // Куда будет собираться проект
   }
 });
