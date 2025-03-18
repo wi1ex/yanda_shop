@@ -4,11 +4,11 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [vue()],
-  root: __dirname,  // Указываем корнем папку src
+  root: __dirname,
   build: {
     outDir: 'dist',
     rollupOptions: {
-      input: path.resolve(__dirname, 'src/index.html')  // Новый путь
+      input: 'index.html'
     }
   }
 });
