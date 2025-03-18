@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [vue()],
   root: "/frontend",
   publicDir: "public",
+  base: "/",
   build: {
     outDir: "dist",
     rollupOptions: {
