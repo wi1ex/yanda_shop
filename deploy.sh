@@ -10,6 +10,7 @@ git reset --hard origin/main
 
 # Остановка контейнеров и освобождение портов
 docker-compose down
+docker system prune -af
 
 # Обновление SSL-сертификатов (только если нужно)
 certbot renew --noninteractive --standalone --agree-tos
