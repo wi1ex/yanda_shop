@@ -1,9 +1,10 @@
 **/.git
 **/node_modules
-**/dist
-**/__pycache__
+frontend/node_modules/
+backend/__pycache__/
 **/*.pyc
 **/.env
 **/.dockerignore
 **/.gitignore
 **/README.md
+Dockerfile

@@ -1,5 +1,4 @@
 # Frontend
-frontend/dist/
 frontend/node_modules/
 frontend/.env
 frontend/.env.local
@@ -8,6 +7,10 @@ frontend/.env.local
 backend/__pycache__/
 backend/.env
 *.pyc
+
+# Docker
+Dockerfile
+docker-compose.override.yml
 
 # Общее
 .env

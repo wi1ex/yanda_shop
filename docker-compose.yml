@@ -7,17 +7,17 @@ services:
       - "8000:8000"
     networks:
       - app-network
+    restart: always
 
   frontend:
     build: ./frontend
-    volumes:
-      - ./frontend/dist:/frontend/dist
     ports:
       - "8080:8080"
     networks:
       - app-network
     depends_on:
       - backend
+    restart: always
 
   bot:
     build: ./bot
@@ -28,11 +28,11 @@ services:
       - app-network
     depends_on:
       - backend
+    restart: always
 
   nginx:
     image: nginx:latest
     volumes:
-      - ./frontend/dist:/frontend/dist
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt
     ports:
@@ -43,6 +43,7 @@ services:
     depends_on:
       - backend
       - frontend
+    restart: always
 
 networks:
   app-network:
