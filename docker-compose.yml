@@ -15,6 +15,7 @@ services:
       target: frontend-build
     networks:
       - app-network
+    container_name: frontend-build
 
   frontend:
     build:
