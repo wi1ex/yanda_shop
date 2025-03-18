@@ -11,11 +11,12 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ["vue", "vue-router"]
+    exclude: ["vue"]
   },
   build: {
     outDir: "dist",
     rollupOptions: {
+      external: ["vue"],
       input: "/frontend/public/index.html"
     }
   }
