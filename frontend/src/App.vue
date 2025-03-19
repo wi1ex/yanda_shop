@@ -1,55 +1,46 @@
 <template>
-    <div v-if="!showForm">
-        <h1>
-          Тестовое приложение
-        </h1>
-        <button class="btn" @click="toggleForm">
-          Тест отправки данных
-        </button>
+    <div v-if="user">
+        <Header :user="user" :cartCount="cartCount" />
+        <Navigation />
+        <ProductGrid @update-cart="updateCart" />
+        <Footer />
     </div>
-
-    <form v-else>
-        <input type="text" placeholder="Введите заголовок" class="title-inp">
-        <input type="text" placeholder="Введите описание" class="desc-inp">
-        <input type="text" placeholder="Введите текст" class="text-inp">
-        <button class="btn" @click.prevent="sendData">
-          Отправить
-        </button>
-    </form>
 </template>
 
-
-
 <script setup>
-import {onMounted, ref} from 'vue';
+import { ref, onMounted } from 'vue';
+import Header from './components/Header.vue';
+import Navigation from './components/Navigation.vue';
+import ProductGrid from './components/ProductGrid.vue';
+import Footer from './components/Footer.vue';
 
-let tg = window.Telegram.WebApp;
-const showForm = ref(false);
+const tg = ref(null);
+const user = ref(null);
+const cartCount = ref(0);
 
-const toggleForm = () => {
-    showForm.value = !showForm.value;
-};
-
-const sendData = () => {
-    const data = {
-        title: document.querySelector(".title-inp").value,
-        desc: document.querySelector(".desc-inp").value,
-        text: document.querySelector(".text-inp").value
-    };
-    tg.sendData(JSON.stringify(data));
-};
+// Функция для накопления количества товаров в корзине
+function updateCart(count) {
+    cartCount.value += count;
+}
 
 onMounted(() => {
-    let user = tg.initDataUnsafe.user;
-    if (user) {
-        fetch("/save_user", {
+    // Если приложение запущено внутри Telegram, получаем данные пользователя
+    if (window.Telegram && window.Telegram.WebApp) {
+        tg.value = window.Telegram.WebApp;
+        const initDataUnsafe = tg.value.initDataUnsafe
+        if (initDataUnsafe && initDataUnsafe.user) {
+            user.value = initDataUnsafe.user;
+        }
+    }
+    if (user.value) {
+        fetch("https://tgtest.twc1.net/save_user", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                id: user.id,
-                first_name: user.first_name,
-                last_name: user.last_name,
-                username: user.username
+                id: user.value.id,
+                first_name: user.value.first_name,
+                last_name: user.value.last_name,
+                username: user.value.username,
             })
         })
         .then(response => response.json())
@@ -58,15 +49,11 @@ onMounted(() => {
 });
 </script>
 
-
-
 <style>
 body {
-    color: var(--tg-theme-text-color);
-    background: var(--tg-theme-bg-color);
-}
-.btn {
-    background: var(--tg-theme-button-color);
-    color: var(--tg-theme-button-text-color);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
 }
 </style>
