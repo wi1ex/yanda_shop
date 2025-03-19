@@ -14,7 +14,7 @@ async def send_admin_message():
 
 async def main():
     logging.basicConfig(level=logging.INFO)
-    await send_admin_message()
+    await bot.send_message(ADMIN_ID, "Приложение запущено!")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
