@@ -2,11 +2,12 @@
   <div class="app-container" v-if="user">
     <!-- Хедер (верхняя панель с логотипом, пользователем и корзиной) -->
     <header class="header">
-      <h1>YANDA|SHOP</h1>
+      <h1>YANDA SHOP</h1>
       <div class="user-info">
         <img :src="user.photo_url" alt="user.photo_url" class="avatar" />
         <span class="username">
-          {{ user.first_name }} {{ user.last_name }} <span class="status">@{{ user.username }}</span>
+<!--          {{ user.first_name }} {{ user.last_name }} <span class="status">@{{ user.username }}</span>-->
+          {{ user.first_name }} <span class="status">@{{ user.username }}</span>
         </span>
       </div>
       <!-- Кнопка корзины с отображением количества товаров и итоговой суммы -->
@@ -111,7 +112,7 @@ const user = ref(null);
 // 🛒 Реактивный список сгруппированных товаров в корзине
 const groupedCartItems = ref([]);
 // 🔹 Список категорий товаров
-const categoryList = ref(["Кроссовки", "Одежда", "Аксессуары", "Техника", "Автозапчасти"]);
+const categoryList = ref(["Кроссовки", "Одежда", "Аксессуары"]);
 // 🔹 Выбранная категория (по умолчанию "Кроссовки")
 const selectedCategory = ref("Кроссовки");
 // 🔹 Открыта ли корзина (true — открыта, false — скрыта)
@@ -126,8 +127,6 @@ const products = ref([
   ...Array(10).fill().map((_, i) => ({ image: "/sneaker.jpg", price: `${9000 + i * 500}`, name: `Кроссовки ${i+1}`, category: "Кроссовки" })),
   ...Array(10).fill().map((_, i) => ({ image: "/shirt.jpg", price: `${3000 + i * 200}`, name: `Одежда ${i+1}`, category: "Одежда" })),
   ...Array(10).fill().map((_, i) => ({ image: "/cap.jpg", price: `${1500 + i * 100}`, name: `Аксессуар ${i+1}`, category: "Аксессуары" })),
-  ...Array(10).fill().map((_, i) => ({ image: "/laptop.jpg", price: `${40000 + i * 5000}`, name: `Техника ${i+1}`, category: "Техника" })),
-  ...Array(10).fill().map((_, i) => ({ image: "/car-part.jpg", price: `${10000 + i * 2000}`, name: `Автозапчасть ${i+1}`, category: "Автозапчасти" }))
 ]);
 
 // 🔍 Фильтруем товары по выбранной категории
@@ -300,7 +299,7 @@ onMounted(() => {
 /* 🔝 Навигация по категориям */
 .sticky-nav {
   position: fixed;
-  top: 100px;
+  top: 116px;
   left: 8px;
   width: calc(100% - 48px);
   background: #1c1f2e;
@@ -338,7 +337,7 @@ onMounted(() => {
 /* 🎁 Грид с товарами */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Адаптивная сетка */
+  grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); /* Адаптивная сетка */
   gap: 16px;
 }
 
@@ -374,7 +373,7 @@ onMounted(() => {
   background: #1c1f2e;
   padding: 20px;
   border-radius: 10px;
-  margin-top: 110px;
+  margin-top: 100px;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
@@ -445,6 +444,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   margin-top: 16px;
+  gap: 16px;
 }
 
 /* 🔢 Количество товаров */
@@ -460,6 +460,7 @@ onMounted(() => {
 /* 👤 Информация о пользователе */
 .user-info {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 10px;
   background: #1c1f2e;
@@ -510,7 +511,7 @@ onMounted(() => {
 .checkout-button {
   background: #28a745;
   color: white;
-  padding: 10px 16px;
+  padding: 10px;
   border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
@@ -522,7 +523,7 @@ onMounted(() => {
 .close-cart {
   background: #dc3545;
   color: white;
-  padding: 10px 16px;
+  padding: 10px;
   border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
@@ -532,7 +533,7 @@ onMounted(() => {
 
 /* 🔘 Кнопки увеличения и уменьшения количества */
 .cart-item-controls button {
-  padding: 4px 10px;
+  padding: 4px;
   font-size: 18px;
   font-weight: bold;
   background: #252a3b;
@@ -548,12 +549,18 @@ onMounted(() => {
   padding: 20px;
 }
 
+/* 📌 Заголовок в хедере */
+h1 {
+  font-size: 24px;
+  text-align: center;
+}
+
 /* 📌 Заголовки в корзине и каталоге */
 h2 {
   font-size: 24px;
   font-weight: bold;
   text-align: center;
-  margin-bottom: 20px;
+  margin-top: 30px;
 }
 
 /* 📌 Блок товара */
@@ -574,6 +581,12 @@ h2 {
 .cart-list li {
   border-bottom: 1px solid #444;
   padding-bottom: 10px;
+}
+
+/* 📜 Футер */
+.footer-content {
+  padding: 20px;
+  text-align: center;
 }
 
 /* 📜 Информация о магазине */
