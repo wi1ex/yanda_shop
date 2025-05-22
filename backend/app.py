@@ -1,9 +1,11 @@
 from flask import Flask
+from flask_cors import CORS
 from routes import register_routes
 import logging
 import sys
 
 app = Flask(__name__)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 register_routes(app)
 
 # Настройка логирования
