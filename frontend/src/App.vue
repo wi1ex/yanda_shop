@@ -6,7 +6,6 @@
       <div class="user-info">
         <img :src="user.photo_url" alt="user.photo_url" class="avatar" />
         <span class="username">
-<!--          {{ user.first_name }} {{ user.last_name }} <span class="status">@{{ user.username }}</span>-->
           {{ user.first_name }} <span class="status">@{{ user.username }}</span>
         </span>
       </div>
@@ -56,12 +55,7 @@
       <div class="sticky-nav">
         <div class="categories">
           <!-- Перебираем список категорий и создаем кнопки для каждой -->
-          <button
-            v-for="(category, index) in categoryList"
-            :key="index"
-            :class="{ active: category === selectedCategory }"
-            @click="changeCategory(category)"
-          >
+          <button v-for="(category, index) in categoryList" :key="index" :class="{ active: category === selectedCategory }" @click="changeCategory(category)">
             {{ category }}
           </button>
         </div>
@@ -104,6 +98,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import img_bot from "frontend/src/assets/images/bot.png";
 
 // 🔹 Telegram-состояние
 const tg = ref(null);
@@ -124,9 +119,9 @@ const cart = ref({ count: 0, total: 0, items: [] });
 
 // 📦 Исходный список товаров с категориями
 const products = ref([
-  ...Array(10).fill().map((_, i) => ({ image: "/sneaker.jpg", price: `${9000 + i * 500}`, name: `Кроссовки ${i+1}`, category: "Кроссовки" })),
-  ...Array(10).fill().map((_, i) => ({ image: "/shirt.jpg", price: `${3000 + i * 200}`, name: `Одежда ${i+1}`, category: "Одежда" })),
-  ...Array(10).fill().map((_, i) => ({ image: "/cap.jpg", price: `${1500 + i * 100}`, name: `Аксессуар ${i+1}`, category: "Аксессуары" })),
+  ...Array(10).fill().map((_, i) => ({ image: img_bot, price: `${9000 + i * 500}`, name: `Кроссовки ${i+1}`, category: "Кроссовки" })),
+  ...Array(10).fill().map((_, i) => ({ image: img_bot, price: `${3000 + i * 200}`, name: `Одежда ${i+1}`, category: "Одежда" })),
+  ...Array(10).fill().map((_, i) => ({ image: img_bot, price: `${1500 + i * 100}`, name: `Аксессуар ${i+1}`, category: "Аксессуары" })),
 ]);
 
 // 🔍 Фильтруем товары по выбранной категории
