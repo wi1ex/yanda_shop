@@ -13,7 +13,7 @@ Dockerfile
 docker-compose.override.yml
 
 # Общее
-.env
+#.env
 .DS_Store
 .idea/
 .vscode/

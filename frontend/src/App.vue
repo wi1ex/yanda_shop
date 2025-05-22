@@ -248,7 +248,7 @@ onMounted(() => {
     };
   }
   if (user.value) {
-    fetch("https://tgtest.twc1.net/save_user", {
+    fetch("https://yanda.twc1.net/save_user", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
