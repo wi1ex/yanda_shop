@@ -98,7 +98,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import img_bot from "frontend/src/assets/images/bot.png";
+import img_bot from '@/assets/images/bot.png'
 
 // 🔹 Telegram-состояние
 const tg = ref(null);
