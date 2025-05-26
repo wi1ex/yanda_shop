@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import path from 'path'
 
 export default defineConfig({
   plugins: [vue()],
@@ -8,7 +7,7 @@ export default defineConfig({
   publicDir: "public",
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'frontend/src'),
+      '@': '/frontend/src',
     },
   },
   build: {
@@ -20,7 +19,7 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        additionalData: `@import "@/styles/_variables.scss";`,
+        additionalData: `@import "/frontend/src/styles/_variables.scss";`,
       },
     },
   },
