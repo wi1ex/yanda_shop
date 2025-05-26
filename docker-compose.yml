@@ -1,5 +1,4 @@
 version: "3.8"
-
 services:
   backend:
     build: ./backend
@@ -20,30 +19,20 @@ services:
       - backend
     restart: always
 
-  frontend-build:
-    build:
-      context: ./frontend
-      target: frontend-build
-    networks:
-      - app-network
-    image: frontend-build
-
   frontend:
     build:
       context: ./frontend
-      target: frontend-runtime
+      dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8080:80"
     networks:
       - app-network
     depends_on:
       - backend
-      - frontend-build
     restart: always
 
-  nginx:
-    build:
-      context: ./nginx
+  proxy:
+    build: ./nginx
     ports:
       - "80:80"
       - "443:443"
