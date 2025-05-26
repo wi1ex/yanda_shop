@@ -1,12 +1,12 @@
-FROM node:18 AS frontend-build
-WORKDIR /frontend
+FROM node:18-alpine AS builder
+WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci --prefer-offline --no-audit
 COPY . .
 RUN npm run build
 
-FROM nginx:latest AS frontend-runtime
-WORKDIR /usr/share/nginx/html
-COPY --from=frontend-build /frontend/dist/ .
-EXPOSE 80 443
+FROM nginx:alpine AS runner
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY --from=builder /app/dist /usr/share/nginx/html
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

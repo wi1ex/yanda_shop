@@ -1,25 +1,29 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import path from 'path';
 
 export default defineConfig({
+  root: '.',
+  publicDir: 'public',
   plugins: [vue()],
-  root: "/frontend",
-  publicDir: "public",
+
   resolve: {
     alias: {
-      '@': '/frontend/src',
+      '@': path.resolve(__dirname, 'src'),
     },
   },
+
   build: {
-    outDir: "dist",
+    outDir: 'dist',
     rollupOptions: {
-      input: "/frontend/index.html",
+      input: path.resolve(__dirname, 'index.html'),
     },
   },
+
   css: {
     preprocessorOptions: {
       scss: {
-        additionalData: `@import "/frontend/src/styles/_variables.scss";`,
+        additionalData: `@import "src/styles/_variables.scss";`,
       },
     },
   },
