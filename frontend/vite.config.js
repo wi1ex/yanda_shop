@@ -7,13 +7,20 @@ export default defineConfig({
   publicDir: "public",
   resolve: {
     alias: {
-      '@': '/frontend/src'
-    }
+      '@': path.resolve(__dirname, 'frontend/src'),
+    },
   },
   build: {
     outDir: "dist",
     rollupOptions: {
-      input: "/frontend/index.html"
-    }
-  }
+      input: "/frontend/index.html",
+    },
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@import "@/styles/_variables.scss";`,
+      },
+    },
+  },
 });
