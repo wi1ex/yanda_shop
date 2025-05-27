@@ -1,14 +1,14 @@
+import os
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher
-from config import BOT_TOKEN, ADMIN_ID
 
-bot = Bot(token=BOT_TOKEN)
+bot = Bot(token=os.getenv('BOT_TOKEN'))
 dp = Dispatcher()
 
 async def main():
     logging.basicConfig(level=logging.INFO)
-    await bot.send_message(ADMIN_ID, "Приложение запущено!")
+    await bot.send_message(os.getenv('ADMIN_ID'), "Приложение запущено!")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
