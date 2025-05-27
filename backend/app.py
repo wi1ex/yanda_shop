@@ -15,13 +15,12 @@ db.init_app(app)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 register_routes(app)
 
-# Создаем таблицы при старте, если их нет
-with app.app_context():
-    db.create_all()
-
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
+    # Создаем таблицы при старте, если их нет
+    with app.app_context():
+        db.create_all()
     app.run(host="0.0.0.0", port=8000)
