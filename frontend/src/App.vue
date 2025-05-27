@@ -30,7 +30,7 @@ onMounted(() => {
       username: 'testuser',
     }
   }
-  fetch('https://shop.yanda.twc1.net/save_user', {
+  fetch('https://shop.yanda.twc1.net/api/save_user', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
