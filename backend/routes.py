@@ -21,7 +21,7 @@ def home():
     return jsonify({"message": "App is working!"})
 
 
-@api.route("/save_user", methods=["POST"])
+@api.route("/api/save_user", methods=["POST"])
 def save_user():
     data = request.json  # ожидаем id, first_name, last_name, username
     # 1) Сохраняем в Postgres
