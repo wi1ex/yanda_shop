@@ -3,7 +3,7 @@
 set -e
 
 # Переход в директорию проекта
-cd /root/app/telegram_test
+cd /root/app/yanda_shop
 
 # Обновление кода из репозитория
 git fetch --all
