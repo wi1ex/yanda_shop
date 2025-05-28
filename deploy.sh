@@ -29,3 +29,6 @@ docker image prune -f
 
 # Проверка статуса
 docker-compose ps
+
+# Отображение логов
+docker-compose logs -f
