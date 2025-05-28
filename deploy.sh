@@ -12,8 +12,6 @@ git reset --hard origin/main
 # Остановка контейнеров и освобождение портов
 docker-compose down
 docker system prune -af
-
-# ХАРД ОЧИСТКА
 # docker-compose down --rmi all --volumes --remove-orphans
 # docker system prune --all --volumes --force
 
@@ -22,6 +20,13 @@ certbot renew --noninteractive --standalone --agree-tos
 
 # Пересборка и запуск контейнеров
 docker-compose build --no-cache
+docker-compose up -d db backend
+
+# Применяем все миграции
+sleep 5
+docker-compose exec backend flask db upgrade
+
+# Запускаем все остальные сервисы
 docker-compose up -d
 
 # Очистка старых образов
