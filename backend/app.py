@@ -5,6 +5,7 @@ from models import db
 from routes import register_routes
 import logging
 import sys
+from sqlalchemy.exc import ProgrammingError
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = (f"postgresql://{os.getenv('DB_USER')}:"
@@ -15,12 +16,16 @@ db.init_app(app)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 register_routes(app)
 
+# Создаем таблицы при старте, если их нет
+with app.app_context():
+    try:
+        db.create_all()
+    except ProgrammingError:
+        pass
+
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
-    # Создаем таблицы при старте, если их нет
-    with app.app_context():
-        db.create_all()
     app.run(host="0.0.0.0", port=8000)
