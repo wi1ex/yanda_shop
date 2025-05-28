@@ -18,28 +18,40 @@ import Footer from '@/components/Footer.vue'
 // Telegram + сохранение пользователя
 onMounted(() => {
   if (window.Telegram?.WebApp) {
-    store.tg = window.Telegram.WebApp
-    const u = store.tg.initDataUnsafe?.user
-    if (u) store.user = u
-  }
-  if (!store.user) {
-    store.user = {
-      id: 1,
-      first_name: 'Test',
-      last_name: 'User',
-      username: 'testuser',
+    store.tg = window.Telegram.WebApp;
+    const user = store.tg.initDataUnsafe?.user;
+    if (user) {
+      store.user = user;
+      fetch('https://shop.yanda.twc1.net/api/save_user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: store.user.id,
+          first_name: store.user.first_name,
+          last_name: store.user.last_name,
+          username: store.user.username,
+        }),
+      }).catch(console.error)
     }
   }
-  fetch('https://shop.yanda.twc1.net/api/save_user', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id: store.user.id,
-      first_name: store.user.first_name,
-      last_name: store.user.last_name,
-      username: store.user.username,
-    }),
-  }).catch(console.error)
+  // if (!store.user) {
+  //   store.user = {
+  //     id: 0,
+  //     first_name: 'Test',
+  //     last_name: 'User',
+  //     username: 'testuser',
+  //   }
+  // }
+  // fetch('https://shop.yanda.twc1.net/api/save_user', {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify({
+  //     id: store.user.id,
+  //     first_name: store.user.first_name,
+  //     last_name: store.user.last_name,
+  //     username: store.user.username,
+  //   }),
+  // }).catch(console.error)
 })
 </script>
 

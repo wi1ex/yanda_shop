@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, request
-from models import db, Visitor
 from datetime import datetime
 import logging
 import redis
@@ -23,31 +22,24 @@ def home():
 
 @api.route("/api/save_user", methods=["POST"])
 def save_user():
-    data = request.json  # ожидаем id, first_name, last_name, username
-    # 1) Сохраняем в Postgres
-    visitor = Visitor(
-        user_id=data['id'],
-        first_name=data.get('first_name'),
-        last_name=data.get('last_name'),
-        username=data.get('username')
-    )
-    db.session.add(visitor)
-    db.session.commit()
+    data = request.json  # ожидаем поля id, first_name, last_name, username
 
-    # 2) Пишем в Redis (sorted set) и чистим старые (>24 ч)
-    key = "recent_visitors"
     timestamp = int(datetime.utcnow().timestamp())
+    # Составляем запись без db_id
     visitor_record = json.dumps({
-        "db_id": visitor.id,
-        "user_id": data['id'],
-        "username": data.get('username'),
+        "user_id":    data['id'],
         "first_name": data.get('first_name'),
+        "last_name":  data.get('last_name'),
+        "username":   data.get('username'),
         "visit_time": timestamp
     })
-    redis_client.zadd(key, {visitor_record: timestamp})
-    # Удаляем записи старше 24 часов
+
+    # Добавляем в сортированное множество
+    redis_client.zadd("recent_visitors", {visitor_record: timestamp})
+
+    # Очищаем старые записи (старше 24 ч)
     cutoff = timestamp - 24*3600
-    redis_client.zremrangebyscore(key, 0, cutoff)
+    redis_client.zremrangebyscore("recent_visitors", 0, cutoff)
 
     return jsonify({"status": "ok"}), 201
 
