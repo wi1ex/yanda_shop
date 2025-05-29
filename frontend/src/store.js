@@ -9,11 +9,7 @@ export const store = reactive({
   categoryList: ['Кроссовки', 'Одежда', 'Аксессуары'],
   selectedCategory: 'Кроссовки',
   // Список товаров
-  products: [
-    ...Array(10).fill().map((_, i) => ({ image: img_bot, price: 9000 + i * 500, name: `Кроссовки ${i+1}`, category: 'Кроссовки' })),
-    ...Array(10).fill().map((_, i) => ({ image: img_bot, price: 3000 + i * 200, name: `Одежда ${i+1}`, category: 'Одежда' })),
-    ...Array(10).fill().map((_, i) => ({ image: img_bot, price: 1500 + i * 100, name: `Аксессуар ${i+1}`, category: 'Аксессуары' })),
-  ],
+  products: [],
   // Корзина
   cartOpen: false,
   cartOrder: [],
@@ -25,6 +21,19 @@ export const filteredProducts = computed(() =>
   store.products
     .filter(p => p.category === store.selectedCategory)
 )
+
+// Загружает товары из бэка по выбранной категории
+export async function fetchProducts() {
+  try {
+    const res = await fetch(
+      `https://shop.yanda.twc1.net/api/products?category=${encodeURIComponent(store.selectedCategory)}`
+    )
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    store.products = await res.json()
+  } catch (e) {
+    console.error('Не удалось загрузить товары:', e)
+  }
+}
 
 // Сгруппированные элементы корзины
 export const groupedCartItems = computed(() => {

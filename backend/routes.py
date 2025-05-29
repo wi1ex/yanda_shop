@@ -1,8 +1,11 @@
 from flask import Blueprint, jsonify, request
+from models import Shoe, Clothing, Accessory, db
 from datetime import datetime
+from io import StringIO
 import logging
 import redis
 import json
+import csv
 import os
 
 logger = logging.getLogger(__name__)
@@ -41,6 +44,54 @@ def save_user():
     cutoff = timestamp - 24*3600
     redis_client.zremrangebyscore("recent_visitors", 0, cutoff)
 
+    return jsonify({"status": "ok"}), 201
+
+
+@api.route("/api/products")
+def list_products():
+    # Параметр ?category=Кроссовки|Одежда|Аксессуары
+    cat = request.args.get("category", "").lower()
+    Model = {"кроссовки": Shoe, "одежда": Clothing, "аксессуары": Accessory}.get(cat)
+    if not Model:
+        return jsonify([])
+
+    items = Model.query.order_by(Model.created_at.desc()).all()
+    result = []
+    for i in items:
+        result.append({
+            "sku":       i.sku,
+            "name":      i.name,
+            "price":     i.price,
+            "category":  i.category,
+            "image":     f'https://shop.yanda.twc1.net/images/{i.image_filename}'
+        })
+    return jsonify(result)
+
+
+@api.route("/api/import_products", methods=["POST"])
+def import_products():
+    """
+    Загрузка CSV: form-data с полями:
+      - file  = CSV-файл
+      - type  = один из: shoe, clothing, accessory
+    """
+    f = request.files.get("file")
+    typ = request.form.get("type")
+    if not f or typ not in ("shoe", "clothing", "accessory"):
+        return jsonify({"error": "bad request"}), 400
+
+    Model = {"shoe": Shoe, "clothing": Clothing, "accessory": Accessory}[typ]
+    reader = csv.DictReader(StringIO(f.stream.read().decode("utf-8")))
+
+    for row in reader:
+        obj = Model.query.filter_by(sku=row["sku"]).first()
+        if not obj:
+            obj = Model(sku=row["sku"])
+            db.session.add(obj)
+        for key, val in row.items():
+            if hasattr(obj, key) and key != "sku":
+                setattr(obj, key, val or None)
+    db.session.commit()
     return jsonify({"status": "ok"}), 201
 
 

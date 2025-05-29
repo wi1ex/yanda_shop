@@ -47,15 +47,26 @@
 </template>
 
 <script setup>
-import {
-  store,
-  filteredProducts,
-  changeCategory,
-  addToCart,
-  getProductQuantity,
-  increaseQuantity,
-  decreaseQuantity,
-} from '@/store.js'
+import {store,
+        filteredProducts,
+        changeCategory,
+        addToCart,
+        getProductQuantity,
+        increaseQuantity,
+        decreaseQuantity,
+        fetchProducts,
+        } from '@/store.js'
+
+// При монтировании — первый загрузка списка
+onMounted(fetchProducts)
+
+// При изменении выбранной категории
+watch(
+  () => store.selectedCategory,
+  () => {
+    fetchProducts()
+  }
+)
 </script>
 
 <style scoped lang="scss">
