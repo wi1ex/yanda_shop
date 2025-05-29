@@ -18,30 +18,29 @@ import Footer from '@/components/Footer.vue'
 // Telegram + сохранение пользователя
 onMounted(() => {
   if (window.Telegram?.WebApp) {
-    store.tg = window.Telegram.WebApp;
-    const user = store.tg.initDataUnsafe?.user;
+    store.tg = window.Telegram.WebApp
+    const user = store.tg.initDataUnsafe?.user
     if (user) {
-      store.user = user;
-      fetch(`${store.url}/api/save_user`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: store.user.id,
-          first_name: store.user.first_name,
-          last_name: store.user.last_name,
-          username: store.user.username,
-        }),
-      }).catch(console.error)
+      store.user = user
+    } else {
+      store.user = {
+        id: 1,
+        first_name: 'Test',
+        last_name: 'User',
+        username: 'testuser',
+      }
     }
   }
-  // if (!store.user) {
-  //   store.user = {
-  //     id: 0,
-  //     first_name: 'Test',
-  //     last_name: 'User',
-  //     username: 'testuser',
-  //   }
-  // }
+  fetch(`${store.url}/api/save_user`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: store.user.id,
+      first_name: store.user.first_name,
+      last_name: store.user.last_name,
+      username: store.user.username,
+    }),
+  }).catch(console.error)
 })
 </script>
 
