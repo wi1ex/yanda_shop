@@ -2,12 +2,7 @@
   <div class="catalog">
     <div class="sticky-nav">
       <div class="categories">
-        <button
-          v-for="cat in store.categoryList"
-          :key="cat"
-          :class="{ active: cat === store.selectedCategory }"
-          @click="changeCategory(cat)"
-        >
+        <button v-for="cat in store.categoryList" :key="cat" :class="{ active: cat === store.selectedCategory }" @click="changeCategory(cat)">
           {{ cat }}
         </button>
       </div>
@@ -16,11 +11,7 @@
     <h2>{{ store.selectedCategory }}</h2>
 
     <div class="products-grid">
-      <div
-        v-for="product in filteredProducts"
-        :key="product.name"
-        class="product-card"
-      >
+      <div v-for="product in filteredProducts" :key="product.name" class="product-card">
 <!--        <img :src="product.image" alt="product" class="product-image" />-->
         <img :src="img_bot" alt="product" class="product-image" />
         <div class="product-info">
@@ -28,10 +19,7 @@
           <p class="product-name">{{ product.name }}</p>
         </div>
 
-        <div
-          v-if="getProductQuantity(product) > 0"
-          class="cart-item-controls"
-        >
+        <div v-if="getProductQuantity(product) > 0" class="cart-item-controls">
           <button @click="decreaseQuantity(product)">➖</button>
           <span class="item-quantity">{{ getProductQuantity(product) }}</span>
           <button @click="increaseQuantity(product)">➕</button>
@@ -44,6 +32,7 @@
 </template>
 
 <script setup>
+import { onMounted, watch } from 'vue'
 import img_bot from '@/assets/images/bot.png';
 import {store,
         filteredProducts,
