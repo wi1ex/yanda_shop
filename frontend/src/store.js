@@ -2,6 +2,7 @@ import { reactive, computed } from 'vue'
 
 export const store = reactive({
   // Telegram + пользователь
+  url: 'https://shop.yanda.twc1.net',
   tg: null,
   user: null,
   // Категории
@@ -25,7 +26,7 @@ export const filteredProducts = computed(() =>
 export async function fetchProducts() {
   try {
     const res = await fetch(
-      `https://shop.yanda.twc1.net/api/products?category=${encodeURIComponent(store.selectedCategory)}`
+      `${store.url}/api/products?category=${encodeURIComponent(store.selectedCategory)}`
     )
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     store.products = await res.json()
