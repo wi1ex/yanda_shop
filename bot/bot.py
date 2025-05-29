@@ -1,4 +1,5 @@
 from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command
 import aiohttp
 import asyncio
 import logging
@@ -12,12 +13,12 @@ async def main():
     await bot.send_message(os.getenv('ADMIN_ID'), "Приложение запущено!")
     await dp.start_polling(bot)
 
-@dp.message_handler(commands=["upload"])
+@dp.message.register(Command("upload"))
 async def cmd_upload(message: types.Message):
     await message.reply("Ответом на это сообщение отправьте CSV + в тексте укажите тип:\n"
                         "`shoe`, `clothing` или `accessory`", parse_mode="Markdown")
 
-@dp.message_handler(content_types=types.ContentType.DOCUMENT)
+@dp.message.register(content_types=types.ContentType.DOCUMENT)
 async def handle_csv(message: types.Message):
     # получаем строку-тип из reply_to
     if not message.reply_to_message or not message.reply_to_message.text:
