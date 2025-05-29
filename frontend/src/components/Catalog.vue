@@ -21,7 +21,8 @@
         :key="product.name"
         class="product-card"
       >
-        <img :src="product.image" alt="product" class="product-image" />
+<!--        <img :src="product.image" alt="product" class="product-image" />-->
+        <img :src="img_bot" alt="product" class="product-image" />
         <div class="product-info">
           <p class="product-price">{{ product.price }} ₽</p>
           <p class="product-name">{{ product.name }}</p>
@@ -36,17 +37,14 @@
           <button @click="increaseQuantity(product)">➕</button>
         </div>
 
-        <button
-          v-else
-          class="buy-button"
-          @click="addToCart(product)"
-        >Купить</button>
+        <button v-else class="buy-button" @click="addToCart(product)">Купить</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import img_bot from '@/assets/images/bot.png';
 import {store,
         filteredProducts,
         changeCategory,

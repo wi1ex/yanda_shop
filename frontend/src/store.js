@@ -1,5 +1,4 @@
 import { reactive, computed } from 'vue'
-import img_bot from '@/assets/images/bot.png'
 
 export const store = reactive({
   // Telegram + пользователь
