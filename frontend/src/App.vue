@@ -22,7 +22,7 @@ onMounted(() => {
     const user = store.tg.initDataUnsafe?.user;
     if (user) {
       store.user = user;
-      fetch('https://shop.yanda.twc1.net/api/save_user', {
+      fetch(`${store.url}/api/save_user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -42,16 +42,6 @@ onMounted(() => {
   //     username: 'testuser',
   //   }
   // }
-  // fetch('https://shop.yanda.twc1.net/api/save_user', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({
-  //     id: store.user.id,
-  //     first_name: store.user.first_name,
-  //     last_name: store.user.last_name,
-  //     username: store.user.username,
-  //   }),
-  // }).catch(console.error)
 })
 </script>
 
