@@ -18,6 +18,7 @@ dp = Dispatcher()
 ADMIN_ID = int(os.getenv('ADMIN_ID'))
 BACKEND_URL = os.getenv("BACKEND_URL")
 
+
 @dp.message(Command("upload"))
 async def cmd_upload(message: types.Message):
     if message.from_user.id == ADMIN_ID:
@@ -57,12 +58,29 @@ async def handle_all(message: types.Message):
     try:
         async with aiohttp.ClientSession() as sess:
             async with sess.post(url, data=form) as resp:
-                text = await resp.text()
-                if resp.status == 201:
-                    await message.reply("✅ Успешно!")
+                try:
+                    data = await resp.json()
+                except Exception:
+                    data = None
+
+                if resp.status == 201 and isinstance(data, dict):
+                    # отчёт CSV-импорта
+                    if "added" in data and "updated" in data:
+                        await message.reply(f"✅ Товары обработаны:\n"
+                                            f"Добавлено: {data['added']}\n"
+                                            f"Обновлено: {data['updated']}")
+                    # отчёт ZIP-импорта
+                    elif {"added", "replaced", "deleted"} <= data.keys():
+                        await message.reply(f"✅ Изображения обработаны:\n"
+                                            f"Добавлено: {data['added']}\n"
+                                            f"Заменено: {data['replaced']}\n"
+                                            f"Удалено: {data['deleted']}")
+                    else:
+                        await message.reply("✅ Успешно!")
                 else:
+                    text = data or await resp.text()
                     logger.error(f"Backend {resp.status}: {text}")
-                    await message.reply(f"❌ Ошибка {resp.status}: {text[:200]}")
+                    await message.reply(f"❌ Ошибка {resp.status}: {str(text)[:200]}")
     except Exception as e:
         logger.exception(e)
         await message.reply(f"🚫 Ошибка соединения: {e}")
@@ -70,7 +88,6 @@ async def handle_all(message: types.Message):
 
 # --- Точка входа ---
 async def main():
-    logging.basicConfig(level=logging.INFO)
     await bot.send_message(ADMIN_ID, "Приложение запущено!")
     await dp.start_polling(bot)
 
