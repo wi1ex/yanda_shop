@@ -14,12 +14,6 @@ services:
     networks:
       - app-network
     restart: always
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
   redis:
     image: redis:7
@@ -32,12 +26,6 @@ services:
     networks:
       - app-network
     restart: always
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
   minio:
     image: minio/minio:latest
@@ -53,12 +41,6 @@ services:
     networks:
       - app-network
     restart: always
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
 
   backend:
     build: ./backend
@@ -70,15 +52,8 @@ services:
     networks:
       - app-network
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     restart: always
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
 
   bot:
     build: ./bot
@@ -86,15 +61,8 @@ services:
     networks:
       - app-network
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "pgrep -f bot.py >/dev/null"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
 
   frontend:
     build:
@@ -105,15 +73,8 @@ services:
     networks:
       - app-network
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     restart: always
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
 
   proxy:
     build: ./nginx
@@ -127,17 +88,9 @@ services:
     networks:
       - app-network
     depends_on:
-      backend:
-        condition: service_healthy
-      frontend:
-        condition: service_healthy
+      - backend
+      - frontend
     restart: always
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/api/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
 
 networks:
   app-network:
