@@ -21,11 +21,11 @@ BACKEND_URL = os.getenv("BACKEND_URL")
 @dp.message(Command("upload"))
 async def cmd_upload(message: types.Message):
     if message.from_user.id == ADMIN_ID:
-        await message.reply("📤 Пришлите *CSV* или *ZIP* без подписи.\n"
+        await message.reply("📤 Пришлите *CSV* или *ZIP* файл\n"
                             "- `shoes.csv` → обновит таблицу обуви\n"
-                            "- `clothing.csv` → обновит одежду\n"
-                            "- `accessories.csv` → обновит аксессуары\n"
-                            "- ZIP → загрузит картинки в MinIO", parse_mode=ParseMode.MARKDOWN)
+                            "- `clothing.csv` → обновит таблицу одежды\n"
+                            "- `accessories.csv` → обновит таблицу аксессуаров\n"
+                            "- `images.zip` → обновит хранилище изображений", parse_mode=ParseMode.MARKDOWN)
 
 
 @dp.message(F.document)

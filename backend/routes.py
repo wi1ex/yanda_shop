@@ -75,12 +75,12 @@ def list_products():
     items = Model.query.order_by(Model.created_at.desc()).all()
     result = []
     for i in items:
-        url = f'{os.getenv("BACKEND_URL")}/images/{i.image_filename}'
+        image_url = f'{os.getenv("BACKEND_URL")}/images/{i.sku}-1.webp'
         result.append({"sku":      i.sku,
                        "name":     i.name,
                        "price":    i.price,
                        "category": i.category,
-                       "image":    url})
+                       "image":    image_url})
     return jsonify(result)
 
 

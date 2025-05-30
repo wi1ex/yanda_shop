@@ -27,7 +27,7 @@ class Shoe(db.Model):
     price          = db.Column(db.Integer, nullable=False)
     size_guide_url = db.Column(db.String(300))
     delivery_time  = db.Column(db.String(100))
-    image_filename = db.Column(db.String(200))
+    count_images   = db.Column(db.Integer, default=10)
     created_at     = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Clothing(db.Model):
@@ -48,7 +48,7 @@ class Clothing(db.Model):
     price          = db.Column(db.Integer, nullable=False)
     size_guide_url = db.Column(db.String(300))
     delivery_time  = db.Column(db.String(100))
-    image_filename = db.Column(db.String(200))
+    count_images   = db.Column(db.Integer, default=10)
     created_at     = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Accessory(db.Model):
@@ -69,5 +69,5 @@ class Accessory(db.Model):
     price          = db.Column(db.Integer, nullable=False)
     size_guide_url = db.Column(db.String(300))
     delivery_time  = db.Column(db.String(100))
-    image_filename = db.Column(db.String(200))
+    count_images   = db.Column(db.Integer, default=10)
     created_at     = db.Column(db.DateTime, default=datetime.utcnow)
