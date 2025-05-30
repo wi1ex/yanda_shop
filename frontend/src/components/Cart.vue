@@ -30,14 +30,13 @@
 </template>
 
 <script setup>
-import {
-  store,
-  groupedCartItems,
-  increaseQuantity,
-  decreaseQuantity,
-  checkout,
-  toggleCart,
-} from '@/store.js'
+import {store,
+        groupedCartItems,
+        increaseQuantity,
+        decreaseQuantity,
+        checkout,
+        toggleCart,
+        } from '@/store.js'
 </script>
 
 <style scoped lang="scss">
@@ -45,7 +44,6 @@ import {
   background: $background-color;
   padding: 20px;
   border-radius: 10px;
-  margin-top: 100px;
   max-width: 600px;
   margin: 100px auto 0;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);

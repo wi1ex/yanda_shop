@@ -1,5 +1,4 @@
 import os
-import re
 import asyncio
 import logging
 import aiohttp
@@ -15,64 +14,58 @@ logger = logging.getLogger(__name__)
 bot = Bot(token=os.getenv("BOT_TOKEN"))
 dp = Dispatcher()
 
-# Получаем ID администратора из переменных окружения
+# Получаем значения из переменных окружения
 ADMIN_ID = int(os.getenv('ADMIN_ID'))
+BACKEND_URL = os.getenv("BACKEND_URL")
 
-
-# --- Команда /upload ---
 @dp.message(Command("upload"))
 async def cmd_upload(message: types.Message):
     if message.from_user.id == ADMIN_ID:
-        # Сохраняем ID сообщения для последующей проверки
-        await message.reply("📤 Пришлите мне CSV-файл и укажите в подписи к файлу тип:\n"
-                            "`shoe`, `clothing` или `accessory`\n\nПример: `accessory`",
-                            parse_mode=ParseMode.MARKDOWN)
+        await message.reply("📤 Пришлите *CSV* или *ZIP* без подписи.\n"
+                            "- `shoes.csv` → обновит таблицу обуви\n"
+                            "- `clothing.csv` → обновит одежду\n"
+                            "- `accessories.csv` → обновит аксессуары\n"
+                            "- ZIP → загрузит картинки в MinIO", parse_mode=ParseMode.MARKDOWN)
 
 
-# --- Обработчик документа ---
 @dp.message(F.document)
-async def handle_csv(message: types.Message):
-    if message.from_user.id == ADMIN_ID:
-        # Проверяем, что это ответ на сообщение с командой /upload
-        if not message.reply_to_message or not message.reply_to_message.text:
-            return await message.reply("❗ Сначала выполните команду /upload!")
+async def handle_all(message: types.Message):
+    if message.from_user.id != ADMIN_ID:
+        return
 
-        # Извлекаем тип из подписи к файлу (message.caption)
-        user_input = (message.caption or "").strip().lower()
+    fname = message.document.file_name.lower()
+    ext = fname.rsplit(".", 1)[-1]
 
-        # Ищем совпадение с допустимыми типами
-        match = re.search(r'\b(shoe|clothing|accessory)\b', user_input)
-        if not match:
-            return await message.reply("❗ Неверно указан тип. В подписи к файлу должно быть одно из: \n"
-                                       "`shoe`, `clothing` или `accessory`\n\nВы указали: {user_input or 'пусто'}",
-                                       parse_mode=ParseMode.MARKDOWN)
-        actual_type = match.group(1)
+    # скачиваем содержимое
+    f = await bot.get_file(message.document.file_id)
+    buf = await bot.download_file(f.file_path)
+    data = buf.read()
 
-        # Скачиваем файл
-        file = await bot.get_file(message.document.file_id)
-        buf = await bot.download_file(file.file_path)
+    # собираем форму
+    form = aiohttp.FormData()
+    form.add_field("file", data, filename=message.document.file_name, content_type="application/octet-stream")
 
-        # Формируем запрос
-        data = aiohttp.FormData()
-        data.add_field("type", actual_type)
-        data.add_field("file", buf, filename=message.document.file_name or "products.csv", content_type="text/csv")
+    # определяем куда шлём
+    if ext == "csv":
+        url = f"{BACKEND_URL}/api/import_products"
+    elif ext == "zip":
+        url = f"{BACKEND_URL}/api/upload_images"
+    else:
+        return await message.reply("❗ Поддерживаются только CSV и ZIP.")
 
-        # Адрес бэкенда
-        url = f'{os.getenv("BACKEND_URL")}/api/import_products'
-
-        # Отправляем на бэкенд
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, data=data) as resp:
-                    if resp.status == 201:
-                        await message.reply("✅ Импорт выполнен успешно!")
-                    else:
-                        text = await resp.text()
-                        logger.error(f"Backend error {resp.status}: {text}")
-                        await message.reply(f"❌ Ошибка {resp.status}: {text[:300]}")
-        except Exception as e:
-            logger.exception("Connection error")
-            await message.reply(f"🚫 Ошибка соединения: {str(e)}")
+    # отправляем
+    try:
+        async with aiohttp.ClientSession() as sess:
+            async with sess.post(url, data=form) as resp:
+                text = await resp.text()
+                if resp.status == 201:
+                    await message.reply("✅ Успешно!")
+                else:
+                    logger.error(f"Backend {resp.status}: {text}")
+                    await message.reply(f"❌ Ошибка {resp.status}: {text[:200]}")
+    except Exception as e:
+        logger.exception(e)
+        await message.reply(f"🚫 Ошибка соединения: {e}")
 
 
 # --- Точка входа ---
