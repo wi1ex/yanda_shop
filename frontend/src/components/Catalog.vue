@@ -12,8 +12,7 @@
 
     <div class="products-grid">
       <div v-for="product in filteredProducts" :key="product.name" class="product-card">
-<!--        <img :src="product.image" alt="product" class="product-image" />-->
-        <img :src="img_bot" alt="product" class="product-image" />
+        <img :src="product.image" alt="product" class="product-image" />
         <div class="product-info">
           <p class="product-price">{{ product.price }} ₽</p>
           <p class="product-name">{{ product.name }}</p>
@@ -33,7 +32,6 @@
 
 <script setup>
 import { onMounted, watch } from 'vue'
-import img_bot from '@/assets/images/bot.png';
 import {store,
         filteredProducts,
         changeCategory,

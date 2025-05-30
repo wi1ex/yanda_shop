@@ -1,7 +1,10 @@
 from flask import Blueprint, jsonify, request
 from models import Shoe, Clothing, Accessory, db
+from minio import Minio
+from minio.error import S3Error
 from datetime import datetime
-from io import StringIO
+import zipfile
+import io
 import logging
 import redis
 import json
@@ -16,6 +19,20 @@ redis_client = redis.Redis(host=os.getenv('REDIS_HOST'),
                            port=int(os.getenv('REDIS_PORT')),
                            password=os.getenv('REDIS_PASSWORD'),
                            decode_responses=True)
+
+# создаём MinIO-клиент
+minio_client = Minio(os.getenv("MINIO_HOST"),
+                     access_key=os.getenv("MINIO_ACCESS_KEY"),
+                     secret_key=os.getenv("MINIO_SECRET_KEY"),
+                     secure=False)
+BUCKET = os.getenv('MINIO_BUCKET')
+# создаём бакет, если нет
+if not minio_client.bucket_exists(BUCKET):
+    minio_client.make_bucket(BUCKET)
+
+
+def model_by_category(cat: str):
+    return {"shoes": Shoe, "clothing": Clothing, "accessories": Accessory}.get(cat)
 
 
 @api.route("/api/")
@@ -59,31 +76,34 @@ def list_products():
     result = []
     for i in items:
         url = f'{os.getenv("BACKEND_URL")}/images/{i.image_filename}'
-        result.append({
-            "sku":       i.sku,
-            "name":      i.name,
-            "price":     i.price,
-            "category":  i.category,
-            "image":     url,
-        })
+        result.append({"sku":      i.sku,
+                       "name":     i.name,
+                       "price":    i.price,
+                       "category": i.category,
+                       "image":    url})
     return jsonify(result)
 
 
 @api.route("/api/import_products", methods=["POST"])
 def import_products():
     """
-    Загрузка CSV: form-data с полями:
-      - file  = CSV-файл
-      - type  = один из: shoe, clothing, accessory
+    Принимает form-data с одним полем file=<csv>,
+    название файла определяет категорию: shoes.csv, clothing.csv или accessories.csv
     """
     f = request.files.get("file")
-    typ = request.form.get("type")
-    if not f or typ not in ("shoe", "clothing", "accessory"):
-        return jsonify({"error": "bad request"}), 400
+    if not f:
+        return jsonify({"error": "no file"}), 400
 
-    Model = {"shoe": Shoe, "clothing": Clothing, "accessory": Accessory}[typ]
-    reader = csv.DictReader(StringIO(f.stream.read().decode("utf-8")))
+    name = f.filename.lower()
+    base, ext = os.path.splitext(name)
+    if ext != ".csv":
+        return jsonify({"error": "not a CSV"}), 400
 
+    Model = model_by_category(base)
+    if not Model:
+        return jsonify({"error": "unknown category"}), 400
+
+    reader = csv.DictReader(io.StringIO(f.stream.read().decode("utf-8")))
     for row in reader:
         obj = Model.query.filter_by(sku=row["sku"]).first()
         if not obj:
@@ -93,6 +113,34 @@ def import_products():
             if hasattr(obj, key) and key != "sku":
                 setattr(obj, key, val or None)
     db.session.commit()
+    return jsonify({"status": "ok"}), 201
+
+
+@api.route("/api/upload_images", methods=["POST"])
+def upload_images():
+    """
+    Принимает form-data с одним полем file=<zip>,
+    разворачивает и заливает все файлы в MinIO (bucket=product-images).
+    """
+    z = request.files.get("file")
+    if not z:
+        return jsonify({"error": "no file"}), 400
+    if not z.filename.lower().endswith(".zip"):
+        return jsonify({"error": "not a ZIP"}), 400
+
+    data = io.BytesIO(z.stream.read())
+    with zipfile.ZipFile(data) as archive:
+        for info in archive.infolist():
+            if info.is_dir(): continue
+            key = info.filename  # например "sku_1.jpg"
+            content = archive.read(info)
+            try:
+                # replace=True — перезапишет, если уже есть
+                minio_client.put_object(BUCKET, key, io.BytesIO(content), length=len(content), content_type="image/jpeg")
+            except S3Error as e:
+                logger.error(f"MinIO upload error {key}: {e}")
+                return jsonify({"error": f"upload {key} failed"}), 500
+
     return jsonify({"status": "ok"}), 201
 
 
