@@ -22,8 +22,8 @@ redis_client = redis.Redis(host=os.getenv('REDIS_HOST'),
 
 # создаём MinIO-клиент
 minio_client = Minio(os.getenv("MINIO_HOST"),
-                     access_key=os.getenv("MINIO_ACCESS_KEY"),
-                     secret_key=os.getenv("MINIO_SECRET_KEY"),
+                     access_key=os.getenv("MINIO_ROOT_USER"),
+                     secret_key=os.getenv("MINIO_ROOT_PASSWORD"),
                      secure=False)
 BUCKET = os.getenv('MINIO_BUCKET')
 # создаём бакет, если нет
@@ -104,23 +104,28 @@ def import_products():
         return jsonify({"error": "unknown category"}), 400
 
     reader = csv.DictReader(io.StringIO(f.stream.read().decode("utf-8")))
+    added = updated = 0
     for row in reader:
         obj = Model.query.filter_by(sku=row["sku"]).first()
-        if not obj:
+        if obj is None:
             obj = Model(sku=row["sku"])
             db.session.add(obj)
+            added += 1
+        else:
+            updated += 1
         for key, val in row.items():
             if hasattr(obj, key) and key != "sku":
                 setattr(obj, key, val or None)
     db.session.commit()
-    return jsonify({"status": "ok"}), 201
+    return jsonify({"status": "ok", "added": added, "updated": updated}), 201
 
 
 @api.route("/api/upload_images", methods=["POST"])
 def upload_images():
     """
     Принимает form-data с одним полем file=<zip>,
-    разворачивает и заливает все файлы в MinIO (bucket=product-images).
+    разворачивает и заливает все файлы в MinIO (bucket=product-images),
+    затем удаляет «лишние» файлы, не относящиеся к текущим SKU.
     """
     z = request.files.get("file")
     if not z:
@@ -129,19 +134,38 @@ def upload_images():
         return jsonify({"error": "not a ZIP"}), 400
 
     data = io.BytesIO(z.stream.read())
+    added = replaced = 0
     with zipfile.ZipFile(data) as archive:
         for info in archive.infolist():
-            if info.is_dir(): continue
-            key = info.filename  # например "sku_1.jpg"
+            if info.is_dir():
+                continue
+            key = info.filename
             content = archive.read(info)
             try:
-                # replace=True — перезапишет, если уже есть
-                minio_client.put_object(BUCKET, key, io.BytesIO(content), length=len(content), content_type="image/jpeg")
-            except S3Error as e:
-                logger.error(f"MinIO upload error {key}: {e}")
-                return jsonify({"error": f"upload {key} failed"}), 500
+                # Проверяем, есть ли уже в бакете
+                minio_client.stat_object(BUCKET, key)
+                replaced += 1
+            except S3Error:
+                added += 1
+            # Загружаем (перезаписываем, если существует)
+            minio_client.put_object(BUCKET, key, io.BytesIO(content), length=len(content), content_type="application/octet-stream")
 
-    return jsonify({"status": "ok"}), 201
+    # Теперь удаляем «чужие» файлы:
+    expected = set()
+    for Model in (Shoe, Clothing, Accessory):
+        for obj in Model.query:
+            count = getattr(obj, "count_images", 0) or 0
+            for i in range(1, count + 1):
+                expected.add(f"{obj.sku}-{i}")
+
+    deleted = 0
+    for item in minio_client.list_objects(BUCKET, recursive=True):
+        base = os.path.splitext(item.object_name)[0]
+        if base not in expected:
+            minio_client.remove_object(BUCKET, item.object_name)
+            deleted += 1
+
+    return jsonify({"status": "ok", "added": added, "replaced": replaced, "deleted": deleted}), 201
 
 
 def register_routes(app):
