@@ -29,3 +29,4 @@ docker-compose run --rm backend flask db upgrade
 # Финальная проверка и логи
 docker-compose ps
 docker-compose logs -f
+chmod +x deploy.sh
