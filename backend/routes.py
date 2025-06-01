@@ -66,9 +66,9 @@ def save_user():
 
 @api.route("/api/products")
 def list_products():
-    # Параметр ?category=Кроссовки|Одежда|Аксессуары
+    # Параметр ?category=Обувь|Одежда|Аксессуары
     cat = request.args.get("category", "").lower()
-    Model = {"кроссовки": Shoe, "одежда": Clothing, "аксессуары": Accessory}.get(cat)
+    Model = {"обувь": Shoe, "одежда": Clothing, "аксессуары": Accessory}.get(cat)
     if not Model:
         return jsonify([])
 
@@ -82,6 +82,45 @@ def list_products():
                        "category": i.category,
                        "image":    image_url})
     return jsonify(result)
+
+
+@api.route("/api/product")
+def get_product():
+    """
+    Новый endpoint: /api/product?category=<категория>&sku=<sku>
+    Возвращает JSON со всеми полями этой записи из таблицы.
+    """
+    cat = request.args.get("category", "").lower()
+    sku = request.args.get("sku", "").strip()
+    if not cat or not sku:
+        return jsonify({"error": "category and sku required"}), 400
+
+    # Определяем модель по category (понимаем, что пользователь передаёт, например, "Обувь" или "Кроссовки")
+    Model = {"обувь": Shoe,
+             "одежда": Clothing,
+             "аксессуары": Accessory}.get(cat)
+    if not Model:
+        return jsonify({"error": "unknown category"}), 400
+
+    obj = Model.query.filter_by(sku=sku).first()
+    if not obj:
+        return jsonify({"error": "not found"}), 404
+
+    # Собираем все поля из объекта в словарь
+    data = {}
+    for column in obj.__table__.columns:
+        val = getattr(obj, column.name)
+        # Для DateTime, если нужно, можно сериализовать, но тут пока просто возвращаем как строку
+        if isinstance(val, datetime):
+            data[column.name] = val.isoformat()
+        else:
+            data[column.name] = val
+
+    # Добавим к JSON ещё прямой URL картинки (если image_filename есть)
+    if obj.image_filename:
+        data["image_url"] = f'{os.getenv("BACKEND_URL")}/images/{obj.image_filename}'
+
+    return jsonify(data)
 
 
 @api.route("/api/import_products", methods=["POST"])

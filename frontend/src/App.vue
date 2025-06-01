@@ -1,8 +1,14 @@
 <template>
   <div class="app-container" v-if="store.user">
     <Header />
+
+    <!-- Если корзина открыта — показываем Cart -->
     <Cart v-if="store.cartOpen" />
+    <!-- Если карточка товара выбрана (и корзина не открыта) — показываем ProductDetail -->
+    <ProductDetail v-else-if="store.selectedProduct" />
+    <!-- В остальных случаях — показываем каталог -->
     <Catalog v-else />
+
     <Footer />
   </div>
 </template>
@@ -14,6 +20,8 @@ import Header from '@/components/Header.vue'
 import Catalog from '@/components/Catalog.vue'
 import Cart from '@/components/Cart.vue'
 import Footer from '@/components/Footer.vue'
+import ProductDetail from '@/components/ProductDetail.vue'
+// import img_bot from '@/assets/images/bot.png'
 
 // Telegram + сохранение пользователя
 onMounted(() => {
