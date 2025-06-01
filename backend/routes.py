@@ -95,10 +95,8 @@ def get_product():
     if not cat or not sku:
         return jsonify({"error": "category and sku required"}), 400
 
-    # Определяем модель по category (понимаем, что пользователь передаёт, например, "Обувь" или "Кроссовки")
-    Model = {"обувь": Shoe,
-             "одежда": Clothing,
-             "аксессуары": Accessory}.get(cat)
+    # Определяем модель по category
+    Model = {"обувь": Shoe, "одежда": Clothing, "аксессуары": Accessory}.get(cat)
     if not Model:
         return jsonify({"error": "unknown category"}), 400
 
