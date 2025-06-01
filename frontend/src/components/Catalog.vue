@@ -11,7 +11,7 @@
     <h2>{{ store.selectedCategory }}</h2>
 
     <div class="products-grid">
-      <div v-for="product in filteredProducts" :key="product.name" class="product-card">
+      <div v-for="product in filteredProducts" :key="product.sku" class="product-card" @click="openProduct(product)">
         <img :src="product.image" alt="product" class="product-image" />
         <div class="product-info">
           <p class="product-price">{{ product.price }} ₽</p>
@@ -24,7 +24,7 @@
           <button @click="increaseQuantity(product)">➕</button>
         </div>
 
-        <button v-else class="buy-button" @click="addToCart(product)">Купить</button>
+        <button v-else class="buy-button" @click.stop="addToCart(product)">Купить</button>
       </div>
     </div>
   </div>
@@ -40,6 +40,7 @@ import {store,
         increaseQuantity,
         decreaseQuantity,
         fetchProducts,
+        selectProduct,
         } from '@/store.js'
 
 // При монтировании — первый загрузка списка
@@ -56,12 +57,12 @@ watch(
 
 <style scoped lang="scss">
 .catalog {
-  margin-top: 170px;
+  margin-top: 190px;
   padding: 20px;
 }
 .sticky-nav {
   position: fixed;
-  top: 116px;
+  top: 132px;
   left: 8px;
   width: calc(100% - 48px);
   background: $background-color;

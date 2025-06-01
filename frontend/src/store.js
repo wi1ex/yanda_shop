@@ -6,10 +6,12 @@ export const store = reactive({
   tg: null,
   user: null,
   // Категории
-  categoryList: ['Кроссовки', 'Одежда', 'Аксессуары'],
-  selectedCategory: 'Кроссовки',
+  categoryList: ['Обувь', 'Одежда', 'Аксессуары'],
+  selectedCategory: 'Обувь',
   // Список товаров
   products: [],
+  // Выбранный товар (null, если ничего не выбрано)
+  selectedProduct: null,
   // Корзина
   cartOpen: false,
   cartOrder: [],
@@ -56,6 +58,8 @@ export const groupedCartItems = computed(() => {
 
 // Изменить категорию
 export function changeCategory(cat) {
+  // При изменении категории сбрасываем выбранный товар
+  store.selectedProduct = null
   store.selectedCategory = cat
 }
 
@@ -75,6 +79,8 @@ export function addToCart(product) {
 
 // Переключить корзину
 export function toggleCart() {
+  // При открытии корзины сбрасываем выбранный товар (если открыт)
+  store.selectedProduct = null
   store.cartOpen = !store.cartOpen
 }
 
@@ -112,3 +118,16 @@ export function checkout() {
   store.cart = { count: 0, total: 0, items: [] }
   store.cartOrder = []
 }
+
+// Выбрать товар и открыть его карточку
+export function selectProduct(product) {
+  store.selectedProduct = product
+  // Переключаем в состояние “открытой карточки” (Cart закрываем)
+  store.cartOpen = false
+}
+
+// Закрыть карточку товара (вернуться в каталог)
+export function clearSelectedProduct() {
+  store.selectedProduct = null
+}
+// ——————————————————————————————————————————

@@ -19,9 +19,7 @@ import { store, toggleCart } from '@/store.js'
 
 <style scoped lang="scss">
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  @include flex-header;
   background: $background-color;
   padding: 16px 32px;
   margin: 10px;
