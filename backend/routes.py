@@ -115,15 +115,21 @@ def get_product():
         else:
             data[column.name] = val
 
-    # Теперь собираем массив всех URL-ов изображений: sku-1.webp, sku-2.webp, …
+    # Вытаскиваем число картинок из count_images (если у вас в модели есть это поле)
     count = getattr(obj, "count_images", 0) or 0
+
+    # Собираем массив всех URL-ов: "<BACKEND_URL>/images/<sku>-1.webp", "<sku>-2.webp" и т.д.
     images = []
-    for idx in range(1, count + 1):
+    base_url = os.getenv("BACKEND_URL")
+    for i in range(1, count + 1):
         # предполагаем, что в MinIO картинки всегда лежат как <sku>-<номер>.webp
-        images.append(f'{os.getenv("BACKEND_URL")}/images/{obj.sku}-{idx}.webp')
+        images.append(f"{base_url}/images/{obj.sku}-{i}.webp")
 
     # Если изображений нет, images останется пустым
     data["images"] = images
+
+    # Добавим поле `image` = первая картинка (или None, если их нет)
+    data["image"] = images[0] if images else None
 
     return jsonify(data)
 

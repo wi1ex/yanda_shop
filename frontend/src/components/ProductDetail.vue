@@ -1,28 +1,38 @@
-<!-- ProductDetail.vue -->
 <template>
   <div class="product-detail">
     <!-- Кнопка “Назад к каталогу” -->
     <button class="back-button" @click="goBack">← Назад в каталог</button>
+
     <!-- Если detailData ещё не загрузились, показываем «Загрузка…» -->
     <div v-if="loading" class="loading">Загрузка...</div>
+
     <!-- Когда detailData загружены, рендерим карточку -->
     <div v-else class="detail-card">
-      <!-- Блок с изображениями (если есть более одной картинки) -->
-      <div v-if="detailData.images && detailData.images.length" class="carousel">
+      <!-- Блок с изображениями (горизонтальный скролл) -->
+      <div v-if="detailData.images && detailData.images.length" class="carousel" ref="carouselRef"
+           @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
+        <div class="images-wrapper">
+          <img v-for="(imgSrc, idx) in detailData.images" :key="idx" :src="imgSrc"
+               alt="product image" class="detail-image" :class="{ active: idx === currentIndex }"/>
+        </div>
+
         <!-- Кнопка «Вперёд» -->
-        <button v-if="detailData.images.length > 1" class="nav-button left" @click="prevImage">◀</button>
-        <!-- Текущее изображение -->
-        <img :src="detailData.images[currentIndex]" alt="product image" class="detail-image"/>
+        <button v-if="detailData.images.length > 1" class="nav-button left" @click="scrollToIndex(currentIndex - 1)">◀</button>
+
         <!-- Кнопка «Назад» -->
-        <button v-if="detailData.images.length > 1" class="nav-button right" @click="nextImage">▶</button>
+        <button v-if="detailData.images.length > 1" class="nav-button right" @click="scrollToIndex(currentIndex + 1)">▶</button>
       </div>
-      <!-- Если изображений вообще нет, можно не показывать img -->
+
+      <!-- Если изображений вообще нет -->
       <div v-else class="no-image">Нет изображений</div>
+
       <div class="detail-info">
         <!-- Название -->
         <h2 class="detail-name">{{ detailData.name }}</h2>
+
         <!-- Цена -->
         <p class="detail-price">{{ detailData.price }} ₽</p>
+
         <!-- Выведем все поля, которые есть в detailData -->
         <p v-if="detailData.sku" class="detail-field">
           <strong>SKU:</strong> {{ detailData.sku }}
@@ -67,6 +77,7 @@
         <p v-if="detailData.delivery_time" class="detail-field">
           <strong>Время доставки:</strong> {{ detailData.delivery_time }}
         </p>
+
         <!-- Кнопки управления количеством в корзине -->
         <div class="detail-cart-controls">
           <div v-if="currentQuantity > 0" class="quantity-controls">
@@ -82,7 +93,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import {
   store,
   clearSelectedProduct,
@@ -96,8 +107,16 @@ import {
 const detailData = ref(null)
 // Индикатор загрузки
 const loading = ref(true)
-// Указатель на текущее изображение в карусели
+// Текущий индекс (номер картинки)
 const currentIndex = ref(0)
+
+// Ссылка на DOM-узел .carousel (обёртка скролла)
+const carouselRef = ref(null)
+
+// Переменные для обработки свайпа
+let touchStartX = 0
+let touchDeltaX = 0
+let isSwiping = false
 
 // Когда store.selectedProduct меняется, запускаем fetchDetail()
 watch(
@@ -106,6 +125,8 @@ watch(
     if (newVal) {
       currentIndex.value = 0
       await fetchDetail(newVal.category, newVal.sku)
+      await nextTick()
+      scrollToIndex(0, false)
     }
   },
   { immediate: true }
@@ -133,18 +154,63 @@ async function fetchDetail(category, sku) {
   }
 }
 
-// Переключение вперёд по картинкам (циклически)
-function nextImage() {
+// Плавный скролл к нужному индексу (num может быть < 0 или >= length, обрабатываем циклично)
+function scrollToIndex(num, smooth = true) {
   if (!detailData.value || !detailData.value.images) return
-  const len = detailData.value.images.length
-  currentIndex.value = (currentIndex.value + 1) % len
+
+  const count = detailData.value.images.length
+  let idx = ((num % count) + count) % count
+  currentIndex.value = idx
+
+  const wrapper = carouselRef.value?.querySelector('.images-wrapper')
+  if (!wrapper) return
+
+  const width = wrapper.clientWidth
+  const targetScrollLeft = idx * width
+
+  wrapper.scrollTo({
+    left: targetScrollLeft,
+    behavior: smooth ? 'smooth' : 'auto'
+  })
 }
 
-// Переключение назад по картинкам (циклически)
+// Обработчик нажатия «▶»
+function nextImage() {
+  scrollToIndex(currentIndex.value + 1)
+}
+
+// Обработчик нажатия «◀»
 function prevImage() {
-  if (!detailData.value || !detailData.value.images) return
-  const len = detailData.value.images.length
-  currentIndex.value = (currentIndex.value - 1 + len) % len
+  scrollToIndex(currentIndex.value - 1)
+}
+
+// ===== Обработка свайпа пальцем =====
+function onTouchStart(evt) {
+  if (!carouselRef.value) return
+  isSwiping = true
+  touchStartX = evt.touches[0].clientX
+  touchDeltaX = 0
+}
+
+function onTouchMove(evt) {
+  if (!isSwiping) return
+  const currentX = evt.touches[0].clientX
+  touchDeltaX = currentX - touchStartX
+}
+
+function onTouchEnd() {
+  if (!isSwiping) return
+  isSwiping = false
+
+  if (touchDeltaX > 50) {
+    prevImage()
+  } else if (touchDeltaX < -50) {
+    nextImage()
+  } else {
+    scrollToIndex(currentIndex.value)
+  }
+
+  touchDeltaX = 0
 }
 
 // Кнопка “Назад”
@@ -191,7 +257,7 @@ function onDecrease(item) {
   padding: 20px;
 }
 
-/* Кнопка “назад” */
+/* Кнопка «назад» */
 .back-button {
   background: transparent;
   color: white;
@@ -206,7 +272,7 @@ function onDecrease(item) {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Состояние “Загрузка” */
+/* Состояние «Загрузка» */
 .loading {
   color: #bbb;
   font-size: 18px;
@@ -228,12 +294,34 @@ function onDecrease(item) {
 /* Блок с каруселью изображений */
 .carousel {
   position: relative;
-  display: flex;
-  align-items: center;
   margin-bottom: 20px;
+  overflow: hidden;
 }
 
-/* Кнопки “◀ ▶” */
+.images-wrapper {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.images-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.detail-image {
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: 300px;
+  scroll-snap-align: center;
+  border-radius: 8px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.detail-image.active {
+  transform: scale(1);
+}
+
+/* Кнопки «◀ ▶» */
 .nav-button {
   background: rgba(0, 0, 0, 0.4);
   color: white;
@@ -245,24 +333,17 @@ function onDecrease(item) {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 10;
   transition: background 0.2s;
+}
+.nav-button.left {
+  left: 8px;
+}
+.nav-button.right {
+  right: 8px;
 }
 .nav-button:hover {
   background: rgba(0, 0, 0, 0.6);
-}
-.nav-button.left {
-  left: -30px;
-}
-.nav-button.right {
-  right: -30px;
-}
-
-/* Текущее изображение */
-.detail-image {
-  width: 100%;
-  max-width: 300px;
-  border-radius: 8px;
-  object-fit: cover;
 }
 
 /* Если изображений нет */
