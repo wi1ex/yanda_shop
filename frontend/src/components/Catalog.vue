@@ -11,7 +11,7 @@
     <h2>{{ store.selectedCategory }}</h2>
 
     <div class="products-grid">
-      <div v-for="product in filteredProducts" :key="product.sku" class="product-card" @click="openProduct(product)">
+      <div v-for="product in filteredProducts" :key="product.sku" class="product-card" @click="selectProduct(product)">
         <img :src="product.image" alt="product" class="product-image" />
         <div class="product-info">
           <p class="product-price">{{ product.price }} ₽</p>
@@ -19,9 +19,9 @@
         </div>
 
         <div v-if="getProductQuantity(product) > 0" class="cart-item-controls">
-          <button @click="decreaseQuantity(product)">➖</button>
+          <button @click.stop="decreaseQuantity(product)">➖</button>
           <span class="item-quantity">{{ getProductQuantity(product) }}</span>
-          <button @click="increaseQuantity(product)">➕</button>
+          <button @click.stop="increaseQuantity(product)">➕</button>
         </div>
 
         <button v-else class="buy-button" @click.stop="addToCart(product)">Купить</button>
