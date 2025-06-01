@@ -27,7 +27,6 @@
         <p class="detail-price">{{ detailData.price }} ₽</p>
 
         <!-- Выведем все поля, которые есть в detailData -->
-        <!-- Например, sku, gender, category, subcategory, brand и т. д. -->
         <p v-if="detailData.sku" class="detail-field">
           <strong>SKU:</strong> {{ detailData.sku }}
         </p>
@@ -53,7 +52,6 @@
           <strong>Цвет:</strong> {{ detailData.color }}
         </p>
 
-        <!-- Для «Обуви» размер может храниться в size_label, width_mm, height_mm, depth_mm -->
         <p v-if="detailData.size_label" class="detail-field">
           <strong>Размер:</strong> {{ detailData.size_label }}
         </p>
@@ -67,9 +65,6 @@
           <strong>Глубина (мм):</strong> {{ detailData.depth_mm }}
         </p>
 
-        <!-- Для «Одежды» отображаем size_label, material, color (уже выше) -->
-        <!-- Для «Аксессуаров» похожим образом -->
-
         <p v-if="detailData.size_guide_url" class="detail-field">
           <strong>Size Guide:</strong>
           <a :href="detailData.size_guide_url" target="_blank">ссылка</a>
@@ -81,9 +76,9 @@
         <!-- Кнопки управления количеством в корзине -->
         <div class="detail-cart-controls">
           <div v-if="currentQuantity > 0" class="quantity-controls">
-            <button @click="decreaseQuantity(detailData)">➖</button>
+            <button @click="onDecrease(detailData)">➖</button>
             <span class="quantity">{{ currentQuantity }}</span>
-            <button @click="increaseQuantity(detailData)">➕</button>
+            <button @click="onIncrease(detailData)">➕</button>
           </div>
           <button v-else class="add-button" @click="addToCart(detailData)">
             Купить
@@ -95,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import {
   store,
   clearSelectedProduct,
@@ -125,7 +120,6 @@ watch(
 async function fetchDetail(category, sku) {
   loading.value = true
   try {
-    // Делаем запрос к бекенду:
     const response = await fetch(
       `${store.url}/api/product?category=${encodeURIComponent(category)}&sku=${encodeURIComponent(sku)}`
     )
@@ -158,7 +152,7 @@ watch(
     }
   }
 )
-// Также следим за динамическим изменением корзины
+// Также следим за изменением корзины
 watch(
   () => store.cart.items,
   () => {
@@ -169,18 +163,15 @@ watch(
 )
 
 // При клике на “➕” рядом с детальным товаром:
-function increaseQuantity(item) {
+// Переименовали, чтобы не конфликтовать с импортированным increaseQuantity
+function onIncrease(item) {
   increaseQuantity(item)
 }
 
 // При клике на “➖” рядом с детальным товаром:
-function decreaseQuantity(item) {
+// Переименовали, чтобы не конфликтовать с импортированным decreaseQuantity
+function onDecrease(item) {
   decreaseQuantity(item)
-}
-
-// При клике “Купить”:
-function addToCart(item) {
-  addToCart(item)
 }
 </script>
 
