@@ -154,6 +154,8 @@ function goBack() {
 
 // Сколько уже в корзине (для данной SKU)
 const currentQuantity = ref(0)
+
+// Обновляем количество один раз, когда загрузились detailData
 watch(
   () => detailData.value,
   (newVal) => {
@@ -164,7 +166,7 @@ watch(
 )
 // Также следим за изменением корзины
 watch(
-  () => store.cart.items,
+  () => store.cart.items.length,
   () => {
     if (detailData.value) {
       currentQuantity.value = getProductQuantity(detailData.value)
