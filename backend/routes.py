@@ -88,7 +88,8 @@ def list_products():
 def get_product():
     """
     Новый endpoint: /api/product?category=<категория>&sku=<sku>
-    Возвращает JSON со всеми полями этой записи из таблицы.
+    Возвращает JSON со всеми полями этой записи из таблицы,
+    а также массив URL всех изображений (по count_images).
     """
     cat = request.args.get("category", "").lower()
     sku = request.args.get("sku", "").strip()
@@ -114,9 +115,15 @@ def get_product():
         else:
             data[column.name] = val
 
-    # Добавим к JSON ещё прямой URL картинки (если image_filename есть)
-    if obj.image_filename:
-        data["image_url"] = f'{os.getenv("BACKEND_URL")}/images/{obj.image_filename}'
+    # Теперь собираем массив всех URL-ов изображений: sku-1.webp, sku-2.webp, …
+    count = getattr(obj, "count_images", 0) or 0
+    images = []
+    for idx in range(1, count + 1):
+        # предполагаем, что в MinIO картинки всегда лежат как <sku>-<номер>.webp
+        images.append(f'{os.getenv("BACKEND_URL")}/images/{obj.sku}-{idx}.webp')
+
+    # Если изображений нет, images останется пустым
+    data["images"] = images
 
     return jsonify(data)
 

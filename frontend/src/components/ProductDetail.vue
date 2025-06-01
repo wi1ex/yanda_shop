@@ -1,31 +1,28 @@
+<!-- ProductDetail.vue -->
 <template>
   <div class="product-detail">
     <!-- Кнопка “Назад к каталогу” -->
-    <button class="back-button" @click="goBack">
-      ← Назад в каталог
-    </button>
-
+    <button class="back-button" @click="goBack">← Назад в каталог</button>
     <!-- Если detailData ещё не загрузились, показываем «Загрузка…» -->
-    <div v-if="loading" class="loading">
-      Загрузка...
-    </div>
-
+    <div v-if="loading" class="loading">Загрузка...</div>
     <!-- Когда detailData загружены, рендерим карточку -->
     <div v-else class="detail-card">
-      <!-- Изображение -->
-      <img
-        v-if="detailData.image_url"
-        :src="detailData.image_url"
-        alt="product image"
-        class="detail-image"
-      />
+      <!-- Блок с изображениями (если есть более одной картинки) -->
+      <div v-if="detailData.images && detailData.images.length" class="carousel">
+        <!-- Кнопка «Вперёд» -->
+        <button v-if="detailData.images.length > 1" class="nav-button left" @click="prevImage">◀</button>
+        <!-- Текущее изображение -->
+        <img :src="detailData.images[currentIndex]" alt="product image" class="detail-image"/>
+        <!-- Кнопка «Назад» -->
+        <button v-if="detailData.images.length > 1" class="nav-button right" @click="nextImage">▶</button>
+      </div>
+      <!-- Если изображений вообще нет, можно не показывать img -->
+      <div v-else class="no-image">Нет изображений</div>
       <div class="detail-info">
         <!-- Название -->
         <h2 class="detail-name">{{ detailData.name }}</h2>
-
         <!-- Цена -->
         <p class="detail-price">{{ detailData.price }} ₽</p>
-
         <!-- Выведем все поля, которые есть в detailData -->
         <p v-if="detailData.sku" class="detail-field">
           <strong>SKU:</strong> {{ detailData.sku }}
@@ -51,7 +48,6 @@
         <p v-if="detailData.color" class="detail-field">
           <strong>Цвет:</strong> {{ detailData.color }}
         </p>
-
         <p v-if="detailData.size_label" class="detail-field">
           <strong>Размер:</strong> {{ detailData.size_label }}
         </p>
@@ -64,7 +60,6 @@
         <p v-if="detailData.depth_mm" class="detail-field">
           <strong>Глубина (мм):</strong> {{ detailData.depth_mm }}
         </p>
-
         <p v-if="detailData.size_guide_url" class="detail-field">
           <strong>Size Guide:</strong>
           <a :href="detailData.size_guide_url" target="_blank">ссылка</a>
@@ -72,7 +67,6 @@
         <p v-if="detailData.delivery_time" class="detail-field">
           <strong>Время доставки:</strong> {{ detailData.delivery_time }}
         </p>
-
         <!-- Кнопки управления количеством в корзине -->
         <div class="detail-cart-controls">
           <div v-if="currentQuantity > 0" class="quantity-controls">
@@ -80,9 +74,7 @@
             <span class="quantity">{{ currentQuantity }}</span>
             <button @click="onIncrease(detailData)">➕</button>
           </div>
-          <button v-else class="add-button" @click="addToCart(detailData)">
-            Купить
-          </button>
+          <button v-else class="add-button" @click="addToCart(detailData)">Купить</button>
         </div>
       </div>
     </div>
@@ -104,12 +96,15 @@ import {
 const detailData = ref(null)
 // Индикатор загрузки
 const loading = ref(true)
+// Указатель на текущее изображение в карусели
+const currentIndex = ref(0)
 
-// Когда store.selectedProduct меняется, будем выполнять fetchDetail()
+// Когда store.selectedProduct меняется, запускаем fetchDetail()
 watch(
   () => store.selectedProduct,
   async (newVal) => {
     if (newVal) {
+      currentIndex.value = 0
       await fetchDetail(newVal.category, newVal.sku)
     }
   },
@@ -119,6 +114,7 @@ watch(
 // Функция для загрузки полного JSON‐объекта из /api/product
 async function fetchDetail(category, sku) {
   loading.value = true
+  detailData.value = null
   try {
     const response = await fetch(
       `${store.url}/api/product?category=${encodeURIComponent(category)}&sku=${encodeURIComponent(sku)}`
@@ -135,6 +131,20 @@ async function fetchDetail(category, sku) {
   } finally {
     loading.value = false
   }
+}
+
+// Переключение вперёд по картинкам (циклически)
+function nextImage() {
+  if (!detailData.value || !detailData.value.images) return
+  const len = detailData.value.images.length
+  currentIndex.value = (currentIndex.value + 1) % len
+}
+
+// Переключение назад по картинкам (циклически)
+function prevImage() {
+  if (!detailData.value || !detailData.value.images) return
+  const len = detailData.value.images.length
+  currentIndex.value = (currentIndex.value - 1 + len) % len
 }
 
 // Кнопка “Назад”
@@ -163,13 +173,11 @@ watch(
 )
 
 // При клике на “➕” рядом с детальным товаром:
-// Переименовали, чтобы не конфликтовать с импортированным increaseQuantity
 function onIncrease(item) {
   increaseQuantity(item)
 }
 
 // При клике на “➖” рядом с детальным товаром:
-// Переименовали, чтобы не конфликтовать с импортированным decreaseQuantity
 function onDecrease(item) {
   decreaseQuantity(item)
 }
@@ -215,12 +223,51 @@ function onDecrease(item) {
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* Изображение */
+/* Блок с каруселью изображений */
+.carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Кнопки “◀ ▶” */
+.nav-button {
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: background 0.2s;
+}
+.nav-button:hover {
+  background: rgba(0, 0, 0, 0.6);
+}
+.nav-button.left {
+  left: -30px;
+}
+.nav-button.right {
+  right: -30px;
+}
+
+/* Текущее изображение */
 .detail-image {
   width: 100%;
   max-width: 300px;
   border-radius: 8px;
   object-fit: cover;
+}
+
+/* Если изображений нет */
+.no-image {
+  color: #bbb;
+  font-size: 16px;
+  margin-bottom: 20px;
 }
 
 /* Блок с текстовой информацией */
