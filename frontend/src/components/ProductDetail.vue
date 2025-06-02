@@ -253,7 +253,7 @@ function onDecrease(item) {
 
 <style scoped lang="scss">
 .product-detail {
-  margin-top: 100px;
+  margin-top: 150px;
   padding: 20px;
 }
 

@@ -8,7 +8,10 @@ export const store = reactive({
   // Категории
   categoryList: ['Обувь', 'Одежда', 'Аксессуары'],
   selectedCategory: 'Обувь',
-  // Список товаров
+  // Сортировка (фронтенд)
+  sortBy: 'date',      // 'date' или 'price'
+  sortOrder: 'desc',   // 'asc' или 'desc'
+  // Список товаров (данные берутся из API один раз при смене категории)
   products: [],
   // Выбранный товар (null, если ничего не выбрано)
   selectedProduct: null,
@@ -18,13 +21,30 @@ export const store = reactive({
   cart: { count: 0, total: 0, items: [] },
 })
 
-// Выбор товаров по категории
-export const filteredProducts = computed(() =>
-  store.products
-    .filter(p => p.category === store.selectedCategory)
-)
+// Фильтрация + сортировка товаров по категории
+export const filteredProducts = computed(() => {
+  // Сначала оставляем только товары текущей категории
+  const byCategory = store.products.filter(
+    p => p.category === store.selectedCategory
+  )
+  // Копируем и сортируем
+  return byCategory
+    .slice()
+    .sort((a, b) => {
+      // Множитель: для asc = 1, для desc = -1
+      const modifier = store.sortOrder === 'asc' ? 1 : -1
+      if (store.sortBy === 'price') {
+        return modifier * (a.price - b.price)
+      } else {
+        // сортировка по дате (created_at)
+        if (a.created_at < b.created_at) return -1 * modifier
+        if (a.created_at > b.created_at) return 1 * modifier
+        return 0
+      }
+    })
+})
 
-// Загружает товары из бэка по выбранной категории
+// Загружает товары из бэка по выбранной категории (однократно)
 export async function fetchProducts() {
   try {
     const res = await fetch(
@@ -61,6 +81,9 @@ export function changeCategory(cat) {
   // При изменении категории сбрасываем выбранный товар
   store.selectedProduct = null
   store.selectedCategory = cat
+  // Сбрасываем сортировку на «по дате, убывание»
+  store.sortBy = 'date'
+  store.sortOrder = 'desc'
 }
 
 // Добавить в корзину
@@ -130,4 +153,3 @@ export function selectProduct(product) {
 export function clearSelectedProduct() {
   store.selectedProduct = null
 }
-// ——————————————————————————————————————————
