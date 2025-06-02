@@ -72,15 +72,17 @@ def list_products():
     if not Model:
         return jsonify([])
 
-    items = Model.query.order_by(Model.created_at.desc()).all()
+    # Возвращаем все товары выбранной категории
+    items = Model.query.all()
     result = []
     for i in items:
         image_url = f'{os.getenv("BACKEND_URL")}/images/{i.sku}-1.webp'
-        result.append({"sku":      i.sku,
-                       "name":     i.name,
-                       "price":    i.price,
-                       "category": i.category,
-                       "image":    image_url})
+        result.append({"sku":        i.sku,
+                       "name":       i.name,
+                       "price":      i.price,
+                       "category":   i.category,
+                       "image":      image_url,
+                       "created_at": i.created_at.isoformat()})
     return jsonify(result)
 
 
