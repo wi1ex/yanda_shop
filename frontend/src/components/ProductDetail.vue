@@ -268,9 +268,6 @@ function onDecrease(item) {
   margin-bottom: 16px;
   transition: background 0.2s;
 }
-.back-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
 
 /* Состояние «Загрузка» */
 .loading {
@@ -342,9 +339,6 @@ function onDecrease(item) {
 .nav-button.right {
   right: 8px;
 }
-.nav-button:hover {
-  background: rgba(0, 0, 0, 0.6);
-}
 
 /* Если изображений нет */
 .no-image {
@@ -396,9 +390,6 @@ function onDecrease(item) {
   cursor: pointer;
   font-size: 16px;
   transition: background 0.2s;
-}
-.add-button:hover {
-  background: #0056b3;
 }
 
 /* Кнопки “➖/➕” */
