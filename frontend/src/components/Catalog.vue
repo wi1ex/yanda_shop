@@ -14,16 +14,12 @@
 
     <!-- Блок управления сортировкой -->
     <div class="sorting-controls">
-      <span>Сортировать по:</span>
-      <!-- Выбор поля сортировки -->
-      <select v-model="store.sortBy" @change="onSortChange">
-        <option value="price">Цене</option>
-        <option value="date">Дате добавления</option>
-      </select>
-      <!-- Выбор порядка сортировки -->
-      <select v-model="store.sortOrder" @change="onSortChange">
-        <option value="asc">По возрастанию</option>
-        <option value="desc">По убыванию</option>
+      <span>Сортировать:</span>
+      <select v-model="sortOption">
+        <option value="date_desc">Дата добавления: по убыванию</option>
+        <option value="date_asc">Дата добавления: по возрастанию</option>
+        <option value="price_asc">Цена: по возрастанию</option>
+        <option value="price_desc">Цена: по убыванию</option>
       </select>
     </div>
 
@@ -49,7 +45,7 @@
 </template>
 
 <script setup>
-import { onMounted, watch } from 'vue'
+import { onMounted, watch, computed } from 'vue'
 import {
   store,
   filteredProducts,
@@ -73,12 +69,20 @@ watch(
   }
 )
 
-// При смене любого из select (sortBy или sortOrder) просто пересортировать уже загруженный массив
-function onSortChange() {
-  // так как filteredProducts — computed, оно автоматически пересчитает список
-  // Нет необходимости заново вызывать fetchProducts(), потому что меняется только сортировка
-  // Единственное, если при смене категории мы сбрасывали сортировку, обновится computed.
-}
+// Вычисляемое свойство для объединённого селекта
+const sortOption = computed({
+  get() {
+    // Объединяем текущие значения sortBy и sortOrder в одну строку
+    return `${store.sortBy}_${store.sortOrder}`
+  },
+  set(value) {
+    // value будет что-то вроде "price_asc" или "date_desc"
+    const [by, order] = value.split('_')
+    store.sortBy = by       // либо 'date', либо 'price'
+    store.sortOrder = order // либо 'asc', либо 'desc'
+    // Возникает реактивная перестройка filteredProducts автоматически
+  }
+})
 </script>
 
 <style scoped lang="scss">
@@ -156,10 +160,6 @@ h2 {
   cursor: pointer;
 }
 
-.product-card:hover {
-  transform: translateY(-4px);
-}
-
 .product-image {
   width: 100%;
   border-radius: 10px;
@@ -191,10 +191,6 @@ h2 {
   margin-top: 8px;
   cursor: pointer;
   transition: 0.3s ease;
-}
-
-.buy-button:hover {
-  background: #0056b3;
 }
 
 .cart-item-controls {
