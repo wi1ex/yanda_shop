@@ -82,6 +82,7 @@ def list_products():
                        "price":      i.price,
                        "category":   i.category,
                        "image":      image_url,
+                       "color":      i.color,
                        "created_at": i.created_at.isoformat()})
     return jsonify(result)
 

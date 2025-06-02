@@ -23,13 +23,36 @@
       </select>
     </div>
 
+    <!-- Блок фильтров -->
+    <div class="filter-controls">
+      <span>Фильтры:</span>
+
+      <!-- Цена: Мин. -->
+      <input type="number" v-model.number="store.filterPriceMin" placeholder="Мин. цена" class="filter-input"/>
+
+      <!-- Цена: Макс. -->
+      <input type="number" v-model.number="store.filterPriceMax" placeholder="Макс. цена" class="filter-input"/>
+
+      <!-- Цвет -->
+      <select v-model="store.filterColor" class="filter-select">
+        <option value="">Все цвета</option>
+        <option v-for="color in distinctColors" :key="color" :value="color">
+          {{ color }}
+        </option>
+      </select>
+
+      <!-- Кнопка сброса фильтров -->
+      <button @click="clearFilters" class="clear-filters-button">Сбросить фильтры</button>
+    </div>
+
     <!-- Сетка товаров -->
     <div class="products-grid">
       <div v-for="product in filteredProducts" :key="product.sku" class="product-card" @click="selectProduct(product)">
-        <img :src="product.image" alt="product" class="product-image" />
+        <img :src="product.image" alt="product" class="product-image"/>
         <div class="product-info">
           <p class="product-price">{{ product.price }} ₽</p>
           <p class="product-name">{{ product.name }}</p>
+          <p class="product-color" v-if="product.color">Цвет: {{ product.color }}</p>
         </div>
 
         <div v-if="getProductQuantity(product) > 0" class="cart-item-controls">
@@ -56,12 +79,13 @@ import {
   decreaseQuantity,
   fetchProducts,
   selectProduct,
+  clearFilters,
 } from '@/store.js'
 
 // При монтировании — первый запрос к API (загрузка товаров выбранной категории)
 onMounted(fetchProducts)
 
-// При изменении выбранной категории — запрос к API, но сортировка на фронте
+// При изменении выбранной категории — загрузка «сырых» данных (без фильтров/сортировки)
 watch(
   () => store.selectedCategory,
   () => {
@@ -82,6 +106,16 @@ const sortOption = computed({
     store.sortOrder = order // либо 'asc', либо 'desc'
     // Возникает реактивная перестройка filteredProducts автоматически
   }
+})
+
+// Список всех цветов, которые есть у товаров в текущей категории
+const distinctColors = computed(() => {
+  const byCategory = store.products.filter(
+    p => p.category === store.selectedCategory
+  )
+  // Собираем уникальные цвета
+  const set = new Set(byCategory.map(p => p.color).filter(c => c))
+  return Array.from(set)
 })
 </script>
 
@@ -143,6 +177,41 @@ h2 {
   cursor: pointer;
 }
 
+/* Блок фильтров */
+.filter-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-input {
+  width: 100px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.filter-select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: #ffffff;
+  cursor: pointer;
+}
+
+.clear-filters-button {
+  padding: 6px 12px;
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
 /* Сетка товаров */
 .products-grid {
   display: grid;
@@ -179,6 +248,12 @@ h2 {
   font-size: 14px;
   color: #555;
   margin-top: 4px;
+}
+
+.product-color {
+  font-size: 12px;
+  color: #777;
+  margin-top: 2px;
 }
 
 .buy-button {
