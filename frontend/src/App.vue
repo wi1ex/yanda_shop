@@ -21,7 +21,6 @@ import Catalog from '@/components/Catalog.vue'
 import Cart from '@/components/Cart.vue'
 import Footer from '@/components/Footer.vue'
 import ProductDetail from '@/components/ProductDetail.vue'
-// import img_bot from '@/assets/images/bot.png'
 
 // Telegram + сохранение пользователя
 onMounted(() => {
@@ -54,9 +53,10 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .app-container {
+  position: absolute;
+  top: 0;
+  width: 100%;
   background-color: #131722;
   color: white;
-  min-height: 100vh;
-  padding: 0 16px;
 }
 </style>

@@ -121,18 +121,18 @@ const distinctColors = computed(() => {
 
 <style scoped lang="scss">
 .catalog {
-  margin-top: 190px;
-  padding: 20px;
+  margin-top: 15vh;
+  padding: 2vw;
 }
 
 .sticky-nav {
   position: fixed;
-  top: 132px;
-  left: 8px;
-  width: calc(100% - 48px);
-  background: $background-color;
+  top: 12vh;
+  left: 0;
+  padding: 2vh 2vw;
+  width: calc(100% - 4vw);
+  background-color: $background-color;
   z-index: 999;
-  padding: 26px 16px;
 }
 
 .categories {
@@ -155,9 +155,8 @@ const distinctColors = computed(() => {
 }
 
 h2 {
-  margin-top: 100px; /* Отступ, чтобы не перекрывался sticky-nav */
+  margin-top: 5vh;
   text-align: center;
-  margin-bottom: 16px;
 }
 
 /* Блок сортировки */

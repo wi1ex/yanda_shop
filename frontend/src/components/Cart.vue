@@ -41,12 +41,10 @@ import {store,
 
 <style scoped lang="scss">
 .cart-container {
-  background: $background-color;
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 600px;
-  margin: 100px auto 0;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  margin-top: 12vh;
+  padding: 2vh;
+  width: calc(100% - 4vh);
+  background-color: $background-color;
 }
 .empty-cart {
   text-align: center;

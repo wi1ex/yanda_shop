@@ -2,7 +2,7 @@
   <header class="header">
     <h1>YANDA SHOP</h1>
     <div class="user-info">
-      <img :src="store.user.photo_url" alt="avatar" class="avatar" />
+      <img :src="store.user.photo_url || img_bot" alt="avatar" class="avatar" />
       <span class="username">
         {{ store.user.first_name }} <span class="status">@{{ store.user.username }}</span>
       </span>
@@ -15,33 +15,31 @@
 
 <script setup>
 import { store, toggleCart } from '@/store.js'
+import img_bot from '@/assets/images/bot.png'
 </script>
 
 <style scoped lang="scss">
 .header {
   @include flex-header;
-  background: $background-color;
-  padding: 16px 32px;
-  margin: 10px;
+  background-color: $background-color;
+  padding: 2vh 2vw;
   position: fixed;
-  top: -10px;
-  left: -2px;
-  width: calc(100% - 80px);
+  top: 0;
+  width: calc(100% - 4vw);
+  max-height: 10vh;
   z-index: 1000;
 }
 .user-info {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 1vh;
   background: $background-color;
-  padding: 8px;
-  border-radius: 8px;
 }
 .avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 4vh;
+  height: 4vh;
+  border-radius: 100%;
   object-fit: cover;
 }
 .username {

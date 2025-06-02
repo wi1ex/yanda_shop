@@ -253,20 +253,22 @@ function onDecrease(item) {
 
 <style scoped lang="scss">
 .product-detail {
-  margin-top: 150px;
-  padding: 20px;
+  margin-top: 12vh;
+  padding: 2vh;
 }
 
 /* Кнопка «назад» */
 .back-button {
-  background: transparent;
-  color: white;
-  border: 1px solid #bbb;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
+  display: flex;
+  justify-self: center;
   margin-bottom: 16px;
-  transition: background 0.2s;
+  padding: 1vh 2vh;
+  border-radius: 6px;
+  background: #292e3f;
+  color: #fff;
+  border: 1px solid #bbb;
+  cursor: pointer;
+  transition: background .2s;
 }
 
 /* Состояние «Загрузка» */
@@ -369,10 +371,15 @@ function onDecrease(item) {
 
 /* Общий стиль для всех полей */
 .detail-field {
+  @include flex-header;
   font-size: 14px;
   color: #ccc;
   margin-bottom: 8px;
   word-wrap: break-word;
+}
+.detail-field a {
+  margin-left: .5vh;
+  color: #ccc;
 }
 
 /* Контейнер для управления корзиной */
