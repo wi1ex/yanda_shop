@@ -4,19 +4,23 @@
     <div class="user-info">
       <img :src="store.user.photo_url || img_bot" alt="avatar" class="avatar" />
       <span class="username">
-        {{ store.user.first_name }} <span class="status">@{{ store.user.username }}</span>
+        {{ store.user.first_name }}
+        <span class="status">@{{ store.user.username }}</span>
       </span>
     </div>
-    <button class="cart-button" @click="toggleCart">
+    <button class="cart-button" @click="store.toggleCart">
       🛒 {{ store.cart.count }} <span class="cart-total-price">({{ store.cart.total }}₽)</span>
     </button>
   </header>
 </template>
 
 <script setup>
-import { store, toggleCart } from '@/store.js'
+import { useStore } from '@/store/index.js'
 import img_bot from '@/assets/images/bot.png'
+
+const store = useStore()
 </script>
+
 
 <style scoped lang="scss">
 .header {

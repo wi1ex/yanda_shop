@@ -17,10 +17,14 @@
         </div>
 
         <!-- Кнопка «Вперёд» -->
-        <button v-if="detailData.images.length > 1" class="nav-button left" @click="scrollToIndex(currentIndex - 1)">◀</button>
+        <button v-if="detailData.images.length > 1" class="nav-button left" @click="scrollToIndex(currentIndex - 1)">
+          ◀
+        </button>
 
         <!-- Кнопка «Назад» -->
-        <button v-if="detailData.images.length > 1" class="nav-button right" @click="scrollToIndex(currentIndex + 1)">▶</button>
+        <button v-if="detailData.images.length > 1" class="nav-button right" @click="scrollToIndex(currentIndex + 1)">
+          ▶
+        </button>
       </div>
 
       <!-- Если изображений вообще нет -->
@@ -85,7 +89,7 @@
             <span class="quantity">{{ currentQuantity }}</span>
             <button @click="onIncrease(detailData)">➕</button>
           </div>
-          <button v-else class="add-button" @click="addToCart(detailData)">Купить</button>
+          <button v-else class="add-button" @click="store.addToCart(detailData)">Купить</button>
         </div>
       </div>
     </div>
@@ -94,22 +98,14 @@
 
 <script setup>
 import { ref, watch, nextTick } from 'vue'
-import {
-  store,
-  clearSelectedProduct,
-  addToCart,
-  getProductQuantity,
-  increaseQuantity,
-  decreaseQuantity,
-} from '@/store.js'
+import { useStore } from '@/store/index.js'
 
-// Локальный стейт: вся детальная информация о товаре
+const store = useStore()
 const detailData = ref(null)
 // Индикатор загрузки
 const loading = ref(true)
 // Текущий индекс (номер картинки)
 const currentIndex = ref(0)
-
 // Ссылка на DOM-узел .carousel (обёртка скролла)
 const carouselRef = ref(null)
 
@@ -170,7 +166,7 @@ function scrollToIndex(num, smooth = true) {
 
   wrapper.scrollTo({
     left: targetScrollLeft,
-    behavior: smooth ? 'smooth' : 'auto'
+    behavior: smooth ? 'smooth' : 'auto',
   })
 }
 
@@ -184,7 +180,7 @@ function prevImage() {
   scrollToIndex(currentIndex.value - 1)
 }
 
-// ===== Обработка свайпа пальцем =====
+// Обработка свайпа пальцем
 function onTouchStart(evt) {
   if (!carouselRef.value) return
   isSwiping = true
@@ -215,7 +211,7 @@ function onTouchEnd() {
 
 // Кнопка “Назад”
 function goBack() {
-  clearSelectedProduct()
+  store.clearSelectedProduct()
 }
 
 // Сколько уже в корзине (для данной SKU)
@@ -226,28 +222,29 @@ watch(
   () => detailData.value,
   (newVal) => {
     if (newVal) {
-      currentQuantity.value = getProductQuantity(newVal)
+      currentQuantity.value = store.getProductQuantity(newVal)
     }
   }
 )
+
 // Также следим за изменением корзины
 watch(
   () => store.cart.items.length,
   () => {
     if (detailData.value) {
-      currentQuantity.value = getProductQuantity(detailData.value)
+      currentQuantity.value = store.getProductQuantity(detailData.value)
     }
   }
 )
 
 // При клике на “➕” рядом с детальным товаром:
 function onIncrease(item) {
-  increaseQuantity(item)
+  store.increaseQuantity(item)
 }
 
 // При клике на “➖” рядом с детальным товаром:
 function onDecrease(item) {
-  decreaseQuantity(item)
+  store.decreaseQuantity(item)
 }
 </script>
 

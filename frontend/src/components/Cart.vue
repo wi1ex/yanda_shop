@@ -4,15 +4,15 @@
     <div v-else class="empty-cart">Корзина пуста</div>
 
     <ul v-if="store.cart.items.length" class="cart-list">
-      <li v-for="item in groupedCartItems" :key="item.id" class="cart-item">
+      <li v-for="item in store.groupedCartItems" :key="item.id" class="cart-item">
         <img :src="item.image" alt="" class="cart-item-image" />
         <div class="cart-item-details">
           <p class="cart-item-name">{{ item.name }}</p>
           <p class="cart-item-price">{{ item.totalPrice }}₽</p>
           <div class="cart-item-controls">
-            <button @click="decreaseQuantity(item)">➖</button>
+            <button @click="store.decreaseQuantity(item)">➖</button>
             <span class="item-quantity">{{ item.quantity }}</span>
-            <button @click="increaseQuantity(item)">➕</button>
+            <button @click="store.increaseQuantity(item)">➕</button>
           </div>
         </div>
       </li>
@@ -23,20 +23,15 @@
     </p>
 
     <div v-if="store.cart.items.length" class="cart-buttons">
-      <button class="checkout-button" @click="checkout">Оформить заказ</button>
-      <button class="close-cart" @click="toggleCart">Вернуться к покупкам</button>
+      <button class="checkout-button" @click="store.checkout">Оформить заказ</button>
+      <button class="close-cart" @click="store.toggleCart">Вернуться к покупкам</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import {store,
-        groupedCartItems,
-        increaseQuantity,
-        decreaseQuantity,
-        checkout,
-        toggleCart,
-        } from '@/store.js'
+import { useStore } from '@/store/index.js'
+const store = useStore()
 </script>
 
 <style scoped lang="scss">

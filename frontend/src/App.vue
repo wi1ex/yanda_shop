@@ -15,12 +15,14 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import { store } from '@/store.js'
+import { useStore } from '@/store/index.js'
 import Header from '@/components/Header.vue'
 import Catalog from '@/components/Catalog.vue'
 import Cart from '@/components/Cart.vue'
 import Footer from '@/components/Footer.vue'
 import ProductDetail from '@/components/ProductDetail.vue'
+
+const store = useStore()
 
 // Telegram + сохранение пользователя
 onMounted(() => {
