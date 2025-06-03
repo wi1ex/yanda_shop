@@ -1,40 +1,23 @@
+from extensions import redis_client, minio_client, BUCKET
 from flask import Blueprint, jsonify, request
 from models import Shoe, Clothing, Accessory, db
-from sqlalchemy.exc import SQLAlchemyError
-from minio import Minio
 from minio.error import S3Error
 from datetime import datetime
 import zipfile
 import io
 import logging
-import redis
 import json
 import csv
 import os
 
+
 logger = logging.getLogger(__name__)
 api = Blueprint("api", __name__)
-
-# Инициализация Redis-клиента
-redis_client = redis.Redis(host=os.getenv('REDIS_HOST'),
-                           port=int(os.getenv('REDIS_PORT')),
-                           password=os.getenv('REDIS_PASSWORD'),
-                           decode_responses=True)
-
-# создаём MinIO-клиент
-minio_client = Minio(os.getenv("MINIO_HOST"),
-                     access_key=os.getenv("MINIO_ROOT_USER"),
-                     secret_key=os.getenv("MINIO_ROOT_PASSWORD"),
-                     secure=False)
-BUCKET = os.getenv('MINIO_BUCKET')
-# создаём бакет, если нет
-if not minio_client.bucket_exists(BUCKET):
-    minio_client.make_bucket(BUCKET)
 
 
 def model_by_category(cat: str):
     return {"shoes": Shoe, "clothing": Clothing, "accessories": Accessory,
-            "обувь": Shoe, "одежда": Clothing, "аксессуары": Accessory}.get(cat)
+            "обувь": Shoe, "одежда": Clothing, "аксессуары": Accessory}.get(cat.lower())
 
 
 @api.route("/api/")
@@ -44,19 +27,16 @@ def home():
 
 @api.route("/api/save_user", methods=["POST"])
 def save_user():
-    data = request.get_json(force=True, silent=True)  # ожидаем поля id, first_name, last_name, username
+    data = request.get_json(force=True, silent=True)
     if not data or 'id' not in data:
         return jsonify({"error": "missing user id"}), 400
 
     timestamp = int(datetime.utcnow().timestamp())
-    # Составляем запись без db_id
-    visitor_record = json.dumps({
-        "user_id":    data['id'],
-        "first_name": data.get('first_name'),
-        "last_name":  data.get('last_name'),
-        "username":   data.get('username'),
-        "visit_time": timestamp
-    })
+    visitor_record = json.dumps({"user_id":    data['id'],
+                                 "first_name": data.get('first_name'),
+                                 "last_name":  data.get('last_name'),
+                                 "username":   data.get('username'),
+                                 "visit_time": timestamp})
 
     # Добавляем в сортированное множество
     redis_client.zadd("recent_visitors", {visitor_record: timestamp})
@@ -126,15 +106,7 @@ def get_product():
 
     # Вытаскиваем число картинок из count_images (если у вас в модели есть это поле)
     count = getattr(obj, "count_images", 0) or 0
-
-    # Собираем массив всех URL-ов: "<BACKEND_URL>/images/<sku>-1.webp", "<sku>-2.webp" и т.д.
-    images = []
-    base_url = os.getenv("BACKEND_URL")
-    for i in range(1, count + 1):
-        # предполагаем, что в MinIO картинки всегда лежат как <sku>-<номер>.webp
-        images.append(f"{base_url}/images/{obj.sku}-{i}.webp")
-
-    # Если изображений нет, images останется пустым
+    images = [f"{os.getenv('BACKEND_URL')}/images/{obj.sku}-{i}.webp" for i in range(1, count + 1)]
     data["images"] = images
 
     # Добавим поле `image` = первая картинка (или None, если их нет)
@@ -166,6 +138,7 @@ def import_products():
     added, updated = 0, 0
     skus = [row["sku"] for row in reader]
     existing_objs = {obj.sku: obj for obj in Model.query.filter(Model.sku.in_(skus)).all()}
+
     try:
         for row in reader:
             sku = row["sku"]
@@ -190,9 +163,9 @@ def import_products():
                             val = None
                     setattr(obj, key, val)
         db.session.commit()
-    except SQLAlchemyError as e:
-        db.session.rollback()
+    except Exception as e:
         logger.error(f"Import error: {e}")
+        db.session.rollback()
         return jsonify({"error": "db error"}), 500
 
     return jsonify({"status": "ok", "added": added, "updated": updated}), 201
