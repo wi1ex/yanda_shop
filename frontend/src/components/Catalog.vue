@@ -3,7 +3,7 @@
     <!-- Верхнее меню с категориями -->
     <div class="sticky-nav">
       <div class="categories">
-        <button v-for="cat in store.categoryList" :key="cat" :class="{ active: cat === store.selectedCategory }" @click="changeCategory(cat)">
+        <button v-for="cat in store.categoryList" :key="cat" :class="{ active: cat === store.selectedCategory }" @click="store.changeCategory(cat)">
           {{ cat }}
         </button>
       </div>
@@ -42,26 +42,30 @@
       </select>
 
       <!-- Кнопка сброса фильтров -->
-      <button @click="clearFilters" class="clear-filters-button">Сбросить фильтры</button>
+      <button @click="store.clearFilters" class="clear-filters-button">
+        Сбросить фильтры
+      </button>
     </div>
 
     <!-- Сетка товаров -->
     <div class="products-grid">
-      <div v-for="product in filteredProducts" :key="product.sku" class="product-card" @click="selectProduct(product)">
-        <img :src="product.image" alt="product" class="product-image"/>
+      <div v-for="product in store.filteredProducts" :key="product.sku" class="product-card" @click="store.selectProduct(product)">
+        <img :src="product.image" alt="product" class="product-image" />
         <div class="product-info">
           <p class="product-price">{{ product.price }} ₽</p>
           <p class="product-name">{{ product.name }}</p>
-          <p class="product-color" v-if="product.color">Цвет: {{ product.color }}</p>
+          <p v-if="product.color" class="product-color">Цвет: {{ product.color }}</p>
         </div>
 
-        <div v-if="getProductQuantity(product) > 0" class="cart-item-controls">
-          <button @click.stop="decreaseQuantity(product)">➖</button>
-          <span class="item-quantity">{{ getProductQuantity(product) }}</span>
-          <button @click.stop="increaseQuantity(product)">➕</button>
+        <div v-if="store.getProductQuantity(product) > 0" class="cart-item-controls">
+          <button @click.stop="store.decreaseQuantity(product)">➖</button>
+          <span class="item-quantity">{{ store.getProductQuantity(product) }}</span>
+          <button @click.stop="store.increaseQuantity(product)">➕</button>
         </div>
 
-        <button v-else class="buy-button" @click.stop="addToCart(product)">Купить</button>
+        <button v-else class="buy-button" @click.stop="store.addToCart(product)">
+          Купить
+        </button>
       </div>
     </div>
   </div>
@@ -69,52 +73,37 @@
 
 <script setup>
 import { onMounted, watch, computed } from 'vue'
-import {
-  store,
-  filteredProducts,
-  changeCategory,
-  addToCart,
-  getProductQuantity,
-  increaseQuantity,
-  decreaseQuantity,
-  fetchProducts,
-  selectProduct,
-  clearFilters,
-} from '@/store.js'
+import { useStore } from '@/store/index.js'
+
+const store = useStore()
 
 // При монтировании — первый запрос к API (загрузка товаров выбранной категории)
-onMounted(fetchProducts)
+onMounted(store.fetchProducts)
 
 // При изменении выбранной категории — загрузка «сырых» данных (без фильтров/сортировки)
 watch(
   () => store.selectedCategory,
   () => {
-    fetchProducts()
+    store.fetchProducts()
   }
 )
 
 // Вычисляемое свойство для объединённого селекта
 const sortOption = computed({
   get() {
-    // Объединяем текущие значения sortBy и sortOrder в одну строку
     return `${store.sortBy}_${store.sortOrder}`
   },
   set(value) {
-    // value будет что-то вроде "price_asc" или "date_desc"
     const [by, order] = value.split('_')
-    store.sortBy = by       // либо 'date', либо 'price'
-    store.sortOrder = order // либо 'asc', либо 'desc'
-    // Возникает реактивная перестройка filteredProducts автоматически
-  }
+    store.sortBy = by
+    store.sortOrder = order
+  },
 })
 
 // Список всех цветов, которые есть у товаров в текущей категории
 const distinctColors = computed(() => {
-  const byCategory = store.products.filter(
-    p => p.category === store.selectedCategory
-  )
-  // Собираем уникальные цвета
-  const set = new Set(byCategory.map(p => p.color).filter(c => c))
+  const byCategory = store.products.filter((p) => p.category === store.selectedCategory)
+  const set = new Set(byCategory.map((p) => p.color).filter((c) => c))
   return Array.from(set)
 })
 </script>
