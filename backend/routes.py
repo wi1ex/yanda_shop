@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from models import Shoe, Clothing, Accessory, db
+from sqlalchemy.exc import SQLAlchemyError
 from minio import Minio
 from minio.error import S3Error
 from datetime import datetime
@@ -32,7 +33,8 @@ if not minio_client.bucket_exists(BUCKET):
 
 
 def model_by_category(cat: str):
-    return {"shoes": Shoe, "clothing": Clothing, "accessories": Accessory}.get(cat)
+    return {"shoes": Shoe, "clothing": Clothing, "accessories": Accessory,
+            "обувь": Shoe, "одежда": Clothing, "аксессуары": Accessory}.get(cat)
 
 
 @api.route("/api/")
@@ -42,7 +44,9 @@ def home():
 
 @api.route("/api/save_user", methods=["POST"])
 def save_user():
-    data = request.json  # ожидаем поля id, first_name, last_name, username
+    data = request.get_json(force=True, silent=True)  # ожидаем поля id, first_name, last_name, username
+    if not data or 'id' not in data:
+        return jsonify({"error": "missing user id"}), 400
 
     timestamp = int(datetime.utcnow().timestamp())
     # Составляем запись без db_id
@@ -68,9 +72,11 @@ def save_user():
 def list_products():
     # Параметр ?category=Обувь|Одежда|Аксессуары
     cat = request.args.get("category", "").lower()
-    Model = {"обувь": Shoe, "одежда": Clothing, "аксессуары": Accessory}.get(cat)
+
+    # Определяем модель по category
+    Model = model_by_category(cat)
     if not Model:
-        return jsonify([])
+        return jsonify({"error": "unknown category"}), 400
 
     # Возвращаем все товары выбранной категории
     items = Model.query.all()
@@ -100,7 +106,7 @@ def get_product():
         return jsonify({"error": "category and sku required"}), 400
 
     # Определяем модель по category
-    Model = {"обувь": Shoe, "одежда": Clothing, "аксессуары": Accessory}.get(cat)
+    Model = model_by_category(cat)
     if not Model:
         return jsonify({"error": "unknown category"}), 400
 
@@ -157,19 +163,38 @@ def import_products():
         return jsonify({"error": "unknown category"}), 400
 
     reader = csv.DictReader(io.StringIO(f.stream.read().decode("utf-8")))
-    added = updated = 0
-    for row in reader:
-        obj = Model.query.filter_by(sku=row["sku"]).first()
-        if obj is None:
-            obj = Model(sku=row["sku"])
-            db.session.add(obj)
-            added += 1
-        else:
-            updated += 1
-        for key, val in row.items():
-            if hasattr(obj, key) and key != "sku":
-                setattr(obj, key, val or None)
-    db.session.commit()
+    added, updated = 0, 0
+    skus = [row["sku"] for row in reader]
+    existing_objs = {obj.sku: obj for obj in Model.query.filter(Model.sku.in_(skus)).all()}
+    try:
+        for row in reader:
+            sku = row["sku"]
+            obj = existing_objs.get(sku)
+            if not obj:
+                obj = Model(sku=sku)
+                db.session.add(obj)
+                added += 1
+            else:
+                updated += 1
+            for key, val in row.items():
+                if hasattr(obj, key) and key != "sku":
+                    if key in ["price", "count_in_stock", "count_images"]:
+                        try:
+                            val = int(val)
+                        except ValueError:
+                            val = 0
+                    elif key in ["size_label", "depth_mm", "width_mm", "height_mm"]:
+                        try:
+                            val = float(val)
+                        except ValueError:
+                            val = None
+                    setattr(obj, key, val)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        logger.error(f"Import error: {e}")
+        return jsonify({"error": "db error"}), 500
+
     return jsonify({"status": "ok", "added": added, "updated": updated}), 201
 
 

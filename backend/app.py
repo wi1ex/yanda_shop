@@ -8,16 +8,19 @@ import logging
 import sys
 
 app = Flask(__name__)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = (f"postgresql://{os.getenv('DB_USER')}:"
                                          f"{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:"
                                          f"{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
+
 migrate = Migrate(app, db)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+CORS(app, resources={r"/api/*": {"origins": "https://shop.yanda.twc1.net"}})
+
 register_routes(app)
 
-# Настройка логирования
 logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 

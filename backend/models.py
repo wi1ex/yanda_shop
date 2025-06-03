@@ -30,6 +30,7 @@ class Shoe(db.Model):
     count_in_stock = db.Column(db.Integer, default=0)
     count_images   = db.Column(db.Integer, default=10)
     created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at     = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Clothing(db.Model):
     __tablename__  = "clothing"
@@ -52,6 +53,7 @@ class Clothing(db.Model):
     count_in_stock = db.Column(db.Integer, default=0)
     count_images   = db.Column(db.Integer, default=10)
     created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at     = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Accessory(db.Model):
     __tablename__  = "accessories"
@@ -74,3 +76,4 @@ class Accessory(db.Model):
     count_in_stock = db.Column(db.Integer, default=0)
     count_images   = db.Column(db.Integer, default=10)
     created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at     = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
