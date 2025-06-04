@@ -40,9 +40,9 @@ def save_user():
     date_str = now.strftime("%Y-%m-%d")
     hour_str = now.strftime("%H")
 
-    is_tg = True
     try:
         user_id = int(user_id)
+        is_tg = True
     except ValueError:
         is_tg = False
 
@@ -50,7 +50,7 @@ def save_user():
         try:
             tg_user = Users.query.get(user_id)
             if not tg_user:
-                tg_user = Users(id=user_id,
+                tg_user = Users(user_id=user_id,
                                 first_name=first_name,
                                 last_name=last_name,
                                 username=username)
