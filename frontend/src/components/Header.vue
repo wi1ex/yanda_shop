@@ -4,8 +4,7 @@
     <div class="user-info">
       <img :src="store.user.photo_url || img_bot" alt="avatar" class="avatar" />
       <span class="username">
-        {{ store.user.first_name }}
-        <span class="status">@{{ store.user.username }}</span>
+        {{ store.user.id }}
       </span>
     </div>
     <button class="cart-button" @click="store.toggleCart">
@@ -49,13 +48,6 @@ const store = useStore()
 .username {
   font-size: 16px;
   font-weight: bold;
-}
-.status {
-  font-size: 12px;
-  color: #00ff88;
-  background: rgba(0, 255, 136, 0.2);
-  padding: 2px 6px;
-  border-radius: 6px;
 }
 .cart-button {
   background: #007bff;
