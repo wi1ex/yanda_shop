@@ -1,12 +1,12 @@
 from extensions import redis_client, minio_client, BUCKET
 from flask import Blueprint, jsonify, request
-from models import Shoe, Clothing, Accessory, db
+from models import Shoe, Clothing, Accessory, Users, db
 from minio.error import S3Error
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import zipfile
 import io
 import logging
-import json
 import csv
 import os
 
@@ -31,21 +31,91 @@ def save_user():
     if not data or 'id' not in data:
         return jsonify({"error": "missing user id"}), 400
 
-    timestamp = int(datetime.utcnow().timestamp())
-    visitor_record = json.dumps({"user_id":    data['id'],
-                                 "first_name": data.get('first_name'),
-                                 "last_name":  data.get('last_name'),
-                                 "username":   data.get('username'),
-                                 "visit_time": timestamp})
+    user_id = str(data['id'])
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
+    username = data.get('username')
 
-    # Добавляем в сортированное множество
-    redis_client.zadd("recent_visitors", {visitor_record: timestamp})
+    now = datetime.now(ZoneInfo("Europe/Moscow"))
+    date_str = now.strftime("%Y-%m-%d")
+    hour_str = now.strftime("%H")
 
-    # Очищаем старые записи (старше 24 ч)
-    cutoff = timestamp - 24*3600
-    redis_client.zremrangebyscore("recent_visitors", 0, cutoff)
+    is_tg = True
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        is_tg = False
 
-    return jsonify({"status": "ok"}), 201
+    if is_tg:
+        try:
+            tg_user = Users.query.get(user_id)
+            if not tg_user:
+                tg_user = Users(id=user_id,
+                                first_name=first_name,
+                                last_name=last_name,
+                                username=username)
+                db.session.add(tg_user)
+            else:
+                # Обновляем имя/фамилию/юзернейм, если поменялись
+                tg_user.first_name = first_name
+                tg_user.last_name = last_name
+                tg_user.username = username
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Postgres save error: {e}")
+
+    try:
+        total_key = f"visits:{date_str}:{hour_str}:total"
+        unique_key = f"visits:{date_str}:{hour_str}:unique"
+
+        redis_client.incr(total_key)
+        redis_client.sadd(unique_key, user_id)
+
+        year = 60 * 60 * 24 * 365
+        redis_client.expire(total_key, year)
+        redis_client.expire(unique_key, year)
+
+        return jsonify({"status": "ok"}), 201
+
+    except Exception as e:
+        logger.error(f"Redis error in save_user: {e}")
+        return jsonify({"error": "internal redis error"}), 500
+
+
+@api.route("/api/visits")
+def get_daily_visits():
+    """
+    Параметр запроса: ?date=2025-01-01 (формат YYYY-MM-DD). Если date не указан, можно вернуть за «сегодня» (UTC-дата).
+    Возвращает JSON вида:
+    {"date": "2025-01-01", "hours": [{"hour": "00", "unique": 12, "total": 34},
+                                      {"hour": "01", "unique": 23, "total": 45},
+                                      ...
+                                      {"hour": "23", "unique": 56, "total": 78}]}
+    """
+    date_str = request.args.get("date")
+    if not date_str:
+        date_str = datetime.now(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d")
+
+    try:
+        hours_data = []
+        for h in range(24):
+            hour_str = f"{h:02d}"
+            total_key = f"visits:{date_str}:{hour_str}:total"
+            unique_key = f"visits:{date_str}:{hour_str}:unique"
+
+            total = redis_client.get(total_key)
+            unique = redis_client.scard(unique_key)
+
+            hours_data.append({"hour": hour_str,
+                               "unique": int(unique),
+                               "total": int(total) if total is not None else 0})
+
+        return jsonify({"date": date_str, "hours": hours_data}), 200
+
+    except Exception as e:
+        logger.error(f"Error getting daily visits for {date_str}: {e}")
+        return jsonify({"error": "cannot fetch data"}), 500
 
 
 @api.route("/api/products")
