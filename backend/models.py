@@ -1,19 +1,20 @@
-from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 db = SQLAlchemy()
 
-class Visitor(db.Model):
-    __tablename__  = 'visitors'
-    id             = db.Column(db.Integer, primary_key=True)
-    user_id        = db.Column(db.BigInteger, nullable=False)
+class Users(db.Model):
+    __tablename__  = 'users'
+    user_id        = db.Column(db.BigInteger, primary_key=True)
+    first_name     = db.Column(db.String(100))
+    last_name      = db.Column(db.String(100))
     username       = db.Column(db.String(100))
-    visit_time     = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Shoe(db.Model):
     __tablename__  = "shoes"
     id             = db.Column(db.Integer, primary_key=True)
-    sku            = db.Column(db.String(100), unique=True, nullable=False)
+    sku            = db.Column(db.String(100), unique=True, nullable=False, index=True)
     name           = db.Column(db.String(200), nullable=False)
     gender         = db.Column(db.String(20))
     category       = db.Column(db.String(100))
@@ -29,13 +30,14 @@ class Shoe(db.Model):
     delivery_time  = db.Column(db.String(100))
     count_in_stock = db.Column(db.Integer, default=0)
     count_images   = db.Column(db.Integer, default=10)
-    created_at     = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at     = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at     = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
+    updated_at     = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Europe/Moscow")),
+                               onupdate=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
 
 class Clothing(db.Model):
     __tablename__  = "clothing"
     id             = db.Column(db.Integer, primary_key=True)
-    sku            = db.Column(db.String(100), unique=True, nullable=False)
+    sku            = db.Column(db.String(100), unique=True, nullable=False, index=True)
     name           = db.Column(db.String(200), nullable=False)
     gender         = db.Column(db.String(20))
     category       = db.Column(db.String(100))
@@ -52,13 +54,14 @@ class Clothing(db.Model):
     delivery_time  = db.Column(db.String(100))
     count_in_stock = db.Column(db.Integer, default=0)
     count_images   = db.Column(db.Integer, default=10)
-    created_at     = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at     = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at     = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
+    updated_at     = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Europe/Moscow")),
+                               onupdate=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
 
 class Accessory(db.Model):
     __tablename__  = "accessories"
     id             = db.Column(db.Integer, primary_key=True)
-    sku            = db.Column(db.String(100), unique=True, nullable=False)
+    sku            = db.Column(db.String(100), unique=True, nullable=False, index=True)
     name           = db.Column(db.String(200), nullable=False)
     gender         = db.Column(db.String(20))
     category       = db.Column(db.String(100))
@@ -75,5 +78,6 @@ class Accessory(db.Model):
     delivery_time  = db.Column(db.String(100))
     count_in_stock = db.Column(db.Integer, default=0)
     count_images   = db.Column(db.Integer, default=10)
-    created_at     = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at     = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at     = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
+    updated_at     = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Europe/Moscow")),
+                               onupdate=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
