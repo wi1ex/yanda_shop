@@ -57,9 +57,12 @@ def save_user():
                 db.session.add(tg_user)
             else:
                 # Обновляем имя/фамилию/юзернейм, если поменялись
-                tg_user.first_name = first_name
-                tg_user.last_name = last_name
-                tg_user.username = username
+                if tg_user.first_name != first_name:
+                    tg_user.first_name = first_name
+                if tg_user.last_name != last_name:
+                    tg_user.last_name = last_name
+                if tg_user.username != username:
+                    tg_user.username = username
             db.session.commit()
         except Exception as e:
             db.session.rollback()
