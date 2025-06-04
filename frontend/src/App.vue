@@ -36,42 +36,30 @@ function generateVisitorId() {
 onMounted(() => {
   let userId
 
+  const stored = localStorage.getItem('visitorId')
+  if (stored) {
+    userId = stored
+  } else {
+    userId = generateVisitorId()
+    localStorage.setItem('visitorId', userId)
+  }
+  store.user = {
+    id: userId,
+    first_name: null,
+    last_name: null,
+    username: null
+  }
+
   if (window.Telegram?.WebApp) {
     store.tg = window.Telegram.WebApp
     const tgUser = store.tg.initDataUnsafe?.user
     if (tgUser) {
-      // Пользователь из Telegram: используем tgUser.id
-      userId = tgUser.id
       store.user = {
-        id: userId,
+        id: tgUser.id,
         first_name: tgUser.first_name,
         last_name: tgUser.last_name,
         username: tgUser.username
       }
-    } else {
-      // Защитная «заглушка», редко понадобится
-      store.user = {
-        id: 1,
-        first_name: null,
-        last_name: null,
-        username: null
-      }
-    }
-  } else {
-    // Обычный веб-посетитель: смотрим localStorage.visitorId
-    const stored = localStorage.getItem('visitorId')
-    if (stored) {
-      userId = stored
-    } else {
-      userId = generateVisitorId()
-      localStorage.setItem('visitorId', userId)
-    }
-    // Сохраняем в сторе (по желанию, для отладки можно оставить поля пустыми)
-    store.user = {
-      id: userId,
-      first_name: null,
-      last_name: null,
-      username: null
     }
   }
 
