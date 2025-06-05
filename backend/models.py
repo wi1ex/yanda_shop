@@ -1,6 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone
 
 db = SQLAlchemy()
 
@@ -30,9 +29,9 @@ class Shoe(db.Model):
     delivery_time  = db.Column(db.String(100))
     count_in_stock = db.Column(db.Integer, default=0)
     count_images   = db.Column(db.Integer, default=10)
-    created_at     = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
-    updated_at     = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Europe/Moscow")),
-                               onupdate=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
+                               onupdate=lambda: datetime.now(timezone.utc))
 
 class Clothing(db.Model):
     __tablename__  = "clothing"
@@ -54,9 +53,9 @@ class Clothing(db.Model):
     delivery_time  = db.Column(db.String(100))
     count_in_stock = db.Column(db.Integer, default=0)
     count_images   = db.Column(db.Integer, default=10)
-    created_at     = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
-    updated_at     = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Europe/Moscow")),
-                               onupdate=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
+                               onupdate=lambda: datetime.now(timezone.utc))
 
 class Accessory(db.Model):
     __tablename__  = "accessories"
@@ -78,6 +77,6 @@ class Accessory(db.Model):
     delivery_time  = db.Column(db.String(100))
     count_in_stock = db.Column(db.Integer, default=0)
     count_images   = db.Column(db.Integer, default=10)
-    created_at     = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
-    updated_at     = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Europe/Moscow")),
-                               onupdate=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
+                               onupdate=lambda: datetime.now(timezone.utc))
