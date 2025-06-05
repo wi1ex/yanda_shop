@@ -1,25 +1,33 @@
 <template>
   <header class="header">
-    <h1>YANDA SHOP</h1>
+    <h1 class="logo" @click="goHome">YANDA SHOP</h1>
+
+    <nav class="nav-links">
+      <router-link to="/" class="nav-link" exact>Главная</router-link>
+      <router-link to="/catalog" class="nav-link">Каталог</router-link>
+      <router-link to="/cart" class="nav-link">Корзина ({{ store.cart.count }})</router-link>
+      <router-link to="/admin" class="nav-link">Админ-панель</router-link>
+    </nav>
+
     <div class="user-info">
       <img :src="store.user.photo_url || img_bot" alt="avatar" class="avatar" />
-      <span class="username">
-        {{ store.user.id }}
-      </span>
+      <span class="username">{{ store.user.id }}</span>
     </div>
-    <button class="cart-button" @click="store.toggleCart">
-      🛒 {{ store.cart.count }} <span class="cart-total-price">({{ store.cart.total }}₽)</span>
-    </button>
   </header>
 </template>
 
 <script setup>
 import { useStore } from '@/store/index.js'
+import { useRouter } from 'vue-router'
 import img_bot from '@/assets/images/bot.png'
 
 const store = useStore()
-</script>
+const router = useRouter()
 
+function goHome() {
+  router.push({ name: 'Home' })
+}
+</script>
 
 <style scoped lang="scss">
 .header {
@@ -32,12 +40,37 @@ const store = useStore()
   max-height: 10vh;
   z-index: 1000;
 }
+
+.logo {
+  cursor: pointer;
+  font-size: 24px;
+  color: #fff;
+}
+
+.nav-links {
+  display: flex;
+  gap: 16px;
+}
+
+.nav-link {
+  color: #fff;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background 0.3s;
+}
+.nav-link.router-link-active {
+  background: #007bff;
+}
+.nav-link:hover {
+  background: #0056b3;
+}
+
 .user-info {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1vh;
-  background: $background-color;
 }
 .avatar {
   width: 4vh;
@@ -48,19 +81,5 @@ const store = useStore()
 .username {
   font-size: 16px;
   font-weight: bold;
-}
-.cart-button {
-  background: #007bff;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  border: none;
-  transition: 0.3s ease;
-}
-.cart-total-price {
-  font-size: 14px;
-  font-weight: bold;
-  margin-left: 6px;
 }
 </style>

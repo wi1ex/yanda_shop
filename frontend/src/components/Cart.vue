@@ -23,8 +23,12 @@
     </p>
 
     <div v-if="store.cart.items.length" class="cart-buttons">
-      <button class="checkout-button" @click="store.checkout">Оформить заказ</button>
-      <button class="close-cart" @click="store.toggleCart">Вернуться к покупкам</button>
+      <button class="checkout-button" @click="store.checkout">
+        Оформить заказ
+      </button>
+      <router-link to="/catalog" class="close-cart">
+        Вернуться к покупкам
+      </router-link>
     </div>
   </div>
 </template>
@@ -121,5 +125,9 @@ const store = useStore()
   cursor: pointer;
   border: none;
   transition: 0.3s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

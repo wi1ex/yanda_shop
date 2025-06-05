@@ -1,14 +1,7 @@
 <template>
   <div class="app-container" v-if="store.user">
     <Header />
-
-    <!-- Если корзина открыта — показываем Cart -->
-    <Cart v-if="store.cartOpen" />
-    <!-- Если карточка товара выбрана (и корзина не открыта) — показываем ProductDetail -->
-    <ProductDetail v-else-if="store.selectedProduct" />
-    <!-- В остальных случаях — показываем каталог -->
-    <Catalog v-else />
-
+    <router-view />
     <Footer />
   </div>
 </template>
@@ -17,19 +10,15 @@
 import { onMounted } from 'vue'
 import { useStore } from '@/store/index.js'
 import Header from '@/components/Header.vue'
-import Catalog from '@/components/Catalog.vue'
-import Cart from '@/components/Cart.vue'
 import Footer from '@/components/Footer.vue'
-import ProductDetail from '@/components/ProductDetail.vue'
 
 const store = useStore()
 
-// Функция для генерации простого случайного ID
+// Генерация случайного ID для веб-посетителя, если нет Telegram WebApp
 function generateVisitorId() {
   if (window.crypto && crypto.randomUUID) {
-    return crypto.randomUUID()  // современный способ, если поддерживается
+    return crypto.randomUUID()
   }
-  // fallback: короткая строка
   return Math.random().toString(36).substring(2, 11)
 }
 
