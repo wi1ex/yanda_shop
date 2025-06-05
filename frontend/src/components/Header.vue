@@ -35,7 +35,7 @@ const router = useRouter()
 
 // Комьютед: true, если текущий user.id равен ADMIN_ID
 const isAdmin = computed(() => {
-  return store.user && String(store.user.id) === String(store.admin_id.value)
+  return store.user && String(store.user.id) === String(store.admin_id)
 })
 
 function goHome() {
