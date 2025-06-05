@@ -131,19 +131,24 @@ def list_products():
     # Возвращаем все товары выбранной категории
     items = Model.query.all()
     result = []
+    ms_tz = ZoneInfo("Europe/Moscow")
+
     for i in items:
         image_url = f'{os.getenv("BACKEND_URL")}/images/{i.sku}-1.webp'
-        ms_tz = ZoneInfo("Europe/Moscow")
+
+        # Конвертируем UTC-время в московское
         created_ms = i.created_at.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S")
-        result.append({
-            "sku": i.sku,
-            "name": i.name,
-            "price": i.price,
-            "category": i.category,
-            "image": image_url,
-            "color": i.color,
-            "created_at": created_ms
-        })
+        # Если updated_at не None, конвертируем аналогично
+        updated_ms = (i.updated_at.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S") if i.updated_at else None)
+
+        result.append({"sku":        i.sku,
+                       "name":       i.name,
+                       "price":      i.price,
+                       "category":   i.category,
+                       "image":      image_url,
+                       "color":      i.color,
+                       "created_at": created_ms,
+                       "updated_at": updated_ms})
 
     return jsonify(result)
 
@@ -351,12 +356,17 @@ def get_user_profile():
         u = Users.query.get(uid)
         if not u:
             return jsonify({"error": "not found"}), 404
-        return jsonify({
-            "user_id": u.user_id,
-            "first_name": u.first_name,
-            "last_name": u.last_name,
-            "username": u.username
-        }), 200
+
+        # Конвертируем created_at из UTC в московское
+        ms_tz = ZoneInfo("Europe/Moscow")
+        created_ms = u.created_at.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S") if u.created_at else None
+
+        return jsonify({"user_id":    u.user_id,
+                        "first_name": u.first_name,
+                        "last_name":  u.last_name,
+                        "username":   u.username,
+                        "created_at": created_ms}), 200
+
     except Exception as e:
         logger.error(f"Error fetching user {uid}: {e}")
         return jsonify({"error": "internal error"}), 500
