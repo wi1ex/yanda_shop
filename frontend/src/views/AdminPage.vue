@@ -45,7 +45,7 @@
       </div>
 
       <div v-else class="chart-container">
-        <!-- BarChart рендерим только после проверки, что visitsData.hours – массив -->
+        <!-- Здесь: BarChart рендерим ТОЛЬКО когда visitsData.hours — массив -->
         <BarChart v-if="Array.isArray(visitsData.hours)" :chartLabels="labelsForChart" :chartData="visitsData.hours"/>
       </div>
     </section>
@@ -57,7 +57,7 @@
 import { ref, onMounted, computed, h } from 'vue'
 import { useStore } from '@/store/index.js'
 
-// --- Импортируем Chart.js и его компоненты для BarChart ---
+// Импортируем Chart.js 4 и vue-chartjs 5
 import {
   Chart as ChartJS,
   Title,
@@ -69,14 +69,12 @@ import {
 } from 'chart.js'
 import { Bar } from 'vue-chartjs'
 
-// Регистрируем необходимые элементы Chart.js
+// Регистрируем нужные «плагины» Chart.js 4
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const store = useStore()
 
-// --------------- ДАННЫЕ И ЛОГИКА ДЛЯ ГРАФИКА ---------------
-
-// Дата, выбранная в input[type="date"]
+// --- ДАННЫЕ И ЛОГИКА ДЛЯ ГРАФИКА ---
 const selectedDate = ref('')
 
 // По умолчанию visitsData.hours = [] – чтобы никогда не было undefined
@@ -85,7 +83,7 @@ const visitsData = ref({ date: '', hours: [] })
 // Флаг, что идёт загрузка
 const visitsLoading = ref(false)
 
-// Вычисляемые метки оси X: ["00:00", "01:00", …]
+// Массив меток «00:00», «01:00» … «23:00»
 const labelsForChart = computed(() =>
   visitsData.value.hours.map((h) => h.hour + ':00')
 )
@@ -100,13 +98,11 @@ async function fetchVisits() {
     // Если дата не выбрана, по умолчанию используем «сегодня»
     const dateToFetch = selectedDate.value || new Date().toISOString().slice(0, 10)
     const resp = await fetch(`${store.url}/api/visits?date=${dateToFetch}`)
-
     if (!resp.ok) {
       console.error('Ошибка при получении статистики:', resp.statusText)
       visitsLoading.value = false
       return
     }
-
     const data = await resp.json()
 
     // Нормализуем: гарантируем, что hours – массив
@@ -130,14 +126,7 @@ onMounted(() => {
   fetchVisits()
 })
 
-// --------------- КОМПОНЕНТ-ОБЁРТКА ДЛЯ BAR CHART ---------------
-
-/**
- * BarChart — локальный компонент, принимающий:
- *   props.chartLabels: Array<String> — метки (часы) для оси X
- *   props.chartData:   Array<{hour, unique, total}>
- * Рисует столбчатый график total по часам.
- */
+// --- КОМПОНЕНТ-ОБЁРТКА ДЛЯ BAR CHART (vue-chartjs 5) ---
 const BarChart = {
   name: 'BarChart',
   props: {
@@ -151,19 +140,21 @@ const BarChart = {
     }
   },
   setup(props) {
-    // Формируем данные для Chart.js
-    const chartData = {
+    // Собираем объект chart-data (Chart.js 4) из props.chartLabels и props.chartData
+    const computedData = computed(() => ({
       labels: props.chartLabels,
       datasets: [
         {
           label: 'Всего визитов',
+          // каждое `item` = { hour: '00', unique: N, total: M }
           data: props.chartData.map((item) => item.total),
           backgroundColor: '#2196F3'
         }
       ]
-    }
+    }))
 
-    const chartOptions = {
+    // Опции для графика
+    const computedOptions = {
       responsive: true,
       plugins: {
         legend: {
@@ -191,8 +182,13 @@ const BarChart = {
       }
     }
 
-    // Возвращаем рендер-функцию (h(Bar, { … }))
-    return () => h(Bar, { chartData, chartOptions, style: { height: '100%' } })
+    // Теперь возвращаем render-функцию, где KEbab-case для пропсов:
+    return () =>
+      h(Bar, {
+        'chart-data': computedData.value,
+        'chart-options': computedOptions,
+        style: { height: '100%' }
+      })
   }
 }
 // --------------------------------------------------------------
