@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 export const useStore = defineStore('main', () => {
   const url = ref('https://shop.yanda.twc1.net')
@@ -22,16 +22,79 @@ export const useStore = defineStore('main', () => {
   // Список загруженных товаров (для выбранной категории)
   const products = ref([])
 
-  // Корзина (список всех item-ов, а также общий счетчик и сумма)
+  // Корзина
   const cartOrder = ref([])
   const cart = ref({ count: 0, total: 0, items: [] })
 
-  // Применяем фильтры и сортировку к списку продуктов
-  const filteredProducts = computed(() => {
-    let list = products.value.filter(
-      (p) => p.category === selectedCategory.value
-    )
+  // Флаг, который указывает, что корзина загружена из backend
+  const cartLoaded = ref(false)
 
+  // Загрузка корзины из backend (GET /api/cart?user_id=…)
+  async function loadCartFromServer() {
+    if (!user.value || !user.value.id) {
+      return
+    }
+    try {
+      const resp = await fetch(`${url.value}/api/cart?user_id=${user.value.id}`)
+      if (!resp.ok) {
+        console.error('Cannot load cart:', resp.statusText)
+        return
+      }
+      const data = await resp.json()
+      // Ожидаем: data = { items: [...], count: <int>, total: <int> }
+      if (data && Array.isArray(data.items)) {
+        cart.value.items = data.items
+        cart.value.count = data.count
+        cart.value.total = data.total
+        // А также восстанавливаем cartOrder – порядок по name:
+        cartOrder.value = data.items.map(i => i.name) // упрощённо
+      }
+      cartLoaded.value = true
+    } catch (e) {
+      console.error('Error loading cart from server:', e)
+    }
+  }
+
+  // Сохранение корзины в backend (POST /api/cart)
+  async function saveCartToServer() {
+    if (!user.value || !user.value.id) {
+      return
+    }
+    const payload = {
+      user_id: user.value.id,
+      items: cart.value.items,
+      count: cart.value.count,
+      total: cart.value.total
+    }
+    try {
+      const resp = await fetch(`${url.value}/api/cart`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      if (!resp.ok) {
+        console.error('Cannot save cart:', resp.statusText)
+      }
+    } catch (e) {
+      console.error('Error saving cart to server:', e)
+    }
+  }
+
+  // Будем следить за тем, когда пользователь определится (инициализируется)
+  watch(
+    () => user.value && user.value.id,
+    (newId) => {
+      if (newId) {
+        // Как только user.id стал доступен (Telegram/visitor), тащим корзину
+        loadCartFromServer()
+      }
+    }
+  )
+
+  // -------------------------------------------------
+
+  const filteredProducts = computed(() => {
+    let list = products.value.filter((p) => p.category === selectedCategory.value)
     if (filterPriceMin.value !== null) {
       list = list.filter((p) => p.price >= filterPriceMin.value)
     }
@@ -41,7 +104,6 @@ export const useStore = defineStore('main', () => {
     if (filterColor.value && filterColor.value !== '') {
       list = list.filter((p) => p.color === filterColor.value)
     }
-
     const modifier = sortOrder.value === 'asc' ? 1 : -1
     return list
       .slice()
@@ -75,8 +137,6 @@ export const useStore = defineStore('main', () => {
     return grouped
   })
 
-  // === Actions ===
-
   // Меняем категорию (сбрасываем фильтры, сортировку)
   function changeCategory(cat) {
     selectedCategory.value = cat
@@ -99,6 +159,8 @@ export const useStore = defineStore('main', () => {
       cart.value.items.push({ ...product, id })
       cartOrder.value.push(product.name)
     }
+    // Сохраняем сразу после операции
+    saveCartToServer()
   }
 
   // Увеличить количество выбранного товара в корзине
@@ -106,6 +168,7 @@ export const useStore = defineStore('main', () => {
     cart.value.count++
     cart.value.total += item.price
     cart.value.items.push(item)
+    saveCartToServer()
   }
 
   // Уменьшить количество
@@ -121,6 +184,7 @@ export const useStore = defineStore('main', () => {
       cart.value.items = cart.value.items.filter((i) => i.name !== product.name)
       cartOrder.value = cartOrder.value.filter((n) => n !== product.name)
     }
+    saveCartToServer()
   }
 
   // Получить текущее количество единиц товара в корзине
@@ -133,6 +197,7 @@ export const useStore = defineStore('main', () => {
     alert('Заказ оформлен!')
     cart.value = { count: 0, total: 0, items: [] }
     cartOrder.value = []
+    saveCartToServer()
   }
 
   // Очистить фильтры
@@ -183,6 +248,10 @@ export const useStore = defineStore('main', () => {
     getProductQuantity,
     checkout,
     clearFilters,
-    fetchProducts
+    fetchProducts,
+
+    // Дополнительные методы для корзины
+    loadCartFromServer,
+    saveCartToServer
   }
 })

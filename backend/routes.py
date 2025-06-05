@@ -228,6 +228,8 @@ def import_products():
                         except ValueError:
                             val = None
                     setattr(obj, key, val)
+            # Явно обновляем колонку updated_at (чтобы сработал timestamp onupdate)
+            obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
         db.session.commit()
     except Exception as e:
         logger.error(f"Import error: {e}")
@@ -283,6 +285,99 @@ def upload_images():
             deleted += 1
 
     return jsonify({"status": "ok", "added": added, "replaced": replaced, "deleted": deleted}), 201
+
+
+@api.route("/api/user")
+def get_user_profile():
+    """
+    GET /api/user?user_id=<id>
+    Возвращает информацию о пользователе из таблицы Users:
+    { user_id, first_name, last_name, username }
+    """
+    user_id = request.args.get("user_id")
+    if not user_id:
+        return jsonify({"error": "user_id required"}), 400
+    try:
+        uid = int(user_id)
+    except ValueError:
+        return jsonify({"error": "invalid user_id"}), 400
+
+    try:
+        u = Users.query.get(uid)
+        if not u:
+            return jsonify({"error": "not found"}), 404
+        return jsonify({
+            "user_id": u.user_id,
+            "first_name": u.first_name,
+            "last_name": u.last_name,
+            "username": u.username
+        }), 200
+    except Exception as e:
+        logger.error(f"Error fetching user {uid}: {e}")
+        return jsonify({"error": "internal error"}), 500
+
+
+@api.route("/api/cart", methods=["GET"])
+def get_cart():
+    """
+    GET /api/cart?user_id=<id>
+    Возвращает JSON: { items: [...], total: <int>, count: <int> }
+    Данные храним/берём из Redis по ключу "cart:{user_id}"
+    """
+    user_id = request.args.get("user_id")
+    if not user_id:
+        return jsonify({"error": "user_id required"}), 400
+    try:
+        uid = int(user_id)
+    except ValueError:
+        return jsonify({"error": "invalid user_id"}), 400
+
+    try:
+        key = f"cart:{uid}"
+        stored = redis_client.get(key)
+        if not stored:
+            # Пустая корзина
+            return jsonify({"items": [], "count": 0, "total": 0}), 200
+
+        # Данные хранятся как JSON-строка: {"items": [...], "count": X, "total": Y}
+        cart_data = json.loads(stored)
+        return jsonify(cart_data), 200
+    except Exception as e:
+        logger.error(f"Redis error in get_cart: {e}")
+        return jsonify({"error": "internal redis error"}), 500
+
+
+@api.route("/api/cart", methods=["POST"])
+def save_cart():
+    """
+    POST /api/cart
+    Принимает JSON: { user_id: <int>, items: [...], count: <int>, total: <int> }
+    Сохраняет в Redis (key="cart:{user_id}", value=JSON).
+    """
+    data = request.get_json(force=True, silent=True)
+    if not data or "user_id" not in data:
+        return jsonify({"error": "user_id required"}), 400
+    try:
+        uid = int(data["user_id"])
+    except ValueError:
+        return jsonify({"error": "invalid user_id"}), 400
+
+    items = data.get("items", [])
+    count = data.get("count", 0)
+    total = data.get("total", 0)
+
+    to_store = {"items": items, "count": count, "total": total}
+    try:
+        key = f"cart:{uid}"
+        # Сохраняем как JSON
+        redis_client.set(key, json.dumps(to_store))
+        # Ставим TTL год (так же, как посещения)
+        year = 60 * 60 * 24 * 365
+        redis_client.expire(key, year)
+        return jsonify({"status": "ok"}), 200
+    except Exception as e:
+        logger.error(f"Redis error in save_cart: {e}")
+        return jsonify({"error": "internal redis error"}), 500
 
 
 def register_routes(app):
