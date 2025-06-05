@@ -1,61 +1,66 @@
 import { defineStore } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 export const useStore = defineStore('main', () => {
-  // state
   const url = ref('https://shop.yanda.twc1.net')
   const tg = ref(null)
   const user = ref(null)
 
+  // Категории
   const categoryList = ref(['Обувь', 'Одежда', 'Аксессуары'])
   const selectedCategory = ref('Обувь')
 
+  // Параметры сортировки
   const sortBy = ref('date')
   const sortOrder = ref('desc')
 
+  // Фильтры (цена, цвет)
   const filterPriceMin = ref(null)
   const filterPriceMax = ref(null)
   const filterColor = ref('')
 
+  // Список загруженных товаров (для выбранной категории)
   const products = ref([])
 
-  const selectedProduct = ref(null)
-
-  const cartOpen = ref(false)
+  // Корзина (список всех item-ов, а также общий счетчик и сумма)
   const cartOrder = ref([])
   const cart = ref({ count: 0, total: 0, items: [] })
 
-  // getters
+  // Применяем фильтры и сортировку к списку продуктов
   const filteredProducts = computed(() => {
-    let list = products.value.filter(p => p.category === selectedCategory.value)
+    let list = products.value.filter(
+      (p) => p.category === selectedCategory.value
+    )
 
     if (filterPriceMin.value !== null) {
-      list = list.filter(p => p.price >= filterPriceMin.value)
+      list = list.filter((p) => p.price >= filterPriceMin.value)
     }
     if (filterPriceMax.value !== null) {
-      list = list.filter(p => p.price <= filterPriceMax.value)
+      list = list.filter((p) => p.price <= filterPriceMax.value)
     }
     if (filterColor.value && filterColor.value !== '') {
-      list = list.filter(p => p.color === filterColor.value)
+      list = list.filter((p) => p.color === filterColor.value)
     }
 
     const modifier = sortOrder.value === 'asc' ? 1 : -1
-
-    return list.slice().sort((a, b) => {
-      if (sortBy.value === 'price') {
-        return modifier * (a.price - b.price)
-      } else {
-        if (a.created_at < b.created_at) return -1 * modifier
-        if (a.created_at > b.created_at) return 1 * modifier
-        return 0
-      }
-    })
+    return list
+      .slice()
+      .sort((a, b) => {
+        if (sortBy.value === 'price') {
+          return modifier * (a.price - b.price)
+        } else {
+          if (a.created_at < b.created_at) return -1 * modifier
+          if (a.created_at > b.created_at) return 1 * modifier
+          return 0
+        }
+      })
   })
 
+  // Группируем товары в корзине по name, считаем количество и суммарную цену
   const groupedCartItems = computed(() => {
     const grouped = []
     for (const item of cart.value.items) {
-      const exist = grouped.find(i => i.name === item.name)
+      const exist = grouped.find((i) => i.name === item.name)
       if (exist) {
         exist.quantity++
         exist.totalPrice += item.price
@@ -63,13 +68,17 @@ export const useStore = defineStore('main', () => {
         grouped.push({ ...item, quantity: 1, totalPrice: item.price })
       }
     }
-    grouped.sort((a, b) => cartOrder.value.indexOf(a.name) - cartOrder.value.indexOf(b.name))
+    grouped.sort(
+      (a, b) =>
+        cartOrder.value.indexOf(a.name) - cartOrder.value.indexOf(b.name)
+    )
     return grouped
   })
 
-  // actions
+  // === Actions ===
+
+  // Меняем категорию (сбрасываем фильтры, сортировку)
   function changeCategory(cat) {
-    selectedProduct.value = null
     selectedCategory.value = cat
     sortBy.value = 'date'
     sortOrder.value = 'desc'
@@ -78,8 +87,9 @@ export const useStore = defineStore('main', () => {
     filterColor.value = ''
   }
 
+  // Добавить товар в корзину
   function addToCart(product) {
-    const exist = cart.value.items.find(i => i.name === product.name)
+    const exist = cart.value.items.find((i) => i.name === product.name)
     if (exist) {
       increaseQuantity(exist)
     } else {
@@ -91,61 +101,51 @@ export const useStore = defineStore('main', () => {
     }
   }
 
-  function toggleCart() {
-    selectedProduct.value = null
-    cartOpen.value = !cartOpen.value
-  }
-
+  // Увеличить количество выбранного товара в корзине
   function increaseQuantity(item) {
     cart.value.count++
     cart.value.total += item.price
     cart.value.items.push(item)
   }
 
+  // Уменьшить количество
   function decreaseQuantity(product) {
-    const idx = cart.value.items.findIndex(i => i.name === product.name)
+    const idx = cart.value.items.findIndex((i) => i.name === product.name)
     if (idx === -1) return
-    const qty = cart.value.items.filter(i => i.name === product.name).length
+    const qty = cart.value.items.filter((i) => i.name === product.name).length
     cart.value.count--
     cart.value.total = Math.max(cart.value.total - product.price, 0)
     if (qty > 1) {
       cart.value.items.splice(idx, 1)
     } else {
-      cart.value.items = cart.value.items.filter(i => i.name !== product.name)
-      cartOrder.value = cartOrder.value.filter(n => n !== product.name)
+      cart.value.items = cart.value.items.filter((i) => i.name !== product.name)
+      cartOrder.value = cartOrder.value.filter((n) => n !== product.name)
     }
   }
 
+  // Получить текущее количество единиц товара в корзине
   function getProductQuantity(product) {
-    return cart.value.items.filter(i => i.name === product.name).length
+    return cart.value.items.filter((i) => i.name === product.name).length
   }
 
+  // Оформление заказа (тут просто чистим корзину и показываем alert)
   function checkout() {
     alert('Заказ оформлен!')
     cart.value = { count: 0, total: 0, items: [] }
     cartOrder.value = []
   }
 
-  function selectProduct(product) {
-    selectedProduct.value = product
-    cartOpen.value = false
-  }
-
-  function clearSelectedProduct() {
-    selectedProduct.value = null
-  }
-
+  // Очистить фильтры
   function clearFilters() {
     filterPriceMin.value = null
     filterPriceMax.value = null
     filterColor.value = ''
   }
 
+  // Fetch: загрузка товаров по category
   async function fetchProducts() {
     try {
-      const res = await fetch(
-        `${url.value}/api/products?category=${encodeURIComponent(selectedCategory.value)}`
-      )
+      const res = await fetch(`${url.value}/api/products?category=${encodeURIComponent(selectedCategory.value)}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       products.value = await res.json()
     } catch (e) {
@@ -170,9 +170,6 @@ export const useStore = defineStore('main', () => {
 
     products,
 
-    selectedProduct,
-
-    cartOpen,
     cartOrder,
     cart,
 
@@ -181,14 +178,11 @@ export const useStore = defineStore('main', () => {
 
     changeCategory,
     addToCart,
-    toggleCart,
     increaseQuantity,
     decreaseQuantity,
     getProductQuantity,
     checkout,
-    selectProduct,
-    clearSelectedProduct,
     clearFilters,
-    fetchProducts,
+    fetchProducts
   }
 })

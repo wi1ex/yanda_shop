@@ -10,10 +10,8 @@ import logging
 import csv
 import os
 
-
 logger = logging.getLogger(__name__)
 api = Blueprint("api", __name__)
-
 
 def model_by_category(cat: str):
     return {"shoes": Shoe, "clothing": Clothing, "accessories": Accessory,
@@ -23,7 +21,6 @@ def model_by_category(cat: str):
 @api.route("/api/")
 def home():
     return jsonify({"message": "App is working!"})
-
 
 @api.route("/api/save_user", methods=["POST"])
 def save_user():
@@ -99,7 +96,6 @@ def get_daily_visits():
     date_str = request.args.get("date")
     if not date_str:
         date_str = datetime.now(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d")
-
     try:
         hours_data = []
         for h in range(24):
@@ -162,7 +158,6 @@ def get_product():
     Model = model_by_category(cat)
     if not Model:
         return jsonify({"error": "unknown category"}), 400
-
     obj = Model.query.filter_by(sku=sku).first()
     if not obj:
         return jsonify({"error": "not found"}), 404
@@ -181,8 +176,6 @@ def get_product():
     count = getattr(obj, "count_images", 0) or 0
     images = [f"{os.getenv('BACKEND_URL')}/images/{obj.sku}-{i}.webp" for i in range(1, count + 1)]
     data["images"] = images
-
-    # Добавим поле `image` = первая картинка (или None, если их нет)
     data["image"] = images[0] if images else None
 
     return jsonify(data)
@@ -274,7 +267,7 @@ def upload_images():
             # Загружаем (перезаписываем, если существует)
             minio_client.put_object(BUCKET, key, io.BytesIO(content), length=len(content), content_type="application/octet-stream")
 
-    # Теперь удаляем «чужие» файлы:
+    # Удаляем “чужие” файлы
     expected = set()
     for Model in (Shoe, Clothing, Accessory):
         for obj in Model.query:

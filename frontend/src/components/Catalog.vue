@@ -3,7 +3,7 @@
     <!-- Верхнее меню с категориями -->
     <div class="sticky-nav">
       <div class="categories">
-        <button v-for="cat in store.categoryList" :key="cat" :class="{ active: cat === store.selectedCategory }" @click="store.changeCategory(cat)">
+        <button v-for="cat in store.categoryList" :key="cat" :class="{ active: cat === store.selectedCategory }" @click="onCategoryClick(cat)">
           {{ cat }}
         </button>
       </div>
@@ -49,20 +49,29 @@
 
     <!-- Сетка товаров -->
     <div class="products-grid">
-      <div v-for="product in store.filteredProducts" :key="product.sku" class="product-card" @click="store.selectProduct(product)">
-        <img :src="product.image" alt="product" class="product-image" />
-        <div class="product-info">
-          <p class="product-price">{{ product.price }} ₽</p>
-          <p class="product-name">{{ product.name }}</p>
-          <p v-if="product.color" class="product-color">Цвет: {{ product.color }}</p>
+      <div v-for="product in store.filteredProducts" :key="product.sku" class="product-card">
+        <!-- Нажатие на карточку — переходим на страницу ProductDetail -->
+        <div @click="goToProductDetail(product)" class="clickable-area">
+          <img :src="product.image" alt="product" class="product-image" />
+          <div class="product-info">
+            <p class="product-price">{{ product.price }} ₽</p>
+            <p class="product-name">{{ product.name }}</p>
+            <p v-if="product.color" class="product-color">
+              Цвет: {{ product.color }}
+            </p>
+          </div>
         </div>
 
+        <!-- Контролы “+ / – количество” -->
         <div v-if="store.getProductQuantity(product) > 0" class="cart-item-controls">
           <button @click.stop="store.decreaseQuantity(product)">➖</button>
-          <span class="item-quantity">{{ store.getProductQuantity(product) }}</span>
+          <span class="item-quantity">
+            {{ store.getProductQuantity(product) }}
+          </span>
           <button @click.stop="store.increaseQuantity(product)">➕</button>
         </div>
 
+        <!-- Если в корзине нет — показываем “Купить” -->
         <button v-else class="buy-button" @click.stop="store.addToCart(product)">
           Купить
         </button>
@@ -74,13 +83,15 @@
 <script setup>
 import { onMounted, watch, computed } from 'vue'
 import { useStore } from '@/store/index.js'
+import { useRouter } from 'vue-router'
 
 const store = useStore()
+const router = useRouter()
 
-// При монтировании — первый запрос к API (загрузка товаров выбранной категории)
+// При монтировании грузим товары
 onMounted(store.fetchProducts)
 
-// При изменении выбранной категории — загрузка «сырых» данных (без фильтров/сортировки)
+// При изменении выбранной категории — заново грузим товары
 watch(
   () => store.selectedCategory,
   () => {
@@ -88,7 +99,7 @@ watch(
   }
 )
 
-// Вычисляемое свойство для объединённого селекта
+// Двухсторонняя привязка sortBy и sortOrder
 const sortOption = computed({
   get() {
     return `${store.sortBy}_${store.sortOrder}`
@@ -97,15 +108,30 @@ const sortOption = computed({
     const [by, order] = value.split('_')
     store.sortBy = by
     store.sortOrder = order
-  },
+  }
 })
 
-// Список всех цветов, которые есть у товаров в текущей категории
+// Получаем список уникальных цветов по текущей категории
 const distinctColors = computed(() => {
-  const byCategory = store.products.filter((p) => p.category === store.selectedCategory)
+  const byCategory = store.products.filter(
+    (p) => p.category === store.selectedCategory
+  )
   const set = new Set(byCategory.map((p) => p.color).filter((c) => c))
   return Array.from(set)
 })
+
+function onCategoryClick(cat) {
+  store.changeCategory(cat)
+}
+
+// Функция: открыть страницу "Карточка товара"
+function goToProductDetail(product) {
+  router.push({
+    name: 'ProductDetail',
+    params: { sku: product.sku },
+    query: { category: product.category }
+  })
+}
 </script>
 
 <style scoped lang="scss">
@@ -214,6 +240,11 @@ h2 {
   text-align: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.clickable-area {
   cursor: pointer;
 }
 

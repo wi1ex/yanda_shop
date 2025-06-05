@@ -3,17 +3,17 @@
     <!-- Кнопка “Назад к каталогу” -->
     <button class="back-button" @click="goBack">← Назад в каталог</button>
 
-    <!-- Если detailData ещё не загрузились, показываем «Загрузка…» -->
+    <!-- Индикатор загрузки -->
     <div v-if="loading" class="loading">Загрузка...</div>
 
-    <!-- Когда detailData загружены, рендерим карточку -->
-    <div v-else class="detail-card">
-      <!-- Блок с изображениями (горизонтальный скролл) -->
+    <!-- Когда detailData загружены -->
+    <div v-else-if="detailData" class="detail-card">
+      <!-- Карусель изображений -->
       <div v-if="detailData.images && detailData.images.length" class="carousel" ref="carouselRef"
            @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
         <div class="images-wrapper">
-          <img v-for="(imgSrc, idx) in detailData.images" :key="idx" :src="imgSrc"
-               alt="product image" class="detail-image" :class="{ active: idx === currentIndex }"/>
+          <img v-for="(imgSrc, idx) in detailData.images" :key="idx" :src="imgSrc" alt="product image"
+               class="detail-image" :class="{ active: idx === currentIndex }"/>
         </div>
 
         <!-- Кнопка «Вперёд» -->
@@ -37,7 +37,7 @@
         <!-- Цена -->
         <p class="detail-price">{{ detailData.price }} ₽</p>
 
-        <!-- Выведем все поля, которые есть в detailData -->
+        <!-- Выводим все доступные поля из detailData -->
         <p v-if="detailData.sku" class="detail-field">
           <strong>SKU:</strong> {{ detailData.sku }}
         </p>
@@ -89,7 +89,9 @@
             <span class="quantity">{{ currentQuantity }}</span>
             <button @click="onIncrease(detailData)">➕</button>
           </div>
-          <button v-else class="add-button" @click="store.addToCart(detailData)">Купить</button>
+          <button v-else class="add-button" @click="store.addToCart(detailData)">
+            Купить
+          </button>
         </div>
       </div>
     </div>
@@ -97,11 +99,26 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useStore } from '@/store/index.js'
 
+// Принимаем параметры из ProductPage.vue
+const props = defineProps({
+  sku: {
+    type: String,
+    required: true
+  },
+  category: {
+    type: String,
+    required: true
+  }
+})
+
 const store = useStore()
+const router = useRouter()
 const detailData = ref(null)
+
 // Индикатор загрузки
 const loading = ref(true)
 // Текущий индекс (номер картинки)
@@ -109,78 +126,11 @@ const currentIndex = ref(0)
 // Ссылка на DOM-узел .carousel (обёртка скролла)
 const carouselRef = ref(null)
 
-// Переменные для обработки свайпа
+// Для свайпов
 let touchStartX = 0
 let touchDeltaX = 0
 let isSwiping = false
 
-// Когда store.selectedProduct меняется, запускаем fetchDetail()
-watch(
-  () => store.selectedProduct,
-  async (newVal) => {
-    if (newVal) {
-      currentIndex.value = 0
-      await fetchDetail(newVal.category, newVal.sku)
-      await nextTick()
-      scrollToIndex(0, false)
-    }
-  },
-  { immediate: true }
-)
-
-// Функция для загрузки полного JSON‐объекта из /api/product
-async function fetchDetail(category, sku) {
-  loading.value = true
-  detailData.value = null
-  try {
-    const response = await fetch(
-      `${store.url}/api/product?category=${encodeURIComponent(category)}&sku=${encodeURIComponent(sku)}`
-    )
-    if (!response.ok) {
-      console.error('Ошибка при получении детализации товара:', response.statusText)
-      detailData.value = null
-    } else {
-      detailData.value = await response.json()
-    }
-  } catch (err) {
-    console.error('Ошибка сети при fetchDetail:', err)
-    detailData.value = null
-  } finally {
-    loading.value = false
-  }
-}
-
-// Плавный скролл к нужному индексу (num может быть < 0 или >= length, обрабатываем циклично)
-function scrollToIndex(num, smooth = true) {
-  if (!detailData.value || !detailData.value.images) return
-
-  const count = detailData.value.images.length
-  let idx = ((num % count) + count) % count
-  currentIndex.value = idx
-
-  const wrapper = carouselRef.value?.querySelector('.images-wrapper')
-  if (!wrapper) return
-
-  const width = wrapper.clientWidth
-  const targetScrollLeft = idx * width
-
-  wrapper.scrollTo({
-    left: targetScrollLeft,
-    behavior: smooth ? 'smooth' : 'auto',
-  })
-}
-
-// Обработчик нажатия «▶»
-function nextImage() {
-  scrollToIndex(currentIndex.value + 1)
-}
-
-// Обработчик нажатия «◀»
-function prevImage() {
-  scrollToIndex(currentIndex.value - 1)
-}
-
-// Обработка свайпа пальцем
 function onTouchStart(evt) {
   if (!carouselRef.value) return
   isSwiping = true
@@ -197,27 +147,78 @@ function onTouchMove(evt) {
 function onTouchEnd() {
   if (!isSwiping) return
   isSwiping = false
-
   if (touchDeltaX > 50) {
-    prevImage()
+    scrollToIndex(currentIndex.value - 1)
   } else if (touchDeltaX < -50) {
-    nextImage()
+    scrollToIndex(currentIndex.value + 1)
   } else {
     scrollToIndex(currentIndex.value)
   }
-
   touchDeltaX = 0
 }
 
-// Кнопка “Назад”
-function goBack() {
-  store.clearSelectedProduct()
+function scrollToIndex(num, smooth = true) {
+  if (!detailData.value || !detailData.value.images) return
+  const count = detailData.value.images.length
+  let idx = ((num % count) + count) % count
+  currentIndex.value = idx
+  const wrapper = carouselRef.value?.querySelector('.images-wrapper')
+  if (!wrapper) return
+  const width = wrapper.clientWidth
+  const targetScrollLeft = idx * width
+  wrapper.scrollTo({
+    left: targetScrollLeft,
+    behavior: smooth ? 'smooth' : 'auto'
+  })
 }
 
-// Сколько уже в корзине (для данной SKU)
+// Функция “Назад в каталог”
+function goBack() {
+  router.push({ name: 'Catalog' })
+}
+
+// Функция получения деталей товара
+async function fetchDetail() {
+  loading.value = true
+  detailData.value = null
+  try {
+    const response = await fetch(
+      `${store.url}/api/product?category=${encodeURIComponent(props.category)}&sku=${encodeURIComponent(props.sku)}`
+    )
+    if (!response.ok) {
+      console.error('Ошибка при получении детализации товара:', response.statusText)
+      detailData.value = null
+    } else {
+      detailData.value = await response.json()
+    }
+  } catch (err) {
+    console.error('Ошибка сети при fetchDetail:', err)
+    detailData.value = null
+  } finally {
+    loading.value = false
+  }
+}
+
+// При монтировании сразу вызываем fetchDetail
+onMounted(async () => {
+  await fetchDetail()
+  await nextTick()
+  scrollToIndex(0, false)
+})
+
+// При изменении sku или category — обновляем данные
+watch(
+  () => [props.sku, props.category],
+  async () => {
+    await fetchDetail()
+    await nextTick()
+    scrollToIndex(0, false)
+  }
+)
+
 const currentQuantity = ref(0)
 
-// Обновляем количество один раз, когда загрузились detailData
+// Следим за detailData, чтобы обновить количество в корзине
 watch(
   () => detailData.value,
   (newVal) => {
@@ -227,7 +228,7 @@ watch(
   }
 )
 
-// Также следим за изменением корзины
+// Следим за изменением корзины
 watch(
   () => store.cart.items.length,
   () => {
@@ -254,7 +255,7 @@ function onDecrease(item) {
   padding: 2vh;
 }
 
-/* Кнопка «назад» */
+/* Стили для кнопки назад */
 .back-button {
   display: flex;
   justify-self: center;
@@ -265,10 +266,10 @@ function onDecrease(item) {
   color: #fff;
   border: 1px solid #bbb;
   cursor: pointer;
-  transition: background .2s;
+  transition: background 0.2s;
 }
 
-/* Состояние «Загрузка» */
+/* Состояние “Загрузка” */
 .loading {
   color: #bbb;
   font-size: 18px;
@@ -287,7 +288,7 @@ function onDecrease(item) {
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* Блок с каруселью изображений */
+/* Карусель изображений */
 .carousel {
   position: relative;
   margin-bottom: 20px;
@@ -317,7 +318,7 @@ function onDecrease(item) {
   transform: scale(1);
 }
 
-/* Кнопки «◀ ▶» */
+/* Кнопки “◀ ▶” */
 .nav-button {
   background: rgba(0, 0, 0, 0.4);
   color: white;
@@ -368,7 +369,7 @@ function onDecrease(item) {
 
 /* Общий стиль для всех полей */
 .detail-field {
-  @include flex-header;
+  display: flex;
   font-size: 14px;
   color: #ccc;
   margin-bottom: 8px;
