@@ -43,8 +43,9 @@
       <div v-if="visitsLoading" class="loading-visits">
         Загрузка данных...
       </div>
+
       <div v-else class="chart-container">
-        <!-- Отрисовываем BarChart только после того, как visitsData.hours — массив -->
+        <!-- BarChart рендерим только после проверки, что visitsData.hours – массив -->
         <BarChart v-if="Array.isArray(visitsData.hours)" :chartLabels="labelsForChart" :chartData="visitsData.hours"/>
       </div>
     </section>
@@ -68,7 +69,7 @@ import {
 } from 'chart.js'
 import { Bar } from 'vue-chartjs'
 
-// Регистрируем необходимые компоненты Chart.js
+// Регистрируем необходимые элементы Chart.js
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const store = useStore()
@@ -78,22 +79,21 @@ const store = useStore()
 // Дата, выбранная в input[type="date"]
 const selectedDate = ref('')
 
-// Объект вида { date: 'YYYY-MM-DD', hours: [ { hour: '00', unique: 12, total: 34 }, … ] }
-// Изначально — пустой массив часов
+// По умолчанию visitsData.hours = [] – чтобы никогда не было undefined
 const visitsData = ref({ date: '', hours: [] })
 
-// Флаг, что в данный момент идёт загрузка данных
+// Флаг, что идёт загрузка
 const visitsLoading = ref(false)
 
-// Вычисленное свойство: массив строк-меток для оси X ["00:00", "01:00", …, "23:00"]
+// Вычисляемые метки оси X: ["00:00", "01:00", …]
 const labelsForChart = computed(() =>
   visitsData.value.hours.map((h) => h.hour + ':00')
 )
 
-// Функция, чтобы подтянуть данные визитов с backend
+// Функция загрузки статистики
 async function fetchVisits() {
   visitsLoading.value = true
-  // Сбрасываем старые данные, выставляем visitsData.hours = []
+  // Обязательно сбрасываем на «пустой» формат
   visitsData.value = { date: '', hours: [] }
 
   try {
@@ -109,21 +109,21 @@ async function fetchVisits() {
 
     const data = await resp.json()
 
-    // Нормализуем полученные данные: гарантируем, что hours — массив
+    // Нормализуем: гарантируем, что hours – массив
     visitsData.value = {
       date: data.date || dateToFetch,
       hours: Array.isArray(data.hours) ? data.hours : []
     }
   } catch (e) {
     console.error('Ошибка сети при fetchVisits:', e)
-    // Если ошибка сети, тоже оставляем пустой массив
+    // В случае ошибки сети оставляем пустой массив
     visitsData.value = { date: '', hours: [] }
   } finally {
     visitsLoading.value = false
   }
 }
 
-// При монтировании компонента задаём сегодняшнюю дату и сразу вызываем fetchVisits
+// При старте страницы задаём сегодняшнюю дату и сразу подгружаем
 onMounted(() => {
   const today = new Date().toISOString().slice(0, 10)
   selectedDate.value = today
@@ -133,10 +133,10 @@ onMounted(() => {
 // --------------- КОМПОНЕНТ-ОБЁРТКА ДЛЯ BAR CHART ---------------
 
 /**
- * BarChart — это локальный компонент, который принимает:
+ * BarChart — локальный компонент, принимающий:
  *   props.chartLabels: Array<String> — метки (часы) для оси X
- *   props.chartData:   Array<{hour: String, unique: Number, total: Number}>
- * И отображает столбчатый график количества «total» визитов по часам.
+ *   props.chartData:   Array<{hour, unique, total}>
+ * Рисует столбчатый график total по часам.
  */
 const BarChart = {
   name: 'BarChart',
@@ -151,19 +151,18 @@ const BarChart = {
     }
   },
   setup(props) {
-    // Формируем объект данных для Chart.js
+    // Формируем данные для Chart.js
     const chartData = {
       labels: props.chartLabels,
       datasets: [
         {
           label: 'Всего визитов',
           data: props.chartData.map((item) => item.total),
-          backgroundColor: '#2196F3' // синий цвет столбцов, можно заменить
+          backgroundColor: '#2196F3'
         }
       ]
     }
 
-    // Параметры (опции) для графика
     const chartOptions = {
       responsive: true,
       plugins: {
@@ -198,7 +197,8 @@ const BarChart = {
 }
 // --------------------------------------------------------------
 
-// === Ниже идут методы для загрузки CSV и ZIP (как у вас было раньше) ===
+// === Ниже методы для CSV/ZIP (как было раньше) ===
+
 const csvInput = ref(null)
 const zipInput = ref(null)
 
@@ -238,7 +238,7 @@ async function submitCsv() {
     console.error('Ошибка при загрузке CSV:', e)
     csvResult.value = `Ошибка соединения: ${e.message}`
   } finally {
-    // Обнуляем выбранный файл в input
+    // Обнуляем input
     csvFile.value = null
     if (csvInput.value) {
       csvInput.value.value = null
@@ -310,12 +310,12 @@ async function submitZip() {
   font-style: italic;
   margin-top: 10px;
 }
-/* Контейнер графика: ограничиваем по высоте и центруем */
+/* Контейнер для графика: ограничиваем по высоте и центруем */
 .chart-container {
   width: 100%;
   max-width: 800px;
   margin: 20px auto;
-  height: 350px; /* Здесь задаётся «компактность» графика */
+  height: 350px;
 }
 /* --- /Стили для раздела статистики --- */
 
