@@ -9,10 +9,10 @@
       <router-link to="/admin" class="nav-link">Админ-панель</router-link>
     </nav>
 
-    <div class="user-info">
+    <router-link to="/profile" class="user-info">
       <img :src="store.user.photo_url || img_bot" alt="avatar" class="avatar" />
       <span class="username">{{ store.user.id }}</span>
-    </div>
+    </router-link>
   </header>
 </template>
 
@@ -65,12 +65,16 @@ function goHome() {
 .nav-link:hover {
   background: #0056b3;
 }
-
 .user-info {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1vh;
+  text-decoration: none;
+  color: inherit;
+}
+.user-info:hover .avatar {
+  outline: 2px solid #007bff;
 }
 .avatar {
   width: 4vh;

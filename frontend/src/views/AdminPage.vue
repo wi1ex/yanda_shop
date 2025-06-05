@@ -2,83 +2,97 @@
   <div class="admin-page">
     <h1>Админ-панель</h1>
 
-    <!-- Секция: Статистика посещений -->
-    <section class="visits-section">
-      <h2>Статистика посещений за день</h2>
-      <div class="date-picker">
-        <label for="visit-date">Дата:</label>
-        <input type="date" id="visit-date" v-model="selectedDate" @change="fetchVisits"/>
-      </div>
-      <button class="refresh-button" @click="fetchVisits">
-        Обновить
-      </button>
-      <div v-if="visitsLoading" class="loading-visits">Загрузка данных...</div>
-      <div v-else>
-        <table class="visits-table">
-          <thead>
-            <tr>
-              <th>Час</th>
-              <th>Уникальные посетители</th>
-              <th>Всего визитов</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="hourData in visitsData.hours" :key="hourData.hour">
-              <td>{{ hourData.hour }}:00</td>
-              <td>{{ hourData.unique }}</td>
-              <td>{{ hourData.total }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Секция: Загрузка CSV (import_products) -->
+    <!-- === Секция: Загрузка CSV === -->
     <section class="upload-section">
-      <h2>Загрузка CSV для товаров</h2>
+      <h2>Загрузить CSV для товаров</h2>
       <form @submit.prevent="submitCsv">
-        <input type="file" accept=".csv" @change="onCsvSelected" />
+        <input type="file" accept=".csv" @change="onCsvSelected" ref="csvInput"/>
         <button type="submit" :disabled="!csvFile">Загрузить CSV</button>
       </form>
       <p v-if="csvResult" class="upload-result">{{ csvResult }}</p>
     </section>
+    <!-- === /Секция: Загрузка CSV === -->
 
-    <!-- Секция: Загрузка ZIP (upload_images) -->
+    <!-- === Секция: Загрузка ZIP === -->
     <section class="upload-section">
-      <h2>Загрузка ZIP с изображениями</h2>
+      <h2>Загрузить ZIP с изображениями</h2>
       <form @submit.prevent="submitZip">
-        <input type="file" accept=".zip" @change="onZipSelected" />
+        <input type="file" accept=".zip" @change="onZipSelected" ref="zipInput"/>
         <button type="submit" :disabled="!zipFile">Загрузить ZIP</button>
       </form>
       <p v-if="zipResult" class="upload-result">{{ zipResult }}</p>
     </section>
+    <!-- === /Секция: Загрузка ZIP === -->
+
+    <!-- === Секция: Статистика посещений === -->
+    <section class="visits-section">
+      <h2>Статистика посещений</h2>
+
+      <div class="date-picker">
+        <label for="visit-date">Дата:</label>
+        <input type="date" id="visit-date" v-model="selectedDate" @change="fetchVisits"/>
+        <button class="refresh-button" @click="fetchVisits">
+          Обновить
+        </button>
+      </div>
+
+      <div v-if="visitsLoading" class="loading-visits">
+        Загрузка данных...
+      </div>
+      <div v-else class="chart-container">
+        <!-- Здесь будет график: передаём в BarChart метки (часы) и массив объектов {hour, unique, total} -->
+        <BarChart :chartLabels="labelsForChart" :chartData="visitsData.hours"/>
+      </div>
+    </section>
+    <!-- === /Секция: Статистика посещений === -->
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, h } from 'vue'
 import { useStore } from '@/store/index.js'
+
+// --- Импортируем Chart.js и его компоненты для BarChart ---
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement
+} from 'chart.js'
+import { Bar } from 'vue-chartjs'
+
+// Регистрируем необходимые компоненты Chart.js
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const store = useStore()
 
-// --- Для статистики посещений ---
+// --------------- ДАННЫЕ И ЛОГИКА ДЛЯ ГРАФИКА ---------------
+
+// Дата, выбранная в input[type="date"]
 const selectedDate = ref('')
+
+// Объект вида { date: 'YYYY-MM-DD', hours: [ { hour: '00', unique: 12, total: 34 }, … ] }
 const visitsData = ref({ date: '', hours: [] })
+
+// Флаг, что в данный момент идёт загрузка данных
 const visitsLoading = ref(false)
 
-// Устанавливаем сегодня как значение по умолчанию
-onMounted(() => {
-  const today = new Date().toISOString().slice(0, 10) // 'YYYY-MM-DD'
-  selectedDate.value = today
-  fetchVisits()
-})
+// Вычисленное свойство: массив строк-меток для оси X ["00:00", "01:00", …, "23:00"]
+const labelsForChart = computed(() =>
+  visitsData.value.hours.map((h) => h.hour + ':00')
+)
 
-// Функция получения статистики
+// Функция, чтобы подтянуть данные визитов с backend
 async function fetchVisits() {
   visitsLoading.value = true
   visitsData.value = { date: '', hours: [] }
   try {
-    const resp = await fetch(`${store.url}/api/visits?date=${selectedDate.value}`)
+    // Если дата не выбрана, по умолчанию используем «сегодня»
+    const dateToFetch = selectedDate.value || new Date().toISOString().slice(0, 10)
+    const resp = await fetch(`${store.url}/api/visits?date=${dateToFetch}`)
     if (!resp.ok) {
       console.error('Ошибка при получении статистики:', resp.statusText)
       visitsLoading.value = false
@@ -93,13 +107,102 @@ async function fetchVisits() {
   }
 }
 
-// --- Для загрузки CSV (import_products) ---
+// При монтировании компонента задаём сегодняшнюю дату и сразу вызываем fetchVisits
+onMounted(() => {
+  const today = new Date().toISOString().slice(0, 10)
+  selectedDate.value = today
+  fetchVisits()
+})
+
+// --------------- КОМПОНЕНТ-ОБЁРТКА ДЛЯ BAR CHART ---------------
+
+/**
+ * BarChart — это локальный компонент, который принимает:
+ *   props.chartLabels: Array<String> — метки (часы) для оси X
+ *   props.chartData:   Array<{hour: String, unique: Number, total: Number}>
+ * И отображает столбчатый график количества «total» визитов по часам.
+ */
+const BarChart = {
+  name: 'BarChart',
+  props: {
+    chartLabels: {
+      type: Array,
+      required: true
+    },
+    chartData: {
+      type: Array,
+      required: true
+    }
+  },
+  setup(props) {
+    // Формируем объект данных для Chart.js
+    const chartData = {
+      labels: props.chartLabels,
+      datasets: [
+        {
+          label: 'Всего визитов',
+          data: props.chartData.map((item) => item.total),
+          backgroundColor: '#2196F3' // синий цвет столбцов, можно заменить
+        }
+      ]
+    }
+
+    // Параметры (опции) для графика
+    const chartOptions = {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom'
+        },
+        title: {
+          display: false
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Часы'
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Всего визитов'
+          },
+          beginAtZero: true
+        }
+      }
+    }
+
+    // Возвращаем рендер-функцию (h(Bar, { … }))
+    return () => h(Bar, { chartData, chartOptions, style: { height: '100%' } })
+  }
+}
+// --------------------------------------------------------------
+
+/**
+ * Ниже идут методы для загрузки CSV и ZIP (как у вас было раньше).
+ * Они показываются лишь для контекста и чтобы сохранить единый файл:
+ */
+
+const csvInput = ref(null)
+const zipInput = ref(null)
+
 const csvFile = ref(null)
 const csvResult = ref('')
+
+const zipFile = ref(null)
+const zipResult = ref('')
 
 function onCsvSelected(event) {
   csvFile.value = event.target.files[0] || null
   csvResult.value = ''
+}
+function onZipSelected(event) {
+  zipFile.value = event.target.files[0] || null
+  zipResult.value = ''
 }
 
 async function submitCsv() {
@@ -122,16 +225,13 @@ async function submitCsv() {
   } catch (e) {
     console.error('Ошибка при загрузке CSV:', e)
     csvResult.value = `Ошибка соединения: ${e.message}`
+  } finally {
+    // Обнуляем выбранный файл в input
+    csvFile.value = null
+    if (csvInput.value) {
+      csvInput.value.value = null
+    }
   }
-}
-
-// --- Для загрузки ZIP (upload_images) ---
-const zipFile = ref(null)
-const zipResult = ref('')
-
-function onZipSelected(event) {
-  zipFile.value = event.target.files[0] || null
-  zipResult.value = ''
 }
 
 async function submitZip() {
@@ -154,6 +254,12 @@ async function submitZip() {
   } catch (e) {
     console.error('Ошибка при загрузке ZIP:', e)
     zipResult.value = `Ошибка соединения: ${e.message}`
+  } finally {
+    // Обнуляем выбранный файл в input
+    zipFile.value = null
+    if (zipInput.value) {
+      zipInput.value.value = null
+    }
   }
 }
 </script>
@@ -165,15 +271,10 @@ async function submitZip() {
   color: #fff;
 }
 
-.admin-page h1 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
+/* --- Стили для раздела статистики --- */
 .visits-section {
   margin-bottom: 40px;
 }
-
 .date-picker {
   display: flex;
   align-items: center;
@@ -188,70 +289,34 @@ async function submitZip() {
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.3s;
-  margin-left: 10px;
 }
 .refresh-button:hover {
   background: #0056b3;
 }
-
 .loading-visits {
   color: #bbb;
   font-style: italic;
   margin-top: 10px;
 }
-
-.visits-table {
+/* Контейнер графика: ограничиваем по высоте и центруем */
+.chart-container {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
+  max-width: 800px;
+  margin: 20px auto;
+  height: 350px; /* Здесь задаётся «компактность» графика */
 }
-.visits-table th,
-.visits-table td {
-  border: 1px solid #555;
-  padding: 8px;
-  text-align: center;
-}
-.visits-table th {
-  background: #333;
-  color: #fff;
-}
-.visits-table tbody tr:nth-child(even) {
-  background: #2a2e3e;
-}
+/* --- /Стили для раздела статистики --- */
 
+/* --- Стили для раздела загрузки CSV/ZIP --- */
 .upload-section {
   margin-bottom: 30px;
 }
-.upload-section h2 {
-  margin-bottom: 10px;
+.upload-section input[type='file'] {
+  margin-right: 10px;
 }
-.upload-section form {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.upload-section input[type="file"] {
-  color: #fff;
-}
-.upload-section button {
-  background: #28a745;
-  color: #fff;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-.upload-section button:disabled {
-  background: #555;
-  cursor: not-allowed;
-}
-.upload-section button:hover:not(:disabled) {
-  background: #218838;
-}
-
 .upload-result {
   margin-top: 8px;
-  font-weight: bold;
+  color: #bada55;
 }
+/* --- /Стили для раздела загрузки CSV/ZIP --- */
 </style>

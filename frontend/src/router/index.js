@@ -4,6 +4,7 @@ import CatalogPage from '@/views/CatalogPage.vue'
 import CartPage from '@/views/CartPage.vue'
 import ProductPage from '@/views/ProductPage.vue'
 import AdminPage from '@/views/AdminPage.vue'
+import ProfilePage from '@/views/ProfilePage.vue'
 
 const routes = [
   {
@@ -14,15 +15,13 @@ const routes = [
   {
     path: '/catalog',
     name: 'Catalog',
-    component: CatalogPage,
-    children: [
-      {
-        path: 'product/:sku',
-        name: 'ProductDetail',
-        component: ProductPage,
-        props: true
-      }
-    ]
+    component: CatalogPage
+  },
+  {
+    path: '/catalog/product/:sku',
+    name: 'ProductDetail',
+    component: ProductPage,
+    props: true
   },
   {
     path: '/cart',
@@ -33,6 +32,11 @@ const routes = [
     path: '/admin',
     name: 'Admin',
     component: AdminPage
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: ProfilePage
   },
   {
     path: '/:catchAll(.*)',
