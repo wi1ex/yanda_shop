@@ -9,6 +9,7 @@ class Users(db.Model):
     first_name     = db.Column(db.String(100))
     last_name      = db.Column(db.String(100))
     username       = db.Column(db.String(100))
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 class Shoe(db.Model):
     __tablename__  = "shoes"
