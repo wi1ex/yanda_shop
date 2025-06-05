@@ -3,10 +3,18 @@
     <h1 class="logo" @click="goHome">YANDA SHOP</h1>
 
     <nav class="nav-links">
-      <router-link to="/" class="nav-link" exact>Главная</router-link>
-      <router-link to="/catalog" class="nav-link">Каталог</router-link>
-      <router-link to="/cart" class="nav-link">Корзина ({{ store.cart.count }})</router-link>
-      <router-link to="/admin" class="nav-link">Админ-панель</router-link>
+      <router-link to="/" class="nav-link" exact>
+        Главная
+      </router-link>
+      <router-link to="/catalog" class="nav-link">
+        Каталог
+      </router-link>
+      <router-link to="/cart" class="nav-link">
+        Корзина ({{ store.cart.count }})
+      </router-link>
+      <router-link v-if="isAdmin" to="/admin" class="nav-link">
+        Админ-панель
+      </router-link>
     </nav>
 
     <router-link to="/profile" class="user-info">
@@ -17,12 +25,18 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 import img_bot from '@/assets/images/bot.png'
 
 const store = useStore()
 const router = useRouter()
+
+// Комьютед: true, если текущий user.id равен ADMIN_ID
+const isAdmin = computed(() => {
+  return store.user && String(store.user.id) === String(store.admin_id.value)
+})
 
 function goHome() {
   router.push({ name: 'Home' })

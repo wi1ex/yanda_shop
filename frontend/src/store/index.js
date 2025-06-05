@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
 export const useStore = defineStore('main', () => {
+  const admin_id = ref(59404714)
   const url = ref('https://shop.yanda.twc1.net')
   const tg = ref(null)
   const user = ref(null)

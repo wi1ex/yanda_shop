@@ -201,21 +201,31 @@ def import_products():
     if not Model:
         return jsonify({"error": "unknown category"}), 400
 
-    reader = csv.DictReader(io.StringIO(f.stream.read().decode("utf-8")))
+    # Читаем CSV целиком в список строк (каждая строка – dict)
+    data_str = f.stream.read().decode("utf-8")
+    reader = csv.DictReader(io.StringIO(data_str))
+    rows = list(reader)  # теперь это список, и мы можем итерировать сколько угодно раз
+
     added, updated = 0, 0
-    skus = [row["sku"] for row in reader]
+
+    # Собираем все SKU из файла
+    skus = [row["sku"] for row in rows]
+    # Берём из БД уже существующие объекты с этими SKU
     existing_objs = {obj.sku: obj for obj in Model.query.filter(Model.sku.in_(skus)).all()}
 
     try:
-        for row in reader:
+        for row in rows:
             sku = row["sku"]
             obj = existing_objs.get(sku)
             if not obj:
+                # Создаём новую запись
                 obj = Model(sku=sku)
                 db.session.add(obj)
                 added += 1
             else:
                 updated += 1
+
+            # Обновляем все поля (кроме SKU)
             for key, val in row.items():
                 if hasattr(obj, key) and key != "sku":
                     if key in ["price", "count_in_stock", "count_images"]:
@@ -229,8 +239,10 @@ def import_products():
                         except ValueError:
                             val = None
                     setattr(obj, key, val)
-            # Явно обновляем колонку updated_at (чтобы сработал timestamp onupdate)
+
+            # Явно выставляем updated_at, чтобы не полагаться на onupdate
             obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
+
         db.session.commit()
     except Exception as e:
         logger.error(f"Import error: {e}")
