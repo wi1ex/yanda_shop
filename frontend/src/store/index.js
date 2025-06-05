@@ -238,6 +238,7 @@ export const useStore = defineStore('main', () => {
     url,
     tg,
     user,
+    admin_id,
 
     categoryList,
     selectedCategory,
