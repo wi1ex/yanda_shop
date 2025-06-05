@@ -29,11 +29,21 @@ export const useStore = defineStore('main', () => {
   // Флаг, который указывает, что корзина загружена из backend
   const cartLoaded = ref(false)
 
+  // helper: true, если user.id можно преобразовать в int (строка из цифр)
+  function isTelegramUserId(id) {
+    // попытка превратить строку/число в целое
+    const asNum = parseInt(id, 10)
+    return (!Number.isNaN(asNum) && String(asNum) === String(id))
+  }
+
   // Загрузка корзины из backend (GET /api/cart?user_id=…)
   async function loadCartFromServer() {
-    if (!user.value || !user.value.id) {
+    // Только, если это Telegram-ID (целое число в строке/числе) — загружаем из Redis
+    if (!user.value || !user.value.id || !isTelegramUserId(user.value.id)) {
+      cartLoaded.value = true
       return
     }
+
     try {
       const resp = await fetch(`${url.value}/api/cart?user_id=${user.value.id}`)
       if (!resp.ok) {
@@ -57,9 +67,11 @@ export const useStore = defineStore('main', () => {
 
   // Сохранение корзины в backend (POST /api/cart)
   async function saveCartToServer() {
-    if (!user.value || !user.value.id) {
+    // Сохраняем только Telegram-пользователя
+    if (!user.value || !user.value.id || !isTelegramUserId(user.value.id)) {
       return
     }
+
     const payload = {
       user_id: user.value.id,
       items: cart.value.items,
@@ -84,9 +96,12 @@ export const useStore = defineStore('main', () => {
   watch(
     () => user.value && user.value.id,
     (newId) => {
-      if (newId) {
-        // Как только user.id стал доступен (Telegram/visitor), тащим корзину
+      if (newId && isTelegramUserId(newId)) {
         loadCartFromServer()
+      } else {
+        // Если гость (UUID) или пустой, но user.value.id всё равно выставлен,
+        // просто говорим, что корзина загружена (пуста) и не грузим ничего из Redis
+        cartLoaded.value = true
       }
     }
   )

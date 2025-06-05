@@ -7,7 +7,9 @@
       <h2>Загрузить CSV для товаров</h2>
       <form @submit.prevent="submitCsv">
         <input type="file" accept=".csv" @change="onCsvSelected" ref="csvInput"/>
-        <button type="submit" :disabled="!csvFile">Загрузить CSV</button>
+        <button type="submit" :disabled="!csvFile">
+          Загрузить CSV
+        </button>
       </form>
       <p v-if="csvResult" class="upload-result">{{ csvResult }}</p>
     </section>
@@ -18,7 +20,9 @@
       <h2>Загрузить ZIP с изображениями</h2>
       <form @submit.prevent="submitZip">
         <input type="file" accept=".zip" @change="onZipSelected" ref="zipInput"/>
-        <button type="submit" :disabled="!zipFile">Загрузить ZIP</button>
+        <button type="submit" :disabled="!zipFile">
+          Загрузить ZIP
+        </button>
       </form>
       <p v-if="zipResult" class="upload-result">{{ zipResult }}</p>
     </section>
@@ -40,8 +44,8 @@
         Загрузка данных...
       </div>
       <div v-else class="chart-container">
-        <!-- Здесь будет график: передаём в BarChart метки (часы) и массив объектов {hour, unique, total} -->
-        <BarChart :chartLabels="labelsForChart" :chartData="visitsData.hours"/>
+        <!-- Отрисовываем BarChart только после того, как visitsData.hours — массив -->
+        <BarChart v-if="Array.isArray(visitsData.hours)" :chartLabels="labelsForChart" :chartData="visitsData.hours"/>
       </div>
     </section>
     <!-- === /Секция: Статистика посещений === -->
@@ -75,6 +79,7 @@ const store = useStore()
 const selectedDate = ref('')
 
 // Объект вида { date: 'YYYY-MM-DD', hours: [ { hour: '00', unique: 12, total: 34 }, … ] }
+// Изначально — пустой массив часов
 const visitsData = ref({ date: '', hours: [] })
 
 // Флаг, что в данный момент идёт загрузка данных
@@ -88,20 +93,31 @@ const labelsForChart = computed(() =>
 // Функция, чтобы подтянуть данные визитов с backend
 async function fetchVisits() {
   visitsLoading.value = true
+  // Сбрасываем старые данные, выставляем visitsData.hours = []
   visitsData.value = { date: '', hours: [] }
+
   try {
     // Если дата не выбрана, по умолчанию используем «сегодня»
     const dateToFetch = selectedDate.value || new Date().toISOString().slice(0, 10)
     const resp = await fetch(`${store.url}/api/visits?date=${dateToFetch}`)
+
     if (!resp.ok) {
       console.error('Ошибка при получении статистики:', resp.statusText)
       visitsLoading.value = false
       return
     }
+
     const data = await resp.json()
-    visitsData.value = data
+
+    // Нормализуем полученные данные: гарантируем, что hours — массив
+    visitsData.value = {
+      date: data.date || dateToFetch,
+      hours: Array.isArray(data.hours) ? data.hours : []
+    }
   } catch (e) {
     console.error('Ошибка сети при fetchVisits:', e)
+    // Если ошибка сети, тоже оставляем пустой массив
+    visitsData.value = { date: '', hours: [] }
   } finally {
     visitsLoading.value = false
   }
@@ -182,11 +198,7 @@ const BarChart = {
 }
 // --------------------------------------------------------------
 
-/**
- * Ниже идут методы для загрузки CSV и ZIP (как у вас было раньше).
- * Они показываются лишь для контекста и чтобы сохранить единый файл:
- */
-
+// === Ниже идут методы для загрузки CSV и ZIP (как у вас было раньше) ===
 const csvInput = ref(null)
 const zipInput = ref(null)
 

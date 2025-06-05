@@ -4,9 +4,10 @@ from models import Shoe, Clothing, Accessory, Users, db
 from minio.error import S3Error
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import zipfile
-import io
 import logging
+import zipfile
+import json
+import io
 import csv
 import os
 
