@@ -133,13 +133,18 @@ def list_products():
     result = []
     for i in items:
         image_url = f'{os.getenv("BACKEND_URL")}/images/{i.sku}-1.webp'
-        result.append({"sku":        i.sku,
-                       "name":       i.name,
-                       "price":      i.price,
-                       "category":   i.category,
-                       "image":      image_url,
-                       "color":      i.color,
-                       "created_at": i.created_at.isoformat()})
+        ms_tz = ZoneInfo("Europe/Moscow")
+        created_ms = i.created_at.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S")
+        result.append({
+            "sku": i.sku,
+            "name": i.name,
+            "price": i.price,
+            "category": i.category,
+            "image": image_url,
+            "color": i.color,
+            "created_at": created_ms
+        })
+
     return jsonify(result)
 
 
@@ -169,7 +174,8 @@ def get_product():
         val = getattr(obj, column.name)
         # Для DateTime, если нужно, можно сериализовать, но тут пока просто возвращаем как строку
         if isinstance(val, datetime):
-            data[column.name] = val.isoformat()
+            moscow_time = val.astimezone(ZoneInfo("Europe/Moscow"))
+            data[column.name] = moscow_time.strftime("%Y-%m-%d %H:%M:%S")
         else:
             data[column.name] = val
 
@@ -217,31 +223,57 @@ def import_products():
         for row in rows:
             sku = row["sku"]
             obj = existing_objs.get(sku)
+
             if not obj:
-                # Создаём новую запись
+                # Новая запись
                 obj = Model(sku=sku)
+                # Устанавливаем все поля для нового объекта
+                for key, val in row.items():
+                    if hasattr(obj, key) and key != "sku":
+                        if key in ["price", "count_in_stock", "count_images"]:
+                            try:
+                                val = int(val)
+                            except ValueError:
+                                val = 0
+                        elif key in ["size_label", "depth_mm", "width_mm", "height_mm"]:
+                            try:
+                                val = float(val)
+                            except ValueError:
+                                val = None
+                        setattr(obj, key, val)
+                # created_at и updated_at заданы через default
                 db.session.add(obj)
                 added += 1
             else:
-                updated += 1
+                # Существующая запись — проверяем, изменились ли поля
+                has_changes = False
 
-            # Обновляем все поля (кроме SKU)
-            for key, val in row.items():
-                if hasattr(obj, key) and key != "sku":
-                    if key in ["price", "count_in_stock", "count_images"]:
-                        try:
-                            val = int(val)
-                        except ValueError:
-                            val = 0
-                    elif key in ["size_label", "depth_mm", "width_mm", "height_mm"]:
-                        try:
-                            val = float(val)
-                        except ValueError:
-                            val = None
-                    setattr(obj, key, val)
+                for key, val in row.items():
+                    if hasattr(obj, key) and key != "sku":
+                        # Приведём типы так же, как раньше
+                        if key in ["price", "count_in_stock", "count_images"]:
+                            try:
+                                new_val = int(val)
+                            except ValueError:
+                                new_val = 0
+                        elif key in ["size_label", "depth_mm", "width_mm", "height_mm"]:
+                            try:
+                                new_val = float(val)
+                            except ValueError:
+                                new_val = None
+                        else:
+                            new_val = val
 
-            # Явно выставляем updated_at, чтобы не полагаться на onupdate
-            obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
+                        old_val = getattr(obj, key)
+                        # Сравнение: если одно из значений None, приводим к строкам или как нужно
+                        if old_val != new_val:
+                            setattr(obj, key, new_val)
+                            has_changes = True
+
+                if has_changes:
+                    # Обновляем только если что-то реально поменялось
+                    obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
+                    updated += 1
 
         db.session.commit()
     except Exception as e:
