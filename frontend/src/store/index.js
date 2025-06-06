@@ -5,7 +5,14 @@ export const useStore = defineStore('main', () => {
   const admin_id = ref(59404714)
   const url = ref('https://shop.yanda.twc1.net')
   const tg = ref(null)
-  const user = ref(null)
+
+  const user = ref({
+    id: null,
+    first_name: null,
+    last_name: null,
+    username: null,
+    photo_url: null
+})
 
   // Категории
   const categoryList = ref(['Обувь', 'Одежда', 'Аксессуары'])
@@ -266,9 +273,5 @@ export const useStore = defineStore('main', () => {
     checkout,
     clearFilters,
     fetchProducts,
-
-    // Дополнительные методы для корзины
-    loadCartFromServer,
-    saveCartToServer
   }
 })
