@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 db = SQLAlchemy()
 
@@ -9,7 +10,7 @@ class Users(db.Model):
     first_name     = db.Column(db.String(100))
     last_name      = db.Column(db.String(100))
     username       = db.Column(db.String(100))
-    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
 
 class Shoe(db.Model):
     __tablename__  = "shoes"
@@ -30,9 +31,9 @@ class Shoe(db.Model):
     delivery_time  = db.Column(db.String(100))
     count_in_stock = db.Column(db.Integer, default=0)
     count_images   = db.Column(db.Integer, default=10)
-    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                               onupdate=lambda: datetime.now(timezone.utc))
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
+    updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(ZoneInfo("Europe/Moscow")),
+                               onupdate=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
 
 class Clothing(db.Model):
     __tablename__  = "clothing"
@@ -54,9 +55,9 @@ class Clothing(db.Model):
     delivery_time  = db.Column(db.String(100))
     count_in_stock = db.Column(db.Integer, default=0)
     count_images   = db.Column(db.Integer, default=10)
-    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                               onupdate=lambda: datetime.now(timezone.utc))
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
+    updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(ZoneInfo("Europe/Moscow")),
+                               onupdate=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
 
 class Accessory(db.Model):
     __tablename__  = "accessories"
@@ -78,6 +79,15 @@ class Accessory(db.Model):
     delivery_time  = db.Column(db.String(100))
     count_in_stock = db.Column(db.Integer, default=0)
     count_images   = db.Column(db.Integer, default=10)
-    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                               onupdate=lambda: datetime.now(timezone.utc))
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
+    updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(ZoneInfo("Europe/Moscow")),
+                               onupdate=lambda: datetime.now(ZoneInfo("Europe/Moscow")))
+
+class ChangeLog(db.Model):
+    __tablename__  = 'change_logs'
+    id             = db.Column(db.Integer, primary_key=True)
+    author_id      = db.Column(db.BigInteger, nullable=False)
+    author_name    = db.Column(db.String(100), nullable=False)
+    action_type    = db.Column(db.String(100), nullable=False)
+    description    = db.Column(db.Text, nullable=False)
+    timestamp      = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(ZoneInfo("Europe/Moscow")), nullable=False)
