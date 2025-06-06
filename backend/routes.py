@@ -14,7 +14,6 @@ import os
 logger = logging.getLogger(__name__)
 api = Blueprint("api", __name__)
 
-
 def model_by_category(cat: str):
     return {
         "shoes": Shoe,
@@ -24,7 +23,6 @@ def model_by_category(cat: str):
         "одежда": Clothing,
         "аксессуары": Accessory
     }.get(cat.lower())
-
 
 @api.route("/api/")
 def home():
@@ -37,10 +35,11 @@ def save_user():
     if not data or 'id' not in data:
         return jsonify({"error": "missing user id"}), 400
 
-    user_id = str(data['id'])
-    first_name = data.get('first_name')
-    last_name = data.get('last_name')
-    username = data.get('username')
+    user_id      = str(data['id'])
+    first_name   = data.get('first_name')
+    last_name    = data.get('last_name')
+    username     = data.get('username')
+    photo_url    = data.get('photo_url')
 
     now = datetime.now(ZoneInfo("Europe/Moscow"))
     date_str = now.strftime("%Y-%m-%d")
@@ -97,12 +96,8 @@ def save_user():
 @api.route("/api/visits")
 def get_daily_visits():
     """
-    Параметр запроса: ?date=2025-01-01 (формат YYYY-MM-DD). Если date не указан, можно вернуть за «сегодня» (UTC-дата).
-    Возвращает JSON вида:
-    {"date": "2025-01-01", "hours": [{"hour": "00", "unique": 12, "total": 34},
-                                      {"hour": "01", "unique": 23, "total": 45},
-                                      ...
-                                      {"hour": "23", "unique": 56, "total": 78}]}
+    GET /api/visits?date=YYYY-MM-DD
+    Если date не указан — берём «сегодня» (московское).
     """
     date_str = request.args.get("date")
     if not date_str:
@@ -138,18 +133,18 @@ def list_products():
     [ {sku, name, price, category, image, color, created_at, updated_at}, ... ]
     """
     cat = request.args.get("category", "").lower()
-
     Model = model_by_category(cat)
     if not Model:
         return jsonify({"error": "unknown category"}), 400
 
     items = Model.query.all()
     result = []
+    ms_tz = ZoneInfo("Europe/Moscow")
 
     for i in items:
         image_url = f'{os.getenv("BACKEND_URL")}/images/{i.sku}-1.webp'
-        created_ms = i.created_at.strftime("%Y-%m-%d %H:%M:%S") if i.created_at else None
-        updated_ms = i.updated_at.strftime("%Y-%m-%d %H:%M:%S") if i.updated_at else None
+        created_ms = (i.created_at.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S") if i.created_at else None)
+        updated_ms = (i.updated_at.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S") if i.updated_at else None)
 
         result.append({
             "sku":        i.sku,
@@ -169,7 +164,7 @@ def list_products():
 def get_product():
     """
     GET /api/product?category=<категория>&sku=<sku>
-    Возвращает: все поля товара + массив URL изображений.
+    Возвращает: все поля записи + массив URL изображений.
     """
     cat = request.args.get("category", "").lower()
     sku = request.args.get("sku", "").strip()
@@ -179,15 +174,17 @@ def get_product():
     Model = model_by_category(cat)
     if not Model:
         return jsonify({"error": "unknown category"}), 400
+
     obj = Model.query.filter_by(sku=sku).first()
     if not obj:
         return jsonify({"error": "not found"}), 404
 
     data = {}
+    ms_tz = ZoneInfo("Europe/Moscow")
     for column in obj.__table__.columns:
         val = getattr(obj, column.name)
         if isinstance(val, datetime):
-            data[column.name] = val.strftime("%Y-%m-%d %H:%M:%S")
+            data[column.name] = val.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S")
         else:
             data[column.name] = val
 
@@ -203,9 +200,13 @@ def get_product():
 def import_products():
     """
     POST /api/import_products
-    Поле form-data: file=<csv>, author_id=<число>
-    Имя файла определяет категорию: shoes.csv, clothing.csv или accessories.csv.
-    Если все значения в строке CSV (кроме sku) пустые → удаляем товар.
+    form-data:
+      - file=<csv> (имя файла → категория: shoes.csv, clothing.csv, accessories.csv)
+      - author_id=<число>
+      - author_name=<строка>
+    Логика:
+      • Если все колонки (кроме sku) пустые → удаляем запись.
+      • Иначе — добавляем или обновляем, подсчитываем added/updated/deleted.
     """
     f = request.files.get("file")
     author_id_str = request.form.get("author_id", "").strip()
@@ -243,7 +244,7 @@ def import_products():
             sku = row["sku"].strip()
             other_fields = {k: row[k].strip() for k in row if k != "sku"}
             if sku and all(not vv for vv in other_fields.values()):
-                # Удаляем товар (если существует)
+                # Удаляем товар (если есть)
                 obj_to_delete = existing_objs.get(sku)
                 if obj_to_delete:
                     db.session.delete(obj_to_delete)
@@ -295,36 +296,51 @@ def import_products():
                     updated += 1
 
         db.session.commit()
-    except Exception as e:
-        logger.error(f"Import error: {e}")
-        db.session.rollback()
-        return jsonify({"error": "db error"}), 500
 
-    # Формируем описание: "Добавлено X, Изменено Y, Удалено Z"
-    desc = f"Добавлено {added}, Изменено {updated}, Удалено {deleted}"
-    try:
+        # Всё прошло без исключений → логируем успешный результат
+        desc = f"Добавлено {added}, Изменено {updated}, Удалено {deleted}"
         log = ChangeLog(
             author_id=author_id,
             author_name=author_name_str,
-            action_type="загрузка csv",
+            action_type=f"успешная загрузка {name}",
             description=desc,
             timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
         )
         db.session.add(log)
         db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Ошибка при сохранении лога (товары): {e}")
 
-    return jsonify({"status": "ok", "added": added, "updated": updated, "deleted": deleted}), 201
+        return jsonify({"status": "ok", "added": added, "updated": updated, "deleted": deleted}), 201
+
+    except Exception as e:
+        logger.error(f"Import error: {e}")
+        db.session.rollback()
+        # Логируем неудачную попытку
+        try:
+            err_desc = f"Ошибка при загрузке CSV: {str(e)}"
+            fail_log = ChangeLog(
+                author_id=author_id,
+                author_name=author_name_str,
+                action_type=f"неудачная загрузка {name}",
+                description=err_desc,
+                timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
+            )
+            db.session.add(fail_log)
+            db.session.commit()
+        except Exception as log_e:
+            db.session.rollback()
+            logger.error(f"Не удалось сохранить лог об ошибке (товары): {log_e}")
+
+        return jsonify({"error": "db error", "message": str(e)}), 500
 
 
 @api.route("/api/upload_images", methods=["POST"])
 def upload_images():
     """
     POST /api/upload_images
-    Поле form-data: file=<zip>, author_id=<число>
-    Распаковывает ZIP, загружает файлы в MinIO, удаляет лишние.
+    form-data:
+      - file=<zip>
+      - author_id=<число>
+      - author_name=<строка>
     """
     z = request.files.get("file")
     author_id_str = request.form.get("author_id", "").strip()
@@ -343,79 +359,100 @@ def upload_images():
     if not z.filename.lower().endswith(".zip"):
         return jsonify({"error": "not a ZIP"}), 400
 
-    data = io.BytesIO(z.stream.read())
-    added = replaced = 0
-    with zipfile.ZipFile(data) as archive:
-        for info in archive.infolist():
-            if info.is_dir():
-                continue
-            key = info.filename
-            content = archive.read(info)
-            try:
-                minio_client.stat_object(BUCKET, key)
-                replaced += 1
-            except S3Error:
-                added += 1
-            minio_client.put_object(BUCKET, key, io.BytesIO(content), length=len(content), content_type="application/octet-stream")
-
-    # Удаляем “чужие” файлы
-    expected = set()
-    for Model in (Shoe, Clothing, Accessory):
-        for obj in Model.query:
-            count = getattr(obj, "count_images", 0) or 0
-            for i in range(1, count + 1):
-                expected.add(f"{obj.sku}-{i}")
-
-    deleted = 0
-    for item in minio_client.list_objects(BUCKET, recursive=True):
-        base = os.path.splitext(item.object_name)[0]
-        if base not in expected:
-            minio_client.remove_object(BUCKET, item.object_name)
-            deleted += 1
-
-    # Логируем действие
-    desc = f"Добавлено {added}, Заменено {replaced}, Удалено {deleted}"
+    name = z.filename.lower()
     try:
+        data = io.BytesIO(z.stream.read())
+        added = replaced = 0
+        with zipfile.ZipFile(data) as archive:
+            for info in archive.infolist():
+                if info.is_dir():
+                    continue
+                key = info.filename
+                content = archive.read(info)
+                try:
+                    minio_client.stat_object(BUCKET, key)
+                    replaced += 1
+                except S3Error:
+                    added += 1
+                minio_client.put_object(BUCKET, key, io.BytesIO(content), length=len(content), content_type="application/octet-stream")
+
+        # Удаляем «чужие» файлы
+        expected = set()
+        for Model in (Shoe, Clothing, Accessory):
+            for obj in Model.query:
+                count = getattr(obj, "count_images", 0) or 0
+                for i in range(1, count + 1):
+                    expected.add(f"{obj.sku}-{i}")
+
+        deleted = 0
+        for item in minio_client.list_objects(BUCKET, recursive=True):
+            base = os.path.splitext(item.object_name)[0]
+            if base not in expected:
+                minio_client.remove_object(BUCKET, item.object_name)
+                deleted += 1
+
+        # Логируем успешную загрузку
+        desc = f"Добавлено {added}, Заменено {replaced}, Удалено {deleted}"
         log = ChangeLog(
             author_id=author_id,
             author_name=author_name_str,
-            action_type="загрузка zip",
+            action_type=f"успешная загрузка {name}",
             description=desc,
             timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
         )
         db.session.add(log)
         db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Ошибка при сохранении лога (изображения): {e}")
 
-    return jsonify({"status": "ok", "added": added, "replaced": replaced, "deleted": deleted}), 201
+        return jsonify({"status": "ok", "added": added, "replaced": replaced, "deleted": deleted}), 201
+
+    except Exception as e:
+        logger.error(f"Upload images error: {e}")
+        db.session.rollback()
+        # Логируем неудачную попытку
+        try:
+            error_desc = f"Ошибка при загрузке ZIP: {str(e)}"
+            fail_log = ChangeLog(
+                author_id=author_id,
+                author_name=author_name_str,
+                action_type=f"неудачная загрузка {name}",
+                description=error_desc,
+                timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
+            )
+            db.session.add(fail_log)
+            db.session.commit()
+        except Exception as log_e:
+            db.session.rollback()
+            logger.error(f"Не удалось сохранить лог об ошибке (изображения): {log_e}")
+
+        return jsonify({"error": "upload error", "message": str(e)}), 500
 
 
 @api.route("/api/logs")
 def get_logs():
     """
     GET /api/logs?limit=<N>
-    Возвращает последние N записей из таблицы change_logs:
-    { logs: [ {id, author_id, action_type, description, timestamp}, ... ] }
+    Возвращает последние N записей из change_logs.
     """
     try:
         limit = int(request.args.get("limit", 10))
     except ValueError:
         limit = 10
+
     try:
+        ms_tz = ZoneInfo("Europe/Moscow")
         logs_qs = ChangeLog.query.order_by(ChangeLog.timestamp.desc()).limit(limit).all()
         result = []
         for lg in logs_qs:
             result.append({
-                "id": lg.id,
-                "author_id": lg.author_id,
+                "id":          lg.id,
+                "author_id":   lg.author_id,
                 "author_name": lg.author_name,
                 "action_type": lg.action_type,
                 "description": lg.description,
-                "timestamp": lg.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                "timestamp":   lg.timestamp.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S")
             })
         return jsonify({"logs": result}), 200
+
     except Exception as e:
         logger.error(f"Ошибка при получении логов: {e}")
         return jsonify({"error": "cannot fetch logs"}), 500
@@ -425,7 +462,7 @@ def get_logs():
 def get_user_profile():
     """
     GET /api/user?user_id=<id>
-    Возвращает: { user_id, first_name, last_name, username, created_at }
+    Возвращает пользовательские данные + дату создания.
     """
     user_id = request.args.get("user_id")
     if not user_id:
@@ -440,7 +477,9 @@ def get_user_profile():
         if not u:
             return jsonify({"error": "not found"}), 404
 
-        created_ms = u.created_at.strftime("%Y-%m-%d %H:%M:%S") if u.created_at else None
+        ms_tz = ZoneInfo("Europe/Moscow")
+        created_ms = (u.created_at.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S") if u.created_at else None)
+
         return jsonify({
             "user_id":    u.user_id,
             "first_name": u.first_name,
@@ -458,7 +497,7 @@ def get_user_profile():
 def get_cart():
     """
     GET /api/cart?user_id=<id>
-    Возвращает JSON: { items: [...], count, total }
+    Возвращает JSON: { items, count, total }.
     """
     user_id = request.args.get("user_id")
     if not user_id:
@@ -469,13 +508,13 @@ def get_cart():
         return jsonify({"error": "invalid user_id"}), 400
 
     try:
-        key = f"cart:{uid}"
+        key    = f"cart:{uid}"
         stored = redis_client.get(key)
         if not stored:
             return jsonify({"items": [], "count": 0, "total": 0}), 200
-
         cart_data = json.loads(stored)
         return jsonify(cart_data), 200
+
     except Exception as e:
         logger.error(f"Redis error in get_cart: {e}")
         return jsonify({"error": "internal redis error"}), 500
@@ -485,7 +524,7 @@ def get_cart():
 def save_cart():
     """
     POST /api/cart
-    Сохраняет корзину в Redis: { user_id, items, count, total }
+    Сохраняет корзину в Redis: { user_id, items, count, total }.
     """
     data = request.get_json(force=True, silent=True)
     if not data or "user_id" not in data:
@@ -506,6 +545,7 @@ def save_cart():
         year = 60 * 60 * 24 * 365
         redis_client.expire(key, year)
         return jsonify({"status": "ok"}), 200
+
     except Exception as e:
         logger.error(f"Redis error in save_cart: {e}")
         return jsonify({"error": "internal redis error"}), 500

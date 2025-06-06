@@ -11,7 +11,6 @@
       </form>
       <p v-if="csvResult" class="upload-result">{{ csvResult }}</p>
     </section>
-    <!-- === /Секция 1 === -->
 
     <!-- === Секция 2: Загрузка ZIP === -->
     <section class="upload-section">
@@ -22,7 +21,6 @@
       </form>
       <p v-if="zipResult" class="upload-result">{{ zipResult }}</p>
     </section>
-    <!-- === /Секция 2 === -->
 
     <!-- === Секция 3: Логи изменений товаров/изображений === -->
     <section class="logs-section">
@@ -33,7 +31,7 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Автор</th>
+              <th>Автор (ID)</th>
               <th>Ник автора</th>
               <th>Тип действия</th>
               <th>Описание</th>
@@ -50,13 +48,12 @@
               <td>{{ log.timestamp }}</td>
             </tr>
             <tr v-if="logs.length === 0">
-              <td colspan="5" class="no-logs">Нет записей</td>
+              <td colspan="6" class="no-logs">Нет записей</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
-    <!-- === /Секция 3 === -->
 
     <!-- === Секция 4: Статистика посещений (бар-чарт) === -->
     <section class="visits-section">
@@ -82,7 +79,6 @@
         </div>
       </div>
     </section>
-    <!-- === /Секция 4 === -->
   </div>
 </template>
 
@@ -95,7 +91,7 @@ const store = useStore()
 const adminId = store.user?.id
 const adminName = store.user?.username
 
-// Поле даты
+// Дата для статистики
 const selectedDate = ref('')
 
 // Объект посещений: { date, hours: [ {hour, unique, total} ] }
@@ -104,17 +100,17 @@ const visitsData = ref({ date: '', hours: [] })
 // Флаг, что идёт загрузка данных посещений
 const visitsLoading = ref(false)
 
-// Массив логов последних 10 изменений
+// Логи (последние 10 записей)
 const logs = ref([])
 const logsLoading = ref(false)
 
-// Вычисляемая “максимальная” высота (макс total), чтобы масштабировать бары
+// Вычисление макс. знач. total, чтобы растянуть бары
 const maxTotal = computed(() => {
   if (!visitsData.value.hours.length) return 1
   return Math.max(...visitsData.value.hours.map((item) => item.total), 1)
 })
 
-// Загрузка посещений
+// fetch посещений
 async function fetchVisits() {
   visitsLoading.value = true
   visitsData.value = { date: '', hours: [] }
@@ -139,7 +135,7 @@ async function fetchVisits() {
   }
 }
 
-// Загрузка последних 10 логов
+// fetch логов
 async function fetchLogs() {
   logsLoading.value = true
   logs.value = []
@@ -160,7 +156,7 @@ async function fetchLogs() {
   }
 }
 
-// При монтировании задаём сегодняшнюю дату и одновременно грузим посещения и логи
+// При монтировании
 onMounted(() => {
   const today = new Date().toISOString().slice(0, 10)
   selectedDate.value = today
@@ -168,7 +164,7 @@ onMounted(() => {
   fetchLogs()
 })
 
-// ——— Методы заливки CSV и ZIP ———
+// Методы для CSV/ZIP
 const csvInput = ref(null)
 const zipInput = ref(null)
 
@@ -182,6 +178,7 @@ function onCsvSelected(event) {
   csvFile.value = event.target.files[0] || null
   csvResult.value = ''
 }
+
 function onZipSelected(event) {
   zipFile.value = event.target.files[0] || null
   zipResult.value = ''
@@ -253,10 +250,6 @@ async function submitZip() {
   }
 }
 
-// Форматирование даты из лога (возвращаем уже строку, т. е. без изменений)
-function formatDateTime(str) {
-  return str
-}
 </script>
 
 <style scoped lang="scss">

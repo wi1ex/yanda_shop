@@ -7,8 +7,8 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
-import { useStore } from '@/store/index.js'
+import {onMounted} from 'vue'
+import {useStore} from '@/store/index.js'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 
@@ -32,11 +32,14 @@ onMounted(() => {
     userId = generateVisitorId()
     localStorage.setItem('visitorId', userId)
   }
+
+  // Инициализируем user со всеми полями, включая photo_url
   store.user = {
     id: userId,
     first_name: null,
     last_name: null,
-    username: null
+    username: null,
+    photo_url: null
   }
 
   if (window.Telegram?.WebApp) {
@@ -47,7 +50,8 @@ onMounted(() => {
         id: tgUser.id,
         first_name: tgUser.first_name,
         last_name: tgUser.last_name,
-        username: tgUser.username
+        username: tgUser.username,
+        photo_url: tgUser.photo_url || null
       }
     }
   }
@@ -55,12 +59,13 @@ onMounted(() => {
   // Отправляем на бэкенд
   fetch(`${store.url}/api/save_user`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
       id: store.user.id,
       first_name: store.user.first_name,
       last_name: store.user.last_name,
       username: store.user.username,
+      photo_url: store.user.photo_url
     }),
   }).catch(console.error)
 })

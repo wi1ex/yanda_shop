@@ -19,7 +19,7 @@
 
     <router-link to="/profile" class="user-info">
       <img :src="store.user.photo_url || img_bot" alt="avatar" class="avatar" />
-      <span class="username">{{ store.user.id }}</span>
+      <span class="username">{{ store.user.username }}</span>
     </router-link>
   </header>
 </template>
