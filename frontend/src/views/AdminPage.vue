@@ -73,7 +73,7 @@
         <!-- Иначе: «самописный» бар-чарт -->
         <div v-else class="bar-chart">
           <div v-for="h in visitsData.hours" :key="h.hour" class="bar" :style="{ height: (h.total / maxTotal * 100) + '%' }">
-            <div class="bar-label">{{ h.hour }}:00</div>
+            <div class="bar-label">{{ Number(h.hour) }}</div>
             <div class="bar-value">{{ h.total }}</div>
           </div>
         </div>

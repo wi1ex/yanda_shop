@@ -1,26 +1,19 @@
 <template>
   <header class="header">
-    <h1 class="logo" @click="goHome">YANDA SHOP</h1>
+    <div class="top-row">
+      <h1 class="logo" @click="goHome">YANDA SHOP</h1>
+      <router-link to="/profile" class="user-info">
+        <img :src="store.user.photo_url || img_bot" alt="avatar" class="avatar" />
+        <span class="username">{{ store.user.username }}</span>
+      </router-link>
+    </div>
 
     <nav class="nav-links">
-      <router-link to="/" class="nav-link" exact>
-        Главная
-      </router-link>
-      <router-link to="/catalog" class="nav-link">
-        Каталог
-      </router-link>
-      <router-link to="/cart" class="nav-link">
-        Корзина ({{ store.cart.count }})
-      </router-link>
-      <router-link v-if="isAdmin" to="/admin" class="nav-link">
-        Админ-панель
-      </router-link>
+      <router-link to="/" class="nav-link" exact>Главная</router-link>
+      <router-link to="/catalog" class="nav-link">Каталог</router-link>
+      <router-link to="/cart" class="nav-link">Корзина ({{ store.cart.count }})</router-link>
+      <router-link v-if="isAdmin" to="/admin" class="nav-link">Админ-панель</router-link>
     </nav>
-
-    <router-link to="/profile" class="user-info">
-      <img :src="store.user.photo_url || img_bot" alt="avatar" class="avatar" />
-      <span class="username">{{ store.user.username }}</span>
-    </router-link>
   </header>
 </template>
 

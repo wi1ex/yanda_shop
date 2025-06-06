@@ -100,23 +100,17 @@
 
 <script setup>
 import { ref, watch, nextTick, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useStore } from '@/store/index.js'
 
-// Принимаем параметры из URL
-const props = defineProps({
-  sku: {
-    type: String,
-    required: true
-  },
-  category: {
-    type: String,
-    required: true
-  }
-})
-
-const store = useStore()
+const route = useRoute()
 const router = useRouter()
+const store = useStore()
+
+// Берём sku из route.params и category из route.query
+const sku = route.params.sku
+const category = route.query.category
+
 const detailData = ref(null)
 
 // Индикатор загрузки
@@ -182,9 +176,7 @@ async function fetchDetail() {
   loading.value = true
   detailData.value = null
   try {
-    const response = await fetch(
-      `${store.url}/api/product?category=${encodeURIComponent(props.category)}&sku=${encodeURIComponent(props.sku)}`
-    )
+    const response = await fetch(`${store.url}/api/product?category=${encodeURIComponent(category)}&sku=${encodeURIComponent(sku)}`)
     if (!response.ok) {
       console.error('Ошибка при получении детализации товара:', response.statusText)
       detailData.value = null
@@ -208,7 +200,7 @@ onMounted(async () => {
 
 // При изменении sku или category — обновляем данные
 watch(
-  () => [props.sku, props.category],
+  () => [route.params.sku, route.query.category],
   async () => {
     await fetchDetail()
     await nextTick()
@@ -221,7 +213,7 @@ const currentQuantity = ref(0)
 // Следим за detailData, чтобы обновить количество в корзине
 watch(
   () => detailData.value,
-  (newVal) => {
+  newVal => {
     if (newVal) {
       currentQuantity.value = store.getProductQuantity(newVal)
     }
@@ -255,7 +247,7 @@ function onDecrease(item) {
   padding: 2vh;
 }
 
-/* Стили для кнопки назад */
+/* Стили для кнопки “Назад” */
 .back-button {
   display: flex;
   justify-self: center;
@@ -285,7 +277,7 @@ function onDecrease(item) {
   background: $background-color;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Карусель изображений */
@@ -376,7 +368,7 @@ function onDecrease(item) {
   word-wrap: break-word;
 }
 .detail-field a {
-  margin-left: .5vh;
+  margin-left: 0.5vh;
   color: #ccc;
 }
 
