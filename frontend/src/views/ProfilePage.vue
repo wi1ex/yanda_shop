@@ -18,6 +18,7 @@
 
     <!-- Когда профиль успешно загружен (и telegram-пользователь) -->
     <div v-else class="profile-info">
+      <img :src="store.user.photo_url || img_bot" alt="avatar" class="profile-avatar"/>
       <p>
         <strong>ID:</strong> {{ profile.user_id }}
       </p>
@@ -113,6 +114,14 @@ onMounted(async () => {
   margin-top: 20px;
   font-style: italic;
   color: #bbb;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 16px;
 }
 
 .profile-info {
