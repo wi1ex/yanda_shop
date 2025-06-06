@@ -1,7 +1,6 @@
 <template>
   <header class="header">
     <div class="top-row">
-      <h1 class="logo" @click="goHome">YANDA SHOP</h1>
       <router-link to="/profile" class="user-info">
         <img :src="store.user.photo_url || img_bot" alt="avatar" class="avatar" />
         <span class="username">{{ store.user.username }}</span>
