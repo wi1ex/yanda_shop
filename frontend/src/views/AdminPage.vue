@@ -13,7 +13,6 @@
     </section>
     <!-- === /Секция 1 === -->
 
-
     <!-- === Секция 2: Загрузка ZIP === -->
     <section class="upload-section">
       <h2>Загрузить ZIP с изображениями</h2>
@@ -25,119 +24,101 @@
     </section>
     <!-- === /Секция 2 === -->
 
+    <!-- === Секция 3: Логи изменений товаров/изображений === -->
+    <section class="logs-section">
+      <h2>Последние 10 изменений</h2>
+      <div v-if="logsLoading" class="loading-logs">Загрузка журналов...</div>
+      <div v-else>
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Автор</th>
+              <th>Ник автора</th>
+              <th>Тип действия</th>
+              <th>Описание</th>
+              <th>Дата</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="log in logs" :key="log.id">
+              <td>{{ log.id }}</td>
+              <td>{{ log.author_id }}</td>
+              <td>{{ log.author_name }}</td>
+              <td>{{ log.action_type }}</td>
+              <td>{{ log.description }}</td>
+              <td>{{ log.timestamp }}</td>
+            </tr>
+            <tr v-if="logs.length === 0">
+              <td colspan="5" class="no-logs">Нет записей</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <!-- === /Секция 3 === -->
 
-    <!-- === Секция 3: Статистика посещений === -->
+    <!-- === Секция 4: Статистика посещений (бар-чарт) === -->
     <section class="visits-section">
       <h2>Статистика посещений</h2>
 
       <div class="date-picker">
         <label for="visit-date">Дата:</label>
-        <input type="date" id="visit-date" v-model="selectedDate" @change="fetchVisits"/>
-        <button class="refresh-button" @click="fetchVisits">
-          Обновить
-        </button>
+        <input type="date" id="visit-date" v-model="selectedDate" @change="fetchVisits" />
+        <button class="refresh-button" @click="fetchVisits">Обновить</button>
       </div>
 
-      <div v-if="visitsLoading" class="loading-visits">
-        Загрузка данных...
-      </div>
+      <div v-if="visitsLoading" class="loading-visits">Загрузка данных...</div>
 
-      <div v-else class="chart-container">
-        <!--  Если hours — массив, рисуем Bar, иначе ничего  -->
-        <Bar v-if="Array.isArray(visitsData.hours)" :chart-data="chartData" :chart-options="chartOptions" style="height: 100%;"/>
+      <div v-else class="chart-wrapper">
+        <!-- Если нет данных, выводим сообщение -->
+        <div v-if="!visitsData.hours.length" class="no-data">Нет данных за выбранный день</div>
+        <!-- Иначе: «самописный» бар-чарт -->
+        <div v-else class="bar-chart">
+          <div v-for="h in visitsData.hours" :key="h.hour" class="bar" :style="{ height: (h.total / maxTotal * 100) + '%' }">
+            <div class="bar-label">{{ h.hour }}:00</div>
+            <div class="bar-value">{{ h.total }}</div>
+          </div>
+        </div>
       </div>
     </section>
-    <!-- === /Секция 3 === -->
+    <!-- === /Секция 4 === -->
   </div>
 </template>
 
 <script setup>
-// Общие импорты
 import { ref, onMounted, computed } from 'vue'
 import { useStore } from '@/store/index.js'
 
-// --- Chart.js 4 + vue-chartjs 5 ---
-import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement
-} from 'chart.js'
-import { Bar } from 'vue-chartjs'
-
-// Регистрируем плагины Chart.js
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
-
+// ——— Работа с бэкендом статистики посещений и логов ———
 const store = useStore()
+const adminId = store.user?.id
+const adminName = store.user?.username
 
-// --- Логику работы с датой и посещениями держим в setup() ---
-
-// 1) Дата, выбранная в input[type="date"]
+// Поле даты
 const selectedDate = ref('')
 
-// 2) Объект вида { date: 'YYYY-MM-DD', hours: [ {hour, unique, total}, ... ] }
+// Объект посещений: { date, hours: [ {hour, unique, total} ] }
 const visitsData = ref({ date: '', hours: [] })
 
-// 3) Флаг, что идёт загрузка
+// Флаг, что идёт загрузка данных посещений
 const visitsLoading = ref(false)
 
-// 4) Вычисленные метки оси X: ["00:00","01:00",…,"23:00"]
-const labelsForChart = computed(() =>
-  visitsData.value.hours.map((h) => h.hour + ':00')
-)
+// Массив логов последних 10 изменений
+const logs = ref([])
+const logsLoading = ref(false)
 
-// 5) Опции для Bar (Chart.js 4)
-const chartOptions = {
-  responsive: true,
-  plugins: {
-    legend: {
-      display: true,
-      position: 'bottom'
-    },
-    title: {
-      display: false
-    }
-  },
-  scales: {
-    x: {
-      title: {
-        display: true,
-        text: 'Часы'
-      }
-    },
-    y: {
-      title: {
-        display: true,
-        text: 'Всего визитов'
-      },
-      beginAtZero: true
-    }
-  }
-}
+// Вычисляемая “максимальная” высота (макс total), чтобы масштабировать бары
+const maxTotal = computed(() => {
+  if (!visitsData.value.hours.length) return 1
+  return Math.max(...visitsData.value.hours.map((item) => item.total), 1)
+})
 
-// 6) Вычисляемые данные для Bar: { labels: [...], datasets: [ {label,data,backgroundColor} ] }
-const chartData = computed(() => ({
-  labels: labelsForChart.value,
-  datasets: [
-    {
-      label: 'Всего визитов',
-      data: visitsData.value.hours.map((item) => item.total),
-      backgroundColor: '#2196F3'
-    }
-  ]
-}))
-
-// 7) Функция, чтобы подтянуть данные визитов с backend
+// Загрузка посещений
 async function fetchVisits() {
   visitsLoading.value = true
-  // Обязательно сбрасываем на «пустой» формат
   visitsData.value = { date: '', hours: [] }
-
   try {
-    // Если дата не выбрана — по умолчанию «сегодня»
     const dateToFetch = selectedDate.value || new Date().toISOString().slice(0, 10)
     const resp = await fetch(`${store.url}/api/visits?date=${dateToFetch}`)
     if (!resp.ok) {
@@ -146,31 +127,48 @@ async function fetchVisits() {
       return
     }
     const data = await resp.json()
-
-    // Нормализуем: гарантируем, что hours – массив
     visitsData.value = {
       date: data.date || dateToFetch,
       hours: Array.isArray(data.hours) ? data.hours : []
     }
   } catch (e) {
     console.error('Ошибка сети при fetchVisits:', e)
-    // В случае ошибки сети оставляем пустой массив
     visitsData.value = { date: '', hours: [] }
   } finally {
     visitsLoading.value = false
   }
 }
 
-// 8) При монтировании компонента сразу задать сегодняшнюю дату и запросить данные
+// Загрузка последних 10 логов
+async function fetchLogs() {
+  logsLoading.value = true
+  logs.value = []
+  try {
+    const resp = await fetch(`${store.url}/api/logs?limit=10`)
+    if (!resp.ok) {
+      console.error('Ошибка при получении логов:', resp.statusText)
+      logsLoading.value = false
+      return
+    }
+    const data = await resp.json()
+    logs.value = Array.isArray(data.logs) ? data.logs : []
+  } catch (e) {
+    console.error('Ошибка сети при fetchLogs:', e)
+    logs.value = []
+  } finally {
+    logsLoading.value = false
+  }
+}
+
+// При монтировании задаём сегодняшнюю дату и одновременно грузим посещения и логи
 onMounted(() => {
   const today = new Date().toISOString().slice(0, 10)
   selectedDate.value = today
   fetchVisits()
+  fetchLogs()
 })
 
-
-// === Ниже идут методы для CSV и ZIP (без изменений) ===
-
+// ——— Методы заливки CSV и ZIP ———
 const csvInput = ref(null)
 const zipInput = ref(null)
 
@@ -194,6 +192,8 @@ async function submitCsv() {
   csvResult.value = 'Загрузка...'
   const formData = new FormData()
   formData.append('file', csvFile.value)
+  formData.append('author_id', adminId)
+  formData.append('author_name', adminName)
 
   try {
     const resp = await fetch(`${store.url}/api/import_products`, {
@@ -202,7 +202,9 @@ async function submitCsv() {
     })
     const data = await resp.json()
     if (resp.status === 201 && data) {
-      csvResult.value = `Успех: Добавлено ${data.added || 0}, Обновлено ${data.updated || 0}`
+      csvResult.value = `Успех: Добавлено ${data.added || 0}, Обновлено ${data.updated || 0}, Удалено ${data.deleted || 0}`
+      // После удачной загрузки — обновим логи
+      fetchLogs()
     } else {
       csvResult.value = `Ошибка ${resp.status}: ${data.error || JSON.stringify(data)}`
     }
@@ -223,6 +225,8 @@ async function submitZip() {
   zipResult.value = 'Загрузка...'
   const formData = new FormData()
   formData.append('file', zipFile.value)
+  formData.append('author_id', adminId)
+  formData.append('author_name', adminName)
 
   try {
     const resp = await fetch(`${store.url}/api/upload_images`, {
@@ -232,6 +236,8 @@ async function submitZip() {
     const data = await resp.json()
     if (resp.status === 201 && data) {
       zipResult.value = `Успех: Добавлено ${data.added || 0}, Заменено ${data.replaced || 0}, Удалено ${data.deleted || 0}`
+      // После загрузки ZIP — обновим логи
+      fetchLogs()
     } else {
       zipResult.value = `Ошибка ${resp.status}: ${data.error || JSON.stringify(data)}`
     }
@@ -246,6 +252,11 @@ async function submitZip() {
     }
   }
 }
+
+// Форматирование даты из лога (возвращаем уже строку, т. е. без изменений)
+function formatDateTime(str) {
+  return str
+}
 </script>
 
 <style scoped lang="scss">
@@ -255,8 +266,46 @@ async function submitZip() {
   color: #fff;
 }
 
-/* --- Секция статистики --- */
+/* --- Секция загрузки CSV/ZIP --- */
+.upload-section {
+  margin-bottom: 30px;
+}
+.upload-section input[type='file'] {
+  margin-right: 10px;
+}
+.upload-result {
+  margin-top: 8px;
+  color: #bada55;
+}
+
+/* --- Секция логов изменений --- */
+.logs-section {
+  margin-bottom: 40px;
+}
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.logs-table th,
+.logs-table td {
+  border: 1px solid #444;
+  padding: 8px;
+  text-align: center;
+  font-size: 14px;
+}
+.logs-table th {
+  background-color: #252a3b;
+}
+.no-logs {
+  text-align: center;
+  padding: 10px;
+  font-style: italic;
+}
+
+/* --- Секция статистики посещений --- */
 .visits-section {
+  margin-top: 40px;
   margin-bottom: 40px;
 }
 .date-picker {
@@ -277,30 +326,57 @@ async function submitZip() {
 .refresh-button:hover {
   background: #0056b3;
 }
-.loading-visits {
+.loading-visits,
+.loading-logs {
   color: #bbb;
   font-style: italic;
   margin-top: 10px;
 }
-/* Контейнер для графика: */
-.chart-container {
+.no-data {
+  color: #bbb;
+  font-style: italic;
+  margin-top: 20px;
+}
+
+/* Контейнер для «самописного» бар-чарта */
+.chart-wrapper {
   width: 100%;
   max-width: 800px;
   margin: 20px auto;
-  height: 350px;
 }
-/* --- Секция статистики завершена --- */
 
-/* --- Секция загрузки CSV/ZIP --- */
-.upload-section {
-  margin-bottom: 30px;
+/* Стили «бар-чарта» */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  height: 300px;
+  border-left: 1px solid #666;
+  border-bottom: 1px solid #666;
 }
-.upload-section input[type='file'] {
-  margin-right: 10px;
+.bar {
+  flex: 1;
+  margin: 0 2px;
+  background-color: #2196F3;
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  align-items: center;
+  transition: background 0.2s;
 }
-.upload-result {
-  margin-top: 8px;
-  color: #bada55;
+.bar:hover {
+  background-color: #1976D2;
 }
-/* --- Конец секции CSV/ZIP --- */
+/* Надпись с числом сверху */
+.bar-value {
+  color: #fff;
+  font-size: 12px;
+  padding: 2px;
+}
+.bar-label {
+  position: absolute;
+  bottom: -20px;
+  font-size: 12px;
+  color: #ccc;
+}
 </style>
