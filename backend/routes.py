@@ -47,43 +47,45 @@ def save_user() -> Tuple[Response, int]:
     raw_id = data["id"]
     try:
         user_id: int = int(raw_id)
+        is_tg: bool = True
     except (TypeError, ValueError):
-        logger.error("save_user: invalid id %r", raw_id)
-        return jsonify({"error": "invalid user id"}), 400
+        # Неконвертируемый id — это не Telegram-пользователь, но не ошибка!
+        logger.warning("save_user: non-integer id %r, skipping Postgres", raw_id)
+        is_tg = False
 
     first_name: Optional[str] = data.get("first_name")
     last_name: Optional[str] = data.get("last_name")
     username: Optional[str] = data.get("username")
 
-    # --- Postgres ---
-    try:
-        tg_user: Optional[Users] = Users.query.get(user_id)
-        if not tg_user:
-            tg_user = Users(
-                user_id=user_id,
-                first_name=first_name,
-                last_name=last_name,
-                username=username,
-            )
-            db.session.add(tg_user)
+    # --- Postgres только для целых id ---
+    if is_tg:
+        try:
+            tg_user: Optional[Users] = Users.query.get(user_id)
+            if not tg_user:
+                tg_user = Users(
+                    user_id=user_id,
+                    first_name=first_name,
+                    last_name=last_name,
+                    username=username,
+                )
+                db.session.add(tg_user)
+                logger.info("Registered new Telegram user %d", user_id)
+            else:
+                updated = False
+                for field in ("first_name", "last_name", "username"):
+                    new_val = data.get(field)
+                    if new_val and getattr(tg_user, field) != new_val:
+                        setattr(tg_user, field, new_val)
+                        updated = True
+                if updated:
+                    logger.info("Updated Telegram user %d", user_id)
             db.session.commit()
-            logger.info("New Telegram user registered: %d", user_id)
-        else:
-            updated = False
-            for field in ("first_name", "last_name", "username"):
-                new = data.get(field)
-                if new and getattr(tg_user, field) != new:
-                    setattr(tg_user, field, new)
-                    updated = True
-            if updated:
-                db.session.commit()
-                logger.info("Telegram user %d updated", user_id)
-    except Exception as e:
-        db.session.rollback()
-        logger.exception("Postgres error in save_user: %s", e)
-        return jsonify({"error": "internal server error"}), 500
+        except Exception as e:
+            db.session.rollback()
+            logger.exception("Postgres error in save_user: %s", e)
+            return jsonify({"error": "internal server error"}), 500
 
-    # --- Redis ---
+    # --- Redis всегда ---
     try:
         now = datetime.now(ZoneInfo("Europe/Moscow"))
         date_str = now.strftime("%Y-%m-%d")
@@ -92,13 +94,14 @@ def save_user() -> Tuple[Response, int]:
         total_key = f"visits:{date_str}:{hour_str}:total"
         unique_key = f"visits:{date_str}:{hour_str}:unique"
 
+        # если raw_id не число, всё равно кладём в Redis строку raw_id
         redis_client.incr(total_key)
-        redis_client.sadd(unique_key, user_id)
+        redis_client.sadd(unique_key, raw_id)
         ttl = 60 * 60 * 24 * 365
         redis_client.expire(total_key, ttl)
         redis_client.expire(unique_key, ttl)
 
-        logger.debug("Redis visit counters incremented for user %d", user_id)
+        logger.debug("Redis visit counters updated for user %r", raw_id)
         return jsonify({"status": "ok"}), 201
     except Exception as e:
         logger.exception("Redis error in save_user: %s", e)
