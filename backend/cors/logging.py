@@ -1,6 +1,6 @@
 import logging
 import sys
-from backend.cors.config import LOG_LEVEL
+from cors.config import LOG_LEVEL
 
 def setup_logging() -> None:
     """
