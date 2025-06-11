@@ -1,29 +1,31 @@
+from flask import Flask
 from flask_migrate import Migrate
 from flask_cors import CORS
-from flask import Flask
-from routes import register_routes
 from models import db
-import extensions
-import logging
-import sys
-import os
+from routes import register_routes
+from cors.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS
+from cors.logging import setup_logging
 
-app = Flask(__name__)
+# 1) Настраиваем логирование по конфику
+setup_logging()
 
-app.config['SQLALCHEMY_DATABASE_URI'] = (f"postgresql://{os.getenv('DB_USER')}:"
-                                         f"{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:"
-                                         f"{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}")
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# 2) Создаём Flask-приложение
+app: Flask = Flask(__name__)
 
+# 3) Загружаем конфиг для SQLAlchemy
+app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# 4) Инициализируем расширения
 db.init_app(app)
 migrate = Migrate(app, db)
 
-CORS(app, resources={r"/api/*": {"origins": "https://shop.yanda.twc1.net"}})
+# 5) CORS
+CORS(app, resources={r"/api/*": {"origins": CORS_ORIGINS}})
 
+# 6) Регистрируем Blueprint
 register_routes(app)
 
-logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
 if __name__ == "__main__":
+    # Во встроенном режиме (для локального дебага)
     app.run(host="0.0.0.0", port=8000)

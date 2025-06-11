@@ -2,7 +2,7 @@
   <header class="header">
     <div class="top-row">
       <router-link to="/profile" class="user-info">
-        <img :src="store.user.photo_url || img_bot" alt="avatar" class="avatar" />
+        <img :src="store.user.photo_url || profile_avatar" alt="avatar" class="avatar" />
         <span class="username">{{ store.user.username }}</span>
       </router-link>
     </div>
@@ -20,7 +20,7 @@
 import { computed } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
-import img_bot from '@/assets/images/bot.png'
+import profile_avatar from '@/assets/images/profile_avatar.svg'
 
 const store = useStore()
 const router = useRouter()
@@ -83,8 +83,8 @@ function goHome() {
   outline: 2px solid #007bff;
 }
 .avatar {
-  width: 4vh;
-  height: 4vh;
+  width: 30px;
+  height: 30px;
   border-radius: 100%;
   object-fit: cover;
 }
