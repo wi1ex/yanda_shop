@@ -7,3 +7,4 @@ redis==6.1.0
 Flask-Migrate==4.0.4
 Alembic==1.11.1
 minio==7.1.5
+requests==2.31.0
