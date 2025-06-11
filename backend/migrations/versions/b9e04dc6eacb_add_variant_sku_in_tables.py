@@ -99,3 +99,5 @@ def downgrade():
         batch_op.drop_index('ix_accessories_sku')
         batch_op.create_index('ix_accessories_sku', ['sku'], unique=False)
         batch_op.drop_column('variant_sku')
+
+    # ### end Alembic commands ###
