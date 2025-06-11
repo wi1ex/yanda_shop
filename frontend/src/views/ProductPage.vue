@@ -362,6 +362,7 @@ function onDecrease(item) {
 /* Общий стиль для всех полей */
 .detail-field {
   display: flex;
+  justify-content: space-between;
   font-size: 14px;
   color: #ccc;
   margin-bottom: 8px;
