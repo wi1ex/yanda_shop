@@ -42,22 +42,19 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
     Model = model_by_category(category)
     if Model is None:
         raise ValueError(f"Unknown category {category}")
+
     added = updated = deleted = 0
-
-    # 1) Собираем все variant_sku из CSV
+    # Собираем все variant_sku
     variants = [row["variant_sku"].strip() for row in rows]
-
-    # 2) Подгружаем существующие объекты по variant_sku
+    # Подгружаем существующие объекты по variant_sku
     existing = {obj.variant_sku: obj for obj in Model.query.filter(Model.variant_sku.in_(variants)).all()}
 
     for row in rows:
         variant = row["variant_sku"].strip()
-        sku = row["sku"].strip()
-        # остальные поля за вычетом ключей
-        other = {k: row[k].strip() for k in row if k not in ("sku", "variant_sku")}
-
-        # 3) Удаление, если все прочие поля пусты
-        if variant and all(not v for v in other.values()):
+        sku     = row["sku"].strip()
+        data    = {k: row[k].strip() for k in row if k not in ("sku", "variant_sku")}
+        # Удаление, если все поля пусты
+        if variant and all(not v for v in data.values()):
             obj = existing.get(variant)
             if obj:
                 db.session.delete(obj)
@@ -66,25 +63,36 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
 
         obj = existing.get(variant)
         if not obj:
-            # 4a) Создаём новую запись, сразу заполняя variant_sku и sku
+            # Создаём новую запись
             obj = Model(variant_sku=variant, sku=sku)
-            for k, v in other.items():
+            for k, v in data.items():
                 if not hasattr(obj, k):
                     continue
-                # integer
+                # price, count_in_stock, count_images  → integer
                 if k in ("price", "count_in_stock", "count_images"):
                     raw = v.replace(" ", "")
                     try:
                         val = int(raw)
                     except ValueError:
                         val = 0
-                # float (с поддержкой запятой)
-                elif k in ("size_label", "width_mm", "height_mm", "depth_mm"):
+                # size_label  → string for Clothing, float otherwise
+                elif k == "size_label":
+                    if Model is Clothing:
+                        val = v  # оставляем строку
+                    else:
+                        raw = v.replace(",", ".").replace(" ", "")
+                        try:
+                            val = float(raw)
+                        except ValueError:
+                            val = None
+                # width_mm, height_mm, depth_mm → float
+                elif k in ("width_mm", "height_mm", "depth_mm"):
                     raw = v.replace(",", ".").replace(" ", "")
                     try:
                         val = float(raw)
                     except ValueError:
                         val = None
+                # все прочие поля — строки
                 else:
                     val = v
                 setattr(obj, k, val)
@@ -92,25 +100,32 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
             added += 1
 
         else:
-            # 4b) Обновление существующей записи
+            # Обновляем существующую запись
             has_changes = False
-
-            # Если sku у товара изменился — тоже обновляем
+            # Если sku поменялся — сохранить
             if obj.sku != sku:
                 obj.sku = sku
                 has_changes = True
-
-            for k, v in other.items():
+            for k, v in data.items():
                 if not hasattr(obj, k):
                     continue
-                # тот же код нормализации
+                # та же нормализация, что и при создании
                 if k in ("price", "count_in_stock", "count_images"):
                     raw = v.replace(" ", "")
                     try:
                         new_val = int(raw)
                     except ValueError:
                         new_val = 0
-                elif k in ("size_label", "width_mm", "height_mm", "depth_mm"):
+                elif k == "size_label":
+                    if Model is Clothing:
+                        new_val = v
+                    else:
+                        raw = v.replace(",", ".").replace(" ", "")
+                        try:
+                            new_val = float(raw)
+                        except ValueError:
+                            new_val = None
+                elif k in ("width_mm", "height_mm", "depth_mm"):
                     raw = v.replace(",", ".").replace(" ", "")
                     try:
                         new_val = float(raw)
@@ -118,11 +133,9 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
                         new_val = None
                 else:
                     new_val = v
-
                 if getattr(obj, k) != new_val:
                     setattr(obj, k, new_val)
                     has_changes = True
-
             if has_changes:
                 obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
                 updated += 1
