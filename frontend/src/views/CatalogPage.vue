@@ -49,7 +49,7 @@
 
     <!-- Сетка товаров -->
     <div class="products-grid">
-      <div v-for="product in store.filteredProducts" :key="product.sku" class="product-card">
+      <div v-for="product in store.filteredProducts" :key="product.variant_sku" class="product-card">
         <!-- Нажатие на карточку — переходим на страницу ProductDetail -->
         <div @click="goToProductDetail(product)" class="clickable-area">
           <img :src="product.image" alt="product" class="product-image" />

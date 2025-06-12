@@ -255,17 +255,16 @@ def list_products() -> Response:
     ms_tz = ZoneInfo("Europe/Moscow")
 
     for i in items:
-        created = i.created_at.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S") if i.created_at else None
-        updated = i.updated_at.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S") if i.updated_at else None
         result.append({
+            "variant_sku": i.variant_sku,
             "sku": i.sku,
             "name": i.name,
             "price": i.price,
             "category": i.category,
             "image": f"{BACKEND_URL}/images/{i.sku}-1.webp",
             "color": i.color,
-            "created_at": created,
-            "updated_at": updated,
+            "created_at": i.created_at.astimezone(ms_tz).isoformat(),
+            "updated_at": i.updated_at.astimezone(ms_tz).isoformat(),
         })
 
     logger.info("Returned %d products for category %s", len(result), cat)

@@ -135,16 +135,14 @@ export const useStore = defineStore('main', () => {
 
     // сортировка
     const modifier = sortOrder.value === 'asc' ? 1 : -1
-    return list
-      .slice()
-      .sort((a, b) => {
-        if (sortBy.value === 'price') {
-          return modifier * (a.price - b.price)
-        } else {
-          // сортируем по дате создания
-          return modifier * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-        }
-      })
+    return list.slice().sort((a, b) => {
+      if (sortBy.value === 'price') {
+        return modifier * (a.price - b.price)
+      } else {
+        // сортируем по дате создания, ISO-строку парсим корректно
+        return modifier * (new Date(a.created_at) - new Date(b.created_at))
+      }
+    })
   })
 
   // Группируем товары в корзине по name, считаем количество и суммарную цену
