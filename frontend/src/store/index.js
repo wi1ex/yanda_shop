@@ -142,10 +142,7 @@ export const useStore = defineStore('main', () => {
           return modifier * (a.price - b.price)
         } else {
           // сортируем по дате создания
-          return (
-            modifier *
-            (new Date(a.created_at) - new Date(b.created_at))
-          )
+          return modifier * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
         }
       })
   })

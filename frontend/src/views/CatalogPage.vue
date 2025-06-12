@@ -111,12 +111,10 @@ const sortOption = computed({
   }
 })
 
-// Получаем список уникальных цветов по текущей категории
+// Получаем список уникальных цветов
 const distinctColors = computed(() => {
-  // теперь без дополнительной категории
-  const set = new Set(
-    products.value.map(p => p.color).filter(Boolean)
-  )
+  // берем цвета из всего массива store.products
+  const set = new Set(store.products.map(p => p.color).filter(c => c))
   return Array.from(set)
 })
 
