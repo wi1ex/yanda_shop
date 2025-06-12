@@ -43,35 +43,42 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
     if Model is None:
         raise ValueError(f"Unknown category {category}")
     added = updated = deleted = 0
-    skus = [row["sku"].strip() for row in rows]
-    existing = {obj.sku: obj for obj in Model.query.filter(Model.sku.in_(skus)).all()}
+
+    # 1) Собираем все variant_sku из CSV
+    variants = [row["variant_sku"].strip() for row in rows]
+
+    # 2) Подгружаем существующие объекты по variant_sku
+    existing = {obj.variant_sku: obj for obj in Model.query.filter(Model.variant_sku.in_(variants)).all()}
 
     for row in rows:
+        variant = row["variant_sku"].strip()
         sku = row["sku"].strip()
-        other = {k: row[k].strip() for k in row if k != "sku"}
+        # остальные поля за вычетом ключей
+        other = {k: row[k].strip() for k in row if k not in ("sku", "variant_sku")}
 
-        # delete if all other fields empty
-        if sku and all(not v for v in other.values()):
-            obj = existing.get(sku)
+        # 3) Удаление, если все прочие поля пусты
+        if variant and all(not v for v in other.values()):
+            obj = existing.get(variant)
             if obj:
                 db.session.delete(obj)
                 deleted += 1
             continue
 
-        obj = existing.get(sku)
+        obj = existing.get(variant)
         if not obj:
-            obj = Model(sku=sku)
+            # 4a) Создаём новую запись, сразу заполняя variant_sku и sku
+            obj = Model(variant_sku=variant, sku=sku)
             for k, v in other.items():
                 if not hasattr(obj, k):
                     continue
-                # integer fields
+                # integer
                 if k in ("price", "count_in_stock", "count_images"):
                     raw = v.replace(" ", "")
                     try:
                         val = int(raw)
                     except ValueError:
                         val = 0
-                # float fields (with comma support)
+                # float (с поддержкой запятой)
                 elif k in ("size_label", "width_mm", "height_mm", "depth_mm"):
                     raw = v.replace(",", ".").replace(" ", "")
                     try:
@@ -85,11 +92,18 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
             added += 1
 
         else:
+            # 4b) Обновление существующей записи
             has_changes = False
+
+            # Если sku у товара изменился — тоже обновляем
+            if obj.sku != sku:
+                obj.sku = sku
+                has_changes = True
+
             for k, v in other.items():
                 if not hasattr(obj, k):
                     continue
-                # same normalization as above
+                # тот же код нормализации
                 if k in ("price", "count_in_stock", "count_images"):
                     raw = v.replace(" ", "")
                     try:
@@ -300,7 +314,7 @@ def import_products() -> Tuple[Response, int]:
     name, ext = os.path.splitext(f.filename.lower())
     if ext != ".csv":
         return jsonify({"error": "not a CSV"}), 400
-    csv_text = f.stream.read().decode("utf-8")
+    csv_text = f.stream.read().decode("utf-8-sig")
     try:
         rows = list(csv.DictReader(io.StringIO(csv_text)))
         a, u, d = process_rows(name, rows)
