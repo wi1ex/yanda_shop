@@ -117,21 +117,23 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
 
   const filteredProducts = computed(() => {
-    // сравниваем категории без учёта регистра
-    const sel = selectedCategory.value.toLowerCase()
-    let list = products.value.filter(p =>
-      p.category &&
-      p.category.toLowerCase() === sel
-    )
-    if (filterPriceMin.value !== null) {
-      list = list.filter((p) => p.price >= filterPriceMin.value)
+    // работаем со всеми пришедшими товарами сразу
+    let list = products.value.slice()
+
+    // фильтр по цене
+    if (filterPriceMin.value != null) {
+      list = list.filter(p => p.price >= filterPriceMin.value)
     }
-    if (filterPriceMax.value !== null) {
-      list = list.filter((p) => p.price <= filterPriceMax.value)
+    if (filterPriceMax.value != null) {
+      list = list.filter(p => p.price <= filterPriceMax.value)
     }
-    if (filterColor.value && filterColor.value !== '') {
-      list = list.filter((p) => p.color === filterColor.value)
+
+    // фильтр по цвету
+    if (filterColor.value) {
+      list = list.filter(p => p.color === filterColor.value)
     }
+
+    // сортировка
     const modifier = sortOrder.value === 'asc' ? 1 : -1
     return list
       .slice()
@@ -139,9 +141,11 @@ export const useStore = defineStore('main', () => {
         if (sortBy.value === 'price') {
           return modifier * (a.price - b.price)
         } else {
-          if (a.created_at < b.created_at) return -1 * modifier
-          if (a.created_at > b.created_at) return 1 * modifier
-          return 0
+          // сортируем по дате создания
+          return (
+            modifier *
+            (new Date(a.created_at) - new Date(b.created_at))
+          )
         }
       })
   })
