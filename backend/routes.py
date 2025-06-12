@@ -8,25 +8,98 @@ import csv
 import os
 import zipfile
 import json
+import requests
+
 from minio.error import S3Error
 from extensions import redis_client, minio_client, BUCKET
-from models import Shoe, Clothing, Accessory, Users, ChangeLog, db
+from models import (
+    Shoe,
+    Clothing,
+    Accessory,
+    Users,
+    ChangeLog,
+    AdminSetting,
+    db
+)
 from cors.config import BACKEND_URL
-
 
 logger: logging.Logger = logging.getLogger(__name__)
 api: Blueprint = Blueprint("api", __name__)
 
 
 def model_by_category(cat: str) -> Optional[type]:
-    return {
-        "shoes": Shoe,
-        "clothing": Clothing,
-        "accessories": Accessory,
-        "обувь": Shoe,
-        "одежда": Clothing,
-        "аксессуары": Accessory,
-    }.get(cat.lower())
+    return {"shoes": Shoe, "clothing": Clothing, "accessories": Accessory,
+            "обувь": Shoe, "одежда": Clothing, "аксессуары": Accessory}.get(cat.lower())
+
+
+def get_sheet_url(category: str) -> Optional[str]:
+    key = f"sheet_url_{category}"
+    setting = AdminSetting.query.get(key)
+    return setting.value if setting else None
+
+
+def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, int]:
+    Model = model_by_category(category)
+    if Model is None:
+        raise ValueError(f"Unknown category {category}")
+    added = updated = deleted = 0
+    skus = [row["sku"].strip() for row in rows]
+    existing = {obj.sku: obj for obj in Model.query.filter(Model.sku.in_(skus)).all()}
+    for row in rows:
+        sku = row["sku"].strip()
+        other = {k: row[k].strip() for k in row if k != "sku"}
+
+        # delete if all other fields empty
+        if sku and all(not v for v in other.values()):
+            obj = existing.get(sku)
+            if obj:
+                db.session.delete(obj)
+                deleted += 1
+            continue
+
+        obj = existing.get(sku)
+        if not obj:
+            obj = Model(sku=sku)
+            for k, v in other.items():
+                if hasattr(obj, k):
+                    if k in ("price", "count_in_stock", "count_images"):
+                        try:
+                            val = int(v)
+                        except ValueError:
+                            val = 0
+                    elif k in ("size_label", "width_mm", "height_mm", "depth_mm"):
+                        try:
+                            val = float(v)
+                        except ValueError:
+                            val = None
+                    else:
+                        val = v
+                    setattr(obj, k, val)
+            db.session.add(obj)
+            added += 1
+        else:
+            has_changes = False
+            for k, v in other.items():
+                if hasattr(obj, k):
+                    if k in ("price", "count_in_stock", "count_images"):
+                        try:
+                            new_val = int(v)
+                        except ValueError:
+                            new_val = 0
+                    elif k in ("size_label", "width_mm", "height_mm", "depth_mm"):
+                        try:
+                            new_val = float(v)
+                        except ValueError:
+                            new_val = None
+                    else:
+                        new_val = v
+                    if getattr(obj, k) != new_val:
+                        setattr(obj, k, new_val)
+                        has_changes = True
+            if has_changes:
+                obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
+                updated += 1
+    return added, updated, deleted
 
 
 @api.route("/api/")
@@ -60,13 +133,13 @@ def save_user() -> Tuple[Response, int]:
     # --- Postgres только для целых id ---
     if is_tg:
         try:
-            tg_user: Optional[Users] = Users.query.get(user_id)
+            tg_user = Users.query.get(user_id)
             if not tg_user:
                 tg_user = Users(
                     user_id=user_id,
                     first_name=first_name,
                     last_name=last_name,
-                    username=username,
+                    username=username
                 )
                 db.session.add(tg_user)
                 logger.info("Registered new Telegram user %d", user_id)
@@ -198,122 +271,57 @@ def get_product() -> Tuple[Response, int]:
 
 @api.route("/api/import_products", methods=["POST"])
 def import_products() -> Tuple[Response, int]:
-    logger.debug("import_products called")
     f = request.files.get("file")
     author_id_str = request.form.get("author_id", "").strip()
     author_name = request.form.get("author_name", "").strip() or "unknown"
 
     if not f or not author_id_str:
-        logger.error("import_products: missing file or author_id")
         return jsonify({"error": "file and author_id required"}), 400
 
     try:
         author_id = int(author_id_str)
     except ValueError:
-        logger.error("import_products: invalid author_id %r", author_id_str)
         return jsonify({"error": "invalid author_id"}), 400
 
     name, ext = os.path.splitext(f.filename.lower())
     if ext != ".csv":
-        logger.error("Wrong file extension %s", ext)
         return jsonify({"error": "not a CSV"}), 400
-
-    Model = model_by_category(name)
-    if Model is None:
-        logger.error("import_products: unknown category %r", name)
-        return jsonify({"error": "unknown category"}), 400
-
-    reader = csv.DictReader(io.StringIO(f.stream.read().decode("utf-8")))
-    rows = list(reader)
-
-    added, updated, deleted = 0, 0, 0
-    skus = [row["sku"].strip() for row in rows]
-    existing = {obj.sku: obj for obj in Model.query.filter(Model.sku.in_(skus)).all()}
-
+    csv_text = f.stream.read().decode("utf-8")
     try:
-        for row in rows:
-            sku = row["sku"].strip()
-            other = {k: row[k].strip() for k in row if k != "sku"}
-
-            # delete if all other fields empty
-            if sku and all(not v for v in other.values()):
-                obj = existing.get(sku)
-                if obj:
-                    db.session.delete(obj)
-                    deleted += 1
-                continue
-
-            obj = existing.get(sku)
-            if not obj:
-                obj = Model(sku=sku)
-                for k, v in other.items():
-                    if hasattr(obj, k):
-                        setattr(obj, k, int(v) if k in ("price", "count_in_stock", "count_images") else float(v) if k in ("size_label", "width_mm", "height_mm", "depth_mm") else v)
-                db.session.add(obj)
-                added += 1
-            else:
-                changed = False
-                for k, v in other.items():
-                    if hasattr(obj, k):
-                        new = int(v) if k in ("price", "count_in_stock", "count_images") else float(v) if k in ("size_label", "width_mm", "height_mm", "depth_mm") else v
-                        if getattr(obj, k) != new:
-                            setattr(obj, k, new)
-                            changed = True
-                if changed:
-                    obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
-                    updated += 1
-
+        rows = list(csv.DictReader(io.StringIO(csv_text)))
+        a, u, d = process_rows(name, rows)
         db.session.commit()
-        desc = f"Добавлено {added}, Изменено {updated}, Удалено {deleted}"
+        desc = f"Добавлено {a}, Изменено {u}, Удалено {d}"
         log = ChangeLog(
             author_id=author_id,
             author_name=author_name,
-            action_type=f"успешная загрузка {name}.csv",
+            action_type=f"успешная загрузка {name} из CSV",
             description=desc,
             timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
         )
         db.session.add(log)
         db.session.commit()
-        logger.info("import_products finished: %s", desc)
-        return jsonify({"status": "ok", "added": added, "updated": updated, "deleted": deleted}), 201
-
+        return jsonify({"status": "ok", "added": a, "updated": u, "deleted": d}), 201
     except Exception as e:
-        db.session.rollback()
         logger.exception("Error in import_products: %s", e)
-        try:
-            err_log = ChangeLog(
-                author_id=author_id,
-                author_name=author_name,
-                action_type=f"неудачная загрузка {name}.csv",
-                description=str(e),
-                timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
-            )
-            db.session.add(err_log)
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-        return jsonify({"error": "db error", "message": str(e)}), 500
+        return jsonify({"error": "import_products failed", "message": str(e)}), 500
 
 
 @api.route("/api/upload_images", methods=["POST"])
 def upload_images() -> Tuple[Response, int]:
-    logger.debug("upload_images called")
     z = request.files.get("file")
     author_id_str = request.form.get("author_id", "").strip()
     author_name = request.form.get("author_name", "").strip() or "unknown"
 
     if not z or not author_id_str:
-        logger.error("upload_images: missing file or author_id")
         return jsonify({"error": "file and author_id required"}), 400
 
     try:
         author_id = int(author_id_str)
     except ValueError:
-        logger.error("upload_images: invalid author_id %r", author_id_str)
         return jsonify({"error": "invalid author_id"}), 400
 
     if not z.filename.lower().endswith(".zip"):
-        logger.error("Wrong archive extension: %s", z.filename)
         return jsonify({"error": "not a ZIP"}), 400
 
     try:
@@ -322,7 +330,7 @@ def upload_images() -> Tuple[Response, int]:
         for M in (Shoe, Clothing, Accessory):
             for o in M.query:
                 cnt = getattr(o, "count_images", 0) or 0
-                for i in range(1, cnt+1):
+                for i in range(1, cnt + 1):
                     expected.add(f"{o.sku}-{i}")
 
         deleted = 0
@@ -357,30 +365,16 @@ def upload_images() -> Tuple[Response, int]:
         )
         db.session.add(log)
         db.session.commit()
-        logger.info("upload_images finished: %s", desc)
         return jsonify({"status": "ok", "added": added, "replaced": replaced, "deleted": deleted}), 201
 
     except Exception as e:
         db.session.rollback()
         logger.exception("Error in upload_images: %s", e)
-        try:
-            err_log = ChangeLog(
-                author_id=author_id,
-                author_name=author_name,
-                action_type=f"неудачная загрузка {z.filename}",
-                description=str(e),
-                timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
-            )
-            db.session.add(err_log)
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
         return jsonify({"error": "upload error", "message": str(e)}), 500
 
 
 @api.route("/api/logs")
 def get_logs() -> Tuple[Response, int]:
-    logger.debug("get_logs called")
     try:
         limit = int(request.args.get("limit", "10"))
     except ValueError:
@@ -397,7 +391,6 @@ def get_logs() -> Tuple[Response, int]:
             "description": lg.description,
             "timestamp": lg.timestamp.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S")
         } for lg in logs_qs]
-        logger.info("Returned %d change logs", len(result))
         return jsonify({"logs": result}), 200
     except Exception as e:
         logger.exception("Error fetching logs: %s", e)
@@ -406,22 +399,18 @@ def get_logs() -> Tuple[Response, int]:
 
 @api.route("/api/user")
 def get_user_profile() -> Tuple[Response, int]:
-    logger.debug("get_user_profile called with args: %s", request.args)
     uid_str = request.args.get("user_id")
     if not uid_str:
-        logger.error("get_user_profile: missing user_id")
         return jsonify({"error": "user_id required"}), 400
 
     try:
         uid = int(uid_str)
     except ValueError:
-        logger.error("get_user_profile: invalid user_id %r", uid_str)
         return jsonify({"error": "invalid user_id"}), 400
 
     try:
         u = Users.query.get(uid)
         if not u:
-            logger.warning("User %d not found", uid)
             return jsonify({"error": "not found"}), 404
 
         ms_tz = ZoneInfo("Europe/Moscow")
@@ -439,16 +428,13 @@ def get_user_profile() -> Tuple[Response, int]:
 
 @api.route("/api/cart", methods=["GET"])
 def get_cart() -> Tuple[Response, int]:
-    logger.debug("get_cart called with args: %s", request.args)
     uid_str = request.args.get("user_id")
     if not uid_str:
-        logger.error("get_cart: missing user_id")
         return jsonify({"error": "user_id required"}), 400
 
     try:
         uid = int(uid_str)
     except ValueError:
-        logger.error("get_cart: invalid user_id %r", uid_str)
         return jsonify({"error": "invalid user_id"}), 400
 
     try:
@@ -465,16 +451,12 @@ def get_cart() -> Tuple[Response, int]:
 @api.route("/api/cart", methods=["POST"])
 def save_cart() -> Tuple[Response, int]:
     data: Dict[str, Any] = request.get_json(force=True, silent=True) or {}
-    logger.debug("save_cart payload: %s", data)
-
     if "user_id" not in data:
-        logger.error("save_cart: missing user_id")
         return jsonify({"error": "user_id required"}), 400
 
     try:
         uid = int(data["user_id"])
     except (TypeError, ValueError):
-        logger.error("save_cart: invalid user_id %r", data.get("user_id"))
         return jsonify({"error": "invalid user_id"}), 400
 
     items = data.get("items", [])
@@ -486,16 +468,78 @@ def save_cart() -> Tuple[Response, int]:
         redis_client.set(key, json.dumps({"items": items, "count": count, "total": total}))
         ttl = 60 * 60 * 24 * 365
         redis_client.expire(key, ttl)
-        logger.debug("Cart saved for user %d", uid)
         return jsonify({"status": "ok"}), 200
     except Exception as e:
         logger.exception("Redis error in save_cart: %s", e)
         return jsonify({"error": "internal redis error"}), 500
 
 
+@api.route("/api/admin/sheet_urls")
+def get_sheet_urls() -> Tuple[Response, int]:
+    urls = {cat: get_sheet_url(cat) for cat in ("shoes", "clothing", "accessories")}
+    return jsonify(urls), 200
+
+
+@api.route("/api/admin/sheet_url", methods=["POST"])
+def update_sheet_url() -> Tuple[Response, int]:
+    data = request.get_json(force=True, silent=True) or {}
+    category = data.get("category", "").lower()
+    url = data.get("url", "").strip()
+    if category not in ("shoes", "clothing", "accessories"):
+        return jsonify({"error": "unknown category"}), 400
+    if not url:
+        return jsonify({"error": "url required"}), 400
+    try:
+        key = f"sheet_url_{category}"
+        setting = AdminSetting.query.get(key)
+        if setting:
+            setting.value = url
+        else:
+            setting = AdminSetting(key=key, value=url)
+            db.session.add(setting)
+        db.session.commit()
+        return jsonify({"status": "ok"}), 200
+    except Exception as e:
+        logger.exception("Error setting sheet url: %s", e)
+        return jsonify({"error": "internal error"}), 500
+
+
+@api.route("/api/import_sheet", methods=["POST"])
+def import_sheet() -> Tuple[Response, int]:
+    data = request.get_json(force=True, silent=True) or {}
+    category = data.get("category", "").lower()
+    author_id = data.get("author_id")
+    author_name = data.get("author_name", "").strip() or "unknown"
+    if category not in ("shoes", "clothing", "accessories"):
+        return jsonify({"error": "unknown category"}), 400
+    try:
+        author_id = int(author_id)
+    except (TypeError, ValueError):
+        return jsonify({"error": "invalid author_id"}), 400
+    url = get_sheet_url(category)
+    if not url:
+        return jsonify({"error": "sheet url not set"}), 400
+    try:
+        r = requests.get(url, timeout=30)
+        r.raise_for_status()
+        rows = list(csv.DictReader(io.StringIO(r.text)))
+        a, u, d = process_rows(category, rows)
+        db.session.commit()
+        desc = f"Добавлено {a}, Изменено {u}, Удалено {d}"
+        log = ChangeLog(
+            author_id=author_id,
+            author_name=author_name,
+            action_type=f"успешная загрузка {category} из Sheets",
+            description=desc,
+            timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
+        )
+        db.session.add(log)
+        db.session.commit()
+        return jsonify({"status": "ok", "added": a, "updated": u, "deleted": d}), 201
+    except Exception as e:
+        logger.exception("Error in import_sheet: %s", e)
+        return jsonify({"error": "import_sheet failed", "message": str(e)}), 500
+
+
 def register_routes(app: Flask) -> None:
-    """
-    Регистрируем blueprint с API.
-    """
-    logger.debug("Registering API routes")
     app.register_blueprint(api)
