@@ -1,0 +1,291 @@
+# Yanda Shop
+
+&#x20;
+
+> 🚀 Готовое к продакшену решение интернет-магазина: backend и frontend, интеграция с Telegram‑ботом, контейнеризация через Docker & Docker‑Compose.
+
+---
+
+## ✨ Оглавление
+
+1. [Обзор](#обзор)
+2. [Предварительные требования](#предварительные-требования)
+3. [Быстрый старт](#быстрый-старт)
+   - [1. Подготовка сервера](#1-подготовка-сервера)
+   - [2. Клон и конфигурация](#2-клон-и-конфигурация)
+   - [3. SSL через Certbot](#3-ssl‑через-certbot)
+   - [4. Переменные окружения & ](#4-переменные‑окружения--env)[`.env`](#4-переменные‑окружения--env)
+   - [5. Запуск и миграции](#5-запуск-и-миграции)
+4. [Скрипты](#скрипты)
+   - [`deploy.sh`](#deploysh)
+   - [`backup_all.sh`](#backupallsh)
+   - [`restore_all.sh`](#restoreallsh)
+5. [Сервисы Docker‑Compose](#сервисы-docker-compose)
+6. [Справочник API](#справочник-api)
+7. [Переменные окружения](#переменные-окружения)
+8. [Лицензия](#лицензия)
+
+---
+
+## Обзор
+
+В этом репозитории собраны:
+
+- **backend/** — Flask‑REST API с PostgreSQL, Redis и MinIO
+- **frontend/** — Vue.js магазин
+- **bot/** — Telegram‑бот для уведомлений и админ‑панели
+- **nginx/** — обратный прокси и SSL‑терминация
+- **.sh скрипты** для деплоя, бэкапа и восстановления
+
+---
+
+## Предварительные требования
+
+- Ubuntu ≥ 20.04 LTS
+- `curl`, `ufw`, `docker`, `docker-compose`
+- **Порты**: 22 (SSH), 80/443 (HTTP/HTTPS)
+- **Права**: sudo или root
+
+---
+
+## Быстрый старт
+
+### 1. Подготовка сервера
+
+```bash
+# Обновление и утилиты
+apt update && apt upgrade -y
+apt install -y ca-certificates curl gnupg lsb-release ufw
+
+# Фаервол
+ufw allow OpenSSH
+ufw allow 80,443/tcp
+ufw --force enable
+
+# Docker & Compose
+apt install -y docker.io docker-compose
+systemctl enable docker
+```
+
+*Добавление официального репозитория Docker и установка последних пакетов:*
+
+```bash
+mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  | tee /etc/apt/keyrings/docker.asc > /dev/null
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+   https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) stable" \
+  | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+apt update
+apt install -y docker-ce docker-ce-cli containerd.io \
+               docker-buildx-plugin docker-compose-plugin
+systemctl enable docker.socket
+systemctl start docker.socket
+systemctl restart docker
+```
+
+---
+
+### 2. Клон и конфигурация
+
+```bash
+mkdir -p ~/app && cd ~/app
+git clone https://<TOKEN>@github.com/wi1ex/yanda_shop.git
+cd yanda_shop
+
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+```
+
+---
+
+### 3. SSL через Certbot
+
+```bash
+apt install -y certbot
+certbot certonly --standalone -d yourdomain.example.com
+# Для принудительного обновления:
+certbot renew --force-renewal
+```
+
+---
+
+### 4. Переменные окружения & `.env`
+
+1. Скопировать `.env.example` → `.env`
+2. Заполнить реальные данные (Postgres, Redis, MinIO, токен бота, домен и т.д.)
+
+```ini
+DB_HOST=...
+DB_USER=...
+DB_PASSWORD=...
+DB_NAME=...
+REDIS_PASSWORD=...
+MINIO_ROOT_USER=...
+MINIO_ROOT_PASSWORD=...
+MINIO_BUCKET=product-images
+BOT_TOKEN=<ваш-токен-telegram-бота>
+BACKEND_URL=https://shop.yourdomain.com
+ADMIN_ID=<ваш-admin-id-в-telegram>
+```
+
+---
+
+### 5. Запуск и миграции
+
+```bash
+# Дать права на запуск деплой-скрипта
+chmod +x deploy.sh
+
+# Полный деплой
+./deploy.sh
+```
+
+*При первом запуске миграций (если ещё не применялись в проде):*
+
+```bash
+docker-compose up -d db backend
+docker-compose exec backend flask db init
+docker-compose exec backend flask db migrate -m "initial schema"
+docker-compose exec backend flask db upgrade
+docker-compose up -d
+```
+
+---
+
+## Скрипты
+
+### `deploy.sh`
+
+> **Обновление и деплой всех сервисов**
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd /root/app/yanda_shop
+git fetch --all
+git reset --hard origin/main
+
+docker-compose down
+docker image prune -f
+
+# Для глубокой очистки:
+# docker-compose down --rmi all --volumes --remove-orphans
+# docker system prune --all --volumes --force
+
+certbot renew --noninteractive --standalone --agree-tos
+
+docker-compose build --no-cache
+docker-compose up -d
+docker-compose run --rm backend flask db upgrade
+
+docker-compose ps
+docker-compose logs -f
+```
+
+---
+
+### `backup_all.sh`
+
+> **Резервное копирование PostgreSQL, Redis и MinIO**
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+source /root/app/yanda_shop/.env
+
+TIMESTAMP=$(date +'%Y%m%d_%H%M')
+BACKUP_ROOT="/root/app/yanda_shop/backups"
+mkdir -p "$BACKUP_ROOT"/{postgres,redis,minio}
+
+# 1) Дамп PostgreSQL
+# 2) RDB-файл Redis
+# 3) Mirror и архив MinIO
+# 4) Удаление бэкапов старше 7 дней
+```
+
+*Запускать по расписанию через cron или systemd-timer.*
+
+---
+
+### `restore_all.sh`
+
+> **Восстановление из последних бэкапов**
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# 1) Остановить сервисы
+# 2) Восстановить Postgres из .dump
+# 3) Восстановить Redis (RDB → volume)
+# 4) Восстановить MinIO (tar.gz → mc mirror)
+# 5) Запустить сервисы
+```
+
+---
+
+## Сервисы Docker‑Compose
+
+| Сервис       | Назначение               | Порт   |
+| ------------ | ------------------------ | ------ |
+| **db**       | PostgreSQL v17           | 5432   |
+| **redis**    | Redis v7 (с паролем)     | 6379   |
+| **minio**    | S3-совместимое хранилище | 9000   |
+| **backend**  | Flask-REST API           | 8000   |
+| **bot**      | Telegram-бот             | –      |
+| **frontend** | Vue.js магазин           | –      |
+| **proxy**    | Nginx прокси и SSL       | 80,443 |
+
+---
+
+## Справочник API
+
+Базовый URL: `https://shop.yourdomain.com/api`
+
+| Endpoint                                            | Метод    | Описание                                            |
+| --------------------------------------------------- | -------- | --------------------------------------------------- |
+| `/`                                                 | GET      | Проверка статуса                                    |
+| `/save_user`                                        | POST     | Лог посещения & сохранение Telegram-пользователя    |
+| `/visits?date=YYYY-MM-DD`                           | GET      | Почасовые общие и уникальные посещения              |
+| `/products?category=<shoes\|clothing\|accessories>` | GET      | Список товаров (основная информация)                |
+| `/product?category=&sku=`                           | GET      | Детали товара + URL-изображения                     |
+| `/import_products`                                  | POST     | Импорт из CSV (`form-data`: file, author\_id, name) |
+| `/upload_images`                                    | POST     | Загрузка ZIP в MinIO                                |
+| `/logs?limit=N`                                     | GET      | Последние логи изменений                            |
+| `/user?user_id=`                                    | GET      | Профиль Telegram-пользователя                       |
+| `/cart`                                             | GET/POST | Получить/сохранить корзину (Redis)                  |
+| `/admin/sheet_urls`                                 | GET      | Получить URL Google Sheets                          |
+| `/admin/sheet_url`                                  | POST     | Установить URL Google Sheets                        |
+| `/import_sheet`                                     | POST     | Импорт товаров из Google Sheets                     |
+
+---
+
+## Переменные окружения
+
+| Переменная                                                           | Описание                                |
+| -------------------------------------------------------------------- | --------------------------------------- |
+| `DB_HOST`, `DB_PORT`                                                 | Хост и порт PostgreSQL                  |
+| `DB_NAME`, `DB_USER`                                                 | Имя БД и пользователь PostgreSQL        |
+| `DB_PASSWORD`                                                        | Пароль PostgreSQL                       |
+| `REDIS_HOST`, `REDIS_PORT``REDIS_PASSWORD`                           | Параметры подключения к Redis           |
+| `MINIO_HOST`, `MINIO_BUCKET``MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` | Конфиг MinIO S3                         |
+| `BOT_TOKEN`                                                          | Токен Telegram-бота                     |
+| `BACKEND_URL`                                                        | Базовый URL API и ссылок на изображения |
+| `ADMIN_ID`                                                           | ID администратора в Telegram            |
+
+---
+
+## Лицензия
+
+Этот проект распространяется под лицензией [MIT License](./LICENSE).
+
+---
+
+> *Создано с ❤️ командой Yanda Shop – деплойте, бэкапьте, восстанавливайте, продавайте!*
+
