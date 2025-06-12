@@ -45,6 +45,7 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
     added = updated = deleted = 0
     skus = [row["sku"].strip() for row in rows]
     existing = {obj.sku: obj for obj in Model.query.filter(Model.sku.in_(skus)).all()}
+
     for row in rows:
         sku = row["sku"].strip()
         other = {k: row[k].strip() for k in row if k != "sku"}
@@ -61,44 +62,57 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
         if not obj:
             obj = Model(sku=sku)
             for k, v in other.items():
-                if hasattr(obj, k):
-                    if k in ("price", "count_in_stock", "count_images"):
-                        try:
-                            val = int(v)
-                        except ValueError:
-                            val = 0
-                    elif k in ("size_label", "width_mm", "height_mm", "depth_mm"):
-                        try:
-                            val = float(v)
-                        except ValueError:
-                            val = None
-                    else:
-                        val = v
-                    setattr(obj, k, val)
+                if not hasattr(obj, k):
+                    continue
+                # integer fields
+                if k in ("price", "count_in_stock", "count_images"):
+                    raw = v.replace(" ", "")
+                    try:
+                        val = int(raw)
+                    except ValueError:
+                        val = 0
+                # float fields (with comma support)
+                elif k in ("size_label", "width_mm", "height_mm", "depth_mm"):
+                    raw = v.replace(",", ".").replace(" ", "")
+                    try:
+                        val = float(raw)
+                    except ValueError:
+                        val = None
+                else:
+                    val = v
+                setattr(obj, k, val)
             db.session.add(obj)
             added += 1
+
         else:
             has_changes = False
             for k, v in other.items():
-                if hasattr(obj, k):
-                    if k in ("price", "count_in_stock", "count_images"):
-                        try:
-                            new_val = int(v)
-                        except ValueError:
-                            new_val = 0
-                    elif k in ("size_label", "width_mm", "height_mm", "depth_mm"):
-                        try:
-                            new_val = float(v)
-                        except ValueError:
-                            new_val = None
-                    else:
-                        new_val = v
-                    if getattr(obj, k) != new_val:
-                        setattr(obj, k, new_val)
-                        has_changes = True
+                if not hasattr(obj, k):
+                    continue
+                # same normalization as above
+                if k in ("price", "count_in_stock", "count_images"):
+                    raw = v.replace(" ", "")
+                    try:
+                        new_val = int(raw)
+                    except ValueError:
+                        new_val = 0
+                elif k in ("size_label", "width_mm", "height_mm", "depth_mm"):
+                    raw = v.replace(",", ".").replace(" ", "")
+                    try:
+                        new_val = float(raw)
+                    except ValueError:
+                        new_val = None
+                else:
+                    new_val = v
+
+                if getattr(obj, k) != new_val:
+                    setattr(obj, k, new_val)
+                    has_changes = True
+
             if has_changes:
                 obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
                 updated += 1
+
     return added, updated, deleted
 
 
@@ -123,7 +137,7 @@ def save_user() -> Tuple[Response, int]:
         is_tg: bool = True
     except (TypeError, ValueError):
         # Неконвертируемый id — это не Telegram-пользователь, но не ошибка!
-        logger.warning("save_user: non-integer id %r, skipping Postgres", raw_id)
+        logger.debug("save_user: non-integer id %r, skipping Postgres", raw_id)
         is_tg = False
 
     first_name: Optional[str] = data.get("first_name")
@@ -510,20 +524,32 @@ def import_sheet() -> Tuple[Response, int]:
     category = data.get("category", "").lower()
     author_id = data.get("author_id")
     author_name = data.get("author_name", "").strip() or "unknown"
+
     if category not in ("shoes", "clothing", "accessories"):
         return jsonify({"error": "unknown category"}), 400
+
     try:
         author_id = int(author_id)
     except (TypeError, ValueError):
         return jsonify({"error": "invalid author_id"}), 400
+
     url = get_sheet_url(category)
     if not url:
         return jsonify({"error": "sheet url not set"}), 400
+
     try:
+        # 1) Скачиваем и ДЕКОДИРУЕМ с BOM
         r = requests.get(url, timeout=30)
         r.raise_for_status()
-        rows = list(csv.DictReader(io.StringIO(r.text)))
+        csv_text = r.content.decode("utf-8-sig")
+
+        # 2) Читаем строки как раньше
+        rows = list(csv.DictReader(io.StringIO(csv_text)))
+
+        # 3) Применяем переписанный process_rows (см. ниже)
         a, u, d = process_rows(category, rows)
+
+        # 4) Коммитим и пишем лог
         db.session.commit()
         desc = f"Добавлено {a}, Изменено {u}, Удалено {d}"
         log = ChangeLog(
@@ -536,7 +562,9 @@ def import_sheet() -> Tuple[Response, int]:
         db.session.add(log)
         db.session.commit()
         return jsonify({"status": "ok", "added": a, "updated": u, "deleted": d}), 201
+
     except Exception as e:
+        db.session.rollback()
         logger.exception("Error in import_sheet: %s", e)
         return jsonify({"error": "import_sheet failed", "message": str(e)}), 500
 
