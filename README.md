@@ -11,16 +11,18 @@
 1. [Обзор](#обзор)
 2. [Предварительные требования](#предварительные-требования)
 3. [Быстрый старт](#быстрый-старт)
-   - [1. Подготовка сервера](#1-подготовка-сервера)
-   - [2. Клон и конфигурация](#2-клон-и-конфигурация)
-   - [3. SSL через Certbot](#3-ssl‑через-certbot)
-   - [4. Переменные окружения & ](#4-переменные‑окружения--env)[`.env`](#4-переменные‑окружения--env)
-   - [5. Запуск и миграции](#5-запуск-и-миграции)
+
+   * [1. Подготовка сервера](#1-подготовка-сервера)
+   * [2. Клон и конфигурация](#2-клон-и-конфигурация)
+   * [3. SSL через Certbot](#3-ssl-через-certbot)
+   * [4. Переменные окружения & .env](#4-переменные-окружения--env)
+   * [5. Запуск и миграции](#5-запуск-и-миграции)
 4. [Скрипты](#скрипты)
-   - [`deploy.sh`](#deploysh)
-   - [`backup_all.sh`](#backupallsh)
-   - [`restore_all.sh`](#restoreallsh)
-5. [Сервисы Docker‑Compose](#сервисы-docker-compose)
+
+   * [`deploy.sh`](#deploysh)
+   * [`backup_all.sh`](#backupallsh)
+   * [`restore_all.sh`](#restoreallsh)
+5. [Сервисы Docker-Compose](#сервисы-docker-compose)
 6. [Справочник API](#справочник-api)
 7. [Переменные окружения](#переменные-окружения)
 8. [Лицензия](#лицензия)
@@ -31,20 +33,20 @@
 
 В этом репозитории собраны:
 
-- **backend/** — Flask‑REST API с PostgreSQL, Redis и MinIO
-- **frontend/** — Vue.js магазин
-- **bot/** — Telegram‑бот для уведомлений и админ‑панели
-- **nginx/** — обратный прокси и SSL‑терминация
-- **.sh скрипты** для деплоя, бэкапа и восстановления
+* **backend/** — Flask‑REST API с PostgreSQL, Redis и MinIO
+* **frontend/** — Vue.js магазин
+* **bot/** — Telegram‑бот для уведомлений и админ‑панели
+* **nginx/** — обратный прокси и SSL‑терминация
+* **.sh** - скрипты для деплоя, бэкапа и восстановления
 
 ---
 
 ## Предварительные требования
 
-- Ubuntu ≥ 20.04 LTS
-- `curl`, `ufw`, `docker`, `docker-compose`
-- **Порты**: 22 (SSH), 80/443 (HTTP/HTTPS)
-- **Права**: sudo или root
+* Ubuntu ≥ 20.04 LTS
+* `curl`, `ufw`, `docker`, `docker-compose`
+* **Порты**: 22 (SSH), 80/443 (HTTP/HTTPS)
+* **Права**: sudo или root
 
 ---
 
@@ -86,6 +88,7 @@ apt install -y docker-ce docker-ce-cli containerd.io \
 systemctl enable docker.socket
 systemctl start docker.socket
 systemctl restart docker
+docker login --username <your-username> <your-password>
 ```
 
 ---
@@ -94,6 +97,7 @@ systemctl restart docker
 
 ```bash
 mkdir -p ~/app && cd ~/app
+rm -rf yanda_shop
 git clone https://<TOKEN>@github.com/wi1ex/yanda_shop.git
 cd yanda_shop
 
@@ -121,13 +125,20 @@ certbot renew --force-renewal
 
 ```ini
 DB_HOST=...
+DB_PORT=5432
+DB_NAME=...
 DB_USER=...
 DB_PASSWORD=...
-DB_NAME=...
+
+REDIS_HOST=...  # default
+REDIS_PORT=6379
 REDIS_PASSWORD=...
+
+MINIO_HOST=minio:9000
+MINIO_BUCKET=product-images
 MINIO_ROOT_USER=...
 MINIO_ROOT_PASSWORD=...
-MINIO_BUCKET=product-images
+
 BOT_TOKEN=<ваш-токен-telegram-бота>
 BACKEND_URL=https://shop.yourdomain.com
 ADMIN_ID=<ваш-admin-id-в-telegram>
@@ -138,6 +149,11 @@ ADMIN_ID=<ваш-admin-id-в-telegram>
 ### 5. Запуск и миграции
 
 ```bash
+cd /root/app/yanda_shop
+
+# npm install локально для обновления package-lock.json
+# Запись домена (помимо .env) в store.js, nginx.conf и BotFather
+
 # Дать права на запуск деплой-скрипта
 chmod +x deploy.sh
 
@@ -164,28 +180,13 @@ docker-compose up -d
 > **Обновление и деплой всех сервисов**
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-cd /root/app/yanda_shop
-git fetch --all
-git reset --hard origin/main
-
-docker-compose down
-docker image prune -f
-
-# Для глубокой очистки:
-# docker-compose down --rmi all --volumes --remove-orphans
-# docker system prune --all --volumes --force
-
-certbot renew --noninteractive --standalone --agree-tos
-
-docker-compose build --no-cache
-docker-compose up -d
-docker-compose run --rm backend flask db upgrade
-
-docker-compose ps
-docker-compose logs -f
+1) Обновляем код
+2) Останавливаем прежние контейнеры и чистим ненужное
+3) Обновление SSL-сертификатов (только если нужно)
+4) Пересобираем образы
+5) Поднимаем образы
+6) Применяем миграции в свежесобранном образе
+7) Финальная проверка и логи
 ```
 
 ---
@@ -195,18 +196,10 @@ docker-compose logs -f
 > **Резервное копирование PostgreSQL, Redis и MinIO**
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-source /root/app/yanda_shop/.env
-
-TIMESTAMP=$(date +'%Y%m%d_%H%M')
-BACKUP_ROOT="/root/app/yanda_shop/backups"
-mkdir -p "$BACKUP_ROOT"/{postgres,redis,minio}
-
-# 1) Дамп PostgreSQL
-# 2) RDB-файл Redis
-# 3) Mirror и архив MinIO
-# 4) Удаление бэкапов старше 7 дней
+1) Дамп PostgreSQL
+2) RDB-файл Redis
+3) Mirror и архив MinIO
+4) Удаление бэкапов старше 7 дней
 ```
 
 *Запускать по расписанию через cron или systemd-timer.*
@@ -218,14 +211,11 @@ mkdir -p "$BACKUP_ROOT"/{postgres,redis,minio}
 > **Восстановление из последних бэкапов**
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-# 1) Остановить сервисы
-# 2) Восстановить Postgres из .dump
-# 3) Восстановить Redis (RDB → volume)
-# 4) Восстановить MinIO (tar.gz → mc mirror)
-# 5) Запустить сервисы
+1) Остановить сервисы
+2) Восстановить Postgres из .dump
+3) Восстановить Redis (RDB → volume)
+4) Восстановить MinIO (tar.gz → mc mirror)
+5) Запустить сервисы
 ```
 
 ---
@@ -253,7 +243,7 @@ set -euo pipefail
 | `/`                                                 | GET      | Проверка статуса                                    |
 | `/save_user`                                        | POST     | Лог посещения & сохранение Telegram-пользователя    |
 | `/visits?date=YYYY-MM-DD`                           | GET      | Почасовые общие и уникальные посещения              |
-| `/products?category=<shoes\|clothing\|accessories>` | GET      | Список товаров (основная информация)                |
+| `/products?category=<shoes/clothing/accessories>`   | GET      | Список товаров (основная информация)                |
 | `/product?category=&sku=`                           | GET      | Детали товара + URL-изображения                     |
 | `/import_products`                                  | POST     | Импорт из CSV (`form-data`: file, author\_id, name) |
 | `/upload_images`                                    | POST     | Загрузка ZIP в MinIO                                |
@@ -270,10 +260,8 @@ set -euo pipefail
 
 | Переменная                                                           | Описание                                |
 | -------------------------------------------------------------------- | --------------------------------------- |
-| `DB_HOST`, `DB_PORT`                                                 | Хост и порт PostgreSQL                  |
-| `DB_NAME`, `DB_USER`                                                 | Имя БД и пользователь PostgreSQL        |
-| `DB_PASSWORD`                                                        | Пароль PostgreSQL                       |
-| `REDIS_HOST`, `REDIS_PORT``REDIS_PASSWORD`                           | Параметры подключения к Redis           |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`            | Параметры подключения к PostgreSQL      |
+| `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`                         | Параметры подключения к Redis           |
 | `MINIO_HOST`, `MINIO_BUCKET``MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` | Конфиг MinIO S3                         |
 | `BOT_TOKEN`                                                          | Токен Telegram-бота                     |
 | `BACKEND_URL`                                                        | Базовый URL API и ссылок на изображения |
@@ -281,11 +269,4 @@ set -euo pipefail
 
 ---
 
-## Лицензия
-
-Этот проект распространяется под лицензией [MIT License](./LICENSE).
-
----
-
-> *Создано с ❤️ командой Yanda Shop – деплойте, бэкапьте, восстанавливайте, продавайте!*
-
+> *Создано с ❤️ командой Yanda Shop!*
