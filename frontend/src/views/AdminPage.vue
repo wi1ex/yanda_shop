@@ -2,31 +2,7 @@
   <div class="admin-page">
     <h1>Админ-панель</h1>
 
-    <!-- === Секция 1: Загрузка CSV === -->
-    <section class="upload-section">
-      <h2>Загрузить CSV для товаров</h2>
-      <form @submit.prevent="submitCsv">
-        <input type="file" accept=".csv" @change="onCsvSelected" ref="csvInput" />
-        <button type="submit" :disabled="!csvFile || csvLoading">
-          {{ csvLoading ? 'Загрузка…' : 'Загрузить CSV' }}
-        </button>
-      </form>
-      <p v-if="csvResult" class="upload-result">{{ csvResult }}</p>
-    </section>
-
-    <!-- === Секция 2: Загрузка ZIP === -->
-    <section class="upload-section">
-      <h2>Загрузить ZIP с изображениями</h2>
-      <form @submit.prevent="submitZip">
-        <input type="file" accept=".zip" @change="onZipSelected" ref="zipInput" />
-        <button type="submit" :disabled="!zipFile || zipLoading">
-          {{ zipLoading ? 'Загрузка…' : 'Загрузить ZIP' }}
-        </button>
-      </form>
-      <p v-if="zipResult" class="upload-result">{{ zipResult }}</p>
-    </section>
-
-  <!-- === Секция 3: Google Sheets === -->
+  <!-- === Секция 1: Google Sheets === -->
   <section class="sheets-section">
     <h2>Импорт из Google Sheets</h2>
     <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="sheet-block">
@@ -59,6 +35,30 @@
       </p>
     </div>
   </section>
+
+    <!-- === Секция 2: Загрузка CSV === -->
+    <section class="upload-section">
+      <h2>Загрузить CSV для товаров</h2>
+      <form @submit.prevent="submitCsv">
+        <input type="file" accept=".csv" @change="onCsvSelected" ref="csvInput" />
+        <button type="submit" :disabled="!csvFile || csvLoading">
+          {{ csvLoading ? 'Загрузка…' : 'Загрузить CSV' }}
+        </button>
+      </form>
+      <p v-if="csvResult" class="upload-result">{{ csvResult }}</p>
+    </section>
+
+    <!-- === Секция 3: Загрузка ZIP === -->
+    <section class="upload-section">
+      <h2>Загрузить ZIP с изображениями</h2>
+      <form @submit.prevent="submitZip">
+        <input type="file" accept=".zip" @change="onZipSelected" ref="zipInput" />
+        <button type="submit" :disabled="!zipFile || zipLoading">
+          {{ zipLoading ? 'Загрузка…' : 'Загрузить ZIP' }}
+        </button>
+      </form>
+      <p v-if="zipResult" class="upload-result">{{ zipResult }}</p>
+    </section>
 
     <!-- === Секция 4: Логи изменений товаров/изображений === -->
     <section class="logs-section">

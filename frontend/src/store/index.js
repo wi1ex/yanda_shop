@@ -15,8 +15,8 @@ export const useStore = defineStore('main', () => {
 })
 
   // Категории
-  const categoryList = ref(['Обувь', 'Одежда', 'Аксессуары'])
-  const selectedCategory = ref('Обувь')
+  const categoryList = ref(['Одежда', 'Обувь', 'Аксессуары'])
+  const selectedCategory = ref('Одежда')
 
   // Параметры сортировки
   const sortBy = ref('date')
@@ -117,7 +117,12 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
 
   const filteredProducts = computed(() => {
-    let list = products.value.filter((p) => p.category === selectedCategory.value)
+    // сравниваем категории без учёта регистра
+    const sel = selectedCategory.value.toLowerCase()
+    let list = products.value.filter(p =>
+      p.category &&
+      p.category.toLowerCase() === sel
+    )
     if (filterPriceMin.value !== null) {
       list = list.filter((p) => p.price >= filterPriceMin.value)
     }

@@ -11,10 +11,7 @@ SQLALCHEMY_DATABASE_URI: str = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:
 
 BACKEND_URL: str = os.environ.get("BACKEND_URL", "")
 
-CORS_ORIGINS: List[str] = [
-    origin.strip()
-    for origin in os.environ.get("CORS_ORIGINS", BACKEND_URL).split(",")
-]
+CORS_ORIGINS: List[str] = [origin.strip() for origin in os.environ.get("CORS_ORIGINS", BACKEND_URL).split(",")]
 
 REDIS_HOST: str = os.environ["REDIS_HOST"]
 REDIS_PORT: int = int(os.environ.get("REDIS_PORT", 6379))
