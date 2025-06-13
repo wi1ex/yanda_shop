@@ -6,7 +6,7 @@
   <section class="sheets-section">
     <h2>Импорт из Google Sheets</h2>
     <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="sheet-block">
-      <h3>{{ capitalize(cat) }}</h3>
+      <h3>{{ cat.charAt(0).toUpperCase() + cat.slice(1) }}</h3>
 
       <!-- Режим редактирования ссылки -->
       <template v-if="editingUrl[cat]">
@@ -155,11 +155,6 @@ const logsLoading = ref(false)
 const selectedDate = ref('')
 const visitsData = ref({ date: '', hours: [] })
 const visitsLoading = ref(false)
-
-// Helpers
-function capitalize(s) {
-  return s.charAt(0).toUpperCase() + s.slice(1)
-}
 
 // --- CSV handlers ---
 function onCsvSelected(event) {

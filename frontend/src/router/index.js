@@ -14,23 +14,7 @@ const routes = [
   { path: '/catalog/product/:variant_sku', name: 'ProductDetail', component: ProductPage, props: true },
   { path: '/cart', name: 'Cart', component: CartPage },
   { path: '/favorites', name: 'Favorites', component: FavoritesPage },
-
-  // Маршрут /admin с защитой: beforeEnter
-  {
-    path: '/admin',
-    name: 'Admin',
-    component: AdminPage,
-    beforeEnter: (to, from, next) => {
-      const store = useStore()
-      // Если user не определён или его ID не совпадает с admin_id → редирект на Home
-      if (!store.user || String(store.user.id) !== String(store.admin_id)) {
-        next({ name: 'Home' })
-      } else {
-        next()
-      }
-    }
-  },
-
+  { path: '/admin', name: 'Admin', component: AdminPage },
   { path: '/profile', name: 'Profile', component: ProfilePage },
   { path: '/:catchAll(.*)', redirect: '/' }
 ]
@@ -38,6 +22,17 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+// глобальный guard вместо beforeEnter на одном маршруте
+router.beforeEach((to, from, next) => {
+  if (to.name === 'Admin') {
+    const store = useStore()
+    if (!store.user || String(store.user.id) !== String(store.admin_id)) {
+      return next({ name: 'Home' })
+    }
+  }
+  next()
 })
 
 export default router
