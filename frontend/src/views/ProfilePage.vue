@@ -102,6 +102,7 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+
 .profile-page {
   margin-top: 12vh;
   padding: 2vw;
@@ -129,6 +130,7 @@ onMounted(async () => {
   padding: 20px;
   border-radius: 8px;
 }
+
 .profile-info p {
   margin: 8px 0;
   font-size: 16px;
@@ -142,10 +144,12 @@ onMounted(async () => {
   padding: 20px;
   border-radius: 8px;
 }
+
 .not-tg-message p {
   margin-bottom: 12px;
   font-size: 16px;
 }
+
 .not-tg-message button {
   background: #007bff;
   color: white;
@@ -154,7 +158,5 @@ onMounted(async () => {
   border-radius: 6px;
   cursor: pointer;
 }
-.not-tg-message button:hover {
-  background: #0056b3;
-}
+
 </style>

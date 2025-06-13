@@ -52,22 +52,26 @@ const store = useStore()
 </script>
 
 <style scoped lang="scss">
+
 .cart-container {
   margin-top: 12vh;
   padding: 2vh;
   width: calc(100% - 4vh);
   background-color: $background-color;
 }
+
 .empty-cart {
   text-align: center;
   font-size: 16px;
   color: #bbb;
   margin: 20px 0;
 }
+
 .cart-list {
   list-style: none;
   padding: 0;
 }
+
 .cart-item {
   display: flex;
   align-items: center;
@@ -76,35 +80,42 @@ const store = useStore()
   border-radius: 8px;
   margin-bottom: 10px;
 }
+
 .cart-item-image {
   width: 50px;
   height: 50px;
   border-radius: 5px;
   object-fit: cover;
 }
+
 .cart-item-details {
   flex-grow: 1;
   margin-left: 10px;
 }
+
 .cart-item-name {
   font-size: 14px;
   font-weight: bold;
   margin: 0;
 }
+
 .cart-item-variant, .cart-item-color, .cart-item-size {
   font-size: 12px;
   color: #aaa;
   margin: 2px 0;
 }
+
 .cart-item-price {
   font-size: 14px;
   margin: 5px 0;
 }
+
 .cart-item-controls {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .item-quantity {
   font-size: 16px;
   font-weight: bold;
@@ -113,17 +124,20 @@ const store = useStore()
   color: white;
   border-radius: 5px;
 }
+
 .cart-total {
   font-size: 16px;
   font-weight: bold;
   margin-top: 10px;
 }
+
 .cart-buttons {
   display: flex;
   justify-content: space-between;
   gap: 16px;
   margin-top: 16px;
 }
+
 .checkout-button {
   background: #28a745;
   color: white;
@@ -134,6 +148,7 @@ const store = useStore()
   border: none;
   transition: 0.3s ease;
 }
+
 .clear-cart-button {
   background: #dc3545;
   color: white;
@@ -143,4 +158,5 @@ const store = useStore()
   margin-bottom: 12px;
   cursor: pointer;
 }
+
 </style>

@@ -12,12 +12,15 @@
 </script>
 
 <style scoped lang="scss">
+
 .footer-content {
   padding: 20px;
   text-align: center;
   border-top: 1px solid white;
 }
+
 .footer-content p {
   margin: 5px 0;
 }
+
 </style>

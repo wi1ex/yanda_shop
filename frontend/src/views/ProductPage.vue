@@ -249,6 +249,7 @@ function onDecrease(item) {
 </script>
 
 <style scoped lang="scss">
+
 .product-detail {
   margin-top: 12vh;
   padding: 2vh;
@@ -300,6 +301,7 @@ function onDecrease(item) {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
 }
+
 .images-wrapper::-webkit-scrollbar {
   display: none;
 }
@@ -313,6 +315,7 @@ function onDecrease(item) {
   object-fit: cover;
   transition: transform 0.3s ease;
 }
+
 .detail-image.active {
   transform: scale(1);
 }
@@ -332,9 +335,11 @@ function onDecrease(item) {
   z-index: 10;
   transition: background 0.2s;
 }
+
 .nav-button.left {
   left: 8px;
 }
+
 .nav-button.right {
   right: 8px;
 }
@@ -375,6 +380,7 @@ function onDecrease(item) {
   margin-bottom: 8px;
   word-wrap: break-word;
 }
+
 .detail-field a {
   margin-left: 0.5vh;
   color: #ccc;
