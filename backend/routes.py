@@ -250,25 +250,27 @@ def list_products() -> Response:
         logger.error("Unknown category %s", cat)
         return jsonify({"error": "unknown category"}), 400
 
-    items = Model.query.all()
-    result: List[Dict[str, Any]] = []
     ms_tz = ZoneInfo("Europe/Moscow")
+    items = Model.query.all()
+    result = []
+    for obj in items:
+        # 1) сериализуем все колонки
+        data: Dict[str, Any] = {}
+        for col in obj.__table__.columns:
+            val = getattr(obj, col.name)
+            if isinstance(val, datetime):
+                data[col.name] = val.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                data[col.name] = val
+        # 2) добавляем картинки
+        count = getattr(obj, "count_images", 0) or 0
+        images = [f"{BACKEND_URL}/images/{obj.sku}-{i}.webp" for i in range(1, count+1)]
+        data["images"] = images
+        data["image"]  = images[0] if images else None
 
-    for i in items:
-        result.append({
-            "variant_sku": i.variant_sku,
-            "sku": i.sku,
-            "name": i.name,
-            "price": i.price,
-            "category": i.category,
-            "image": f"{BACKEND_URL}/images/{i.sku}-1.webp",
-            "color": i.color,
-            "created_at": i.created_at.astimezone(ms_tz).isoformat(),
-            "updated_at": i.updated_at.astimezone(ms_tz).isoformat(),
-        })
+        result.append(data)
 
-    logger.info("Returned %d products for category %s", len(result), cat)
-    return jsonify(result)
+    return jsonify(result), 200
 
 
 @api.route("/api/product")
