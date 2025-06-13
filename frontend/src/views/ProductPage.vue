@@ -1,104 +1,104 @@
 <template>
   <div class="product-detail">
-    <!-- Кнопка “Назад к каталогу” -->
-    <button class="back-button" @click="goBack">← Назад в каталог</button>
-
     <!-- Индикатор загрузки -->
     <div v-if="loading" class="loading">Загрузка...</div>
 
-    <!-- Когда detailData загружены -->
+    <!-- Основная карточка -->
     <div v-else-if="detailData" class="detail-card">
-      <!-- Карусель изображений -->
-      <div v-if="detailData.images && detailData.images.length" class="carousel" ref="carouselRef"
-           @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
-        <div class="images-wrapper">
-          <img v-for="(imgSrc, idx) in detailData.images" :key="idx" :src="imgSrc" alt="product image"
-               class="detail-image" :class="{ active: idx === currentIndex }"/>
+      <!-- 1. Шапка: Назад + Наличие -->
+      <div class="top-row">
+        <button class="back-button" @click="goBack">← Назад</button>
+        <div class="availability">
+          <span v-if="detailData.count_in_stock > 0">
+            В НАЛИЧИИ: {{ detailData.count_in_stock }}
+          </span>
+          <span v-else>ПОД ЗАКАЗ</span>
         </div>
+      </div>
 
-        <!-- Кнопка «Вперёд» -->
-        <button v-if="detailData.images.length > 1" class="nav-button left" @click="scrollToIndex(currentIndex - 1)">
-          ◀
+      <!-- 2. Бренд, название, артикул -->
+      <div class="title-block">
+        <p class="brand">{{ detailData.brand }}</p>
+        <h1 class="name">{{ detailData.name }}</h1>
+        <p class="sku">артикул: {{ detailData.variant_sku }}</p>
+      </div>
+
+      <!-- 3. Галерея: крупное изображение + прокручиваемые миниатюры -->
+      <div class="carousel-container">
+        <div class="main-image-wrapper">
+          <img :src="detailData.images[currentIndex]" alt="product image" class="main-image"/>
+        </div>
+        <div class="thumbnails-wrapper" ref="thumbsRef">
+          <img v-for="(img, idx) in detailData.images" :key="idx" :src="img" alt="" class="thumbnail"
+               :class="{ active: idx === currentIndex }" @click="scrollToIndex(idx)"/>
+        </div>
+      </div>
+
+      <!-- 4. Параметры: размер, цвет, материал -->
+      <div class="options-block">
+        <div class="option">
+          <label>Размер</label>
+          <span class="value">{{ detailData.size_label }}</span>
+        </div>
+        <div v-if="detailData.color" class="option">
+          <label>Цвет</label>
+          <div class="color-swatches">
+            <span v-for="c in detailData.color.split(',')" :key="c" class="swatch" :style="{ backgroundColor: c.trim() }"/>
+          </div>
+        </div>
+        <div v-if="detailData.material" class="option">
+          <label>Материал</label>
+          <span class="value">{{ detailData.material }}</span>
+        </div>
+      </div>
+
+      <!-- 5. Доставка и цена -->
+      <div class="delivery-price-block">
+        <div class="delivery">
+          <label>Доставка</label>
+          <span>{{ detailData.delivery_time }}</span>
+        </div>
+        <div class="price-row">
+          <label>Цена</label>
+          <span class="price">{{ detailData.price }} ₽</span>
+        </div>
+      </div>
+
+      <!-- 6. Кнопки действий -->
+      <div class="actions-block">
+        <button class="add-cart-button" @click="store.addToCart(detailData)">
+          Добавить в корзину
         </button>
-
-        <!-- Кнопка «Назад» -->
-        <button v-if="detailData.images.length > 1" class="nav-button right" @click="scrollToIndex(currentIndex + 1)">
-          ▶
+        <button v-if="!store.isFavorite(detailData)" class="add-fav-button" @click="store.addToFavorites(detailData)">
+          Добавить в избранное
+        </button>
+        <button v-else class="remove-fav-button" @click="store.removeFromFavorites(detailData)">
+          Убрать из избранного
         </button>
       </div>
 
-      <!-- Если изображений вообще нет -->
-      <div v-else class="no-image">Нет изображений</div>
+      <!-- 7. Аккордеон: Описание -->
+      <div class="section">
+        <div class="section-header" @click="toggleDescription">
+          <span>Описание</span>
+          <span class="arrow">{{ showDescription ? '▼' : '▶' }}</span>
+        </div>
+        <div v-show="showDescription" class="section-body">
+          <p>{{ detailData.description }}</p>
+        </div>
+      </div>
 
-      <div class="detail-info">
-        <!-- Название -->
-        <h2 class="detail-name">{{ detailData.name }}</h2>
-
-        <!-- Цена -->
-        <p class="detail-price">{{ detailData.price }} ₽</p>
-
-        <!-- Выводим все доступные поля из detailData -->
-        <p v-if="detailData.variant_sku" class="detail-field">
-          <strong>Артикул:</strong> {{ detailData.variant_sku }}
-        </p>
-        <p v-if="detailData.gender" class="detail-field">
-          <strong>Пол:</strong> {{ detailData.gender }}
-        </p>
-        <p v-if="detailData.category" class="detail-field">
-          <strong>Категория:</strong> {{ detailData.category }}
-        </p>
-        <p v-if="detailData.subcategory" class="detail-field">
-          <strong>Субкатегория:</strong> {{ detailData.subcategory }}
-        </p>
-        <p v-if="detailData.brand" class="detail-field">
-          <strong>Бренд:</strong> {{ detailData.brand }}
-        </p>
-        <p v-if="detailData.description" class="detail-field">
-          <strong>Описание:</strong> {{ detailData.description }}
-        </p>
-        <p v-if="detailData.material" class="detail-field">
-          <strong>Материал:</strong> {{ detailData.material }}
-        </p>
-        <p v-if="detailData.color" class="detail-field">
-          <strong>Цвет:</strong> {{ detailData.color }}
-        </p>
-        <p v-if="detailData.size_label" class="detail-field">
-          <strong>Размер:</strong> {{ detailData.size_label }}
-        </p>
-        <p v-if="detailData.width_mm" class="detail-field">
-          <strong>Ширина (мм):</strong> {{ detailData.width_mm }}
-        </p>
-        <p v-if="detailData.height_mm" class="detail-field">
-          <strong>Высота (мм):</strong> {{ detailData.height_mm }}
-        </p>
-        <p v-if="detailData.depth_mm" class="detail-field">
-          <strong>Глубина (мм):</strong> {{ detailData.depth_mm }}
-        </p>
-        <p v-if="detailData.size_guide_url" class="detail-field">
-          <strong>Size Guide:</strong>
-          <a :href="detailData.size_guide_url" target="_blank">ссылка</a>
-        </p>
-        <p v-if="detailData.delivery_time" class="detail-field">
-          <strong>Время доставки:</strong> {{ detailData.delivery_time }}
-        </p>
-
-        <!-- Кнопки управления количеством в корзине -->
-        <div class="detail-cart-controls">
-          <button v-if="!store.isFavorite(detailData)" class="add-fav-button" @click="store.addToFavorites(detailData)">
-            Добавить в избранное
-          </button>
-          <button v-else class="remove-fav-button" @click="store.removeFromFavorites(detailData)">
-            Убрать из избранного
-          </button>
-
-          <div v-if="currentQuantity > 0" class="quantity-controls">
-            <button @click="onDecrease(detailData)">➖</button>
-            <span class="quantity">{{ currentQuantity }}</span>
-            <button @click="onIncrease(detailData)">➕</button>
-          </div>
-          <button v-else class="add-button" @click="store.addToCart(detailData)">
-            В корзину
-          </button>
+      <!-- 8. Аккордеон: Характеристики -->
+      <div class="section">
+        <div class="section-header" @click="toggleCharacteristics">
+          <span>Характеристики</span>
+          <span class="arrow">{{ showCharacteristics ? '▼' : '▶' }}</span>
+        </div>
+        <div v-show="showCharacteristics" class="section-body">
+          <p v-for="(val, key) in detailData" :key="key"
+            v-if="keyLabels[key] && val != null && !['images','name','price','description','brand','variant_sku','count_in_stock','delivery_time','size_label','color','material'].includes(key)">
+            <strong>{{ keyLabels[key] }}:</strong> {{ val }}
+          </p>
         </div>
       </div>
     </div>
@@ -106,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted } from 'vue'
+import { ref, nextTick, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useStore } from '@/store/index.js'
 
@@ -114,138 +114,81 @@ const route = useRoute()
 const router = useRouter()
 const store = useStore()
 
-// Берём category из route.query
 const category = route.query.category
 
 const detailData = ref(null)
-
-// Индикатор загрузки
 const loading = ref(true)
-// Текущий индекс (номер картинки)
 const currentIndex = ref(0)
-// Ссылка на DOM-узел .carousel (обёртка скролла)
-const carouselRef = ref(null)
+const thumbsRef = ref(null)
 
-// Для свайпов
-let touchStartX = 0
-let touchDeltaX = 0
-let isSwiping = false
+const showDescription = ref(false)
+const showCharacteristics = ref(false)
 
-function onTouchStart(evt) {
-  if (!carouselRef.value) return
-  isSwiping = true
-  touchStartX = evt.touches[0].clientX
-  touchDeltaX = 0
+// Читаемые подписи для характеристик
+const keyLabels = {
+  gender: 'Пол',
+  category: 'Категория',
+  subcategory: 'Субкатегория',
+  width_mm: 'Ширина (мм)',
+  height_mm: 'Высота (мм)',
+  depth_mm: 'Глубина (мм)',
+  material: 'Материал',
+  color: 'Цвет',
+  size_label: 'Размер',
+  count_in_stock: 'Наличие',
+  delivery_time: 'Время доставки'
 }
 
-function onTouchMove(evt) {
-  if (!isSwiping) return
-  const currentX = evt.touches[0].clientX
-  touchDeltaX = currentX - touchStartX
+function toggleDescription() {
+  showDescription.value = !showDescription.value
+}
+function toggleCharacteristics() {
+  showCharacteristics.value = !showCharacteristics.value
 }
 
-function onTouchEnd() {
-  if (!isSwiping) return
-  isSwiping = false
-  if (touchDeltaX > 50) {
-    scrollToIndex(currentIndex.value - 1)
-  } else if (touchDeltaX < -50) {
-    scrollToIndex(currentIndex.value + 1)
-  } else {
-    scrollToIndex(currentIndex.value)
-  }
-  touchDeltaX = 0
-}
-
-function scrollToIndex(num, smooth = true) {
-  if (!detailData.value || !detailData.value.images) return
-  const count = detailData.value.images.length
-  let idx = ((num % count) + count) % count
-  currentIndex.value = idx
-  const wrapper = carouselRef.value?.querySelector('.images-wrapper')
-  if (!wrapper) return
-  const width = wrapper.clientWidth
-  const targetScrollLeft = idx * width
-  wrapper.scrollTo({
-    left: targetScrollLeft,
-    behavior: smooth ? 'smooth' : 'auto'
-  })
-}
-
-// Функция “Назад в каталог”
 function goBack() {
   router.push({ name: 'Catalog' })
 }
 
-// Функция получения деталей товара
+function scrollToIndex(idx) {
+  if (!detailData.value?.images) return
+  currentIndex.value = idx
+  nextTick(() => {
+    const thumbs = thumbsRef.value
+    const thumb = thumbs?.children[idx]
+    if (thumb) {
+      const offset = thumb.offsetLeft - thumbs.clientWidth / 2 + thumb.clientWidth / 2
+      thumbs.scrollTo({ left: offset, behavior: 'smooth' })
+    }
+  })
+}
+
 async function fetchDetail() {
   loading.value = true
   detailData.value = null
   try {
     const vs = route.params.variant_sku
-    const response = await fetch(`${store.url}/api/product?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(vs)}`)
-    if (!response.ok) {
-      console.error('Ошибка при получении детализации товара:', response.statusText)
-      detailData.value = null
+    const res = await fetch(
+      `${store.url}/api/product?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(vs)}`
+    )
+    if (res.ok) {
+      detailData.value = await res.json()
     } else {
-      detailData.value = await response.json()
+      console.error('Ошибка при получении детализации товара:', res.statusText)
     }
-  } catch (err) {
-    console.error('Ошибка сети при fetchDetail:', err)
-    detailData.value = null
+  } catch (e) {
+    console.error('Сетевая ошибка fetchDetail:', e)
   } finally {
     loading.value = false
   }
 }
 
-// При монтировании сразу вызываем fetchDetail
-onMounted(async () => {
-  await fetchDetail()
-  await nextTick()
-  scrollToIndex(0, false)
-})
+onMounted(fetchDetail)
 
-// При изменении sku или category — обновляем данные
 watch(
   () => [route.params.variant_sku, route.query.category],
-  async () => {
-    await fetchDetail()
-    await nextTick()
-    scrollToIndex(0, false)
-  }
+  fetchDetail
 )
-
-const currentQuantity = ref(0)
-
-// Следим за detailData, чтобы обновить количество в корзине
-watch(
-  () => detailData.value,
-  newVal => {
-    if (newVal) {
-      currentQuantity.value = store.getProductQuantity(newVal)
-    }
-  }
-)
-
-// Следим за изменением корзины
-watch(
-  () => store.cart.items.length,
-  () => {
-    if (detailData.value) {
-      currentQuantity.value = store.getProductQuantity(detailData.value)
-    }
-  }
-)
-
-// При клике на “➕” рядом с детальным товаром:
-function onIncrease(item) {
-  store.increaseQuantity(item)
-}
-
-// При клике на “➖” рядом с детальным товаром:
-function onDecrease(item) {
-  store.decreaseQuantity(item)
-}
 </script>
 
 <style scoped lang="scss">
@@ -255,21 +198,6 @@ function onDecrease(item) {
   padding: 2vh;
 }
 
-/* Стили для кнопки “Назад” */
-.back-button {
-  display: flex;
-  justify-self: center;
-  margin-bottom: 16px;
-  padding: 1vh 2vh;
-  border-radius: 6px;
-  background: #292e3f;
-  color: #fff;
-  border: 1px solid #bbb;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-/* Состояние “Загрузка” */
 .loading {
   color: #bbb;
   font-size: 18px;
@@ -277,172 +205,203 @@ function onDecrease(item) {
   margin-top: 40px;
 }
 
-/* Карточка товара */
 .detail-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   background: $background-color;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Карусель изображений */
-.carousel {
-  position: relative;
-  margin-bottom: 20px;
-  overflow: hidden;
-}
-
-.images-wrapper {
+/* 1. Шапка */
+.top-row {
   display: flex;
-  overflow-x: scroll;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
-.images-wrapper::-webkit-scrollbar {
+.back-button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #007bff;
+  cursor: pointer;
+}
+
+.availability span {
+  font-weight: bold;
+}
+
+/* 2. Заголовок */
+.title-block {
+  margin-bottom: 16px;
+}
+
+.title-block .brand {
+  font-size: 14px;
+  color: #777;
+}
+
+.title-block .name {
+  font-size: 20px;
+  margin: 4px 0;
+}
+
+.title-block .sku {
+  font-size: 12px;
+  color: #777;
+}
+
+/* 3. Галерея */
+.carousel-container {
+  margin-bottom: 16px;
+}
+
+.main-image-wrapper {
+  text-align: center;
+}
+
+.main-image {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.thumbnails-wrapper {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.thumbnails-wrapper::-webkit-scrollbar {
   display: none;
 }
 
-.detail-image {
-  flex: 0 0 100%;
-  width: 100%;
-  max-width: 300px;
-  scroll-snap-align: center;
-  border-radius: 8px;
+.thumbnail {
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
   object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.detail-image.active {
-  transform: scale(1);
-}
-
-/* Кнопки “◀ ▶” */
-.nav-button {
-  background: rgba(0, 0, 0, 0.4);
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 50%;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 18px;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  transition: background 0.2s;
+  opacity: 0.6;
+  border: 2px solid transparent;
 }
 
-.nav-button.left {
-  left: 8px;
+.thumbnail.active {
+  opacity: 1;
+  border-color: #007bff;
 }
 
-.nav-button.right {
-  right: 8px;
+/* 4. Параметры */
+.options-block {
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  margin: 16px 0;
 }
 
-/* Если изображений нет */
-.no-image {
-  color: #bbb;
-  font-size: 16px;
-  margin-bottom: 20px;
-}
-
-/* Блок с текстовой информацией */
-.detail-info {
-  margin-top: 16px;
-  width: 100%;
-  max-width: 500px;
-}
-
-/* Заголовок (название) */
-.detail-name {
-  font-size: 24px;
-  margin-bottom: 8px;
-}
-
-/* Цена */
-.detail-price {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 12px;
-}
-
-/* Общий стиль для всех полей */
-.detail-field {
+.option {
   display: flex;
   justify-content: space-between;
-  font-size: 14px;
-  color: #ccc;
-  margin-bottom: 8px;
-  word-wrap: break-word;
+  padding: 12px 0;
 }
 
-.detail-field a {
-  margin-left: 0.5vh;
-  color: #ccc;
+.option + .option {
+  border-top: 1px solid #eee;
 }
 
-/* Контейнер для управления корзиной */
-.detail-cart-controls {
-  margin-top: 16px;
+label {
+  font-weight: bold;
+  color: #333;
 }
 
-/* Кнопка “Купить” */
-.add-button {
-  background: #007bff;
-  color: white;
-  padding: 10px 24px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background 0.2s;
+.value {
+  color: #555;
 }
 
-/* Кнопки “➖/➕” */
-.quantity-controls {
+.color-swatches {
   display: flex;
-  align-items: center;
   gap: 8px;
 }
 
-.quantity-controls button {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
+.swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
 }
 
-.quantity {
-  font-size: 16px;
+/* 5. Доставка и цена */
+.delivery-price-block {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.price-row .price {
+  font-size: 18px;
   font-weight: bold;
-  color: white;
 }
 
-.add-fav-button,
-.remove-fav-button {
-  margin-top: 12px;
-  padding: 10px 20px;
+/* 6. Кнопки действий */
+.actions-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.add-cart-button {
+  background: #000;
+  color: #fff;
+  padding: 14px;
   border: none;
   border-radius: 6px;
+  font-size: 16px;
   cursor: pointer;
-  font-size: 14px;
 }
 
 .add-fav-button {
-  background: #ffc107;
+  background: #fff;
   color: #000;
+  border: 1px solid #000;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .remove-fav-button {
   background: #dc3545;
   color: #fff;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* 7–8. Аккордеоны */
+.section {
+  margin-top: 16px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 12px 0;
+  border-top: 1px solid #eee;
+}
+
+.section-body {
+  padding: 8px 0 12px;
+  color: #555;
+}
+
+.arrow {
+  font-size: 14px;
 }
 
 </style>
