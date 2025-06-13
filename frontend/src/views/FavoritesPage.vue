@@ -8,7 +8,7 @@
       <router-link v-for="product in store.favorites.items" :key="product.variant_sku" class="product-card"
                    :to="{ name: 'ProductDetail', params: { variant_sku: product.variant_sku }, query: { category: product.category }}">
         <!-- кнопка “×” для удаления -->
-        <button class="remove-fav-btn" @click.stop="store.removeFromFavorites(product)" aria-label="Удалить из избранного">
+        <button type="button" class="remove-fav-btn" @click.prevent.stop="store.removeFromFavorites(product)" aria-label="Удалить из избранного">
           ×
         </button>
         <img :src="product.image" alt="product" class="product-image"/>
