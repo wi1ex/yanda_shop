@@ -1,14 +1,31 @@
 <template>
   <div class="cart-container">
+    <router-link to="/catalog" class="close-cart">
+      Вернуться к покупкам
+    </router-link>
+
     <h2 v-if="store.cart.items.length">Корзина</h2>
     <div v-else class="empty-cart">Корзина пуста</div>
 
     <ul v-if="store.cart.items.length" class="cart-list">
       <li v-for="item in store.groupedCartItems" :key="item.variant_sku" class="cart-item">
-        <img :src="item.image" alt="" class="cart-item-image" />
+        <img :src="item.image" alt="" class="cart-item-image"/>
         <div class="cart-item-details">
-          <p class="cart-item-name">{{ item.name }}</p>
-          <p class="cart-item-price">{{ item.totalPrice }}₽</p>
+          <p class="cart-item-name">
+            {{ item.name }}
+          </p>
+          <p class="cart-item-variant">
+            Артикул: {{ item.variant_sku }}
+          </p>
+          <p class="cart-item-color">
+            Цвет: {{ item.color }}
+          </p>
+          <p class="cart-item-size">
+            Размер: {{ item.size_label }}
+          </p>
+          <p class="cart-item-price">
+            {{ item.quantity }} шт × {{ item.price }}₽
+          </p>
           <div class="cart-item-controls">
             <button @click="store.decreaseQuantity(item)">➖</button>
             <span class="item-quantity">{{ item.quantity }}</span>
@@ -23,12 +40,12 @@
     </p>
 
     <div v-if="store.cart.items.length" class="cart-buttons">
-      <button class="checkout-button" @click="store.checkout">
+      <button class="checkout-button">
         Оформить заказ
       </button>
-      <router-link to="/catalog" class="close-cart">
-        Вернуться к покупкам
-      </router-link>
+      <button class="clear-cart-button" @click="store.checkout">
+        Очистить корзину
+      </button>
     </div>
   </div>
 </template>
@@ -44,6 +61,20 @@ const store = useStore()
   padding: 2vh;
   width: calc(100% - 4vh);
   background-color: $background-color;
+}
+.close-cart {
+  background: #dc3545;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  transition: 0.3s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .empty-cart {
   text-align: center;
@@ -77,6 +108,11 @@ const store = useStore()
   font-size: 14px;
   font-weight: bold;
   margin: 0;
+}
+.cart-item-variant, .cart-item-color, .cart-item-size {
+  font-size: 12px;
+  color: #aaa;
+  margin: 2px 0;
 }
 .cart-item-price {
   font-size: 14px;
@@ -116,18 +152,13 @@ const store = useStore()
   border: none;
   transition: 0.3s ease;
 }
-.close-cart {
+.clear-cart-button {
   background: #dc3545;
   color: white;
-  padding: 10px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
+  padding: 8px 16px;
   border: none;
-  transition: 0.3s ease;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  cursor: pointer;
 }
 </style>
