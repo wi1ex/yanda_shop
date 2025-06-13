@@ -5,13 +5,15 @@ import CartPage from '@/views/CartPage.vue'
 import ProductPage from '@/views/ProductPage.vue'
 import AdminPage from '@/views/AdminPage.vue'
 import ProfilePage from '@/views/ProfilePage.vue'
-import { useStore } from '@/store/index.js'  // <-- импортируем стор
+import FavoritesPage from '@/views/FavoritesPage.vue'
+import { useStore } from '@/store/index.js'
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
   { path: '/catalog', name: 'Catalog', component: CatalogPage },
   { path: '/catalog/product/:variant_sku', name: 'ProductDetail', component: ProductPage, props: true },
   { path: '/cart', name: 'Cart', component: CartPage },
+  { path: '/favorites', name: 'Favorites', component: FavoritesPage },
 
   // Маршрут /admin с защитой: beforeEnter
   {

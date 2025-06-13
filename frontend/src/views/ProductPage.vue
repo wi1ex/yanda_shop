@@ -84,13 +84,20 @@
 
         <!-- Кнопки управления количеством в корзине -->
         <div class="detail-cart-controls">
+          <button v-if="!store.isFavorite(detailData)" class="add-fav-button" @click="store.addToFavorites(detailData)">
+            Добавить в избранное
+          </button>
+          <button v-else class="remove-fav-button" @click="store.removeFromFavorites(detailData)">
+            Убрать из избранного
+          </button>
+
           <div v-if="currentQuantity > 0" class="quantity-controls">
             <button @click="onDecrease(detailData)">➖</button>
             <span class="quantity">{{ currentQuantity }}</span>
             <button @click="onIncrease(detailData)">➕</button>
           </div>
           <button v-else class="add-button" @click="store.addToCart(detailData)">
-            Купить
+            В корзину
           </button>
         </div>
       </div>
@@ -396,6 +403,7 @@ function onDecrease(item) {
   align-items: center;
   gap: 8px;
 }
+
 .quantity-controls button {
   background: #007bff;
   color: white;
@@ -404,9 +412,31 @@ function onDecrease(item) {
   border-radius: 6px;
   cursor: pointer;
 }
+
 .quantity {
   font-size: 16px;
   font-weight: bold;
   color: white;
 }
+
+.add-fav-button,
+.remove-fav-button {
+  margin-top: 12px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.add-fav-button {
+  background: #ffc107;
+  color: #000;
+}
+
+.remove-fav-button {
+  background: #dc3545;
+  color: #fff;
+}
+
 </style>

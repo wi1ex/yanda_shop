@@ -8,10 +8,21 @@
     </div>
 
     <nav class="nav-links">
-      <router-link to="/" class="nav-link" exact>Главная</router-link>
-      <router-link to="/catalog" class="nav-link">Каталог</router-link>
-      <router-link to="/cart" class="nav-link">Корзина ({{ store.cart.count }})</router-link>
-      <router-link v-if="isAdmin" to="/admin" class="nav-link">Админ-панель</router-link>
+      <router-link to="/" class="nav-link" exact>
+        Главная
+      </router-link>
+      <router-link to="/catalog" class="nav-link">
+        Каталог
+      </router-link>
+      <router-link to="/favorites" class="nav-link">
+        Избранное ({{ store.favorites.count }})
+      </router-link>
+      <router-link to="/cart" class="nav-link">
+        Корзина ({{ store.cart.count }})
+      </router-link>
+      <router-link v-if="isAdmin" to="/admin" class="nav-link">
+        Админ-панель
+      </router-link>
     </nav>
   </header>
 </template>
