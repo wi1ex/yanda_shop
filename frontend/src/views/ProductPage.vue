@@ -112,9 +112,19 @@
           <span class="arrow">{{ showCharacteristics ? '▼' : '▶' }}</span>
         </div>
         <div v-show="showCharacteristics" class="section-body">
-          <div v-for="(val, key) in detailData" :key="key" v-if="isCharacteristic(key, val)" class="char-row">
-            <strong>{{ keyLabels[key] || key }}:</strong> {{ val }}
-          </div>
+          <p v-if="detailData.gender" class="char-row"><strong>Пол:</strong> {{ detailData.gender }}</p>
+          <p v-if="detailData.category" class="char-row"><strong>Категория:</strong> {{ detailData.category }}</p>
+          <p v-if="detailData.subcategory" class="char-row"><strong>Субкатегория:</strong> {{ detailData.subcategory }}</p>
+          <p v-if="detailData.material" class="char-row"><strong>Материал:</strong> {{ detailData.material }}</p>
+          <p v-if="detailData.size_guide_url" class="char-row">
+            <strong>Размерная сетка:</strong>
+            <a :href="detailData.size_guide_url" target="_blank">Ссылка</a>
+          </p>
+          <p v-if="detailData.width_mm" class="char-row"><strong>Ширина (мм):</strong> {{ detailData.width_mm }}</p>
+          <p v-if="detailData.height_mm" class="char-row"><strong>Высота (мм):</strong> {{ detailData.height_mm }}</p>
+          <p v-if="detailData.depth_mm" class="char-row"><strong>Глубина (мм):</strong> {{ detailData.depth_mm }}</p>
+          <p v-if="detailData.size_label" class="char-row"><strong>Размер:</strong> {{ detailData.size_label }}</p>
+          <p v-if="detailData.sku" class="char-row"><strong>Общий артикул:</strong> {{ detailData.sku }}</p>
         </div>
       </div>
     </div>
@@ -139,28 +149,22 @@ const variants = ref([])
 const showDescription = ref(false)
 const showCharacteristics = ref(false)
 
-// Лейблы для характеристик
-const keyLabels = {
-  gender: 'Пол',
-  category: 'Категория',
-  subcategory: 'Субкатегория',
-  material: 'Материал',
-  width_mm: 'Ширина (мм)',
-  height_mm: 'Высота (мм)',
-  depth_mm: 'Глубина (мм)',
-  size_label: 'Размер',
-  size_guide_url: 'Размерная сетка',
-  count_in_stock: 'Наличие',
-  delivery_time: 'Доставка'
-}
-
 // Опции
-const sizeOptions = computed(() =>
-  Array.from(new Set(variants.value.map(v => v.size_label)))
-)
 const colorOptions = computed(() =>
   Array.from(new Set(variants.value.map(v => v.color)))
 )
+
+const sizeOptions = computed(() => {
+  const opts = Array.from(new Set(variants.value.map(v => v.size_label)));
+  // проверяем, все ли опции — числа
+  if (opts.every(o => !isNaN(parseFloat(o)))) {
+    return opts
+      .map(o => parseFloat(o))
+      .sort((a, b) => a - b)
+      .map(n => n.toString());
+  }
+  return opts;
+});
 
 // Количество в корзине
 const currentQuantity = ref(0)
@@ -260,29 +264,6 @@ function toggleDescription() {
 function toggleCharacteristics() {
   showCharacteristics.value = !showCharacteristics.value
 }
-
-// Какие поля в «характеристики»
-function isCharacteristic(key, val) {
-  if (val == null) return false
-  // Всё, что уже выведено выше, а также чисто технические поля
-  const excluded = [
-    'images',
-    'name',
-    'brand',
-    'variant_sku',
-    'sku',
-    'count_in_stock',
-    'delivery_time',
-    'price',
-    'description',
-    'color',
-    'count_images',
-    'created_at',
-    'updated_at'
-  ]
-  return !excluded.includes(key)
-}
-
 
 // ← Назад → каталог
 function goBack() {
