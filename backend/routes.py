@@ -468,54 +468,6 @@ def get_user_profile() -> Tuple[Response, int]:
         return jsonify({"error": "internal error"}), 500
 
 
-@api.route("/api/cart", methods=["GET"])
-def get_cart() -> Tuple[Response, int]:
-    uid_str = request.args.get("user_id")
-    if not uid_str:
-        return jsonify({"error": "user_id required"}), 400
-
-    try:
-        uid = int(uid_str)
-    except ValueError:
-        return jsonify({"error": "invalid user_id"}), 400
-
-    try:
-        key = f"cart:{uid}"
-        stored = redis_client.get(key)
-        if not stored:
-            return jsonify({"items": [], "count": 0, "total": 0}), 200
-        return jsonify(json.loads(stored)), 200
-    except Exception as e:
-        logger.exception("Redis error in get_cart: %s", e)
-        return jsonify({"error": "internal redis error"}), 500
-
-
-@api.route("/api/cart", methods=["POST"])
-def save_cart() -> Tuple[Response, int]:
-    data: Dict[str, Any] = request.get_json(force=True, silent=True) or {}
-    if "user_id" not in data:
-        return jsonify({"error": "user_id required"}), 400
-
-    try:
-        uid = int(data["user_id"])
-    except (TypeError, ValueError):
-        return jsonify({"error": "invalid user_id"}), 400
-
-    items = data.get("items", [])
-    count = data.get("count", 0)
-    total = data.get("total", 0)
-
-    try:
-        key = f"cart:{uid}"
-        redis_client.set(key, json.dumps({"items": items, "count": count, "total": total}))
-        ttl = 60 * 60 * 24 * 365
-        redis_client.expire(key, ttl)
-        return jsonify({"status": "ok"}), 200
-    except Exception as e:
-        logger.exception("Redis error in save_cart: %s", e)
-        return jsonify({"error": "internal redis error"}), 500
-
-
 @api.route("/api/admin/sheet_urls")
 def get_sheet_urls() -> Tuple[Response, int]:
     urls = {cat: get_sheet_url(cat) for cat in ("shoes", "clothing", "accessories")}
@@ -595,6 +547,102 @@ def import_sheet() -> Tuple[Response, int]:
         db.session.rollback()
         logger.exception("Error in import_sheet: %s", e)
         return jsonify({"error": "import_sheet failed", "message": str(e)}), 500
+
+
+@api.route("/api/cart", methods=["GET"])
+def get_cart() -> Tuple[Response, int]:
+    uid_str = request.args.get("user_id")
+    if not uid_str:
+        return jsonify({"error": "user_id required"}), 400
+
+    try:
+        uid = int(uid_str)
+    except ValueError:
+        return jsonify({"error": "invalid user_id"}), 400
+
+    try:
+        key = f"cart:{uid}"
+        stored = redis_client.get(key)
+        if not stored:
+            return jsonify({"items": [], "count": 0, "total": 0}), 200
+        return jsonify(json.loads(stored)), 200
+    except Exception as e:
+        logger.exception("Redis error in get_cart: %s", e)
+        return jsonify({"error": "internal redis error"}), 500
+
+
+@api.route("/api/cart", methods=["POST"])
+def save_cart() -> Tuple[Response, int]:
+    data: Dict[str, Any] = request.get_json(force=True, silent=True) or {}
+    if "user_id" not in data:
+        return jsonify({"error": "user_id required"}), 400
+
+    try:
+        uid = int(data["user_id"])
+    except (TypeError, ValueError):
+        return jsonify({"error": "invalid user_id"}), 400
+
+    items = data.get("items", [])
+    count = data.get("count", 0)
+    total = data.get("total", 0)
+
+    try:
+        key = f"cart:{uid}"
+        redis_client.set(key, json.dumps({"items": items, "count": count, "total": total}))
+        ttl = 60 * 60 * 24 * 365
+        redis_client.expire(key, ttl)
+        return jsonify({"status": "ok"}), 200
+    except Exception as e:
+        logger.exception("Redis error in save_cart: %s", e)
+        return jsonify({"error": "internal redis error"}), 500
+
+
+@api.route("/api/favorites", methods=["GET"])
+def get_favorites() -> Tuple[Response, int]:
+    uid_str = request.args.get("user_id")
+    if not uid_str:
+        return jsonify({"error": "user_id required"}), 400
+
+    try:
+        uid = int(uid_str)
+    except ValueError:
+        return jsonify({"error": "invalid user_id"}), 400
+
+    try:
+        key = f"favorites:{uid}"
+        stored = redis_client.get(key)
+        if not stored:
+            return jsonify({"items": [], "count": 0}), 200
+        return jsonify(json.loads(stored)), 200
+    except Exception as e:
+        logger.exception("Redis error in get_favorites: %s", e)
+        return jsonify({"error": "internal redis error"}), 500
+
+
+@api.route("/api/favorites", methods=["POST"])
+def save_favorites() -> Tuple[Response, int]:
+    data = request.get_json(force=True, silent=True) or {}
+    if "user_id" not in data:
+        return jsonify({"error": "user_id required"}), 400
+
+    try:
+        uid = int(data["user_id"])
+    except (TypeError, ValueError):
+        return jsonify({"error": "invalid user_id"}), 400
+
+    items = data.get("items", [])
+    # count храним для фронта
+    payload = {"items": items, "count": len(items)}
+
+    try:
+        key = f"favorites:{uid}"
+        redis_client.set(key, json.dumps(payload))
+        ttl = 60 * 60 * 24 * 365
+        redis_client.expire(key, ttl)
+        return jsonify({"status": "ok"}), 200
+    except Exception as e:
+        logger.exception("Redis error in save_favorites: %s", e)
+        return jsonify({"error": "internal redis error"}), 500
 
 
 def register_routes(app: Flask) -> None:

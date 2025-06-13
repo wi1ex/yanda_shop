@@ -34,6 +34,11 @@ export const useStore = defineStore('main', () => {
   const cartOrder = ref([])
   const cart = ref({ count: 0, total: 0, items: [] })
 
+  // Список избранного
+  const favoritesOrder = ref([]);
+  const favorites = ref({ items: [], count: 0 });
+  const favoritesLoaded = ref(false);
+
   // Флаг, который указывает, что корзина загружена из backend
   const cartLoaded = ref(false)
 
@@ -98,16 +103,71 @@ export const useStore = defineStore('main', () => {
     }
   }
 
+  // Загрузка избранного
+  async function loadFavoritesFromServer() {
+    if (!user.value?.id || !isTelegramUserId(user.value.id)) {
+      favoritesLoaded.value = true;
+      return;
+    }
+    try {
+      const resp = await fetch(`${url.value}/api/favorites?user_id=${user.value.id}`);
+      if (!resp.ok) throw new Error(resp.statusText);
+      const data = await resp.json();
+      favorites.value = data;
+      // порядок variant_sku
+      favoritesOrder.value = data.items.map(i => i.variant_sku);
+    } catch (e) {
+      console.error('Cannot load favorites:', e);
+    } finally {
+      favoritesLoaded.value = true;
+    }
+  }
+
+  // Сохранение избранного
+  async function saveFavoritesToServer() {
+    if (!user.value?.id || !isTelegramUserId(user.value.id)) return;
+    const payload = {
+      user_id: user.value.id,
+      items: favorites.value.items
+    };
+    try {
+      const resp = await fetch(`${url.value}/api/favorites`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!resp.ok) console.error('Cannot save favorites:', resp.statusText);
+    } catch (e) {
+      console.error('Error saving favorites:', e);
+    }
+  }
+
+  // Добавить/удалить из избранного
+  function addToFavorites(product) {
+    if (favorites.value.items.find(i => i.variant_sku === product.variant_sku)) return;
+    favorites.value.items.push(product);
+    favorites.value.count = favorites.value.items.length;
+    favoritesOrder.value.push(product.variant_sku);
+    saveFavoritesToServer();
+  }
+  function removeFromFavorites(product) {
+    favorites.value.items = favorites.value.items.filter(i => i.variant_sku !== product.variant_sku);
+    favorites.value.count = favorites.value.items.length;
+    favoritesOrder.value = favoritesOrder.value.filter(sku => sku !== product.variant_sku);
+    saveFavoritesToServer();
+  }
+  function isFavorite(product) {
+    return favorites.value.items.some(i => i.variant_sku === product.variant_sku);
+  }
+
   // Будем следить за тем, когда пользователь определится (инициализируется)
-  watch(
-    () => user.value && user.value.id,
-    (newId) => {
+  watch(() => user.value?.id, (newId) => {
       if (newId && isTelegramUserId(newId)) {
-        loadCartFromServer()
+        loadCartFromServer();
+        loadFavoritesFromServer();
       } else {
-        // Если гость (UUID) или пустой, но user.value.id всё равно выставлен,
-        // просто говорим, что корзина загружена (пуста) и не грузим ничего из Redis
-        cartLoaded.value = true
+        cartLoaded.value = true;
+        favoritesLoaded.value = true;
       }
     }
   )
@@ -117,7 +177,6 @@ export const useStore = defineStore('main', () => {
   const filteredProducts = computed(() => {
     // работаем со всеми пришедшими товарами сразу
     let list = products.value.slice()
-
     // фильтр по цене
     if (filterPriceMin.value != null) {
       list = list.filter(p => p.price >= filterPriceMin.value)
@@ -125,12 +184,10 @@ export const useStore = defineStore('main', () => {
     if (filterPriceMax.value != null) {
       list = list.filter(p => p.price <= filterPriceMax.value)
     }
-
     // фильтр по цвету
     if (filterColor.value) {
       list = list.filter(p => p.color === filterColor.value)
     }
-
     // сортировка
     const modifier = sortOrder.value === 'asc' ? 1 : -1
     return list.slice().sort((a, b) => {
@@ -155,7 +212,7 @@ export const useStore = defineStore('main', () => {
       map[key].totalPrice += item.price;
     }
     // Собираем в порядке cartOrder (по variant_sku)
-    return cartOrder.value.map(vsku => map[vsku]).filter(Boolean);
+    return cartOrder.value.map(variant_sku => map[variant_sku]).filter(Boolean);
   });
 
   // Меняем категорию (сбрасываем фильтры, сортировку)
@@ -204,7 +261,7 @@ export const useStore = defineStore('main', () => {
       cart.value.items.splice(idx, 1)
     } else {
       cart.value.items = cart.value.items.filter(i => i.variant_sku !== product.variant_sku)
-      cartOrder.value = cartOrder.value.filter(vsku => vsku !== product.variant_sku)
+      cartOrder.value = cartOrder.value.filter(variant_sku => variant_sku !== product.variant_sku)
     }
     saveCartToServer()
   }
@@ -216,7 +273,6 @@ export const useStore = defineStore('main', () => {
 
   // Оформление заказа (тут просто чистим корзину и показываем alert)
   function checkout() {
-    alert('Заказ оформлен!')
     cart.value = { count: 0, total: 0, items: [] }
     cartOrder.value = []
     saveCartToServer()
@@ -261,6 +317,10 @@ export const useStore = defineStore('main', () => {
     cartOrder,
     cart,
 
+    favorites,
+    favoritesOrder,
+    favoritesLoaded,
+
     filteredProducts,
     groupedCartItems,
 
@@ -272,5 +332,9 @@ export const useStore = defineStore('main', () => {
     checkout,
     clearFilters,
     fetchProducts,
+    loadFavoritesFromServer,
+    addToFavorites,
+    removeFromFavorites,
+    isFavorite,
   }
 })
