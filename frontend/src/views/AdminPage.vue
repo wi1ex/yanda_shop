@@ -351,40 +351,49 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+
 .admin-page {
   margin-top: 12vh;
   padding: 2vw;
   color: #fff;
 }
+
 /* --- Секции CSV/ZIP и Google Sheets --- */
 .upload-section,
 .sheets-section {
   margin-bottom: 30px;
 }
+
 .sheet-block {
   margin-bottom: 20px;
 }
+
 .sheet-input {
   width: 60%;
   margin-right: 8px;
 }
+
 .sheet-save,
 .sheet-import {
   margin-right: 8px;
 }
+
 .upload-result {
   margin-top: 8px;
   color: #bada55;
 }
+
 /* --- Секция логов изменений --- */
 .logs-section {
   margin-bottom: 40px;
 }
+
 .logs-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
 }
+
 .logs-table th,
 .logs-table td {
   border: 1px solid #444;
@@ -392,25 +401,30 @@ onMounted(() => {
   text-align: center;
   font-size: 14px;
 }
+
 .logs-table th {
   background-color: #252a3b;
 }
+
 .no-logs {
   text-align: center;
   padding: 10px;
   font-style: italic;
 }
+
 /* --- Секция статистики посещений --- */
 .visits-section {
   margin-top: 40px;
   margin-bottom: 40px;
 }
+
 .date-picker {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
 }
+
 .refresh-button {
   background: #007bff;
   color: white;
@@ -420,26 +434,27 @@ onMounted(() => {
   cursor: pointer;
   transition: background 0.3s;
 }
-.refresh-button:hover {
-  background: #0056b3;
-}
+
 .loading-visits,
 .loading-logs {
   color: #bbb;
   font-style: italic;
   margin-top: 10px;
 }
+
 .no-data {
   color: #bbb;
   font-style: italic;
   margin-top: 20px;
 }
+
 /* Контейнер для «самописного» бар-чарта */
 .chart-wrapper {
   width: 100%;
   max-width: 800px;
   margin: 20px auto;
 }
+
 /* Стили «бар-чарта» */
 .bar-chart {
   display: flex;
@@ -448,6 +463,7 @@ onMounted(() => {
   border-left: 1px solid #666;
   border-bottom: 1px solid #666;
 }
+
 .bar {
   flex: 1;
   margin: 0 2px;
@@ -459,19 +475,19 @@ onMounted(() => {
   align-items: center;
   transition: background 0.2s;
 }
-.bar:hover {
-  background-color: #1976D2;
-}
+
 /* Надпись с числом сверху */
 .bar-value {
   color: #fff;
   font-size: 12px;
   padding: 2px;
 }
+
 .bar-label {
   position: absolute;
   bottom: -20px;
   font-size: 12px;
   color: #ccc;
 }
+
 </style>

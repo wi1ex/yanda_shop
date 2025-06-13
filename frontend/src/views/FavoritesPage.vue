@@ -60,10 +60,6 @@ onMounted(() => {
   position: relative;
 }
 
-.product-card:hover {
-  transform: translateY(-5px);
-}
-
 /* Изображение */
 .product-image {
   width: 100%;
@@ -117,10 +113,6 @@ onMounted(() => {
   cursor: pointer;
   z-index: 10;
   transition: background 0.2s;
-}
-
-.remove-fav-btn:hover {
-  background: rgba(220, 53, 69, 1);
 }
 
 </style>

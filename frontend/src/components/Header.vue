@@ -47,6 +47,7 @@ function goHome() {
 </script>
 
 <style scoped lang="scss">
+
 .header {
   @include flex-header;
   background-color: $background-color;
@@ -70,12 +71,11 @@ function goHome() {
   border-radius: 6px;
   transition: background 0.3s;
 }
+
 .nav-link.router-link-active {
   background: #007bff;
 }
-.nav-link:hover {
-  background: #0056b3;
-}
+
 .user-info {
   display: flex;
   flex-direction: column;
@@ -84,17 +84,17 @@ function goHome() {
   text-decoration: none;
   color: inherit;
 }
-.user-info:hover .avatar {
-  outline: 2px solid #007bff;
-}
+
 .avatar {
   width: 30px;
   height: 30px;
   border-radius: 100%;
   object-fit: cover;
 }
+
 .username {
   font-size: 16px;
   font-weight: bold;
 }
+
 </style>

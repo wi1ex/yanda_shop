@@ -10,6 +10,7 @@
 </script>
 
 <style scoped lang="scss">
+
 .home-container {
   display: flex;
   flex-direction: column;
@@ -29,7 +30,5 @@
   font-weight: bold;
   transition: background 0.3s;
 }
-.go-catalog-button:hover {
-  background: #0056b3;
-}
+
 </style>

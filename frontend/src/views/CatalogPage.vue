@@ -141,6 +141,7 @@ function goToProductDetail(product) {
 </script>
 
 <style scoped lang="scss">
+
 .catalog {
   margin-top: 15vh;
   padding: 2vw;
