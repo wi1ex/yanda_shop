@@ -10,7 +10,7 @@ import { useStore } from '@/store/index.js'  // <-- импортируем ст�
 const routes = [
   { path: '/', name: 'Home', component: Home },
   { path: '/catalog', name: 'Catalog', component: CatalogPage },
-  { path: '/catalog/product/:sku', name: 'ProductDetail', component: ProductPage, props: true },
+  { path: '/catalog/product/:variant_sku', name: 'ProductDetail', component: ProductPage, props: true },
   { path: '/cart', name: 'Cart', component: CartPage },
 
   // Маршрут /admin с защитой: beforeEnter

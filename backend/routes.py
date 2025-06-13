@@ -273,22 +273,22 @@ def list_products() -> Response:
 
 @api.route("/api/product")
 def get_product() -> Tuple[Response, int]:
-    cat = request.args.get("category", "").lower()
-    sku = request.args.get("sku", "").strip()
-    logger.debug("get_product category=%s sku=%s", cat, sku)
+    category = request.args.get("category", "").lower()
+    variant_sku = request.args.get("variant_sku", "").strip()
+    logger.debug("get_product category=%s sku=%s", category, variant_sku)
 
-    if not cat or not sku:
-        logger.error("Missing category or sku")
-        return jsonify({"error": "category and sku required"}), 400
+    if not category or not variant_sku:
+        logger.error("Missing category or variant_sku")
+        return jsonify({"error": "category and variant_sku required"}), 400
 
-    Model = model_by_category(cat)
+    Model = model_by_category(category)
     if not Model:
-        logger.error("Unknown category %s", cat)
+        logger.error("Unknown category %s", category)
         return jsonify({"error": "unknown category"}), 400
 
-    obj = Model.query.filter_by(sku=sku).first()
+    obj = Model.query.filter_by(variant_sku=variant_sku).first()
     if not obj:
-        logger.warning("Product not found %s/%s", cat, sku)
+        logger.warning("Product not found %s/%s", category, variant_sku)
         return jsonify({"error": "not found"}), 404
 
     ms_tz = ZoneInfo("Europe/Moscow")
@@ -305,7 +305,7 @@ def get_product() -> Tuple[Response, int]:
     data["images"] = images
     data["image"] = images[0] if images else None
 
-    logger.info("Fetched product %s/%s", cat, sku)
+    logger.info("Fetched product %s/%s", category, variant_sku)
     return jsonify(data), 200
 
 

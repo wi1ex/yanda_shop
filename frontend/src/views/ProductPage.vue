@@ -107,8 +107,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useStore()
 
-// Берём sku из route.params и category из route.query
-const sku = route.params.sku
+// Берём category из route.query
 const category = route.query.category
 
 const detailData = ref(null)
@@ -176,7 +175,8 @@ async function fetchDetail() {
   loading.value = true
   detailData.value = null
   try {
-    const response = await fetch(`${store.url}/api/product?category=${encodeURIComponent(category)}&sku=${encodeURIComponent(sku)}`)
+    const vs = route.params.variant_sku
+    const response = await fetch(`${store.url}/api/product?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(vs)}`)
     if (!response.ok) {
       console.error('Ошибка при получении детализации товара:', response.statusText)
       detailData.value = null
@@ -200,7 +200,7 @@ onMounted(async () => {
 
 // При изменении sku или category — обновляем данные
 watch(
-  () => [route.params.sku, route.query.category],
+  () => [route.params.variant_sku, route.query.category],
   async () => {
     await fetchDetail()
     await nextTick()

@@ -126,7 +126,7 @@ function onCategoryClick(cat) {
 function goToProductDetail(product) {
   router.push({
     name: 'ProductDetail',
-    params: { sku: product.sku },
+    params: { variant_sku: product.variant_sku },
     query: { category: product.category }
   })
 }

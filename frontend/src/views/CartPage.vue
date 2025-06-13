@@ -4,7 +4,7 @@
     <div v-else class="empty-cart">Корзина пуста</div>
 
     <ul v-if="store.cart.items.length" class="cart-list">
-      <li v-for="item in store.groupedCartItems" :key="item.id" class="cart-item">
+      <li v-for="item in store.groupedCartItems" :key="item.variant_sku" class="cart-item">
         <img :src="item.image" alt="" class="cart-item-image" />
         <div class="cart-item-details">
           <p class="cart-item-name">{{ item.name }}</p>
