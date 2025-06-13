@@ -38,8 +38,8 @@
         <p class="detail-price">{{ detailData.price }} ₽</p>
 
         <!-- Выводим все доступные поля из detailData -->
-        <p v-if="detailData.sku" class="detail-field">
-          <strong>SKU:</strong> {{ detailData.sku }}
+        <p v-if="detailData.variant_sku" class="detail-field">
+          <strong>Артикул:</strong> {{ detailData.variant_sku }}
         </p>
         <p v-if="detailData.gender" class="detail-field">
           <strong>Пол:</strong> {{ detailData.gender }}
