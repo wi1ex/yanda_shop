@@ -144,12 +144,12 @@ const keyLabels = {
   gender: 'Пол',
   category: 'Категория',
   subcategory: 'Субкатегория',
+  material: 'Материал',
   width_mm: 'Ширина (мм)',
   height_mm: 'Высота (мм)',
   depth_mm: 'Глубина (мм)',
-  material: 'Материал',
-  color: 'Цвет',
   size_label: 'Размер',
+  size_guide_url: 'Размерная сетка',
   count_in_stock: 'Наличие',
   delivery_time: 'Доставка'
 }
@@ -264,13 +264,25 @@ function toggleCharacteristics() {
 // Какие поля в «характеристики»
 function isCharacteristic(key, val) {
   if (val == null) return false
+  // Всё, что уже выведено выше, а также чисто технические поля
   const excluded = [
-    'images','name','brand','variant_sku','sku',
-    'count_in_stock','delivery_time','price','description',
-    'size_label','color'
+    'images',
+    'name',
+    'brand',
+    'variant_sku',
+    'sku',
+    'count_in_stock',
+    'delivery_time',
+    'price',
+    'description',
+    'color',
+    'count_images',
+    'created_at',
+    'updated_at'
   ]
   return !excluded.includes(key)
 }
+
 
 // ← Назад → каталог
 function goBack() {
