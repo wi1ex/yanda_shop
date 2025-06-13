@@ -18,10 +18,10 @@
 
       <!-- Стандартный режим -->
       <template v-else>
-        <button v-if="!sheetUrls[cat]" @click="startEdit(cat)" class="sheet-load">
+        <button v-if="!sheetUrls[cat]" @click="startEdit(cat)">
           Загрузить ссылку
         </button>
-        <button v-else @click="startEdit(cat)" class="sheet-refresh-url" :disabled="sheetImportLoading[cat]">
+        <button v-else @click="startEdit(cat)" :disabled="sheetImportLoading[cat]">
           Обновить ссылку
         </button>
 

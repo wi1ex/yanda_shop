@@ -1,6 +1,6 @@
 <template>
   <header class="header">
-    <div class="top-row">
+    <div>
       <router-link to="/profile" class="user-info">
         <img :src="store.user.photo_url || profile_avatar" alt="avatar" class="avatar" />
         <span class="username">{{ store.user.username }}</span>
@@ -56,12 +56,6 @@ function goHome() {
   width: calc(100% - 4vw);
   max-height: 10vh;
   z-index: 1000;
-}
-
-.logo {
-  cursor: pointer;
-  font-size: 24px;
-  color: #fff;
 }
 
 .nav-links {
