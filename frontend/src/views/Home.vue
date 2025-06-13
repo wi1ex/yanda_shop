@@ -2,10 +2,6 @@
   <div class="home-container">
     <h1>Добро пожаловать в YANDA SHOP!</h1>
     <p>Здесь вы можете просмотреть наши лучшие товары.</p>
-    <!-- Ссылка на страницу каталога -->
-    <router-link to="/catalog" class="go-catalog-button">
-      Перейти в каталог
-    </router-link>
   </div>
 </template>
 

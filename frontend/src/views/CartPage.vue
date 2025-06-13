@@ -1,9 +1,5 @@
 <template>
   <div class="cart-container">
-    <router-link to="/catalog" class="close-cart">
-      Вернуться к покупкам
-    </router-link>
-
     <h2 v-if="store.cart.items.length">Корзина</h2>
     <div v-else class="empty-cart">Корзина пуста</div>
 
@@ -61,15 +57,6 @@ const store = useStore()
   padding: 2vh;
   width: calc(100% - 4vh);
   background-color: $background-color;
-}
-.close-cart {
-  background: #9fa003;
-  color: #fff;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: .3s ease;
-  text-decoration: none;
 }
 .empty-cart {
   text-align: center;

@@ -1,9 +1,5 @@
 <template>
   <div class="favorites-container">
-    <router-link to="/catalog" class="back-link">
-      ← Вернуться к покупкам
-    </router-link>
-
     <h2 v-if="store.favorites.items.length">Избранное</h2>
     <div v-else class="empty">Список избранного пуст</div>
 
@@ -43,11 +39,6 @@ onMounted(() => {
 .favorites-container {
   margin-top: 12vh;
   padding: 2vh;
-}
-
-.back-link {
-  text-decoration: none;
-  color: #007bff;
 }
 
 /* Грид как в каталоге */
