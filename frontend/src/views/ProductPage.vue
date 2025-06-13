@@ -114,17 +114,12 @@
         <div v-show="showCharacteristics" class="section-body">
           <p v-if="detailData.gender" class="char-row"><strong>Пол:</strong> {{ detailData.gender }}</p>
           <p v-if="detailData.category" class="char-row"><strong>Категория:</strong> {{ detailData.category }}</p>
-          <p v-if="detailData.subcategory" class="char-row"><strong>Субкатегория:</strong> {{ detailData.subcategory }}</p>
+          <p v-if="detailData.subcategory" class="char-row"><strong>Подкатегория:</strong> {{ detailData.subcategory }}</p>
           <p v-if="detailData.material" class="char-row"><strong>Материал:</strong> {{ detailData.material }}</p>
           <p v-if="detailData.size_guide_url" class="char-row">
             <strong>Размерная сетка:</strong>
             <a :href="detailData.size_guide_url" target="_blank">Ссылка</a>
           </p>
-          <p v-if="detailData.width_mm" class="char-row"><strong>Ширина (мм):</strong> {{ detailData.width_mm }}</p>
-          <p v-if="detailData.height_mm" class="char-row"><strong>Высота (мм):</strong> {{ detailData.height_mm }}</p>
-          <p v-if="detailData.depth_mm" class="char-row"><strong>Глубина (мм):</strong> {{ detailData.depth_mm }}</p>
-          <p v-if="detailData.size_label" class="char-row"><strong>Размер:</strong> {{ detailData.size_label }}</p>
-          <p v-if="detailData.sku" class="char-row"><strong>Общий артикул:</strong> {{ detailData.sku }}</p>
         </div>
       </div>
     </div>
@@ -532,6 +527,8 @@ label {
 }
 
 .char-row {
+  display: flex;
+  justify-content: space-between;
   padding: 4px 0;
   border-bottom: 1px solid #f0f0f0;
   font-size: 14px;
