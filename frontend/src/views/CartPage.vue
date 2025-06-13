@@ -20,11 +20,11 @@
           <p class="cart-item-color">
             Цвет: {{ item.color }}
           </p>
-          <p class="cart-item-size">
+          <p v-if="item.size_label" class="cart-item-size">
             Размер: {{ item.size_label }}
           </p>
           <p class="cart-item-price">
-            {{ item.quantity }} шт × {{ item.price }}₽
+            {{ item.quantity }} шт × {{ item.price }}₽ = {{ item.quantity * item.price }}₽
           </p>
           <div class="cart-item-controls">
             <button @click="store.decreaseQuantity(item)">➖</button>
@@ -63,18 +63,13 @@ const store = useStore()
   background-color: $background-color;
 }
 .close-cart {
-  background: #dc3545;
-  color: white;
+  background: #9fa003;
+  color: #fff;
   padding: 10px;
   border-radius: 8px;
-  font-weight: bold;
   cursor: pointer;
-  border: none;
-  transition: 0.3s ease;
+  transition: .3s ease;
   text-decoration: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 .empty-cart {
   text-align: center;
