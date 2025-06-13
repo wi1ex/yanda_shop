@@ -23,10 +23,10 @@
         <p class="sku">артикул: {{ detailData.variant_sku }}</p>
       </div>
 
-      <!-- Галерея: главное + миниатюры с кликом + свайп -->
+      <!-- Галерея: главное + миниатюры + свайп -->
       <div class="carousel-container">
         <div class="main-image-wrapper" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
-          <img :src="detailData.images[currentIndex]" alt="product image" class="main-image"/>
+          <img :src="detailData.images[currentIndex]" alt="product" class="main-image"/>
         </div>
         <div class="thumbnails-wrapper" ref="thumbsRef">
           <img v-for="(img, idx) in detailData.images" :key="idx" :src="img" alt="" class="thumbnail"
@@ -34,17 +34,22 @@
         </div>
       </div>
 
-      <!-- Параметры: ВСЕ варианты размеров и цветов -->
+      <!-- 4. Параметры: Размер или Г×Ш×В + Цвет -->
       <div class="options-block">
         <!-- Размер -->
         <div class="option">
-          <label>Размер</label>
-          <div class="options-list">
+          <label v-if="sizeOptions.length && detailData.size_label">Размер</label>
+          <label v-else>Г×Ш×В (мм)</label>
+
+          <div v-if="sizeOptions.length && detailData.size_label" class="options-list">
             <button v-for="opt in sizeOptions" :key="opt" class="option-btn"
                     :class="{ active: opt === detailData.size_label }" @click="selectVariantByOpt('size', opt)">
               {{ opt }}
             </button>
           </div>
+          <span v-else class="value">
+            {{ detailData.height_mm }}×{{ detailData.width_mm }}×{{ detailData.depth_mm }}
+          </span>
         </div>
         <!-- Цвет -->
         <div class="option">
@@ -70,7 +75,7 @@
         </div>
       </div>
 
-      <!-- Кнопки: корзина + избранное -->
+      <!-- 1. Кнопка/контролы корзины + избранное -->
       <div class="actions-block">
         <div v-if="currentQuantity > 0" class="quantity-controls">
           <button @click="onDecrease(detailData)">➖</button>
@@ -89,7 +94,7 @@
         </button>
       </div>
 
-      <!-- Описание (аккордеон) -->
+      <!-- Описание -->
       <div class="section">
         <div class="section-header" @click="toggleDescription">
           <span>Описание</span>
@@ -100,7 +105,7 @@
         </div>
       </div>
 
-      <!-- Характеристики (аккордеон) -->
+      <!-- Характеристики -->
       <div class="section">
         <div class="section-header" @click="toggleCharacteristics">
           <span>Характеристики</span>
@@ -130,12 +135,11 @@ const detailData = ref(null)
 const loading = ref(true)
 const currentIndex = ref(0)
 const thumbsRef = ref(null)
-
-const variants = ref([])         // все варианты по общему sku
+const variants = ref([])
 const showDescription = ref(false)
 const showCharacteristics = ref(false)
 
-// Настройка читаемых лейблов
+// Лейблы для характеристик
 const keyLabels = {
   gender: 'Пол',
   category: 'Категория',
@@ -150,7 +154,7 @@ const keyLabels = {
   delivery_time: 'Доставка'
 }
 
-// Доступные опции
+// Опции
 const sizeOptions = computed(() =>
   Array.from(new Set(variants.value.map(v => v.size_label)))
 )
@@ -158,10 +162,10 @@ const colorOptions = computed(() =>
   Array.from(new Set(variants.value.map(v => v.color)))
 )
 
-// Текущее кол-во в корзине
+// Количество в корзине
 const currentQuantity = ref(0)
 
-// Функция загрузки деталей
+// Логика загрузки
 async function fetchDetail() {
   loading.value = true
   detailData.value = null
@@ -171,7 +175,7 @@ async function fetchDetail() {
     if (res.ok) {
       detailData.value = await res.json()
       currentQuantity.value = store.getProductQuantity(detailData.value)
-      await loadVariants()              // загружаем варианты
+      await loadVariants()
     }
   } catch (e) {
     console.error(e)
@@ -205,18 +209,19 @@ function selectVariantByOpt(type, opt) {
   }
 }
 
-// Свайп-обработчики
+// Swipe
 let touchStartX = 0, touchDeltaX = 0, isSwiping = false
-
 function onTouchStart(e) {
-  isSwiping = true
-  touchStartX = e.touches[0].clientX
+  isSwiping = true;
+  touchStartX = e.touches[0].clientX;
   touchDeltaX = 0
 }
+
 function onTouchMove(e) {
-  if (!isSwiping) return
+  if (!isSwiping) return;
   touchDeltaX = e.touches[0].clientX - touchStartX
 }
+
 function onTouchEnd() {
   if (!isSwiping) return
   isSwiping = false
@@ -238,45 +243,69 @@ function scrollToIndex(idx) {
   })
 }
 
-// Корзина + избранное контролы
-function onIncrease(item) { store.increaseQuantity(item) }
-function onDecrease(item) { store.decreaseQuantity(item) }
+// Корзина / избранное контролы
+function onIncrease(item) {
+  store.increaseQuantity(item)
+}
 
-// Аккордеон
-function toggleDescription() { showDescription.value = !showDescription.value }
-function toggleCharacteristics() { showCharacteristics.value = !showCharacteristics.value }
+function onDecrease(item) {
+  store.decreaseQuantity(item)
+}
 
-// Определяем, что это характеристика
+// Аккордеоны
+function toggleDescription() {
+  showDescription.value = !showDescription.value
+}
+
+function toggleCharacteristics() {
+  showCharacteristics.value = !showCharacteristics.value
+}
+
+// Какие поля в «характеристики»
 function isCharacteristic(key, val) {
   if (val == null) return false
-  const excluded = [ 'images', 'name', 'brand', 'variant_sku', 'sku', 'count_in_stock', 'delivery_time', 'price', 'description']
+  const excluded = [
+    'images','name','brand','variant_sku','sku',
+    'count_in_stock','delivery_time','price','description',
+    'size_label','color'
+  ]
   return !excluded.includes(key)
 }
 
-// Кнопка назад
-function goBack() { router.back() }
+// ← Назад → каталог
+function goBack() {
+  router.push({ name: 'Catalog' })
+}
 
-// Следим за route
+// Обновляем currentQuantity при изменении корзины
+watch(
+  () => store.cart.items,
+  () => {
+    if (detailData.value) {
+      currentQuantity.value = store.getProductQuantity(detailData.value)
+    }
+  },
+  { deep: true }
+)
+
+// Следим за сменой variant или категории
 watch(
   () => [route.params.variant_sku, route.query.category],
   () => fetchDetail()
 )
 
-// Инициализация
 onMounted(fetchDetail)
+
 </script>
 
 <style scoped lang="scss">
 
 .product-detail {
-  margin-top: 12vh;
   padding: 2vh;
   max-width: 480px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 12vh auto 0;
 }
 
-/* 1. Загрузка */
 .loading {
   text-align: center;
   color: #bbb;
@@ -284,7 +313,6 @@ onMounted(fetchDetail)
   margin-top: 40px;
 }
 
-/* 2. Карточка */
 .detail-card {
   background: $background-color;
   border-radius: 12px;
@@ -292,13 +320,13 @@ onMounted(fetchDetail)
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* Шапка */
 .top-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
 }
+
 .back-button {
   background: none;
   border: none;
@@ -306,36 +334,56 @@ onMounted(fetchDetail)
   font-size: 16px;
   cursor: pointer;
 }
+
 .availability span {
   font-weight: bold;
   font-size: 14px;
 }
 
-/* Заголовок */
 .title-block {
   margin-bottom: 12px;
 }
-.brand { font-size: 14px; color: #777; }
-.name  { font-size: 20px; margin: 4px 0; }
-.sku   { font-size: 12px; color: #777; }
 
-/* Галерея */
-.carousel-container { margin-bottom: 16px; }
+.brand {
+  font-size: 14px;
+  color: #777;
+}
+
+.name  {
+  font-size: 20px;
+  margin: 4px 0;
+}
+
+.sku   {
+  font-size: 12px;
+  color: #777;
+}
+
+.carousel-container {
+  margin-bottom: 16px;
+}
+
 .main-image-wrapper {
   overflow: hidden;
   border-radius: 8px;
 }
+
 .main-image {
   width: 100%;
   display: block;
 }
+
 .thumbnails-wrapper {
   display: flex;
   gap: 8px;
   overflow-x: auto;
   margin-top: 8px;
 }
-.thumbnails-wrapper::-webkit-scrollbar { display: none; }
+
+.thumbnails-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
 .thumbnail {
   width: 60px;
   height: 60px;
@@ -346,29 +394,40 @@ onMounted(fetchDetail)
   flex: 0 0 auto;
   border: 2px solid transparent;
 }
+
 .thumbnail.active {
   opacity: 1;
   border-color: #007bff;
 }
 
-/* Опции */
 .options-block {
   border-top: 1px solid #eee;
   border-bottom: 1px solid #eee;
   margin: 16px 0;
 }
+
 .option {
   display: flex;
   align-items: center;
   padding: 8px 0;
 }
-.option + .option { border-top: 1px solid #eee; }
-label { flex: 0 0 80px; font-weight: bold; color: #333; }
+
+.option + .option {
+  border-top: 1px solid #eee;
+}
+
+label {
+  flex: 0 0 80px;
+  font-weight: bold;
+  color: #333;
+}
+
 .options-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
+
 .option-btn {
   padding: 6px 10px;
   border: 1px solid #ccc;
@@ -376,32 +435,41 @@ label { flex: 0 0 80px; font-weight: bold; color: #333; }
   background: #fff;
   cursor: pointer;
 }
+
 .option-btn.active {
   background: #007bff;
   color: #fff;
   border-color: #007bff;
 }
-.color-btn { min-width: 40px; text-align: center; }
 
-/* Доставка + цена */
+.color-btn {
+  min-width: 40px;
+  text-align: center;
+}
+
+.value {
+  color: #555;
+}
+
 .delivery-price-block {
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
   border-bottom: 1px solid #eee;
 }
+
 .price-row .price {
   font-size: 18px;
   font-weight: bold;
 }
 
-/* Действия */
 .actions-block {
   display: flex;
   flex-direction: column;
   gap: 12px;
   margin: 16px 0;
 }
+
 .add-cart-button {
   background: #000;
   color: #fff;
@@ -411,11 +479,13 @@ label { flex: 0 0 80px; font-weight: bold; color: #333; }
   font-size: 16px;
   cursor: pointer;
 }
+
 .quantity-controls {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .quantity-controls button {
   background: #007bff;
   color: #fff;
@@ -424,9 +494,11 @@ label { flex: 0 0 80px; font-weight: bold; color: #333; }
   border-radius: 6px;
   cursor: pointer;
 }
-.quantity { font-size: 16px; }
 
-/* Избранное */
+.quantity {
+  font-size: 16px;
+}
+
 .add-fav-button {
   background: #fff;
   color: #000;
@@ -435,6 +507,7 @@ label { flex: 0 0 80px; font-weight: bold; color: #333; }
   border-radius: 6px;
   cursor: pointer;
 }
+
 .remove-fav-button {
   background: #dc3545;
   color: #fff;
@@ -444,10 +517,10 @@ label { flex: 0 0 80px; font-weight: bold; color: #333; }
   cursor: pointer;
 }
 
-/* Секции */
 .section {
   margin-top: 16px;
 }
+
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -455,24 +528,35 @@ label { flex: 0 0 80px; font-weight: bold; color: #333; }
   padding: 8px 0;
   border-top: 1px solid #eee;
 }
+
 .section-body {
   padding: 8px 0;
   color: #555;
 }
-.arrow { font-size: 14px; }
 
-/* Карточка характеристик */
+.arrow {
+  font-size: 14px;
+}
+
 .char-row {
   padding: 4px 0;
   border-bottom: 1px solid #f0f0f0;
   font-size: 14px;
 }
 
-/* Mobile tweaks */
 @media (max-width: 600px) {
-  .thumbnail { width: 48px; height: 48px; }
-  .add-cart-button { padding: 10px; font-size: 14px; }
-  .option-btn { padding: 4px 8px; font-size: 14px; }
+  .thumbnail {
+    width: 48px;
+    height: 48px;
+  }
+  .add-cart-button {
+    padding: 10px;
+    font-size: 14px;
+  }
+  .option-btn {
+    padding: 4px 8px;
+    font-size: 14px;
+  }
 }
 
 </style>
