@@ -46,30 +46,28 @@ export const useStore = defineStore('main', () => {
 
   // Загрузка корзины из backend (GET /api/cart?user_id=…)
   async function loadCartFromServer() {
-    // Только, если это Telegram-ID (целое число в строке/числе) — загружаем из Redis
     if (!user.value || !user.value.id || !isTelegramUserId(user.value.id)) {
-      cartLoaded.value = true
-      return
+      cartLoaded.value = true;
+      return;
     }
 
     try {
-      const resp = await fetch(`${url.value}/api/cart?user_id=${user.value.id}`)
+      const resp = await fetch(`${url.value}/api/cart?user_id=${user.value.id}`);
       if (!resp.ok) {
-        console.error('Cannot load cart:', resp.statusText)
-        return
+        console.error('Cannot load cart:', resp.statusText);
+        return;
       }
-      const data = await resp.json()
-      // Ожидаем: data = { items: [...], count: <int>, total: <int> }
+      const data = await resp.json();
       if (data && Array.isArray(data.items)) {
-        cart.value.items = data.items
-        cart.value.count = data.count
-        cart.value.total = data.total
-        // А также восстанавливаем cartOrder – порядок по name:
-        cartOrder.value = data.items.map(i => i.name) // упрощённо
+        cart.value.items = data.items;
+        cart.value.count = data.count;
+        cart.value.total = data.total;
+        const vs = data.items.map(i => i.variant_sku);
+        cartOrder.value = Array.from(new Set(vs));
       }
-      cartLoaded.value = true
+      cartLoaded.value = true;
     } catch (e) {
-      console.error('Error loading cart from server:', e)
+      console.error('Error loading cart from server:', e);
     }
   }
 
@@ -145,24 +143,20 @@ export const useStore = defineStore('main', () => {
     })
   })
 
-  // Группируем товары в корзине по name, считаем количество и суммарную цену
+  // Группируем товары в корзине по variant_sku, считаем количество и суммарную цену
   const groupedCartItems = computed(() => {
-    const grouped = []
+    const map = {};
     for (const item of cart.value.items) {
-      const exist = grouped.find((i) => i.name === item.name)
-      if (exist) {
-        exist.quantity++
-        exist.totalPrice += item.price
-      } else {
-        grouped.push({ ...item, quantity: 1, totalPrice: item.price })
+      const key = item.variant_sku;
+      if (!map[key]) {
+        map[key] = { ...item, quantity: 0, totalPrice: 0 };
       }
+      map[key].quantity++;
+      map[key].totalPrice += item.price;
     }
-    grouped.sort(
-      (a, b) =>
-        cartOrder.value.indexOf(a.name) - cartOrder.value.indexOf(b.name)
-    )
-    return grouped
-  })
+    // Собираем в порядке cartOrder (по variant_sku)
+    return cartOrder.value.map(vsku => map[vsku]).filter(Boolean);
+  });
 
   // Меняем категорию (сбрасываем фильтры, сортировку)
   function changeCategory(cat) {
@@ -176,18 +170,17 @@ export const useStore = defineStore('main', () => {
 
   // Добавить товар в корзину
   function addToCart(product) {
-    const exist = cart.value.items.find((i) => i.name === product.name)
+    const exist = cart.value.items.find(i => i.variant_sku === product.variant_sku);
     if (exist) {
-      increaseQuantity(exist)
+      increaseQuantity(exist);
     } else {
-      cart.value.count++
-      cart.value.total += product.price
-      const id = `${Date.now()}-${Math.random()}`
-      cart.value.items.push({ ...product, id })
-      cartOrder.value.push(product.name)
+      cart.value.count++;
+      cart.value.total += product.price;
+      const id = `${Date.now()}-${Math.random()}`;
+      cart.value.items.push({ ...product, id });
+      cartOrder.value.push(product.variant_sku);
     }
-    // Сохраняем сразу после операции
-    saveCartToServer()
+    saveCartToServer();
   }
 
   // Увеличить количество выбранного товара в корзине
@@ -200,23 +193,25 @@ export const useStore = defineStore('main', () => {
 
   // Уменьшить количество
   function decreaseQuantity(product) {
-    const idx = cart.value.items.findIndex((i) => i.name === product.name)
+    const idx = cart.value.items.findIndex(i => i.variant_sku === product.variant_sku)
     if (idx === -1) return
-    const qty = cart.value.items.filter((i) => i.name === product.name).length
+
+    const qty = cart.value.items.filter(i => i.variant_sku === product.variant_sku).length
     cart.value.count--
     cart.value.total = Math.max(cart.value.total - product.price, 0)
+
     if (qty > 1) {
       cart.value.items.splice(idx, 1)
     } else {
-      cart.value.items = cart.value.items.filter((i) => i.name !== product.name)
-      cartOrder.value = cartOrder.value.filter((n) => n !== product.name)
+      cart.value.items = cart.value.items.filter(i => i.variant_sku !== product.variant_sku)
+      cartOrder.value = cartOrder.value.filter(vsku => vsku !== product.variant_sku)
     }
     saveCartToServer()
   }
 
   // Получить текущее количество единиц товара в корзине
   function getProductQuantity(product) {
-    return cart.value.items.filter((i) => i.name === product.name).length
+    return cart.value.items.filter(i => i.variant_sku === product.variant_sku).length;
   }
 
   // Оформление заказа (тут просто чистим корзину и показываем alert)
