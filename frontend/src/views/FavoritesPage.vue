@@ -13,8 +13,12 @@
         </button>
         <img :src="product.image" alt="product" class="product-image"/>
         <div class="product-info">
-          <p class="product-price">{{ product.price }} ₽</p>
-          <p class="product-name">{{ product.name }}</p>
+          <p class="product-price">
+            {{ product.price }} ₽
+          </p>
+          <p class="product-name">
+            {{ product.name }}
+          </p>
           <p v-if="product.color" class="product-color">
             Цвет: {{ product.color }}
           </p>
