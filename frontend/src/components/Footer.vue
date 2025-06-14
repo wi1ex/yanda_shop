@@ -86,6 +86,7 @@ function goHomeOrScroll() {
 .copyright {
   font-size: 12px;
 }
+
 @media (max-width: 600px) {
   .footer-columns {
     flex-direction: column;
@@ -93,14 +94,6 @@ function goHomeOrScroll() {
   }
   .column {
     align-items: center;
-  }
-}
-@media (max-width: 480px) {
-  .footer-bottom {
-    margin-top: 16px;
-  }
-  .logo {
-    font-size: 18px;
   }
 }
 

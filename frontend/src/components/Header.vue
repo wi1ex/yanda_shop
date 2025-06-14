@@ -17,7 +17,7 @@
       <router-link to="/favorites" class="nav-link">
         Избранное ({{ store.favorites.count }})
       </router-link>
-      <button type="button" class="nav-link btn-as-link" @click="store.openCartDrawer()">
+      <button type="button" class="nav-link btn-as-link" :class="{ active: store.showCartDrawer }" @click="store.openCartDrawer()">
         Корзина ({{ store.cart.count }})
       </button>
       <router-link to="/about" class="nav-link">
@@ -110,12 +110,40 @@ function goHome() {
   text-decoration: none;
 }
 
-@media (max-width: 360px) {
-  .nav-links {
-    flex-wrap: wrap;
-    gap: 8px;
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 2vh 4vw;   /* чуть больше вертикальных отступов */
+    max-height: none;   /* чтобы header не обрезался */
   }
-  .nav-link { font-size: 14px; padding: 6px 8px; }
+  .user-info {
+    margin-bottom: 12px;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.5vh;
+  }
+  .avatar {
+    width: 40px;
+    height: 40px;
+  }
+  .username {
+    font-size: 14px;
+  }
+  .nav-links {
+    flex-direction: column;
+    gap: 12px;          /* чуть больше пространства между пунктами */
+    width: 100%;
+  }
+  .nav-link,
+  .btn-as-link {
+    width: 100%;
+    text-align: left;
+    padding: 12px;      /* увеличиваем тактильную зону */
+  }
+  .btn-as-link.active {
+    background: #007bff;
+  }
 }
 
 </style>

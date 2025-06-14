@@ -335,12 +335,63 @@ h2 {
   color: #fff;
 }
 
-@media(max-width: 360px) {
-  .product-grid {
+/* Брейкпоинт 360px (уже есть) */
+@media (max-width: 360px) {
+  .products-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
-  .product-card {
-    margin: 8px 0;
+  .product-card { width: 100%; }
+}
+
+/* Новый брейкпоинт для мобильных до 600px */
+@media (max-width: 600px) {
+  /* 1. Две колонки товаров */
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* 2. Sticky-nav & категории */
+  .sticky-nav {
+    top: 10vh;
+    padding: 1vh 2vw;
+  }
+  .categories {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+  .categories button {
+    flex: 1 1 calc(50% - 8px);
+    padding: 8px;
+    text-align: center;
+  }
+
+  /* 3. Сортировка по колонке */
+  .sorting-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .sorting-controls span {
+    order: -1;
+  }
+  .sorting-controls select {
+    width: 100%;
+  }
+
+  /* 4. Фильтры */
+  .filter-controls {
+    gap: 8px;
+  }
+  .filter-input,
+  .filter-select {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 80px;
+  }
+  .clear-filters-button {
+    flex: 1 1 100%;
   }
 }
 

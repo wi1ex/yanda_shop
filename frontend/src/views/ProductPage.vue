@@ -535,16 +535,91 @@ label {
 }
 
 @media (max-width: 600px) {
-  .thumbnail {
-    width: 48px;
-    height: 48px;
+  /* общий контейнер */
+  .product-detail {
+    padding: 1vh;
+    margin-top: 8vh;
   }
-  .add-cart-button {
-    padding: 10px;
+  .detail-card {
+    padding: 12px;
+  }
+  .carousel-container {
+    margin-bottom: 12px; /* чуть меньше, чем 16px */
+  }
+
+  /* Шапка */
+  .top-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .back-button {
     font-size: 14px;
+  }
+
+  /* Заголовок */
+  .title-block .name {
+    font-size: 18px;
+  }
+
+  /* Галерея */
+  .main-image {
+    max-height: 40vh;
+    object-fit: contain;
+  }
+  .thumbnails-wrapper {
+    gap: 4px;
+  }
+  .thumbnail {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Опции */
+  .options-list {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .option {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 4px 0;
+  }
+  .option label {
+    margin-bottom: 4px;
   }
   .option-btn {
     padding: 4px 8px;
+    font-size: 14px;
+  }
+
+  /* Доставка и цена */
+  .delivery-price-block {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .price-row .price {
+    font-size: 16px;
+  }
+
+  /* Кнопки действий */
+  .actions-block {
+    gap: 8px;
+  }
+  .add-cart-button, .add-fav-button, .remove-fav-button {
+    width: 100%;
+    font-size: 14px;
+    padding: 10px;
+  }
+  .quantity-controls {
+    gap: 6px;
+  }
+
+  /* Секции «Описание» и «Характеристики» */
+  .section-header {
+    padding: 8px;
+  }
+  .section-body p {
     font-size: 14px;
   }
 }

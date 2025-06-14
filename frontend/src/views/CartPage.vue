@@ -54,8 +54,9 @@ const store = useStore()
 <style scoped lang="scss">
 
 .cart-container {
-  padding: 2vh;
-  width: calc(100% - 4vh);
+  padding: 2vh 4vw;
+  width: 100%;
+  box-sizing: border-box;
   background-color: $background-color;
 }
 
@@ -98,7 +99,9 @@ const store = useStore()
   margin: 0;
 }
 
-.cart-item-variant, .cart-item-color, .cart-item-size {
+.cart-item-variant,
+.cart-item-color,
+.cart-item-size {
   font-size: 12px;
   color: #aaa;
   margin: 2px 0;
@@ -156,6 +159,33 @@ const store = useStore()
   border-radius: 6px;
   margin-bottom: 12px;
   cursor: pointer;
+}
+
+/* адаптив */
+@media (max-width: 600px) {
+  .cart-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .cart-item-image {
+    width: 100%;
+    height: auto;
+    margin-bottom: 8px;
+  }
+  .cart-item-controls {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 12px;
+  }
+  .cart-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .checkout-button,
+  .clear-cart-button {
+    width: 100%;
+    padding: 14px;
+  }
 }
 
 </style>
