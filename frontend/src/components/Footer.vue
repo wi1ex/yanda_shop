@@ -95,4 +95,13 @@ function goHomeOrScroll() {
     align-items: center;
   }
 }
+@media (max-width: 480px) {
+  .footer-bottom {
+    margin-top: 16px;
+  }
+  .logo {
+    font-size: 18px;
+  }
+}
+
 </style>

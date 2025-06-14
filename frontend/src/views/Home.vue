@@ -531,4 +531,11 @@ onMounted(() => {
   }
 }
 
+@media (max-width: 360px) {
+  .marquee-content {
+    animation-duration: 15s;
+    font-size: 14px;
+  }
+}
+
 </style>

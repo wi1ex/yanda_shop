@@ -335,4 +335,13 @@ h2 {
   color: #fff;
 }
 
+@media(max-width: 360px) {
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+  .product-card {
+    margin: 8px 0;
+  }
+}
+
 </style>
