@@ -159,4 +159,57 @@ onMounted(async () => {
   cursor: pointer;
 }
 
+/* Уже есть внизу: */
+@media (min-width: 600px) {
+  form input,
+  form button {
+    width: 100%;
+    font-size: 14px;
+  }
+}
+
+/* Добавьте ниже этого блока: */
+@media (max-width: 600px) {
+  .profile-page {
+    padding: 4vw;
+    margin-top: 8vh;
+  }
+  .profile-page h1 {
+    font-size: 20px;
+    text-align: center;
+  }
+
+  .not-tg-message,
+  .loading-profile,
+  .error-profile,
+  .profile-info {
+    margin: 16px 0;
+  }
+
+  .not-tg-message p,
+  .loading-profile,
+  .error-profile {
+    font-size: 14px;
+  }
+  .not-tg-message button {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .profile-avatar {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 12px;
+  }
+
+  .profile-info {
+    padding: 16px;
+  }
+  .profile-info p {
+    font-size: 14px;
+    margin: 6px 0;
+  }
+}
+
 </style>

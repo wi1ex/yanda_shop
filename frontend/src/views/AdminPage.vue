@@ -361,7 +361,7 @@ onMounted(() => {
 /* --- Секции CSV/ZIP и Google Sheets --- */
 .upload-section,
 .sheets-section {
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .sheet-block {
@@ -385,7 +385,7 @@ onMounted(() => {
 
 /* --- Секция логов изменений --- */
 .logs-section {
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
 .logs-table {
@@ -488,6 +488,77 @@ onMounted(() => {
   bottom: -20px;
   font-size: 12px;
   color: #ccc;
+}
+
+@media (max-width: 600px) {
+  /* Google Sheets */
+  .sheet-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sheet-input {
+    width: 100% !important;
+    margin-right: 0;
+  }
+  .sheet-save,
+  .sheet-import {
+    width: 100%;
+  }
+
+  /* CSV/ZIP upload */
+  .upload-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .upload-section input,
+  .upload-section button {
+    width: 100%;
+  }
+
+  /* Таблица логов */
+  .logs-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+  .logs-table thead,
+  .logs-table tbody,
+  .logs-table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  /* Date-picker */
+  .date-picker {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .date-picker input,
+  .date-picker .refresh-button {
+    width: 100%;
+  }
+
+  /* Бар-чарт */
+  .chart-wrapper {
+    max-width: 100%;
+  }
+  .bar-chart {
+    height: 200px;
+  }
+  .bar {
+    margin: 0 1px;
+  }
+  .bar-label {
+    font-size: 10px;
+    bottom: -16px;
+  }
+  .bar-value {
+    font-size: 10px;
+  }
 }
 
 </style>

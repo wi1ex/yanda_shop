@@ -98,6 +98,7 @@ onMounted(() => {
   background: rgba(0,0,0,0.5);
   display: flex;
   justify-content: flex-end;
+  align-items: stretch;
   z-index: 2000;
 }
 

@@ -130,7 +130,7 @@ function joinTelegram() {
 section {
   width: 100%;
   max-width: 480px;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .placeholder {
@@ -193,12 +193,6 @@ section {
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-@media (min-width: 600px) {
-  .about-columns {
-    flex-direction: row;
-  }
 }
 
 .mosaic-section .mosaic-row {
@@ -271,4 +265,80 @@ section {
   width: calc(50% - 4px);
   height: 100px;
 }
+
+@media (max-width: 600px) {
+  .cover-section {
+    height: 40vh;
+  }
+  .cover-overlay {
+    top: 15%;
+    left: 5%;
+  }
+  .cover-title {
+    font-size: 20px;
+  }
+  .cover-tagline {
+    font-size: 14px;
+  }
+  .marquee {
+    font-size: 12px;
+    padding: 4px 0;
+  }
+  .categories-section {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 0;
+  }
+  .category {
+    font-size: 16px;
+  }
+  .about-section h2,
+  .philosophy-section h2,
+  .details-section h2,
+  .community-section h2 {
+    font-size: 20px;
+  }
+  .about-content {
+    padding: 0 8px;
+  }
+  .mosaic-section .mosaic-row {
+    flex-direction: column;
+  }
+  .image-block, .mosaic-text {
+    width: 100%;
+  }
+  .image-block {
+    height: 160px;
+  }
+  .philosophy-section {
+    padding: 16px 8px;
+  }
+  .philosophy-graphic {
+    height: 80px;
+  }
+  .details-section .cards {
+    gap: 12px;
+  }
+  .card {
+    padding: 12px;
+  }
+  .number {
+    top: 4px;
+    left: 4px;
+    font-size: 12px;
+  }
+  .join-button {
+    width: 100%;
+    font-size: 14px;
+    padding: 10px;
+  }
+  .social-images {
+    gap: 4px;
+  }
+  .social-images .image-block {
+    width: calc(50% - 2px);
+    height: 80px;
+  }
+}
+
 </style>

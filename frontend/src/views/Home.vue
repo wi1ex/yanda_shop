@@ -523,18 +523,78 @@ onMounted(() => {
 
 /* адаптив */
 @media (max-width: 600px) {
-  .steps {
-    grid-template-columns: 1fr;
+  .hero .image-placeholder {
+    height: 200px;
   }
-  .best-slider {
+  .hero {
+    padding: 0 8px;
+  }
+  .hero-text h1 {
+    font-size: 18px;
+    top: 15%;
+    left: 5%;
+  }
+  .marquee-content {
+    font-size: 12px;
+  }
+  .hero-controls {
+    position: absolute;
+    bottom: 8px;             /* подвинуть кнопки */
+    left: 5%;
+  }
+  .btn-catalog {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+  .how-it-works .steps {
+    gap: 12px;
+  }
+  .categories .cat-slider {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .categories .cat-slider button {
+    width: 100%;
+  }
+  .principles {
+    padding: 16px 8px;
+  }
+  .principle {
+    font-size: 14px;
+  }
+  .bestsellers .best-slider {
     flex-direction: column;
   }
-}
-
-@media (max-width: 360px) {
-  .marquee-content {
-    animation-duration: 15s;
+  .best-item {
+    width: 100%;
+    max-width: 250px;
+    margin: 0 auto 16px;
+  }
+  .request-form form {
+    padding: 0 16px;
+  }
+  .request-form input,
+  .request-form .btn-submit {
+    width: 100%;
+  }
+  .or-sep {
+    text-align: center;
+  }
+  .messages {
+    max-width: 100%;
+    padding: 0 16px;
+  }
+  .author {
+    flex-direction: column;
+  }
+  .faq {
+    padding: 16px 8px;
+  }
+  .q-header {
     font-size: 14px;
+  }
+  .q-answer {
+    font-size: 13px;
   }
 }
 
