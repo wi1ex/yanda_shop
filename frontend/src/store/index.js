@@ -39,8 +39,17 @@ export const useStore = defineStore('main', () => {
   const favorites = ref({ items: [], count: 0 });
   const favoritesLoaded = ref(false);
 
-  // Флаг, который указывает, что корзина загружена из backend
+  // Флаг, который указывает, что корзина открыта/загружена
   const cartLoaded = ref(false)
+  const showCartDrawer = ref(false)
+
+  function openCartDrawer() {
+    showCartDrawer.value = true
+  }
+
+  function closeCartDrawer() {
+    showCartDrawer.value = false
+  }
 
   // helper: true, если user.id можно преобразовать в int (строка из цифр)
   function isTelegramUserId(id) {
@@ -316,6 +325,7 @@ export const useStore = defineStore('main', () => {
 
     cartOrder,
     cart,
+    showCartDrawer,
 
     favorites,
     favoritesOrder,
@@ -336,5 +346,7 @@ export const useStore = defineStore('main', () => {
     addToFavorites,
     removeFromFavorites,
     isFavorite,
+    openCartDrawer,
+    closeCartDrawer,
   }
 })

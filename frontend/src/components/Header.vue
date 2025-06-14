@@ -17,9 +17,9 @@
       <router-link to="/favorites" class="nav-link">
         Избранное ({{ store.favorites.count }})
       </router-link>
-      <router-link to="/cart" class="nav-link">
+      <button type="button" class="nav-link btn-as-link" @click="store.openCartDrawer()">
         Корзина ({{ store.cart.count }})
-      </router-link>
+      </button>
       <router-link to="/about" class="nav-link">
         О нас
       </router-link>
@@ -98,6 +98,16 @@ function goHome() {
 .username {
   font-size: 16px;
   font-weight: bold;
+}
+
+.btn-as-link {
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: none;
 }
 
 </style>
