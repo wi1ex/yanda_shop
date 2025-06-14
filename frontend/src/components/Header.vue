@@ -20,6 +20,9 @@
       <router-link to="/cart" class="nav-link">
         Корзина ({{ store.cart.count }})
       </router-link>
+      <router-link to="/about" class="nav-link">
+        О нас
+      </router-link>
       <router-link v-if="isAdmin" to="/admin" class="nav-link">
         Админ-панель
       </router-link>
