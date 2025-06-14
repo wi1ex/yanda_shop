@@ -59,11 +59,12 @@
 | `/visits?date=YYYY-MM-DD`                           | GET      | Почасовые общие и уникальные посещения              |
 | `/products?category=<shoes/clothing/accessories>`   | GET      | Список товаров (основная информация)                |
 | `/product?category=&sku=`                           | GET      | Детали товара + URL-изображения                     |
-| `/import_products`                                  | POST     | Импорт из CSV (`form-data`: file, author\_id, name) |
+| `/import_products`                                  | POST     | Импорт из CSV (form-data: file, author\_id, name)   |
 | `/upload_images`                                    | POST     | Загрузка ZIP в MinIO                                |
 | `/logs?limit=N`                                     | GET      | Последние логи изменений                            |
 | `/user?user_id=`                                    | GET      | Профиль Telegram-пользователя                       |
 | `/cart`                                             | GET/POST | Получить/сохранить корзину (Redis)                  |
+| `/favorites`                                        | GET/POST | Получить/сохранить избранное (Redis)                |
 | `/admin/sheet_urls`                                 | GET      | Получить URL Google Sheets                          |
 | `/admin/sheet_url`                                  | POST     | Установить URL Google Sheets                        |
 | `/import_sheet`                                     | POST     | Импорт товаров из Google Sheets                     |
