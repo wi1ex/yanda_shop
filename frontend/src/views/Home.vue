@@ -61,12 +61,19 @@
     </section>
 
     <!-- BESTSELLERS -->
-    <section class="bestsellers">
+    <section class="bestsellers" v-if="bests.length">
       <h2>Бестселлеры</h2>
       <div class="best-slider">
         <button @click="prevBest" aria-label="Назад">←</button>
-        <div class="best-item" v-for="(p, i) in [bests[bestIndex]]" :key="p.variant_sku">
-          <button class="fav-btn" @click="toggleFav(p)">♡</button>
+        <div
+          class="best-item"
+          v-for="(p, i) in bests"
+          :key="p.variant_sku"
+          v-show="i === bestIndex"
+        >
+          <button class="fav-btn" @click="toggleFav(p)">
+            {{ store.isFavorite(p) ? '❤️' : '♡' }}
+          </button>
           <img :src="p.image" alt="" class="product-image"/>
           <p class="brand">{{ p.brand }}</p>
           <p class="name">{{ p.name }}</p>
@@ -128,7 +135,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 
@@ -201,6 +208,10 @@ const faqs = [
   { question:'Как я могу посмотреть статус моего заказа?', answer:'В личном кабинете или через Telegram-бота.', open:false },
 ]
 function toggleFaq(i){ faqs[i].open = !faqs[i].open }
+
+onMounted(() => {
+  store.fetchProducts()
+})
 
 </script>
 
