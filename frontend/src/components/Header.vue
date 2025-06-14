@@ -110,4 +110,12 @@ function goHome() {
   text-decoration: none;
 }
 
+@media (max-width: 360px) {
+  .nav-links {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .nav-link { font-size: 14px; padding: 6px 8px; }
+}
+
 </style>

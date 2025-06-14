@@ -54,7 +54,6 @@ const store = useStore()
 <style scoped lang="scss">
 
 .cart-container {
-  margin-top: 12vh;
   padding: 2vh;
   width: calc(100% - 4vh);
   background-color: $background-color;
