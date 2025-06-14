@@ -64,7 +64,6 @@ function goHome() {
 
 .nav-links {
   display: flex;
-  gap: 16px;
 }
 
 .nav-link {
@@ -111,12 +110,6 @@ function goHome() {
 }
 
 @media (max-width: 600px) {
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 2vh 4vw;   /* чуть больше вертикальных отступов */
-    max-height: none;   /* чтобы header не обрезался */
-  }
   .user-info {
     margin-bottom: 12px;
     width: 100%;
@@ -129,11 +122,6 @@ function goHome() {
   }
   .username {
     font-size: 14px;
-  }
-  .nav-links {
-    flex-direction: column;
-    gap: 12px;          /* чуть больше пространства между пунктами */
-    width: 100%;
   }
   .nav-link,
   .btn-as-link {

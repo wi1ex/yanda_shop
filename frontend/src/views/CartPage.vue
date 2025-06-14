@@ -168,7 +168,6 @@ const store = useStore()
     align-items: flex-start;
   }
   .cart-item-image {
-    width: 100%;
     height: auto;
     margin-bottom: 8px;
   }
