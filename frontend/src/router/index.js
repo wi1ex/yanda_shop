@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '@/views/Home.vue'
 import AboutPage from '@/views/AboutPage.vue'
 import CatalogPage from '@/views/CatalogPage.vue'
-import CartPage from '@/views/CartPage.vue'
 import ProductPage from '@/views/ProductPage.vue'
 import AdminPage from '@/views/AdminPage.vue'
 import ProfilePage from '@/views/ProfilePage.vue'
@@ -11,13 +10,12 @@ import { useStore } from '@/store/index.js'
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
-  { path: '/about', name: 'About', component: AboutPage },
   { path: '/catalog', name: 'Catalog', component: CatalogPage },
+  { path: '/about', name: 'About', component: AboutPage },
   { path: '/catalog/product/:variant_sku', name: 'ProductDetail', component: ProductPage, props: true },
-  { path: '/cart', name: 'Cart', component: CartPage },
   { path: '/favorites', name: 'Favorites', component: FavoritesPage },
-  { path: '/admin', name: 'Admin', component: AdminPage },
   { path: '/profile', name: 'Profile', component: ProfilePage },
+  { path: '/admin', name: 'Admin', component: AdminPage },
   { path: '/:catchAll(.*)', redirect: '/' }
 ]
 
