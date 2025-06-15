@@ -143,18 +143,14 @@ function goToProductDetail(product) {
 <style scoped lang="scss">
 
 .catalog {
-  margin-top: 15vh;
+  margin-top: 5vh;
   padding: 2vw;
 }
 
 .sticky-nav {
-  position: fixed;
-  top: 12vh;
-  left: 0;
+  position: relative;
   padding: 2vh 2vw;
   width: calc(100% - 4vw);
-  background-color: $background-color;
-  z-index: 999;
 }
 
 .categories {
@@ -177,7 +173,6 @@ function goToProductDetail(product) {
 }
 
 h2 {
-  margin-top: 5vh;
   text-align: center;
 }
 
