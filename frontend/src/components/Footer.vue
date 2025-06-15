@@ -70,9 +70,6 @@ function goHomeOrScroll() {
   font-size: 14px;
   transition: opacity 0.2s;
 }
-.footer-link:hover {
-  opacity: 0.7;
-}
 .footer-bottom {
   display: flex;
   flex-direction: column;
