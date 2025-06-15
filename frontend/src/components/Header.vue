@@ -5,31 +5,27 @@
       <img :src="icon_menu" alt="Меню" />
     </button>
 
-    <!-- Левая растяжка -->
-    <div class="spacer"></div>
-
     <!-- Логотип (ссылка на главную) -->
     <router-link to="/" class="logo-btn">
       <img :src="icon_logo_orange" alt="Главная" class="logo-icon" />
     </router-link>
 
-    <!-- Правая растяжка -->
-    <div class="spacer"></div>
-
     <!-- Иконки действий -->
-    <router-link to="/profile" class="icon-btn" title="Профиль">
-      <img :src="store.user.photo_url || icon_default_avatar" alt="Профиль" class="avatar" />
-    </router-link>
+    <div>
+      <router-link to="/profile" class="icon-btn" title="Профиль">
+        <img :src="store.user.photo_url || icon_default_avatar" alt="Профиль" class="avatar" />
+      </router-link>
 
-    <router-link to="/favorites" class="icon-btn" title="Избранное">
-      <img :src="icon_favorites" alt="Избранное" />
-      <span v-if="store.favorites.count" class="badge">{{ store.favorites.count }}</span>
-    </router-link>
+      <router-link to="/favorites" class="icon-btn" title="Избранное">
+        <img :src="icon_favorites" alt="Избранное" />
+        <span v-if="store.favorites.count" class="badge">{{ store.favorites.count }}</span>
+      </router-link>
 
-    <button class="icon-btn" title="Корзина" @click="store.openCartDrawer()">
-      <img :src="icon_cart" alt="Корзина" />
-      <span v-if="store.cart.count" class="badge">{{ store.cart.count }}</span>
-    </button>
+      <button class="icon-btn" title="Корзина" @click="store.openCartDrawer()">
+        <img :src="icon_cart" alt="Корзина" />
+        <span v-if="store.cart.count" class="badge">{{ store.cart.count }}</span>
+      </button>
+    </div>
 
     <!-- Выпадающее меню -->
     <transition name="fade">
@@ -92,7 +88,7 @@ onBeforeUnmount(() => {
   top: 0;
   width: 100%;
   background-color: $background-color;
-  padding: 1vh 2vw;
+  padding: 1vh 0;
   z-index: 1000;
 }
 
@@ -103,14 +99,12 @@ onBeforeUnmount(() => {
   padding: 8px;
 }
 
-.spacer {
-  flex: 1;
-}
-
 .logo-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0;
 }
 .logo-icon {
   height: 32px;
