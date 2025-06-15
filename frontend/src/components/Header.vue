@@ -11,7 +11,7 @@
     </router-link>
 
     <!-- Иконки действий -->
-    <div>
+    <div class="actions">
       <router-link to="/profile" class="icon-btn" title="Профиль">
         <img :src="store.user.photo_url || icon_default_avatar" alt="Профиль" class="avatar" />
       </router-link>
@@ -97,6 +97,10 @@ onBeforeUnmount(() => {
   border: none;
   cursor: pointer;
   padding: 8px;
+}
+
+.actions {
+  display: flex;
 }
 
 .logo-btn {
