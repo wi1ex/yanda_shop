@@ -8,7 +8,8 @@ git reset --hard origin/main
 
 # Останавливаем прежние контейнеры и чистим ненужное
 docker-compose down
-docker image prune -f
+docker builder prune --filter "until=72h" --force
+docker image prune --filter "until=72h" --force
 
 # Для полной очистки
 # docker-compose down --rmi all --volumes --remove-orphans
