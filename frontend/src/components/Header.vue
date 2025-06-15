@@ -1,18 +1,22 @@
 <template>
   <header class="header">
-    <!-- Hamburger menu -->
-    <button class="menu-btn" @click="toggleMenu">
+    <!-- Кнопка меню -->
+    <button class="menu-btn" ref="menuBtn" @click="toggleMenu">
       <img :src="icon_menu" alt="Меню" />
     </button>
 
-    <!-- Logo (home) -->
+    <!-- Левая растяжка -->
+    <div class="spacer"></div>
+
+    <!-- Логотип (ссылка на главную) -->
     <router-link to="/" class="logo-btn">
       <img :src="icon_logo_orange" alt="Главная" class="logo-icon" />
     </router-link>
 
+    <!-- Правая растяжка -->
     <div class="spacer"></div>
 
-    <!-- Action icons -->
+    <!-- Иконки действий -->
     <router-link to="/profile" class="icon-btn" title="Профиль">
       <img :src="store.user.photo_url || icon_default_avatar" alt="Профиль" class="avatar" />
     </router-link>
@@ -27,20 +31,19 @@
       <span v-if="store.cart.count" class="badge">{{ store.cart.count }}</span>
     </button>
 
-    <!-- Slide-out menu -->
-    <transition name="slide">
-      <nav v-if="menuOpen" class="side-menu">
-        <router-link to="/catalog" class="side-link" @click="toggleMenu">Каталог</router-link>
-        <router-link to="/about" class="side-link" @click="toggleMenu">О нас</router-link>
-        <router-link v-if="isAdmin" to="/admin" class="side-link" @click="toggleMenu">Админ-панель</router-link>
+    <!-- Выпадающее меню -->
+    <transition name="fade">
+      <nav v-if="menuOpen" class="dropdown-menu" ref="menu">
+        <router-link to="/catalog" class="dropdown-link" @click="closeMenu">Каталог</router-link>
+        <router-link to="/about" class="dropdown-link" @click="closeMenu">О нас</router-link>
+        <router-link v-if="isAdmin" to="/admin" class="dropdown-link" @click="closeMenu">Админ-панель</router-link>
       </nav>
     </transition>
   </header>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from '@/store/index.js'
 import icon_default_avatar from '@/assets/images/default_avatar.svg'
 import icon_favorites from '@/assets/images/favorites.svg'
@@ -49,17 +52,40 @@ import icon_menu from '@/assets/images/menu.svg'
 import icon_logo_orange from '@/assets/images/logo_orange.svg'
 
 const store = useStore()
-const router = useRouter()
 const menuOpen = ref(false)
-const isAdmin = computed(() => store.user && String(store.user.id) === String(store.admin_id))
+const menuBtn = ref(null)
+const menu = ref(null)
+
+const isAdmin = computed(() =>
+  store.user && String(store.user.id) === String(store.admin_id)
+)
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
+function closeMenu() {
+  menuOpen.value = false
+}
+
+// Закрыть меню кликом вне
+function onClickOutside(e) {
+  if (!menuOpen.value) return
+  const clickedInsideBtn = menuBtn.value?.contains(e.target)
+  const clickedInsideMenu = menu.value?.contains(e.target)
+  if (!clickedInsideBtn && !clickedInsideMenu) {
+    closeMenu()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', onClickOutside)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onClickOutside)
+})
 </script>
 
 <style scoped lang="scss">
-
 .header {
   @include flex-header;
   position: fixed;
@@ -77,15 +103,17 @@ function toggleMenu() {
   padding: 8px;
 }
 
+.spacer {
+  flex: 1;
+}
+
 .logo-btn {
-  margin: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .logo-icon {
   height: 32px;
-}
-
-.spacer {
-  flex: 1;
 }
 
 .icon-btn {
@@ -121,46 +149,44 @@ function toggleMenu() {
   justify-content: center;
 }
 
-.side-menu {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 200px;
-  height: 100vh;
-  background-color: $background-color;
-  padding: 2vh 1vw;
+/* маленькое выпадающее меню */
+.dropdown-menu {
+  position: absolute;
+  top: calc(1vh + 40px); /* чуть ниже кнопки меню */
+  left: 2vw;
+  background: $background-color;
+  padding: 8px 0;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+  min-width: 140px;
+  z-index: 1100;
 }
 
-.side-link {
+.dropdown-link {
   color: #fff;
   text-decoration: none;
-  font-size: 16px;
-  padding: 8px 0;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+.dropdown-link:hover {
+  background: rgba(255,255,255,0.1);
 }
 
-/* slide animation */
-.slide-enter-from {
-  transform: translateX(-100%);
+/* плавное появление */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .2s ease;
 }
-.slide-enter-active {
-  transition: transform 0.3s ease;
-}
-.slide-leave-to {
-  transform: translateX(-100%);
-}
-.slide-leave-active {
-  transition: transform 0.3s ease;
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 
-/* Responsive tweaks */
+/* адаптив */
 @media (max-width: 600px) {
-  .side-menu {
-    width: 70%;
+  .dropdown-menu {
+    left: 1vw;
+    min-width: 60%;
   }
 }
-
 </style>
