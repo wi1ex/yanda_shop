@@ -1,51 +1,60 @@
 <template>
   <header class="header">
-    <div>
-      <router-link to="/profile" class="user-info">
-        <img :src="store.user.photo_url || profile_avatar" alt="avatar" class="avatar" />
-        <span class="username">{{ store.user.username }}</span>
-      </router-link>
-    </div>
+    <!-- Hamburger menu -->
+    <button class="menu-btn" @click="toggleMenu">
+      <img :src="icon_menu" alt="Меню" />
+    </button>
 
-    <nav class="nav-links">
-      <router-link to="/" class="nav-link" exact>
-        Главная
-      </router-link>
-      <router-link to="/catalog" class="nav-link">
-        Каталог
-      </router-link>
-      <router-link to="/favorites" class="nav-link">
-        Избранное ({{ store.favorites.count }})
-      </router-link>
-      <button type="button" class="nav-link btn-as-link" :class="{ active: store.showCartDrawer }" @click="store.openCartDrawer()">
-        Корзина ({{ store.cart.count }})
-      </button>
-      <router-link to="/about" class="nav-link">
-        О нас
-      </router-link>
-      <router-link v-if="isAdmin" to="/admin" class="nav-link">
-        Админ-панель
-      </router-link>
-    </nav>
+    <!-- Logo (home) -->
+    <router-link to="/" class="logo-btn">
+      <img :src="icon_logo_orange" alt="Главная" class="logo-icon" />
+    </router-link>
+
+    <div class="spacer"></div>
+
+    <!-- Action icons -->
+    <router-link to="/profile" class="icon-btn" title="Профиль">
+      <img :src="store.user.photo_url || icon_default_avatar" alt="Профиль" class="avatar" />
+    </router-link>
+
+    <router-link to="/favorites" class="icon-btn" title="Избранное">
+      <img :src="icon_favorites" alt="Избранное" />
+      <span v-if="store.favorites.count" class="badge">{{ store.favorites.count }}</span>
+    </router-link>
+
+    <button class="icon-btn" title="Корзина" @click="store.openCartDrawer()">
+      <img :src="icon_cart" alt="Корзина" />
+      <span v-if="store.cart.count" class="badge">{{ store.cart.count }}</span>
+    </button>
+
+    <!-- Slide-out menu -->
+    <transition name="slide">
+      <nav v-if="menuOpen" class="side-menu">
+        <router-link to="/catalog" class="side-link" @click="toggleMenu">Каталог</router-link>
+        <router-link to="/about" class="side-link" @click="toggleMenu">О нас</router-link>
+        <router-link v-if="isAdmin" to="/admin" class="side-link" @click="toggleMenu">Админ-панель</router-link>
+      </nav>
+    </transition>
   </header>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useStore } from '@/store/index.js'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import profile_avatar from '@/assets/images/profile_avatar.svg'
+import { useStore } from '@/store/index.js'
+import icon_default_avatar from '@/assets/images/default_avatar.svg'
+import icon_favorites from '@/assets/images/favorites.svg'
+import icon_cart from '@/assets/images/cart.svg'
+import icon_menu from '@/assets/images/menu.svg'
+import icon_logo_orange from '@/assets/images/logo_orange.svg'
 
 const store = useStore()
 const router = useRouter()
+const menuOpen = ref(false)
+const isAdmin = computed(() => store.user && String(store.user.id) === String(store.admin_id))
 
-// Комьютед: true, если текущий user.id равен ADMIN_ID
-const isAdmin = computed(() => {
-  return store.user && String(store.user.id) === String(store.admin_id)
-})
-
-function goHome() {
-  router.push({ name: 'Home' })
+function toggleMenu() {
+  menuOpen.value = !menuOpen.value
 }
 </script>
 
@@ -53,84 +62,104 @@ function goHome() {
 
 .header {
   @include flex-header;
-  background-color: $background-color;
-  padding: 2vh 2vw;
   position: fixed;
   top: 0;
-  width: calc(100% - 4vw);
-  max-height: 10vh;
+  width: 100%;
+  background-color: $background-color;
+  padding: 1vh 2vw;
   z-index: 1000;
 }
 
-.nav-links {
+.menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.logo-btn {
+  margin: 0 16px;
+}
+.logo-icon {
+  height: 32px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.icon-btn {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 12px;
+  padding: 8px;
   display: flex;
-}
-
-.nav-link {
-  color: #fff;
-  text-decoration: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: background 0.3s;
-}
-
-.nav-link.router-link-active {
-  background: #007bff;
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 1vh;
-  text-decoration: none;
-  color: inherit;
 }
 
 .avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 100%;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
   object-fit: cover;
 }
 
-.username {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.btn-as-link {
-  background: none;
-  border: none;
-  padding: 8px 12px;
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #dc3545;
   color: #fff;
-  cursor: pointer;
-  font: inherit;
-  text-decoration: none;
+  font-size: 10px;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200px;
+  height: 100vh;
+  background-color: $background-color;
+  padding: 2vh 1vw;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+}
+
+.side-link {
+  color: #fff;
+  text-decoration: none;
+  font-size: 16px;
+  padding: 8px 0;
+}
+
+/* slide animation */
+.slide-enter-from {
+  transform: translateX(-100%);
+}
+.slide-enter-active {
+  transition: transform 0.3s ease;
+}
+.slide-leave-to {
+  transform: translateX(-100%);
+}
+.slide-leave-active {
+  transition: transform 0.3s ease;
+}
+
+/* Responsive tweaks */
 @media (max-width: 600px) {
-  .user-info {
-    margin-bottom: 12px;
-    width: 100%;
-    justify-content: flex-start;
-    gap: 0.5vh;
-  }
-  .avatar {
-    width: 40px;
-    height: 40px;
-  }
-  .username {
-    font-size: 14px;
-  }
-  .nav-link,
-  .btn-as-link {
-    width: 100%;
-    text-align: left;
-    padding: 12px;      /* увеличиваем тактильную зону */
-  }
-  .btn-as-link.active {
-    background: #007bff;
+  .side-menu {
+    width: 70%;
   }
 }
 
