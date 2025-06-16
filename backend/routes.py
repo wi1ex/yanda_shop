@@ -21,7 +21,7 @@ from models import (
     AdminSetting,
     db
 )
-from cors.config import BACKEND_URL
+from cors.config import BACKEND_URL, ADMIN_IDS
 
 logger: logging.Logger = logging.getLogger(__name__)
 api: Blueprint = Blueprint("api", __name__)
@@ -51,8 +51,8 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
 
     for row in rows:
         variant = row["variant_sku"].strip()
-        sku     = row["sku"].strip()
-        data    = {k: row[k].strip() for k in row if k not in ("sku", "variant_sku")}
+        sku = row["sku"].strip()
+        data = {k: row[k].strip() for k in row if k not in ("sku", "variant_sku")}
         # Удаление, если все поля пусты
         if variant and all(not v for v in data.values()):
             obj = existing.get(variant)
@@ -147,6 +147,12 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
 def home() -> Tuple[Response, int]:
     logger.debug("Health check: /api/ called")
     return jsonify({"message": "App is working!"}), 200
+
+
+@api.route("/api/admin_ids")
+def get_admin_ids() -> Tuple[Response, int]:
+    logger.debug("Health check: /api/admin_ids called")
+    return jsonify({"admin_ids": ADMIN_IDS}), 200
 
 
 @api.route("/api/save_user", methods=["POST"])
@@ -264,7 +270,7 @@ def list_products() -> Response:
                 data[col.name] = val
         # 2) добавляем картинки
         count = getattr(obj, "count_images", 0) or 0
-        images = [f"{BACKEND_URL}/images/{obj.sku}-{i}.webp" for i in range(1, count+1)]
+        images = [f"{BACKEND_URL}/images/{obj.variant_sku}-{i}.webp" for i in range(1, count+1)]
         data["images"] = images
         data["image"]  = images[0] if images else None
 
@@ -277,7 +283,7 @@ def list_products() -> Response:
 def get_product() -> Tuple[Response, int]:
     category = request.args.get("category", "").lower()
     variant_sku = request.args.get("variant_sku", "").strip()
-    logger.debug("get_product category=%s sku=%s", category, variant_sku)
+    logger.debug("get_product category=%s variant_sku=%s", category, variant_sku)
 
     if not category or not variant_sku:
         logger.error("Missing category or variant_sku")
@@ -303,7 +309,7 @@ def get_product() -> Tuple[Response, int]:
             data[col.name] = val
 
     count = getattr(obj, "count_images", 0) or 0
-    images = [f"{BACKEND_URL}/images/{obj.sku}-{i}.webp" for i in range(1, count + 1)]
+    images = [f"{BACKEND_URL}/images/{obj.variant_sku}-{i}.webp" for i in range(1, count + 1)]
     data["images"] = images
     data["image"] = images[0] if images else None
 
@@ -373,7 +379,7 @@ def upload_images() -> Tuple[Response, int]:
             for o in M.query:
                 cnt = getattr(o, "count_images", 0) or 0
                 for i in range(1, cnt + 1):
-                    expected.add(f"{o.sku}-{i}")
+                    expected.add(f"{o.variant_sku}-{i}")
 
         deleted = 0
         for obj in minio_client.list_objects(BUCKET, recursive=True):

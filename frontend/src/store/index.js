@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
 export const useStore = defineStore('main', () => {
-  const admin_id = ref(59404714)
+  const admin_ids = ref([])
   const url = ref('https://shop.yanda.twc1.net')
   const tg = ref(null)
 
@@ -56,6 +56,18 @@ export const useStore = defineStore('main', () => {
     // попытка превратить строку/число в целое
     const asNum = parseInt(id, 10)
     return (!Number.isNaN(asNum) && String(asNum) === String(id))
+  }
+
+  async function fetchAdminIds() {
+    try {
+      const res = await fetch(`${url.value}/api/admin_ids`)
+      if (res.ok) {
+        const data = await res.json()
+        admin_ids.value = data.admin_ids || []
+      }
+    } catch (e) {
+      console.error('Не удалось загрузить admin_ids:', e)
+    }
   }
 
   // Загрузка корзины из backend (GET /api/cart?user_id=…)
@@ -172,6 +184,7 @@ export const useStore = defineStore('main', () => {
   // Будем следить за тем, когда пользователь определится (инициализируется)
   watch(() => user.value?.id, (newId) => {
       if (newId && isTelegramUserId(newId)) {
+        fetchAdminIds();
         loadCartFromServer();
         loadFavoritesFromServer();
       } else {
