@@ -53,7 +53,7 @@ const menuBtn = ref(null)
 const menu = ref(null)
 
 const isAdmin = computed(() =>
-  store.user && String(store.user.id) === String(store.admin_id)
+  store.user && store.admin_ids.includes(Number(store.user.id))
 )
 
 function toggleMenu() {
