@@ -10,6 +10,7 @@ DB_NAME: str = os.environ["DB_NAME"]
 SQLALCHEMY_DATABASE_URI: str = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 BACKEND_URL: str = os.environ.get("BACKEND_URL", "")
+ADMIN_IDS = [int(x) for x in os.getenv("ADMIN_IDS", "").split(",") if x.strip().isdigit()]
 
 CORS_ORIGINS: List[str] = [origin.strip() for origin in os.environ.get("CORS_ORIGINS", BACKEND_URL).split(",")]
 
