@@ -322,7 +322,7 @@ export const useStore = defineStore('main', () => {
     url,
     tg,
     user,
-    admin_id,
+    admin_ids,
 
     categoryList,
     selectedCategory,
