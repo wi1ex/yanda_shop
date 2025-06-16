@@ -103,6 +103,11 @@ onBeforeUnmount(() => {
   display: flex;
 }
 
+.actions img {
+  width: 30px;
+  height: 30px;
+}
+
 .logo-btn {
   position: absolute;
   left: 50%;
