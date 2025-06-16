@@ -349,7 +349,7 @@ h2 {
 
   /* 2. Sticky-nav & категории */
   .sticky-nav {
-    top: 10vh;
+    top: 2vh;
     padding: 1vh 2vw;
   }
   .categories {

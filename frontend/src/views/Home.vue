@@ -65,12 +65,7 @@
       <h2>Бестселлеры</h2>
       <div class="best-slider">
         <button @click="prevBest" aria-label="Назад">←</button>
-        <div
-          class="best-item"
-          v-for="(p, i) in bests"
-          :key="p.variant_sku"
-          v-show="i === bestIndex"
-        >
+        <div class="best-item" v-for="(p, i) in bests" :key="p.variant_sku" v-show="i === bestIndex">
           <button class="fav-btn" @click="toggleFav(p)">
             {{ store.isFavorite(p) ? '❤️' : '♡' }}
           </button>
@@ -178,9 +173,22 @@ function toggleOrig(b){ b.open = !b.open }
 // BESTSELLERS
 const bests = computed(() => store.filteredProducts.slice(0,2))
 const bestIndex = ref(0)
-function prevBest(){ bestIndex.value = (bestIndex.value + bests.value.length -1) % bests.value.length }
-function nextBest(){ bestIndex.value = (bestIndex.value +1) % bests.value.length }
-function toggleFav(p){ /* вызвать store.addToFavorites/remove... */ }
+
+function prevBest() {
+  bestIndex.value = (bestIndex.value + bests.value.length -1) % bests.value.length
+}
+
+function nextBest() {
+  bestIndex.value = (bestIndex.value +1) % bests.value.length
+}
+
+function toggleFav(p) {
+  if (store.isFavorite(p)) {
+    store.removeFromFavorites(p)
+  } else {
+    store.addToFavorites(p)
+  }
+}
 
 // REQUEST FORM
 const request = ref({ name:'', email:'', sku:'', file:null, agree:false })
