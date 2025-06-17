@@ -88,8 +88,7 @@ onMounted(() => {
   position: absolute;
   top: 0;
   width: 100%;
-  background-color: #596380;
-  color: white;
+  background-color: #DEDEDE;
 }
 
 .cart-drawer-overlay {
