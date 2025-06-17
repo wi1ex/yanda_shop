@@ -1,190 +1,278 @@
 <template>
   <div class="cart-container">
-    <h2 v-if="store.cart.items.length">Корзина</h2>
-    <div v-else class="empty-cart">Корзина пуста</div>
-
-    <ul v-if="store.cart.items.length" class="cart-list">
-      <li v-for="item in store.groupedCartItems" :key="item.variant_sku" class="cart-item">
-        <img :src="item.image" alt="" class="cart-item-image"/>
-        <div class="cart-item-details">
-          <p class="cart-item-name">
-            {{ item.name }}
-          </p>
-          <p class="cart-item-variant">
-            Артикул: {{ item.variant_sku }}
-          </p>
-          <p class="cart-item-color">
-            Цвет: {{ item.color }}
-          </p>
-          <p v-if="item.size_label" class="cart-item-size">
-            Размер: {{ item.size_label }}
-          </p>
-          <p class="cart-item-price">
-            {{ item.quantity }} шт × {{ item.price }}₽ = {{ item.quantity * item.price }}₽
-          </p>
-          <div class="cart-item-controls">
-            <button @click="store.decreaseQuantity(item)">➖</button>
-            <span class="item-quantity">{{ item.quantity }}</span>
-            <button @click="store.increaseQuantity(item)">➕</button>
-          </div>
-        </div>
-      </li>
-    </ul>
-
-    <p v-if="store.cart.items.length" class="cart-total">
-      Итого: {{ store.cart.total }}₽
-    </p>
-
-    <div v-if="store.cart.items.length" class="cart-buttons">
-      <button class="checkout-button">
-        Оформить заказ
-      </button>
-      <button class="clear-cart-button" @click="store.checkout">
-        Очистить корзину
+    <!-- Header -->
+    <div class="cart-header">
+      <h2>Корзина [{{ store.cart.count }}]</h2>
+      <button class="close-btn" @click="store.closeCartDrawer()">
+        <img :src="icon_close" alt="Закрыть" />
       </button>
     </div>
+
+    <!-- Empty state -->
+    <div v-if="store.cart.items.length === 0" class="empty-cart">
+      Корзина пуста
+    </div>
+
+    <!-- Items list -->
+    <div v-else class="cart-items-frame">
+      <div v-for="item in store.groupedCartItems" :key="item.variant_sku" class="cart-item">
+        <div class="item-image-container">
+          <img :src="item.image" alt="" />
+        </div>
+        <div class="item-details">
+          <p class="item-brand">{{ item.brand }}</p>
+          <p class="item-name">{{ item.name }}</p>
+          <p class="item-price">{{ formatPrice(item.price) }} ₽</p>
+
+          <div class="item-quantity-controls">
+            <button class="qty-btn" @click="store.decreaseQuantity(item)">
+              <img :src="icon_minus" alt="Минус" />
+            </button>
+            <span class="qty">{{ item.quantity }}</span>
+            <button class="qty-btn" @click="store.increaseQuantity(item)">
+              <img :src="icon_plus" alt="Плюс" />
+            </button>
+          </div>
+
+          <div class="item-info-row">
+            <span class="item-info">Размер: {{ item.size_label || 'one size' }}</span>
+            <span class="item-info">Доставка: {{ item.delivery_time }}</span>
+            <button class="remove-btn" @click="removeItem(item)">
+              <img :src="icon_trash" alt="Удалить" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div v-if="store.cart.items.length" class="cart-summary">
+      <div class="summary-text">
+        <p class="summary-label">Стоимость:</p>
+        <p class="summary-note">Стоимость доставки рассчитывается при оформлении заказа</p>
+      </div>
+      <p class="summary-total">{{ formatPrice(store.cart.total) }} ₽</p>
+    </div>
+
+    <!-- Checkout button -->
+    <button v-if="store.cart.items.length" class="checkout-button" @click="store.checkout">
+      Оформить заказ
+    </button>
   </div>
 </template>
 
 <script setup>
 import { useStore } from '@/store/index.js'
+import icon_trash from '@/assets/images/trash.svg'
+import icon_close from '@/assets/images/close.svg'
+import icon_minus from '@/assets/images/minus.svg'
+import icon_plus from '@/assets/images/plus.svg'
 const store = useStore()
+
+function removeItem(item) {
+  const qty = store.getProductQuantity(item)
+  for (let i = 0; i < qty; i++) {
+    store.decreaseQuantity(item)
+  }
+}
+
+function formatPrice(val) {
+  return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
 </script>
 
 <style scoped lang="scss">
-
 .cart-container {
-  padding: 2vh 4vw;
-  width: 100%;
-  box-sizing: border-box;
-  background-color: $background-color;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 86px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fff;
+}
+.cart-header h2 {
+  font-size: 32px;
+  font-weight: 500;
+  margin: 0;
+}
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
 }
 
 .empty-cart {
-  text-align: center;
-  font-size: 16px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #bbb;
-  margin: 20px 0;
+  font-size: 16px;
 }
 
-.cart-list {
-  list-style: none;
-  padding: 0;
+.cart-items-frame {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: 100px; /* Чтобы последний элемент не перекрывался кнопкой */
+  position: relative;
+}
+.cart-items-frame::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.05));
+  pointer-events: none;
 }
 
 .cart-item {
   display: flex;
-  align-items: center;
-  background: #252a3b;
-  padding: 10px;
+  margin-bottom: 16px;
+}
+
+.item-image-container {
+  width: 80px;
+  height: 80px;
+  background: #f4f4f4;
   border-radius: 8px;
-  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.item-image-container img {
+  max-width: 100%;
+  max-height: 100%;
 }
 
-.cart-item-image {
-  width: 50px;
-  height: 50px;
-  border-radius: 5px;
-  object-fit: cover;
+.item-details {
+  flex: 1;
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
 }
 
-.cart-item-details {
-  flex-grow: 1;
-  margin-left: 10px;
-}
-
-.cart-item-name {
-  font-size: 14px;
-  font-weight: bold;
+.item-brand {
+  font-size: 12px;
+  color: #858697;
   margin: 0;
 }
-
-.cart-item-variant,
-.cart-item-color,
-.cart-item-size {
-  font-size: 12px;
-  color: #aaa;
-  margin: 2px 0;
+.item-name {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 4px 0;
+}
+.item-price {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 4px 0 8px;
 }
 
-.cart-item-price {
-  font-size: 14px;
-  margin: 5px 0;
-}
-
-.cart-item-controls {
+.item-quantity-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
 }
-
-.item-quantity {
+.qty-btn {
+  width: 32px;
+  height: 24px;
+  background: #f4f4f4;
+  border: none;
+  border-radius: 4px;
   font-size: 16px;
-  font-weight: bold;
-  padding: 4px 8px;
-  background: #007bff;
-  color: white;
-  border-radius: 5px;
+  cursor: pointer;
 }
-
-.cart-total {
+.qty {
+  width: 24px;
+  text-align: center;
   font-size: 16px;
-  font-weight: bold;
-  margin-top: 10px;
+  margin: 0 8px;
 }
 
-.cart-buttons {
+.item-info-row {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+.item-info {
+  font-size: 12px;
+  color: #858697;
+  margin-right: 12px;
+}
+.remove-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.cart-summary {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  margin-top: 16px;
+  align-items: flex-start;
+  padding: 0 16px;
+  border-top: 1px solid #e0e0e0;
+}
+.summary-text {
+  display: flex;
+  flex-direction: column;
+}
+.summary-label {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 16px 0 4px;
+}
+.summary-note {
+  font-size: 12px;
+  color: #858697;
+  margin: 0 0 16px;
+}
+.summary-total {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 16px;
 }
 
 .checkout-button {
-  background: #28a745;
-  color: white;
-  padding: 10px;
+  margin: 0 16px 16px;
+  padding: 14px;
+  background: #000;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
   border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  border: none;
-  transition: 0.3s ease;
-}
-
-.clear-cart-button {
-  background: #dc3545;
-  color: white;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  margin-bottom: 12px;
   cursor: pointer;
 }
 
-/* адаптив */
+/* Адаптив для мобильных */
 @media (max-width: 600px) {
   .cart-item {
     flex-direction: column;
     align-items: flex-start;
   }
-  .cart-item-image {
-    height: auto;
+  .item-image-container {
     margin-bottom: 8px;
   }
-  .cart-item-controls {
+  .item-quantity-controls {
     width: 100%;
     justify-content: space-between;
     margin-top: 12px;
   }
-  .cart-buttons {
-    flex-direction: column;
-    gap: 8px;
-  }
-  .checkout-button,
-  .clear-cart-button {
-    width: 100%;
-    padding: 14px;
+  .checkout-button {
+    width: calc(100% - 32px);
+    padding: 16px;
   }
 }
-
 </style>

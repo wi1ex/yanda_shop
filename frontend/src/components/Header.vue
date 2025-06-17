@@ -85,10 +85,8 @@ onBeforeUnmount(() => {
 .header {
   @include flex-header;
   position: fixed;
-  top: 0;
   width: 100%;
-  background-color: $background-color;
-  padding: 1vh 0;
+  height: 50px;
   z-index: 1000;
 }
 
