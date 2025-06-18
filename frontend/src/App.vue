@@ -76,6 +76,7 @@ onMounted(() => {
   top: 0;
   width: 100%;
   background-color: #DEDEDE;
+  font-family: Manrope-Medium;
 }
 
 </style>
