@@ -8,13 +8,14 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, watch, onBeforeUnmount } from 'vue'
 import { useStore } from '@/store/index.js'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 import CartPage from '@/views/CartPage.vue'
 
 const store = useStore()
+let prevOverflow
 
 // Генерация случайного ID для веб-посетителя, если нет Telegram WebApp
 function generateVisitorId() {
@@ -23,6 +24,19 @@ function generateVisitorId() {
   }
   return Math.random().toString(36).substring(2, 11)
 }
+
+// следим за открытием/закрытием корзины
+watch(
+  () => store.showCartDrawer,
+  (isOpen) => {
+    if (isOpen) {
+      prevOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = prevOverflow || ''
+    }
+  }
+)
 
 onMounted(() => {
   let userId
@@ -66,6 +80,10 @@ onMounted(() => {
       photo_url: store.user.photo_url
     }),
   }).catch(console.error)
+})
+
+onBeforeUnmount(() => {
+  document.body.style.overflow = prevOverflow || ''
 })
 </script>
 
