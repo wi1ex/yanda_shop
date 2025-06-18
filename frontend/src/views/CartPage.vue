@@ -1,64 +1,77 @@
 <template>
-  <div class="cart-container">
-    <!-- Header -->
-    <div class="cart-header">
-      <h2>Корзина [{{ store.cart.count }}]</h2>
-      <button class="close-btn" @click="store.closeCartDrawer()">
-        <img :src="icon_close" alt="Закрыть" />
-      </button>
-    </div>
-
-    <!-- Empty state -->
-    <div v-if="store.cart.items.length === 0" class="empty-cart">
-      Корзина пуста
-    </div>
-
-    <!-- Items list -->
-    <div v-else class="cart-items-frame">
-      <div v-for="item in store.groupedCartItems" :key="item.variant_sku" class="cart-item">
-        <div class="item-image-container">
-          <img :src="item.image" alt="" />
+  <transition name="fade">
+    <div class="cart-drawer-overlay" @click.self="store.closeCartDrawer()">
+      <div class="cart-drawer">
+        <!-- Header -->
+        <div class="cart-header">
+          <h2>Корзина [{{ store.cart.count }}]</h2>
+          <button class="close-btn" @click="store.closeCartDrawer()">
+            <img :src="icon_close" alt="Закрыть" />
+          </button>
         </div>
-        <div class="item-details">
-          <p class="item-brand">{{ item.brand }}</p>
-          <p class="item-name">{{ item.name }}</p>
-          <p class="item-price">{{ formatPrice(item.price) }} ₽</p>
 
-          <div class="item-quantity-controls">
-            <button class="qty-btn" @click="store.decreaseQuantity(item)">
-              <img :src="icon_minus" alt="Минус" />
-            </button>
-            <span class="qty">{{ item.quantity }}</span>
-            <button class="qty-btn" @click="store.increaseQuantity(item)">
-              <img :src="icon_plus" alt="Плюс" />
-            </button>
-          </div>
+        <!-- Empty state -->
+        <div v-if="store.cart.items.length === 0" class="empty-cart">
+          Корзина пуста
+        </div>
 
-          <div class="item-info-row">
-            <span class="item-info">Размер: {{ item.size_label || 'one size' }}</span>
-            <span class="item-info">Доставка: {{ item.delivery_time }}</span>
-            <button class="remove-btn" @click="removeItem(item)">
-              <img :src="icon_trash" alt="Удалить" />
-            </button>
+        <!-- Items list -->
+        <div v-else class="cart-items-frame">
+          <div v-for="item in store.groupedCartItems" :key="item.variant_sku" class="cart-item">
+            <div class="item-image-container">
+              <img :src="item.image" alt="" />
+            </div>
+            <div class="item-details">
+              <p class="item-brand">{{ item.brand }}</p>
+              <p class="item-name">{{ item.name }}</p>
+              <p class="item-price">{{ formatPrice(item.price) }} ₽</p>
+
+              <div class="item-quantity-controls">
+                <button class="qty-btn" @click="store.decreaseQuantity(item)">
+                  <img :src="icon_minus" alt="Минус" />
+                </button>
+                <span class="qty">{{ item.quantity }}</span>
+                <button class="qty-btn" @click="store.increaseQuantity(item)">
+                  <img :src="icon_plus" alt="Плюс" />
+                </button>
+              </div>
+
+              <div class="item-info-row">
+                <span class="item-info">
+                  Размер: {{ item.size_label || 'one size' }}
+                </span>
+                <span class="item-info">
+                  Доставка: {{ item.delivery_time }}
+                </span>
+                <button class="remove-btn" @click="removeItem(item)">
+                  <img :src="icon_trash" alt="Удалить" />
+                </button>
+              </div>
+            </div>
           </div>
+        </div>
+
+        <!-- Summary -->
+        <div v-if="store.cart.items.length" class="cart-summary">
+          <div class="summary-block">
+            <p class="summary-label">Стоимость:</p>
+            <p class="summary-note">Стоимость доставки рассчитывается при оформлении заказа</p>
+          </div>
+          <p class="summary-total">{{ formatPrice(store.cart.total) }} ₽</p>
+        </div>
+
+        <!-- Checkout button -->
+        <div class="cart-action" v-if="store.cart.items.length">
+          <button v-if="store.isTelegramUserId(store.user.id)" class="checkout-button" @click="store.checkout">
+            Оформить заказ (очистить корзину)
+          </button>
+          <button v-else class="register-button" @click="onRegister">
+            Зарегистрироваться
+          </button>
         </div>
       </div>
     </div>
-
-    <!-- Summary -->
-    <div v-if="store.cart.items.length" class="cart-summary">
-      <div class="summary-text">
-        <p class="summary-label">Стоимость:</p>
-        <p class="summary-note">Стоимость доставки рассчитывается при оформлении заказа</p>
-      </div>
-      <p class="summary-total">{{ formatPrice(store.cart.total) }} ₽</p>
-    </div>
-
-    <!-- Checkout button -->
-    <button v-if="store.cart.items.length" class="checkout-button" @click="store.checkout">
-      Оформить заказ
-    </button>
-  </div>
+  </transition>
 </template>
 
 <script setup>
@@ -79,24 +92,51 @@ function removeItem(item) {
 function formatPrice(val) {
   return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
+
+function onRegister() {
+  if (store.tg && store.tg.open) {
+    store.tg.open();
+  } else {
+    alert('Пожалуйста, авторизуйтесь');
+  }
+}
+
 </script>
 
 <style scoped lang="scss">
-.cart-container {
+
+.cart-drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  z-index: 2000;
+}
+
+.cart-drawer {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  max-width: 400px;
+  background: #fff;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  background: #fff;
 }
 
 .cart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   height: 86px;
   padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   border-bottom: 1px solid #e0e0e0;
   background: #fff;
+  flex-shrink: 0;
 }
 .cart-header h2 {
   font-size: 32px;
@@ -108,6 +148,10 @@ function formatPrice(val) {
   border: none;
   font-size: 24px;
   cursor: pointer;
+}
+.close-btn img {
+  width: 24px;
+  height: 24px;
 }
 
 .empty-cart {
@@ -123,7 +167,6 @@ function formatPrice(val) {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
-  padding-bottom: 100px; /* Чтобы последний элемент не перекрывался кнопкой */
   position: relative;
 }
 .cart-items-frame::after {
@@ -133,7 +176,7 @@ function formatPrice(val) {
   left: 0;
   right: 0;
   height: 20px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.05));
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.1));
   pointer-events: none;
 }
 
@@ -192,6 +235,10 @@ function formatPrice(val) {
   font-size: 16px;
   cursor: pointer;
 }
+.qty-btn img {
+  width: 16px;
+  height: 16px;
+}
 .qty {
   width: 24px;
   text-align: center;
@@ -214,17 +261,20 @@ function formatPrice(val) {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  font-size: 18px;
 }
 
 .cart-summary {
+  height: 170px;
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+  background: #fff;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 0 16px;
-  border-top: 1px solid #e0e0e0;
+  flex-shrink: 0;
 }
-.summary-text {
+.summary-block {
   display: flex;
   flex-direction: column;
 }
@@ -244,6 +294,22 @@ function formatPrice(val) {
   margin: 16px;
 }
 
+.cart-action {
+  padding: 0 16px 16px;
+  background: #fff;
+  flex-shrink: 0;
+}
+.register-button {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #000;
+  color: #fff;
+}
 .checkout-button {
   margin: 0 16px 16px;
   padding: 14px;
@@ -256,23 +322,17 @@ function formatPrice(val) {
   cursor: pointer;
 }
 
-/* Адаптив для мобильных */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .2s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
 @media (max-width: 600px) {
-  .cart-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .item-image-container {
-    margin-bottom: 8px;
-  }
-  .item-quantity-controls {
-    width: 100%;
-    justify-content: space-between;
-    margin-top: 12px;
-  }
-  .checkout-button {
-    width: calc(100% - 32px);
-    padding: 16px;
+  .cart-drawer {
+    max-width: 100vw;
   }
 }
+
 </style>

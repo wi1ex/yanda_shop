@@ -1,24 +1,15 @@
 <template>
   <div class="app-container" v-if="store.user">
     <Header />
-
-    <transition name="fade">
-      <div v-if="store.showCartDrawer" class="cart-drawer-overlay" @click.self="store.closeCartDrawer()">
-        <div class="cart-drawer">
-          <button class="close-btn" @click="store.closeCartDrawer()">×</button>
-          <CartPage />
-        </div>
-      </div>
-    </transition>
-
+    <CartPage v-if="store.showCartDrawer" />
     <router-view />
     <Footer />
   </div>
 </template>
 
 <script setup>
-import {onMounted} from 'vue'
-import {useStore} from '@/store/index.js'
+import { onMounted } from 'vue'
+import { useStore } from '@/store/index.js'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 import CartPage from '@/views/CartPage.vue'
@@ -35,7 +26,6 @@ function generateVisitorId() {
 
 onMounted(() => {
   let userId
-
   const stored = localStorage.getItem('visitorId')
   if (stored) {
     userId = stored
@@ -43,7 +33,6 @@ onMounted(() => {
     userId = generateVisitorId()
     localStorage.setItem('visitorId', userId)
   }
-
   // Инициализируем user со всеми полями, включая photo_url
   store.user = {
     id: userId,
@@ -52,7 +41,6 @@ onMounted(() => {
     username: null,
     photo_url: null
   }
-
   if (window.Telegram?.WebApp) {
     store.tg = window.Telegram.WebApp
     const tgUser = store.tg.initDataUnsafe?.user
@@ -66,7 +54,6 @@ onMounted(() => {
       }
     }
   }
-
   // Отправляем на бэкенд
   fetch(`${store.url}/api/save_user`, {
     method: 'POST',
@@ -89,53 +76,6 @@ onMounted(() => {
   top: 0;
   width: 100%;
   background-color: #DEDEDE;
-}
-
-.cart-drawer-overlay {
-  position: fixed;
-  top:0; left:0; right:0; bottom:0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: flex-end;
-  align-items: stretch;
-  z-index: 2000;
-}
-
-.cart-drawer {
-  background: #131722;
-  height: 100%;
-  position: relative;
-  overflow-y: auto;
-}
-
-.close-btn {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  background: transparent;
-  border: none;
-  color: #fff;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-/* появление/исчезание */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity .2s;
-}
-
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
-
-/* мобильная — на весь экран */
-@media (max-width: 600px) {
-  .cart-drawer { width: 100%; }
-}
-
-/* десктоп — 400px справа */
-@media (min-width: 601px) {
-  .cart-drawer { width: 400px; }
 }
 
 </style>
