@@ -66,10 +66,10 @@
 
         <!-- Checkout button -->
         <div class="cart-action" v-if="store.cart.items.length">
-          <button v-if="store.isTelegramUserId(store.user.id)" class="checkout-button" @click="store.checkout">
+          <button v-if="store.isTelegramUserId(store.user.id)" class="action-button" @click="store.checkout">
             Оформить заказ (очистить корзину)
           </button>
-          <button v-else class="register-button" @click="onRegister">
+          <button v-else class="action-button" @click="onRegister">
             Зарегистрироваться
           </button>
         </div>
@@ -267,7 +267,7 @@ function onRegister() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  margin-top: 65px;
+  margin-top: 48px;
   font-size: 12px;
   color: #858697;
 }
@@ -331,27 +331,16 @@ function onRegister() {
   background: #fff;
   flex-shrink: 0;
 }
-.register-button {
+.action-button {
   width: 100%;
   padding: 14px;
   font-size: 16px;
   font-weight: 500;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
   background-color: #333333;
   color: #fff;
-}
-.checkout-button {
-  margin: 0 16px 16px;
-  padding: 14px;
-  background: #000;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 500;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
 }
 
 .fade-enter-active, .fade-leave-active {
@@ -371,7 +360,7 @@ function onRegister() {
     margin-bottom: 16px;
   }
   .item-info-row {
-    margin-top: 52px;
+    margin-top: 40px;
   }
 }
 
