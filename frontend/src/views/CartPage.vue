@@ -141,9 +141,12 @@ function onRegister() {
   flex-shrink: 0;
 }
 .cart-header h2 {
+  margin: 0;
   font-size: 32px;
   font-family: TT-Regular;
-  margin: 0;
+  font-weight: 400;
+  line-height: 80%;
+  letter-spacing: -1.6px;
 }
 .close-btn {
   background: none;
@@ -170,6 +173,8 @@ function onRegister() {
   overflow-y: auto;
   padding: 16px;
   position: relative;
+  line-height: 100%;
+  letter-spacing: -0.6px;
 }
 .cart-items-frame::after {
   content: '';
@@ -212,16 +217,22 @@ function onRegister() {
   color: #333333;
   margin: 0 0 8px;
 }
+.item-title-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 24px;
+}
 .item-name {
   font-size: 15px;
   font-family: Manrope-SemiBold;
-  margin: 4px 0;
+  margin: 0;
   color: #0A0A0A;
 }
 .item-price {
   font-size: 15px;
   font-family: Manrope-SemiBold;
-  margin: 4px 0 8px;
+  margin: 0;
   color: #0A0A0A;
 }
 
@@ -256,7 +267,7 @@ function onRegister() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  margin-top: 38px;
+  margin-top: 65px;
   font-size: 12px;
   color: #858697;
 }
@@ -268,16 +279,6 @@ function onRegister() {
 }
 .item-info-value {
   color: #333333;
-}
-.item-title-price {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 24px;
-}
-.item-title-price .item-name,
-.item-title-price .item-price {
-  margin: 0;
 }
 .remove-btn {
   margin-left: auto;
@@ -291,7 +292,6 @@ function onRegister() {
 }
 
 .cart-summary {
-  height: 170px;
   padding: 16px;
   border-top: 1px solid #e0e0e0;
   background: #fff;
@@ -303,10 +303,12 @@ function onRegister() {
 .summary-block {
   display: flex;
   flex-direction: column;
+  line-height: 100%;
+  letter-spacing: -0.6px;
 }
 .summary-label {
   font-size: 16px;
-  margin: 16px 0 4px;
+  margin: 18px 0 4px;
   color: #333333;
 }
 .summary-note {
@@ -317,8 +319,11 @@ function onRegister() {
 .summary-total {
   font-size: 18px;
   font-family: TT-Regular;
-  color: #0A0A0A;
-  margin: 16px;
+  color: #0a0a0a;
+  margin: 24px 0;
+  font-weight: 400;
+  line-height: 80%;
+  letter-spacing: -0.9px;
 }
 
 .cart-action {
@@ -366,7 +371,7 @@ function onRegister() {
     margin-bottom: 16px;
   }
   .item-info-row {
-    margin-top: 18px;
+    margin-top: 52px;
   }
 }
 
