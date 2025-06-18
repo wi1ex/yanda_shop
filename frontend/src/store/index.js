@@ -347,6 +347,7 @@ export const useStore = defineStore('main', () => {
     filteredProducts,
     groupedCartItems,
 
+    isTelegramUserId,
     changeCategory,
     addToCart,
     increaseQuantity,
