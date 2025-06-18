@@ -177,6 +177,8 @@ function onRegister() {
   position: relative;
   line-height: 100%;
   letter-spacing: -0.6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.3) transparent;
 }
 .cart-items-frame::after {
   content: '';
@@ -187,6 +189,16 @@ function onRegister() {
   height: 20px;
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.1));
   pointer-events: none;
+}
+.cart-items-frame::-webkit-scrollbar {
+  width: 6px;
+}
+.cart-items-frame::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cart-items-frame::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.3);
+  border-radius: 3px;
 }
 
 .cart-item {
