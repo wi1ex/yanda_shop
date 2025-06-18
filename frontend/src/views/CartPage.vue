@@ -4,7 +4,7 @@
       <div class="cart-drawer">
         <!-- Header -->
         <div class="cart-header">
-          <h2>Корзина [{{ store.cart.count }}]</h2>
+          <h2>Корзина [ {{ store.cart.count }} ]</h2>
           <button class="close-btn" @click="store.closeCartDrawer()">
             <img :src="icon_close" alt="Закрыть" />
           </button>
@@ -115,9 +115,8 @@ function onRegister() {
   align-items: stretch;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   z-index: 2000;
 }
 
@@ -125,7 +124,7 @@ function onRegister() {
   position: relative;
   height: 100vh;
   width: 100vw;
-  max-width: 400px;
+  max-width: 600px;
   background: #fff;
   display: flex;
   flex-direction: column;
@@ -189,8 +188,8 @@ function onRegister() {
 }
 
 .item-image-container {
-  width: 80px;
-  height: 80px;
+  width: 134px;
+  height: 178px;
   background: #f4f4f4;
   border-radius: 8px;
   display: flex;
@@ -283,8 +282,6 @@ function onRegister() {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px;
-  margin-top: 4px;
 }
 
 .cart-summary {
