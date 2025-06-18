@@ -173,7 +173,7 @@ function onRegister() {
 .cart-items-frame {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 10px 0 10px 10px;
   position: relative;
   line-height: 100%;
   letter-spacing: -0.6px;
@@ -296,6 +296,7 @@ function onRegister() {
 }
 .remove-btn {
   margin-left: auto;
+  padding: 0;
   background: none;
   border: none;
   cursor: pointer;
