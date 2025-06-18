@@ -23,8 +23,10 @@
             </div>
             <div class="item-details">
               <p class="item-brand">{{ item.brand }}</p>
-              <p class="item-name">{{ item.name }}</p>
-              <p class="item-price">{{ formatPrice(item.price) }} ₽</p>
+              <div class="item-title-price">
+                <p class="item-name">{{ item.name }}</p>
+                <p class="item-price">{{ formatPrice(item.price) }} ₽</p>
+              </div>
 
               <div class="item-quantity-controls">
                 <button class="qty-btn" @click="store.decreaseQuantity(item)">
@@ -37,12 +39,14 @@
               </div>
 
               <div class="item-info-row">
-                <span class="item-info">
-                  Размер: {{ item.size_label || 'one size' }}
-                </span>
-                <span class="item-info">
-                  Доставка: {{ item.delivery_time }}
-                </span>
+                <p v-if="item.size_label" class="item-info">
+                  Размер:
+                  <span class="item-info-value">{{ item.size_label }}</span>
+                </p>
+                <p class="item-info">
+                  Доставка:
+                  <span class="item-info-value">{{ item.delivery_time }}</span>
+                </p>
                 <button class="remove-btn" @click="removeItem(item)">
                   <img :src="icon_trash" alt="Удалить" />
                 </button>
@@ -106,15 +110,14 @@ function onRegister() {
 <style scoped lang="scss">
 
 .cart-drawer-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
   display: flex;
   justify-content: flex-end;
   align-items: stretch;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 2000;
 }
 
@@ -140,7 +143,7 @@ function onRegister() {
 }
 .cart-header h2 {
   font-size: 32px;
-  font-weight: 500;
+  font-family: TT-Regular;
   margin: 0;
 }
 .close-btn {
@@ -205,21 +208,22 @@ function onRegister() {
   display: flex;
   flex-direction: column;
 }
-
 .item-brand {
   font-size: 12px;
-  color: #858697;
+  color: #333333;
   margin: 0;
 }
 .item-name {
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 15px;
+  font-family: Manrope-SemiBold;
   margin: 4px 0;
+  color: #0A0A0A;
 }
 .item-price {
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 15px;
+  font-family: Manrope-SemiBold;
   margin: 4px 0 8px;
+  color: #0A0A0A;
 }
 
 .item-quantity-controls {
@@ -248,13 +252,31 @@ function onRegister() {
 
 .item-info-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  margin-top: 8px;
-}
-.item-info {
+  margin: 8px 0 4px;
+  flex: 0 0 100%;
   font-size: 12px;
   color: #858697;
-  margin-right: 12px;
+}
+.item-info {
+  flex: 0 0 100%;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.4);
+  margin: 4px 0;
+}
+.item-info-value {
+  color: #333333;
+}
+.item-title-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.item-title-price .item-name,
+.item-title-price .item-price {
+  margin: 0;
 }
 .remove-btn {
   margin-left: auto;
@@ -262,6 +284,7 @@ function onRegister() {
   border: none;
   cursor: pointer;
   font-size: 18px;
+  margin-top: 4px;
 }
 
 .cart-summary {
@@ -279,18 +302,19 @@ function onRegister() {
   flex-direction: column;
 }
 .summary-label {
-  font-size: 24px;
-  font-weight: 500;
+  font-size: 16px;
   margin: 16px 0 4px;
+  color: #333333;
 }
 .summary-note {
   font-size: 12px;
-  color: #858697;
+  color: rgba(10, 10, 10, 0.6);
   margin: 0 0 16px;
 }
 .summary-total {
-  font-size: 24px;
-  font-weight: 500;
+  font-size: 18px;
+  font-family: TT-Regular;
+  color: #0A0A0A;
   margin: 16px;
 }
 
@@ -307,7 +331,7 @@ function onRegister() {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  background: #000;
+  background-color: #333333;
   color: #fff;
 }
 .checkout-button {
@@ -332,6 +356,10 @@ function onRegister() {
 @media (max-width: 600px) {
   .cart-drawer {
     max-width: 100vw;
+  }
+  .item-title-price {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
