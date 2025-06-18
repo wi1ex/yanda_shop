@@ -1,6 +1,6 @@
 <template>
   <transition name="fade">
-    <div class="cart-drawer-overlay" @click.self="store.closeCartDrawer()">
+    <div v-if="store.showCartDrawer" class="cart-drawer-overlay" @click.self="store.closeCartDrawer()">
       <transition name="slide">
         <div class="cart-drawer">
           <!-- Header -->
@@ -357,6 +357,7 @@ function onRegister() {
 .slide-leave-from {
   transform: translateX(0);
 }
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;

@@ -1,7 +1,7 @@
 <template>
   <div class="app-container" v-if="store.user">
     <Header />
-    <CartPage v-if="store.showCartDrawer" />
+    <CartPage />
     <router-view />
     <Footer />
   </div>
