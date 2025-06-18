@@ -203,14 +203,14 @@ function onRegister() {
 
 .item-details {
   flex: 1;
-  margin-left: 12px;
+  margin-left: 8px;
   display: flex;
   flex-direction: column;
 }
 .item-brand {
   font-size: 12px;
   color: #333333;
-  margin: 0;
+  margin: 0 0 8px;
 }
 .item-name {
   font-size: 15px;
@@ -228,11 +228,14 @@ function onRegister() {
 .item-quantity-controls {
   display: flex;
   align-items: center;
+  width: fit-content;
+  background: #F1F1F1;
+  border-radius: 4px;
 }
 .qty-btn {
-  width: 32px;
+  @include flex-cc;
+  width: 24px;
   height: 24px;
-  background: #f4f4f4;
   border: none;
   border-radius: 4px;
   font-size: 16px;
@@ -253,16 +256,15 @@ function onRegister() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  margin: 8px 0 4px;
-  flex: 0 0 100%;
+  margin-top: 38px;
   font-size: 12px;
   color: #858697;
 }
 .item-info {
-  flex: 0 0 100%;
+  flex: 0 0 80%;
   font-size: 14px;
   color: rgba(0, 0, 0, 0.4);
-  margin: 4px 0;
+  margin: 0;
 }
 .item-info-value {
   color: #333333;
@@ -271,7 +273,7 @@ function onRegister() {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 8px;
+  margin-bottom: 24px;
 }
 .item-title-price .item-name,
 .item-title-price .item-price {
@@ -282,6 +284,10 @@ function onRegister() {
   background: none;
   border: none;
   cursor: pointer;
+}
+.remove-btn img {
+  width: 30px;
+  height: 30px;
 }
 
 .cart-summary {
@@ -357,6 +363,10 @@ function onRegister() {
   .item-title-price {
     flex-direction: column;
     align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .item-info-row {
+    margin-top: 18px;
   }
 }
 
