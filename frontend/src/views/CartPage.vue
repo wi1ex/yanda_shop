@@ -1,79 +1,81 @@
 <template>
   <transition name="fade">
     <div class="cart-drawer-overlay" @click.self="store.closeCartDrawer()">
-      <div class="cart-drawer">
-        <!-- Header -->
-        <div class="cart-header">
-          <h2>Корзина [ {{ store.cart.count }} ]</h2>
-          <button class="close-btn" @click="store.closeCartDrawer()">
-            <img :src="icon_close" alt="Закрыть" />
-          </button>
-        </div>
+      <transition name="slide">
+        <div class="cart-drawer">
+          <!-- Header -->
+          <div class="cart-header">
+            <h2>Корзина [ {{ store.cart.count }} ]</h2>
+            <button class="close-btn" @click="store.closeCartDrawer()">
+              <img :src="icon_close" alt="Закрыть" />
+            </button>
+          </div>
 
-        <!-- Empty state -->
-        <div v-if="store.cart.items.length === 0" class="empty-cart">
-          Корзина пуста
-        </div>
+          <!-- Empty state -->
+          <div v-if="store.cart.items.length === 0" class="empty-cart">
+            Корзина пуста
+          </div>
 
-        <!-- Items list -->
-        <div v-else class="cart-items-frame">
-          <div v-for="item in store.groupedCartItems" :key="item.variant_sku" class="cart-item">
-            <div class="item-image-container">
-              <img :src="item.image" alt="" />
-            </div>
-            <div class="item-details">
-              <p class="item-brand">{{ item.brand }}</p>
-              <div class="item-title-price">
-                <p class="item-name">{{ item.name }}</p>
-                <p class="item-price">{{ formatPrice(item.price) }} ₽</p>
+          <!-- Items list -->
+          <div v-else class="cart-items-frame">
+            <div v-for="item in store.groupedCartItems" :key="item.variant_sku" class="cart-item">
+              <div class="item-image-container">
+                <img :src="item.image" alt="" />
               </div>
+              <div class="item-details">
+                <p class="item-brand">{{ item.brand }}</p>
+                <div class="item-title-price">
+                  <p class="item-name">{{ item.name }}</p>
+                  <p class="item-price">{{ formatPrice(item.price) }} ₽</p>
+                </div>
 
-              <div class="item-quantity-controls">
-                <button class="qty-btn" @click="store.decreaseQuantity(item)">
-                  <img :src="icon_minus" alt="Минус" />
-                </button>
-                <span class="qty">{{ item.quantity }}</span>
-                <button class="qty-btn" @click="store.increaseQuantity(item)">
-                  <img :src="icon_plus" alt="Плюс" />
-                </button>
-              </div>
+                <div class="item-quantity-controls">
+                  <button class="qty-btn" @click="store.decreaseQuantity(item)">
+                    <img :src="icon_minus" alt="Минус" />
+                  </button>
+                  <span class="qty">{{ item.quantity }}</span>
+                  <button class="qty-btn" @click="store.increaseQuantity(item)">
+                    <img :src="icon_plus" alt="Плюс" />
+                  </button>
+                </div>
 
-              <div class="item-info-row">
-                <p v-if="item.size_label" class="item-info">
-                  Размер:
-                  <span class="item-info-value">{{ item.size_label }}</span>
-                </p>
-                <p class="item-info">
-                  Доставка:
-                  <span class="item-info-value">{{ item.delivery_time }}</span>
-                </p>
-                <button class="remove-btn" @click="removeItem(item)">
-                  <img :src="icon_trash" alt="Удалить" />
-                </button>
+                <div class="item-info-row">
+                  <p v-if="item.size_label" class="item-info">
+                    Размер:
+                    <span class="item-info-value">{{ item.size_label }}</span>
+                  </p>
+                  <p class="item-info">
+                    Доставка:
+                    <span class="item-info-value">{{ item.delivery_time }}</span>
+                  </p>
+                  <button class="remove-btn" @click="removeItem(item)">
+                    <img :src="icon_trash" alt="Удалить" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Summary -->
-        <div v-if="store.cart.items.length" class="cart-summary">
-          <div class="summary-block">
-            <p class="summary-label">Стоимость:</p>
-            <p class="summary-note">Стоимость доставки рассчитывается при оформлении заказа</p>
+          <!-- Summary -->
+          <div v-if="store.cart.items.length" class="cart-summary">
+            <div class="summary-block">
+              <p class="summary-label">Стоимость:</p>
+              <p class="summary-note">Стоимость доставки рассчитывается при оформлении заказа</p>
+            </div>
+            <p class="summary-total">{{ formatPrice(store.cart.total) }} ₽</p>
           </div>
-          <p class="summary-total">{{ formatPrice(store.cart.total) }} ₽</p>
-        </div>
 
-        <!-- Checkout button -->
-        <div class="cart-action" v-if="store.cart.items.length">
-          <button v-if="store.isTelegramUserId(store.user.id)" class="action-button" @click="store.checkout">
-            Оформить заказ (очистить корзину)
-          </button>
-          <button v-else class="action-button" @click="onRegister">
-            Зарегистрироваться
-          </button>
+          <!-- Checkout button -->
+          <div class="cart-action" v-if="store.cart.items.length">
+            <button v-if="store.isTelegramUserId(store.user.id)" class="action-button" @click="store.checkout">
+              Оформить заказ (очистить корзину)
+            </button>
+            <button v-else class="action-button" @click="onRegister">
+              Зарегистрироваться
+            </button>
+          </div>
         </div>
-      </div>
+      </transition>
     </div>
   </transition>
 </template>
@@ -343,11 +345,29 @@ function onRegister() {
   color: #fff;
 }
 
-.fade-enter-active, .fade-leave-active {
-  transition: opacity .2s;
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.3s ease;
 }
-.fade-enter-from, .fade-leave-to {
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(100%);
+}
+.slide-enter-to,
+.slide-leave-from {
+  transform: translateX(0);
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
+}
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
 }
 
 @media (max-width: 600px) {
