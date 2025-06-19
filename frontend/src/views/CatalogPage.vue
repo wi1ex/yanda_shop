@@ -29,7 +29,6 @@
 
       <!-- Цена: Мин. -->
       <input type="number" v-model.number="store.filterPriceMin" placeholder="Мин. цена" class="filter-input"/>
-
       <!-- Цена: Макс. -->
       <input type="number" v-model.number="store.filterPriceMax" placeholder="Макс. цена" class="filter-input"/>
 
@@ -54,11 +53,9 @@
         <div @click="goToProductDetail(product)" class="clickable-area">
           <img :src="product.image" alt="product" class="product-image" />
           <div class="product-info">
-            <p class="product-price">{{ product.price }} ₽</p>
+            <p class="product-brand">{{ product.brand }}</p>
             <p class="product-name">{{ product.name }}</p>
-            <p v-if="product.color" class="product-color">
-              Цвет: {{ product.color }}
-            </p>
+            <p class="product-price">{{ product.price }} ₽</p>
           </div>
         </div>
 
@@ -70,7 +67,7 @@
           Убрать из избранного
         </button>
 
-        <!-- Контролы “+ / – количество” -->
+        <!-- Контролы +/– количество -->
         <div v-if="store.getProductQuantity(product) > 0" class="cart-item-controls">
           <button @click.stop="store.decreaseQuantity(product)">➖</button>
           <span class="item-quantity">
@@ -271,7 +268,7 @@ h2 {
   margin-top: 4px;
 }
 
-.product-color {
+.product-brand {
   font-size: 12px;
   color: #777;
   margin-top: 2px;

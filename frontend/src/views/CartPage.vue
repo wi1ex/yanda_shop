@@ -134,7 +134,7 @@ function onRegister() {
 
 .cart-header {
   height: 86px;
-  padding: 0 16px;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -148,7 +148,7 @@ function onRegister() {
   font-family: TT-Regular;
   font-weight: 400;
   line-height: 80%;
-  letter-spacing: -1.6px;
+  letter-spacing: -0.05em;
 }
 .close-btn {
   background: none;
@@ -173,10 +173,10 @@ function onRegister() {
 .cart-items-frame {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 0 10px 10px;
+  padding: 10px 10px 10px 20px;
   position: relative;
   line-height: 100%;
-  letter-spacing: -0.6px;
+  letter-spacing: -0.04em;
   scrollbar-width: thin;
   scrollbar-color: rgba(0,0,0,0.3) transparent;
 }
@@ -207,8 +207,8 @@ function onRegister() {
 }
 
 .item-image-container {
-  width: 134px;
-  height: 178px;
+  width: 150px;
+  height: 200px;
   background: #f4f4f4;
   border-radius: 8px;
   display: flex;
@@ -307,7 +307,7 @@ function onRegister() {
 }
 
 .cart-summary {
-  padding: 16px;
+  padding: 10px 20px;
   border-top: 1px solid #e0e0e0;
   background: #fff;
   display: flex;
@@ -318,36 +318,39 @@ function onRegister() {
 .summary-block {
   display: flex;
   flex-direction: column;
-  line-height: 100%;
-  letter-spacing: -0.6px;
 }
 .summary-label {
-  font-size: 16px;
+  font-size: 20px;
   margin: 18px 0 4px;
   color: #333333;
+  line-height: 110%;
+  letter-spacing: -0.02em;
 }
 .summary-note {
   font-size: 12px;
   color: rgba(10, 10, 10, 0.6);
   margin: 0 0 16px;
+  line-height: 100%;
+  letter-spacing: -0.04em;
 }
 .summary-total {
-  font-size: 18px;
+  font-size: 24px;
   font-family: TT-Regular;
   color: #0a0a0a;
   margin: 24px 0;
   font-weight: 400;
   line-height: 80%;
-  letter-spacing: -0.9px;
+  letter-spacing: -0.05em;
 }
 
 .cart-action {
-  padding: 0 16px 16px;
+  padding: 0 20px 20px;
   background: #fff;
   flex-shrink: 0;
 }
 .action-button {
   width: 100%;
+  height: 72px;
   padding: 14px;
   font-size: 16px;
   font-weight: 500;
@@ -356,6 +359,8 @@ function onRegister() {
   cursor: pointer;
   background-color: #333333;
   color: #fff;
+  line-height: 100%;
+  letter-spacing: -0.04em;
 }
 
 .slide-enter-active,
@@ -388,6 +393,12 @@ function onRegister() {
   .cart-drawer {
     max-width: 100vw;
   }
+  .cart-header {
+    padding: 0 10px;
+  }
+  .cart-items-frame {
+    padding: 10px 0 10px 10px;
+  }
   .item-title-price {
     flex-direction: column;
     align-items: flex-start;
@@ -395,6 +406,28 @@ function onRegister() {
   }
   .item-info-row {
     margin-top: 40px;
+  }
+  .action-button {
+    height: 56px;
+  }
+  .summary-label {
+    font-size: 16px;
+    letter-spacing: -0.04em;
+  }
+  .summary-total {
+    font-size: 18px;
+  }
+  .item-image-container {
+    width: 134px;
+    height: 178px;
+  }
+  .cart-summary {
+    padding: 10px;
+  }
+  .cart-action {
+    padding: 0 10px 20px;
+    background: #fff;
+    flex-shrink: 0;
   }
 }
 
