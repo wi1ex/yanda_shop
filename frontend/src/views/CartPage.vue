@@ -49,7 +49,8 @@
                     <span class="item-info-value">{{ item.delivery_time }}</span>
                   </p>
                   <button class="remove-btn" @click="removeItem(item)">
-                    <img :src="icon_trash" alt="Удалить" />
+                    <span class="remove-text">Удалить</span>
+                    <img :src="icon_trash" alt="Удалить" class="remove-icon" />
                   </button>
                 </div>
               </div>
@@ -138,7 +139,6 @@ function onRegister() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #e0e0e0;
   background: #fff;
   flex-shrink: 0;
 }
@@ -204,6 +204,8 @@ function onRegister() {
 .cart-item {
   display: flex;
   margin-bottom: 16px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
 }
 
 .item-image-container {
@@ -281,7 +283,7 @@ function onRegister() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  margin-top: 48px;
+  margin-top: 74px;
   font-size: 12px;
   color: #858697;
 }
@@ -301,22 +303,27 @@ function onRegister() {
   border: none;
   cursor: pointer;
 }
-.remove-btn img {
-  width: 30px;
-  height: 30px;
+.remove-text {
+  display: inline-block;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.4);
+}
+.remove-icon {
+  display: none;
 }
 
 .cart-summary {
-  padding: 10px 20px;
-  border-top: 1px solid #e0e0e0;
-  background: #fff;
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
   flex-shrink: 0;
+  padding: 10px 20px;
+  background: #fff;
 }
 .summary-block {
   display: flex;
+  justify-content: space-between;
   width: 100%;
 }
 .summary-label {
@@ -330,7 +337,7 @@ function onRegister() {
   font-size: 24px;
   font-family: TT-Regular;
   color: #0a0a0a;
-  margin: 24px 0;
+  margin: 18px 0 4px;
   font-weight: 400;
   line-height: 80%;
   letter-spacing: -0.05em;
@@ -405,7 +412,7 @@ function onRegister() {
     margin-bottom: 16px;
   }
   .item-info-row {
-    margin-top: 40px;
+    margin-top: 44px;
   }
   .action-button {
     height: 56px;
@@ -428,6 +435,13 @@ function onRegister() {
     padding: 0 10px 20px;
     background: #fff;
     flex-shrink: 0;
+  }
+  .remove-text {
+    display: none;
+  }
+  .remove-icon {
+    width: 24px;
+    height: 24px;
   }
 }
 
