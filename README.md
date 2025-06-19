@@ -6,18 +6,17 @@
 
 ## ✨ Оглавление
 
-1. [Сервисы Docker-Compose](#сервисы-docker-compose)
-2. [Переменные окружения](#переменные-окружения)
-3. [Справочник API](#справочник-api)
-4. [Быстрый старт](#быстрый-старт)
-   - [1. Подготовка сервера](#1-подготовка-сервера)
-   - [2. Клон и конфигурация](#2-клон-и-конфигурация)
-   - [3. SSL через Certbot](#3-ssl-через-certbot)
-   - [4. Запуск и миграции](#4-запуск-и-миграции)
-5. [Скрипты](#скрипты)
-   - [`deploy.sh`](#deploysh)
-   - [`backup_all.sh`](#backup_allsh)
-   - [`restore_all.sh`](#restore_allsh)
+1. [Сервисы Docker-Compose](#сервисы-docker-compose)  
+2. [Переменные окружения](#переменные-окружения)  
+3. [Справочник API](#справочник-api)  
+4. [Быстрый старт](#быстрый-старт)  
+   4.1. [Подготовка сервера](#41-подготовка-сервера)  
+   4.2. [Клон и конфигурация](#42-клон-и-конфигурация)  
+   4.3. [SSL через Certbot](#43-ssl-через-certbot)  
+   4.4. [Запуск и миграции](#44-запуск-и-миграции)  
+5. [Скрипты](#5-скрипты)  
+6. [Автодеплой (GitHub Actions)](#6-автодеплой-проекта-на-сервер-с-помощью-github-actions)  
+
 
 ---
 
@@ -166,16 +165,38 @@ certbot renew --force-renewal
 ### 4. Запуск и миграции
 
 ```bash
-cd /root/app/yanda_shop
-
 # npm install локально для обновления package-lock.json
 # Запись домена (помимо .env) в store.js, nginx.conf и BotFather
 
-# Дать права на запуск деплой-скрипта
-chmod +x deploy.sh
+# Обновляем код
+cd /root/app/yanda_shop
+git fetch --all
+git reset --hard origin/main
 
-# Полный деплой
-./deploy.sh
+# Останавливаем прежние контейнеры и чистим ненужное
+docker-compose down
+docker builder prune --filter "until=72h" --force
+docker image prune --filter "until=72h" --force
+
+# Для полной очистки
+# docker-compose down --rmi all --volumes --remove-orphans
+# docker system prune --all --volumes --force
+
+# Обновление SSL-сертификатов (только если нужно)
+certbot renew --noninteractive --standalone --agree-tos
+
+# Пересобираем образы
+docker-compose build --no-cache
+
+# Поднимаем образы
+docker-compose up -d
+
+# Применяем миграции в свежесобранном образе
+docker-compose run --rm backend flask db upgrade
+
+# Финальная проверка и логи
+docker-compose ps
+docker-compose logs -f
 ```
 
 *При первом запуске миграций (если ещё не применялись в проде):*
@@ -192,26 +213,7 @@ docker-compose up -d
 
 ## Скрипты
 
-### `deploy.sh`
-
-> **Обновление и деплой всех сервисов**
-
-```bash
-1) Обновляем код
-2) Останавливаем прежние контейнеры
-2) Чистим старый кэш (если есть)
-4) Обновление SSL-сертификатов (если нужно)
-5) Пересобираем образы
-6) Поднимаем образы
-7) Применяем миграции в свежесобранном образе
-8) Финальная проверка и логи
-```
-
----
-
-### `backup_all.sh`
-
-> **Резервное копирование PostgreSQL, Redis и MinIO**
+### `backup_all.sh - резервное копирование PostgreSQL, Redis и MinIO`
 
 ```bash
 1) Дамп PostgreSQL
@@ -224,9 +226,7 @@ docker-compose up -d
 
 ---
 
-### `restore_all.sh`
-
-> **Восстановление из последних бэкапов**
+### `restore_all.sh - восстановление из последних бэкапов`
 
 ```bash
 1) Остановить сервисы
@@ -237,3 +237,112 @@ docker-compose up -d
 ```
 
 ---
+
+## Автодеплой проекта на сервер с помощью GitHub Actions
+
+На **сервере** выполните:
+
+```bash
+# Перейдите в корень проекта
+cd path/to/yanda_shop
+
+# Сгенерируйте ED25519-ключ (без пароля):
+ssh-keygen -t ed25519 -f github_deploy_key -N ""
+
+# создаём папку ~/.ssh, если её нет
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+
+# добавляем публичный ключ в авторизованные
+cat ~/github_deploy_key.pub >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+
+# удаляем временный файл
+rm ~/github_deploy_key.pub
+
+# чтобы GitHub Actions мог «доверять» вашему серверу
+ssh-keyscan -H SERVER_HOST > known_hosts.txt
+```
+
+В веб-интерфейсе вашего репозитория:
+
+```
+Settings → Secrets and variables → Actions → New repository secret
+```
+
+Создайте четыре секрета:
+
+| Имя               | Значение                                          |
+| ----------------- | ------------------------------------------------- |
+| SSH\_PRIVATE\_KEY | содержимое `github_deploy_key`                    |
+| SSH\_KNOWN\_HOSTS | содержимое `known_hosts.txt`                      |
+| SERVER\_HOST      | IP вашего сервера (например, `1.2.3.4`)           |
+| SERVER\_USER      | имя SSH-пользователя (обычно `root`)              |
+
+В корне репозитория заведите файл `.github/workflows/deploy.yml` со следующим содержимым:
+
+```yaml
+name: Deploy on push to main
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) Забираем код
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2) Пишем SSH-ключ и known_hosts в runner
+      - name: Configure SSH key and known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}"  > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}"   > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+        shell: bash
+
+      # 3) Подключаемся по SSH и выполняем деплой-скрипт
+      - name: Deploy on server
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=yes \
+              -l "${{ secrets.SERVER_USER }}" \
+              "${{ secrets.SERVER_HOST }}" << 'EOF'
+            set -euo pipefail
+            cd /root/app/yanda_shop
+
+            # 1. Синхронизируем код
+            git fetch --all
+            git reset --hard origin/main
+
+            # 2. Останавливаем контейнеры и чистим образы
+            docker-compose down
+            docker builder prune --filter "until=72h" --force
+            docker image prune   --filter "until=72h" --force
+
+            # 3. (Опционально) обновляем SSL
+            certbot renew --noninteractive --standalone --agree-tos
+
+            # 4. Сборка и поднятие новых контейнеров
+            docker-compose build --no-cache
+            docker-compose up -d
+
+            # 5. Миграции и финальная проверка
+            docker-compose run --rm backend flask db upgrade
+            docker-compose ps
+          EOF
+        shell: bash
+```
+
+После успешной настройки **удалите** из папки `/root/app/yanda_shop` все временные артефакты:
+
+```bash
+cd /root/app/yanda_shop
+rm -f github_deploy_key github_deploy_key.pub known_hosts.txt
+```
