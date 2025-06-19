@@ -155,6 +155,7 @@ function onRegister() {
   border: none;
   font-size: 24px;
   cursor: pointer;
+  padding: 0;
 }
 .close-btn img {
   width: 24px;
@@ -203,8 +204,7 @@ function onRegister() {
 
 .cart-item {
   display: flex;
-  margin-bottom: 16px;
-  padding-top: 20px;
+  padding: 20px 0;
   border-top: 1px solid #e0e0e0;
 }
 
@@ -283,7 +283,7 @@ function onRegister() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  margin-top: 74px;
+  margin-top: 76px;
   font-size: 12px;
   color: #858697;
 }
@@ -302,11 +302,13 @@ function onRegister() {
   background: none;
   border: none;
   cursor: pointer;
+  height: 24px;
 }
 .remove-text {
   display: inline-block;
   font-size: 12px;
   color: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
 }
 .remove-icon {
   display: none;
@@ -412,7 +414,7 @@ function onRegister() {
     margin-bottom: 16px;
   }
   .item-info-row {
-    margin-top: 44px;
+    margin-top: 46px;
   }
   .action-button {
     height: 56px;
@@ -440,6 +442,7 @@ function onRegister() {
     display: none;
   }
   .remove-icon {
+    display: inline-block;
     width: 24px;
     height: 24px;
   }
