@@ -60,9 +60,9 @@
           <div v-if="store.cart.items.length" class="cart-summary">
             <div class="summary-block">
               <p class="summary-label">Стоимость:</p>
-              <p class="summary-note">Стоимость доставки рассчитывается при оформлении заказа</p>
+              <p class="summary-total">{{ formatPrice(store.cart.total) }} ₽</p>
             </div>
-            <p class="summary-total">{{ formatPrice(store.cart.total) }} ₽</p>
+            <p class="summary-note">Стоимость доставки рассчитывается при оформлении заказа</p>
           </div>
 
           <!-- Checkout button -->
@@ -317,7 +317,7 @@ function onRegister() {
 }
 .summary-block {
   display: flex;
-  flex-direction: column;
+  width: 100%;
 }
 .summary-label {
   font-size: 20px;
@@ -325,13 +325,6 @@ function onRegister() {
   color: #333333;
   line-height: 110%;
   letter-spacing: -0.02em;
-}
-.summary-note {
-  font-size: 12px;
-  color: rgba(10, 10, 10, 0.6);
-  margin: 0 0 16px;
-  line-height: 100%;
-  letter-spacing: -0.04em;
 }
 .summary-total {
   font-size: 24px;
@@ -341,6 +334,13 @@ function onRegister() {
   font-weight: 400;
   line-height: 80%;
   letter-spacing: -0.05em;
+}
+.summary-note {
+  font-size: 12px;
+  color: rgba(10, 10, 10, 0.6);
+  margin: 0 0 16px;
+  line-height: 100%;
+  letter-spacing: -0.04em;
 }
 
 .cart-action {
