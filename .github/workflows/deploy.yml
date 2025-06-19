@@ -7,28 +7,28 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Start ssh-agent and load key
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Add server to known_hosts
+      - name: Write SSH key and known_hosts
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+          # Записываем приватный ключ из секрета
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Записываем known_hosts, чтобы явно доверять серверу
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
         shell: bash
 
-      - name: Deploy via ssh
+      - name: Deploy via SSH
         run: |
-          ssh \
-            -o StrictHostKeyChecking=yes \
-            -l ${{ secrets.SERVER_USER }} \
-            ${{ secrets.SERVER_HOST }} << 'EOF'
+          ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=yes \
+              -l "${{ secrets.SERVER_USER }}" \
+              "${{ secrets.SERVER_HOST }}" << 'EOF'
             set -euo pipefail
             cd /root/app/yanda_shop
             git fetch --all
