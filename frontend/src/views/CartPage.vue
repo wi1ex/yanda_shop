@@ -1,82 +1,80 @@
 <template>
-  <transition name="fade">
+  <transition name="drawer">
     <div v-if="store.showCartDrawer" class="cart-drawer-overlay" @click.self="store.closeCartDrawer()">
-      <transition name="slide">
-        <div class="cart-drawer">
-          <!-- Header -->
-          <div class="cart-header">
-            <h2>Корзина [ {{ store.cart.count }} ]</h2>
-            <button class="close-btn" @click="store.closeCartDrawer()">
-              <img :src="icon_close" alt="Закрыть" />
-            </button>
-          </div>
+      <div class="cart-drawer">
+        <!-- Header -->
+        <div class="cart-header">
+          <h2>Корзина [ {{ store.cart.count }} ]</h2>
+          <button class="close-btn" @click="store.closeCartDrawer()">
+            <img :src="icon_close" alt="Закрыть" />
+          </button>
+        </div>
 
-          <!-- Empty state -->
-          <div v-if="store.cart.items.length === 0" class="empty-cart">
-            Корзина пуста
-          </div>
+        <!-- Empty state -->
+        <div v-if="store.cart.items.length === 0" class="empty-cart">
+          Корзина пуста
+        </div>
 
-          <!-- Items list -->
-          <div v-else class="cart-items-frame">
-            <div v-for="item in store.groupedCartItems" :key="item.variant_sku" class="cart-item">
-              <div class="item-image-container">
-                <img :src="item.image" alt="" />
+        <!-- Items list -->
+        <div v-else class="cart-items-frame">
+          <div v-for="item in store.groupedCartItems" :key="item.variant_sku" class="cart-item">
+            <div class="item-image-container">
+              <img :src="item.image" alt="" />
+            </div>
+            <div class="item-details">
+              <p class="item-brand">{{ item.brand }}</p>
+              <div class="item-title-price">
+                <p class="item-name">{{ item.name }}</p>
+                <p class="item-price">{{ formatPrice(item.price) }} ₽</p>
               </div>
-              <div class="item-details">
-                <p class="item-brand">{{ item.brand }}</p>
-                <div class="item-title-price">
-                  <p class="item-name">{{ item.name }}</p>
-                  <p class="item-price">{{ formatPrice(item.price) }} ₽</p>
-                </div>
 
-                <div class="item-quantity-controls">
-                  <button class="qty-btn" @click="store.decreaseQuantity(item)">
-                    <img :src="icon_minus" alt="Минус" />
-                  </button>
-                  <span class="qty">{{ item.quantity }}</span>
-                  <button class="qty-btn" @click="store.increaseQuantity(item)">
-                    <img :src="icon_plus" alt="Плюс" />
-                  </button>
-                </div>
+              <div class="item-quantity-controls">
+                <button class="qty-btn" @click="store.decreaseQuantity(item)">
+                  <img :src="icon_minus" alt="Минус" />
+                </button>
+                <span class="qty">{{ item.quantity }}</span>
+                <button class="qty-btn" @click="store.increaseQuantity(item)">
+                  <img :src="icon_plus" alt="Плюс" />
+                </button>
+              </div>
 
-                <div class="item-info-row">
-                  <p v-if="item.size_label" class="item-info">
-                    Размер:
-                    <span class="item-info-value">{{ item.size_label }}</span>
-                  </p>
-                  <p class="item-info">
-                    Доставка:
-                    <span class="item-info-value">{{ item.delivery_time }}</span>
-                  </p>
-                  <button class="remove-btn" @click="removeItem(item)">
-                    <span class="remove-text">Удалить</span>
-                    <img :src="icon_trash" alt="Удалить" class="remove-icon" />
-                  </button>
-                </div>
+              <div class="item-info-row">
+                <p class="item-info">
+                  Размер:
+                  <span class="item-info-value">{{ item.size_label || 'one size'}}</span>
+                </p>
+                <p class="item-info">
+                  Доставка:
+                  <span class="item-info-value">{{ item.delivery_time }}</span>
+                </p>
+                <button class="remove-btn" @click="removeItem(item)">
+                  <span class="remove-text">Удалить</span>
+                  <img :src="icon_trash" alt="Удалить" class="remove-icon" />
+                </button>
               </div>
             </div>
-          </div>
-
-          <!-- Summary -->
-          <div v-if="store.cart.items.length" class="cart-summary">
-            <div class="summary-block">
-              <p class="summary-label">Стоимость:</p>
-              <p class="summary-total">{{ formatPrice(store.cart.total) }} ₽</p>
-            </div>
-            <p class="summary-note">Стоимость доставки рассчитывается при оформлении заказа</p>
-          </div>
-
-          <!-- Checkout button -->
-          <div class="cart-action" v-if="store.cart.items.length">
-            <button v-if="store.isTelegramUserId(store.user.id)" class="action-button" @click="store.checkout">
-              Оформить заказ (очистить корзину)
-            </button>
-            <button v-else class="action-button" @click="onRegister">
-              Зарегистрироваться
-            </button>
           </div>
         </div>
-      </transition>
+
+        <!-- Summary -->
+        <div v-if="store.cart.items.length" class="cart-summary">
+          <div class="summary-block">
+            <p class="summary-label">Стоимость:</p>
+            <p class="summary-total">{{ formatPrice(store.cart.total) }} ₽</p>
+          </div>
+          <p class="summary-note">Стоимость доставки рассчитывается при оформлении заказа</p>
+        </div>
+
+        <!-- Checkout button -->
+        <div class="cart-action" v-if="store.cart.items.length">
+          <button v-if="store.isTelegramUserId(store.user.id)" class="action-button" @click="store.checkout">
+            Оформить заказ (очистить корзину)
+          </button>
+          <button v-else class="action-button" @click="onRegister">
+            Зарегистрироваться
+          </button>
+        </div>
+      </div>
     </div>
   </transition>
 </template>
@@ -174,7 +172,7 @@ function onRegister() {
 .cart-items-frame {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 10px 10px 20px;
+  padding: 10px 10px 0 20px;
   position: relative;
   line-height: 100%;
   letter-spacing: -0.04em;
@@ -320,7 +318,7 @@ function onRegister() {
   justify-content: space-between;
   align-items: flex-start;
   flex-shrink: 0;
-  padding: 10px 20px;
+  padding: 0 20px 10px;
   background: #fff;
 }
 .summary-block {
@@ -372,30 +370,19 @@ function onRegister() {
   letter-spacing: -0.04em;
 }
 
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.3s ease;
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: opacity 0.2s ease, transform 0.3s ease;
 }
-.slide-enter-from,
-.slide-leave-to {
+.drawer-enter-from,
+.drawer-leave-to {
+  opacity: 0;
   transform: translateX(100%);
 }
-.slide-enter-to,
-.slide-leave-from {
-  transform: translateX(0);
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-.fade-enter-to,
-.fade-leave-from {
+.drawer-enter-to,
+.drawer-leave-from {
   opacity: 1;
+  transform: translateX(0);
 }
 
 @media (max-width: 600px) {
@@ -431,7 +418,7 @@ function onRegister() {
     height: 178px;
   }
   .cart-summary {
-    padding: 10px;
+    padding: 0 10px 10px;
   }
   .cart-action {
     padding: 0 10px 20px;
