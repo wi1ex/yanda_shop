@@ -2,7 +2,7 @@
   <transition name="drawer">
     <div v-if="store.showCartDrawer" class="cart-drawer-overlay" @click.self="store.closeCartDrawer()">
       <div class="cart-drawer">
-        <!-- Header -->
+
         <div class="cart-header">
           <h2>Корзина [ {{ store.cart.count }} ]</h2>
           <button class="close-btn" @click="store.closeCartDrawer()">
@@ -10,12 +10,10 @@
           </button>
         </div>
 
-        <!-- Empty state -->
         <div v-if="store.cart.items.length === 0" class="empty-cart">
           Корзина пуста
         </div>
 
-        <!-- Items list -->
         <div v-else class="cart-items-frame">
           <div v-for="item in store.groupedCartItems" :key="item.variant_sku" class="cart-item">
             <div class="item-image-container">
@@ -56,7 +54,6 @@
           </div>
         </div>
 
-        <!-- Summary -->
         <div v-if="store.cart.items.length" class="cart-summary">
           <div class="summary-block">
             <p class="summary-label">Стоимость:</p>
@@ -65,15 +62,15 @@
           <p class="summary-note">Стоимость доставки рассчитывается при оформлении заказа</p>
         </div>
 
-        <!-- Checkout button -->
         <div class="cart-action" v-if="store.cart.items.length">
           <button v-if="store.isTelegramUserId(store.user.id)" class="action-button" @click="store.checkout">
-            Оформить заказ (очистить корзину)
+            Оформить заказ
           </button>
           <button v-else class="action-button" @click="onRegister">
             Зарегистрироваться
           </button>
         </div>
+
       </div>
     </div>
   </transition>
