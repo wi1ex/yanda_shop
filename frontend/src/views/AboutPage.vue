@@ -2,40 +2,40 @@
   <div class="about-page">
     <!-- Cover Section -->
     <section class="cover-section">
-      <!-- здесь будет фон-изображение (пока желтый блок) -->
-      <div class="cover-image placeholder"></div>
-      <div class="cover-overlay">
-        <h1 class="cover-title">YANDA.SHOP</h1>
-        <p class="cover-tagline">Оригинальность во всём. Честность в деталях.</p>
+      <div class="cover-bg">
+        <img class="cover-image" :src="about_image1" alt="Покрывное изображение" />
       </div>
-      <!-- Running marquee of 5 words -->
-      <div class="marquee">
+      <div class="cover-overlay">
+        <h1 class="title">YANDA.SHOP</h1>
+        <p class="subtitle">Оригинальность во всём. Честность в деталях.</p>
+      </div>
+      <div class="marquee-wrap">
         <div class="marquee-content">Слово1 Слово2 Слово3 Слово4 Слово5</div>
       </div>
     </section>
 
     <!-- Categories Navigation -->
-    <section class="categories-section">
-      <div class="category">Честность</div>
-      <div class="category">Оригинальность</div>
-      <div class="category">Стиль</div>
-    </section>
+    <nav class="categories">
+      <span class="category">Честность</span>
+      <span class="category">Оригинальность</span>
+      <span class="category">Стиль</span>
+    </nav>
 
     <!-- About Us Section -->
-    <section class="about-section">
-      <h2>О нас</h2>
+    <section class="section about-us">
+      <h2 class="section-title">О нас</h2>
       <div class="about-content">
-        <div class="about-main">
+        <div class="text-main">
           <p>Мы запустили YANDA, потому что устали от шума, фейков и бессмысленных наценок.</p>
           <p>Мы знаем: можно одеваться стильно, честно и без лишних вещей. Мы только начали — и не боимся об этом сказать.</p>
         </div>
-        <div class="about-columns">
-          <div class="vision">
+        <div class="text-columns">
+          <div class="column">
             <h3>Наше видение</h3>
             <p>В мире, где слишком много одинакового, мы помогаем тебе найти оригинал.</p>
             <p>Не то, что просто доступно, а то, что действительно тебе подойдет.</p>
           </div>
-          <div class="mission">
+          <div class="column">
             <h3>Наша миссия</h3>
             <p>Мы верим в осознанную моду, справедливое ценообразование и вещи, которые говорят за человека, а не вместо него.</p>
           </div>
@@ -43,14 +43,18 @@
       </div>
     </section>
 
-    <!-- Mosaic Image/Text Section -->
-    <section class="mosaic-section">
-      <div class="mosaic-row">
-        <div class="placeholder image-block"></div>
-        <div class="placeholder image-block"></div>
-      </div>
-      <div class="mosaic-row">
-        <div class="placeholder image-block"></div>
+    <!-- Mosaic Section -->
+    <section class="section mosaic">
+      <div class="mosaic-grid">
+        <div class="mosaic-item">
+          <img :src="about_image2" alt="Изображение 1" />
+        </div>
+        <div class="mosaic-item">
+          <img :src="about_image3" alt="Изображение 2" />
+        </div>
+        <div class="mosaic-item">
+          <img :src="about_image4" alt="Изображение 3" />
+        </div>
         <div class="mosaic-text">
           <p>Мы закупаем товары напрямую, тщательно проверяем их и передаем дальше — с заботой, вниманием и уважением к твоему стилю.</p>
         </div>
@@ -58,38 +62,39 @@
     </section>
 
     <!-- Philosophy Section -->
-    <section class="philosophy-section">
-      <h2>Философия</h2>
-      <p>Мы выбираем путь, где качество важнее количества. Где честность — это не формат, а основа. Где одежда становится частью того, кто ты есть.</p>
-      <!-- здесь будет декоративное изображение или фон (желтый блок) -->
-      <div class="placeholder philosophy-graphic"></div>
+    <section class="section philosophy">
+      <h2 class="section-title">Философия</h2>
+      <p class="philosophy-text">Мы выбираем путь, где качество важнее количества. Где честность — это не формат, а основа. Где одежда становится частью того, кто ты есть.</p>
+      <div class="philosophy-image">
+        <img :src="about_image5" alt="Декоративное изображение философии" />
+      </div>
     </section>
 
     <!-- Details Cards Section -->
-    <section class="details-section">
-      <h2>Когда детали имеют значение</h2>
+    <section class="section details">
+      <h2 class="section-title">Когда детали имеют значение</h2>
       <div class="cards">
         <div class="card">
-          <div class="number">01</div>
-          <div class="icon placeholder"></div>
+          <div class="card-number">01</div>
+          <div class="card-icon"><img :src="about_image6" alt="Иконка 1" /></div>
           <h3>Никаких подделок</h3>
           <p>Только оригинальные товары, заказанные напрямую из Poizon и проверенных магазинов.</p>
         </div>
         <div class="card">
-          <div class="number">02</div>
-          <div class="icon placeholder"></div>
+          <div class="card-number">02</div>
+          <div class="card-icon"><img :src="about_image7" alt="Иконка 2" /></div>
           <h3>Дешевле, потому что честно</h3>
           <p>Наши товары на 20–45% дешевле, чем в российских магазинах — по реальной цене без накруток.</p>
         </div>
         <div class="card">
-          <div class="number">03</div>
-          <div class="icon placeholder"></div>
+          <div class="card-number">03</div>
+          <div class="card-icon"><img :src="about_image8" alt="Иконка 3" /></div>
           <h3>Ты выбираешь — мы находим</h3>
           <p>Пришли нам фото, ссылку или просто описание — и мы подберем то, что тебе подойдет.</p>
         </div>
         <div class="card">
-          <div class="number">04</div>
-          <div class="icon placeholder"></div>
+          <div class="card-number">04</div>
+          <div class="card-icon"><img :src="about_image9" alt="Иконка 4" /></div>
           <h3>Мы не бот</h3>
           <p>Пиши в Telegram: тебе ответит человек, а не автоответчик — мы действительно хотим помочь.</p>
         </div>
@@ -97,248 +102,276 @@
     </section>
 
     <!-- Community Section -->
-    <section class="community-section">
-      <h2>Сообщество</h2>
-      <p>Пиши нам в Телеграм — это самый быстрый и легкий способ для связи.</p>
+    <section class="section community">
+      <h2 class="section-title">Сообщество</h2>
+      <p class="community-text">Пиши нам в Телеграм — это самый быстрый и легкий способ для связи.</p>
       <button class="join-button" @click="joinTelegram">Присоединиться</button>
-      <div class="social-images">
-        <div class="placeholder image-block"></div>
-        <div class="placeholder image-block"></div>
-        <div class="placeholder image-block"></div>
-        <div class="placeholder image-block"></div>
+      <div class="community-images">
+        <div class="img-item"><img :src="about_image10" alt="" /></div>
+        <div class="img-item"><img :src="about_image11" alt="" /></div>
+        <div class="img-item"><img :src="about_image12" alt="" /></div>
+        <div class="img-item"><img :src="about_image13" alt="" /></div>
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
+import about_image1 from '@/assets/images/about_image1.png'
+import about_image2 from '@/assets/images/about_image2.png'
+import about_image3 from '@/assets/images/about_image3.png'
+import about_image4 from '@/assets/images/about_image4.png'
+import about_image5 from '@/assets/images/about_image5.png'
+import about_image6 from '@/assets/images/about_image6.png'
+import about_image7 from '@/assets/images/about_image7.png'
+import about_image8 from '@/assets/images/about_image8.png'
+import about_image9 from '@/assets/images/about_image9.png'
+import about_image10 from '@/assets/images/about_image10.png'
+import about_image11 from '@/assets/images/about_image11.png'
+import about_image12 from '@/assets/images/about_image12.png'
+import about_image13 from '@/assets/images/about_image13.png'
+
 function joinTelegram() {
-  window.open('https://t.me/yanda_shop', '_blank')
+  window.open('https://t.me/yanda_shop', '_blank');
 }
 </script>
 
 <style scoped lang="scss">
 .about-page {
+  width: 100%;
+  background: #f5f5f5;
+  color: #000;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  color: #000;
-  background: #f5f5f5;
 }
 
-section {
+.section {
   width: 100%;
-  max-width: 480px;
-  margin-bottom: 24px;
-}
-
-.placeholder {
-  background: yellow;
+  max-width: 1200px;
+  padding: 80px 32px;
+  box-sizing: border-box;
 }
 
 .cover-section {
   position: relative;
+  width: 100%;
   height: 60vh;
+  overflow: hidden;
 }
-.cover-image {
+.cover-bg img {
   width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 .cover-overlay {
   position: absolute;
   top: 20%;
   left: 10%;
-  color: white;
+  transform: translateY(-20%);
 }
-.marquee {
-  overflow: hidden;
-  white-space: nowrap;
+.title {
+  font-size: 80px;
+  font-weight: bold;
+  color: #fff;
+  margin: 0;
+}
+.subtitle {
+  font-size: 24px;
+  color: #fff;
+  margin-top: 16px;
+}
+.marquee-wrap {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
   background: rgba(0,0,0,0.6);
+  overflow: hidden;
 }
 .marquee-content {
   display: inline-block;
+  white-space: nowrap;
   padding-left: 100%;
-  animation: marquee 10s linear infinite;
+  animation: marquee 15s linear infinite;
   color: #fff;
-}
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
-}
-
-.categories-section {
-  display: flex;
-  justify-content: space-around;
-  background: #ddd;
-  padding: 16px 0;
-}
-
-.about-section h2,
-.philosophy-section h2,
-.details-section h2,
-.community-section h2 {
   font-size: 24px;
+  line-height: 1.5;
+}
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
+.categories {
+  display: flex;
+  justify-content: center;
+  gap: 64px;
+  padding: 32px 0;
+}
+.category {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.about-us .section-title,
+.philosophy .section-title,
+.details .section-title,
+.community .section-title {
   text-align: center;
+  font-size: 36px;
+  margin-bottom: 48px;
+}
+
+.about-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+.text-main p {
+  font-size: 18px;
   margin-bottom: 16px;
 }
-
-.about-content .about-main p,
-.about-columns h3,
-.about-columns p {
-  margin-bottom: 8px;
-}
-
-.about-columns {
+.text-columns {
   display: flex;
   flex-direction: column;
+  gap: 24px;
+}
+.text-columns .column h3 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.mosaic {
+  background: #fff;
+}
+.mosaic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: auto auto;
   gap: 16px;
 }
-
-.mosaic-section .mosaic-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
+.mosaic-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .mosaic-text {
-  flex: 1;
-  background: #fff;
-  padding: 16px;
-}
-.image-block {
-  flex: 1;
-  height: 120px;
+  grid-column: 1 / -1;
+  font-size: 18px;
+  line-height: 1.6;
 }
 
-.philosophy-section {
+.philosophy {
   background: #000;
   color: #fff;
   text-align: center;
-  padding: 32px 16px;
+  padding: 80px 32px;
 }
-.philosophy-graphic {
-  height: 100px;
-  margin-top: 16px;
+.philosophy-text {
+  max-width: 800px;
+  margin: 0 auto 40px;
+  font-size: 18px;
+  line-height: 1.6;
+}
+.philosophy-image img {
+  width: 100%;
+  max-width: 400px;
+  display: block;
+  margin: 0 auto;
 }
 
-.details-section .cards {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.details .cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
 }
 .card {
   background: #fff;
-  padding: 16px;
+  padding: 24px;
   position: relative;
 }
-.number {
+.card-number {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 16px;
+  left: 16px;
   background: #000;
   color: #fff;
   padding: 4px 8px;
+  font-size: 14px;
 }
-.icon {
+.card-icon img {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 16px;
+  right: 16px;
   width: 24px;
   height: 24px;
 }
+.card h3 {
+  margin-top: 48px;
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+.card p {
+  font-size: 16px;
+  line-height: 1.5;
+}
 
-.community-section .join-button {
+.community-text {
+  text-align: center;
+  font-size: 20px;
+  max-width: 600px;
+  margin: 0 auto 24px;
+}
+.join-button {
+  display: block;
+  margin: 0 auto 32px;
   background: #000;
   color: #fff;
-  border: none;
-  padding: 12px 24px;
+  padding: 16px 32px;
   border-radius: 24px;
+  font-size: 18px;
   cursor: pointer;
-  margin-bottom: 16px;
 }
-.social-images {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+.community-images {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
 }
-.image-block {
-  width: calc(50% - 4px);
-  height: 100px;
+.community-images .img-item img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }
 
+/* Mobile (<600px) */
 @media (max-width: 600px) {
+  .section {
+    padding: 40px 16px;
+  }
   .cover-section {
     height: 40vh;
   }
-  .cover-overlay {
-    top: 15%;
-    left: 5%;
+  .title {
+    font-size: 32px;
   }
-  .cover-title {
-    font-size: 20px;
-  }
-  .cover-tagline {
-    font-size: 14px;
-  }
-  .marquee {
-    font-size: 12px;
-    padding: 4px 0;
-  }
-  .categories-section {
-    flex-direction: column;
-    gap: 12px;
-    padding: 12px 0;
-  }
-  .category {
+  .subtitle {
     font-size: 16px;
   }
-  .about-section h2,
-  .philosophy-section h2,
-  .details-section h2,
-  .community-section h2 {
-    font-size: 20px;
+  .marquee-content {
+    font-size: 14px;
+  }
+  .categories {
+    flex-direction: column;
+    gap: 16px;
   }
   .about-content {
-    padding: 0 8px;
+    grid-template-columns: 1fr;
   }
-  .mosaic-section .mosaic-row {
-    flex-direction: column;
+  .details .cards {
+    grid-template-columns: 1fr;
   }
-  .image-block, .mosaic-text {
-    width: 100%;
+  .mosaic-grid {
+    grid-template-columns: 1fr;
   }
-  .image-block {
-    height: 160px;
-  }
-  .philosophy-section {
-    padding: 16px 8px;
-  }
-  .philosophy-graphic {
-    height: 80px;
-  }
-  .details-section .cards {
-    gap: 12px;
-  }
-  .card {
-    padding: 12px;
-  }
-  .number {
-    top: 4px;
-    left: 4px;
-    font-size: 12px;
-  }
-  .join-button {
-    width: 100%;
-    font-size: 14px;
-    padding: 10px;
-  }
-  .social-images {
-    gap: 4px;
-  }
-  .social-images .image-block {
-    width: calc(50% - 2px);
-    height: 80px;
+  .community-images {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
-
 </style>
