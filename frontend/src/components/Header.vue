@@ -7,7 +7,7 @@
 
     <!-- Логотип (ссылка на главную) -->
     <router-link to="/" class="logo-btn">
-      <img :src="icon_logo_orange" alt="Главная" class="logo-icon" />
+      <img :src="icon_logo" alt="Главная" class="logo-icon" />
     </router-link>
 
     <!-- Иконки действий -->
@@ -41,20 +41,31 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from '@/store/index.js'
-import icon_default_avatar from '@/assets/images/default_avatar.svg'
-import icon_favorites from '@/assets/images/favorites.svg'
-import icon_cart from '@/assets/images/cart.svg'
-import icon_menu from '@/assets/images/menu.svg'
+import { useRoute } from 'vue-router'
+import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
+import icon_default_avatar_white from '@/assets/images/default_avatar_white.svg'
+import icon_favorites_grey from '@/assets/images/favorites_grey.svg'
+import icon_favorites_white from '@/assets/images/favorites_white.svg'
+import icon_cart_grey from '@/assets/images/cart_grey.svg'
+import icon_cart_white from '@/assets/images/cart_white.svg'
+import icon_menu_grey from '@/assets/images/menu_grey.svg'
+import icon_menu_white from '@/assets/images/menu_white.svg'
 import icon_logo_orange from '@/assets/images/logo_orange.svg'
+import icon_logo_white from '@/assets/images/logo_white.svg'
 
 const store = useStore()
+const route = useRoute()
 const menuOpen = ref(false)
 const menuBtn = ref(null)
 const menu = ref(null)
 
-const isAdmin = computed(() =>
-  store.user && store.admin_ids.includes(Number(store.user.id))
-)
+const isAbout = computed(() => route.name === 'About')
+const icon_default_avatar = computed(() => isAbout.value ? icon_default_avatar_white : icon_default_avatar_grey)
+const icon_favorites = computed(() => isAbout.value ? icon_favorites_white : icon_favorites_grey)
+const icon_cart = computed(() => isAbout.value ? icon_cart_white : icon_cart_grey)
+const icon_menu = computed(() => isAbout.value ? icon_menu_white : icon_menu_grey)
+const icon_logo = computed(() => isAbout.value ? icon_logo_white : icon_logo_orange)
+const isAdmin = computed(() => store.user && store.admin_ids.includes(Number(store.user.id)))
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
