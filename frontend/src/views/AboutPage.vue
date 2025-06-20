@@ -6,7 +6,7 @@
         <img class="cover-image" :src="about_image1" alt="Главное изображение" />
       </div>
       <div class="cover-overlay">
-        <img class="title" :src="about_image1" alt="Название" />
+        <img class="title" :src="about_text_logo" alt="Название" />
         <p class="subtitle">Оригинальность</p>
         <p class="subtitle">во всём.</p>
         <p class="subtitle">Честность</p>
@@ -24,6 +24,7 @@
         <div class="text-main">
           <p>Мы запустили YANDA, потому что устали от шума, фейков и бессмысленных наценок.</p>
           <p>Мы знаем: можно одеваться стильно, честно и без лишних вещей. Мы только начали — и не боимся об этом сказать.</p>
+          <p>Потому что мы строим не магазин, а культуру выбора.</p>
         </div>
         <div class="text-columns">
           <div class="column">
@@ -48,9 +49,6 @@
         <div class="mosaic-item">
           <img :src="about_image3" alt="Изображение 2" />
         </div>
-        <div class="mosaic-item">
-          <img :src="about_image4" alt="Изображение 3" />
-        </div>
         <div class="mosaic-text">
           <p>Мы закупаем товары напрямую, тщательно проверяем их и передаем дальше — с заботой, вниманием и уважением к твоему стилю.</p>
         </div>
@@ -59,6 +57,9 @@
 
     <!-- Philosophy Section -->
     <section class="section philosophy">
+      <div class="philosophy-image">
+        <img :src="about_image4" alt="Декоративное изображение философии" />
+      </div>
       <h2 class="section-title">Философия</h2>
       <p class="philosophy-text">Мы выбираем путь, где качество важнее количества. Где честность — это не формат, а основа. Где одежда становится частью того, кто ты есть.</p>
       <div class="philosophy-image">
@@ -103,14 +104,14 @@
       <p class="community-text">Пиши нам в Телеграм — это самый быстрый и легкий способ для связи.</p>
       <button class="join-button" @click="joinTelegram">Присоединиться</button>
       <div class="community-images">
-        <div class="img-item"><img :src="about_image10" alt="" /></div>
         <div class="img-item"><img :src="about_image11" alt="" /></div>
         <div class="img-item">
-          <button class="join-button" @click="joinTelegram">TELEGRAM</button>
-          <button class="join-button" @click="joinTelegram">WHATSAPP</button>
-          <button class="join-button" @click="joinTelegram">INSTAGRAM</button>
-          <button class="join-button" @click="joinTelegram">E-MAIL</button>
+          <a href="https://t.me/your_telegram" target="_blank" rel="noopener" class="link">Telegram</a>
+          <a href="https://wa.me/your_whatsapp_number" target="_blank" rel="noopener" class="link">WhatsApp</a>
+          <a href="https://instagram.com/your_instagram" target="_blank" rel="noopener" class="link">Instagram</a>
+          <a href="mailto:youremail@example.com" class="link">E-mail</a>
         </div>
+        <div class="img-item"><img :src="about_image10" alt="" /></div>
         <div class="img-item"><img :src="about_image12" alt="" /></div>
       </div>
     </section>
@@ -132,7 +133,7 @@ import about_image11 from '@/assets/images/about_image11.png'
 import about_image12 from '@/assets/images/about_image12.png'
 import about_text_logo from '@/assets/images/about_text_logo.svg'
 
-const runningText = 'ЧЕСТНОСТЬ     ОРИГИНАЛЬНОСТЬ     СТИЛЬ     ГАРАНТИИ     ВЫГОДА'
+const runningText = 'ЧЕСТНОСТЬ ОРИГИНАЛЬНОСТЬ СТИЛЬ ГАРАНТИИ ВЫГОДА'
 
 function joinTelegram() {
   window.open('https://t.me/yanda_shop', '_blank');
@@ -147,6 +148,12 @@ function joinTelegram() {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+.link {
+  color: inherit;
+  text-decoration: none;
+  font-size: 14px;
+  transition: opacity 0.2s;
 }
 
 .section {
@@ -196,6 +203,7 @@ function joinTelegram() {
   color: #fff;
   font-size: 24px;
   line-height: 1.5;
+  word-spacing: 50px;
 }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 
