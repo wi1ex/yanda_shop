@@ -3,23 +3,19 @@
     <!-- Cover Section -->
     <section class="cover-section">
       <div class="cover-bg">
-        <img class="cover-image" :src="about_image1" alt="Покрывное изображение" />
+        <img class="cover-image" :src="about_image1" alt="Главное изображение" />
       </div>
       <div class="cover-overlay">
-        <h1 class="title">YANDA.SHOP</h1>
-        <p class="subtitle">Оригинальность во всём. Честность в деталях.</p>
+        <img class="title" :src="about_image1" alt="Название" />
+        <p class="subtitle">Оригинальность</p>
+        <p class="subtitle">во всём.</p>
+        <p class="subtitle">Честность</p>
+        <p class="subtitle">в деталях.</p>
       </div>
       <div class="marquee-wrap">
-        <div class="marquee-content">Слово1 Слово2 Слово3 Слово4 Слово5</div>
+        <div class="marquee-content">{{ runningText }}</div>
       </div>
     </section>
-
-    <!-- Categories Navigation -->
-    <nav class="categories">
-      <span class="category">Честность</span>
-      <span class="category">Оригинальность</span>
-      <span class="category">Стиль</span>
-    </nav>
 
     <!-- About Us Section -->
     <section class="section about-us">
@@ -109,8 +105,13 @@
       <div class="community-images">
         <div class="img-item"><img :src="about_image10" alt="" /></div>
         <div class="img-item"><img :src="about_image11" alt="" /></div>
+        <div class="img-item">
+          <button class="join-button" @click="joinTelegram">TELEGRAM</button>
+          <button class="join-button" @click="joinTelegram">WHATSAPP</button>
+          <button class="join-button" @click="joinTelegram">INSTAGRAM</button>
+          <button class="join-button" @click="joinTelegram">E-MAIL</button>
+        </div>
         <div class="img-item"><img :src="about_image12" alt="" /></div>
-        <div class="img-item"><img :src="about_image13" alt="" /></div>
       </div>
     </section>
   </div>
@@ -122,14 +123,16 @@ import about_image2 from '@/assets/images/about_image2.png'
 import about_image3 from '@/assets/images/about_image3.png'
 import about_image4 from '@/assets/images/about_image4.png'
 import about_image5 from '@/assets/images/about_image5.png'
-import about_image6 from '@/assets/images/about_image6.png'
-import about_image7 from '@/assets/images/about_image7.png'
-import about_image8 from '@/assets/images/about_image8.png'
-import about_image9 from '@/assets/images/about_image9.png'
+import about_image6 from '@/assets/images/about_image6.svg'
+import about_image7 from '@/assets/images/about_image7.svg'
+import about_image8 from '@/assets/images/about_image8.svg'
+import about_image9 from '@/assets/images/about_image9.svg'
 import about_image10 from '@/assets/images/about_image10.png'
 import about_image11 from '@/assets/images/about_image11.png'
 import about_image12 from '@/assets/images/about_image12.png'
-import about_image13 from '@/assets/images/about_image13.png'
+import about_text_logo from '@/assets/images/about_text_logo.svg'
+
+const runningText = 'ЧЕСТНОСТЬ     ОРИГИНАЛЬНОСТЬ     СТИЛЬ     ГАРАНТИИ     ВЫГОДА'
 
 function joinTelegram() {
   window.open('https://t.me/yanda_shop', '_blank');
@@ -171,10 +174,7 @@ function joinTelegram() {
   transform: translateY(-20%);
 }
 .title {
-  font-size: 80px;
-  font-weight: bold;
-  color: #fff;
-  margin: 0;
+  width: 100%;
 }
 .subtitle {
   font-size: 24px;
@@ -198,17 +198,6 @@ function joinTelegram() {
   line-height: 1.5;
 }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-100%); } }
-
-.categories {
-  display: flex;
-  justify-content: center;
-  gap: 64px;
-  padding: 32px 0;
-}
-.category {
-  font-size: 18px;
-  font-weight: 500;
-}
 
 .about-us .section-title,
 .philosophy .section-title,
@@ -348,18 +337,11 @@ function joinTelegram() {
   .cover-section {
     height: 40vh;
   }
-  .title {
-    font-size: 32px;
-  }
   .subtitle {
     font-size: 16px;
   }
   .marquee-content {
     font-size: 14px;
-  }
-  .categories {
-    flex-direction: column;
-    gap: 16px;
   }
   .about-content {
     grid-template-columns: 1fr;
