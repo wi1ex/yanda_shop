@@ -31,7 +31,8 @@ def upgrade():
         batch_op.alter_column('size_guide_url',
                existing_type=sa.VARCHAR(length=300),
                type_=sa.Integer(),
-               existing_nullable=True)
+               existing_nullable=True,
+               postgresql_using="size_guide_url::integer")
         batch_op.alter_column('price',
                existing_type=sa.INTEGER(),
                nullable=True)
@@ -66,7 +67,8 @@ def upgrade():
         batch_op.alter_column('size_guide_url',
                existing_type=sa.VARCHAR(length=300),
                type_=sa.Integer(),
-               existing_nullable=True)
+               existing_nullable=True,
+               postgresql_using="size_guide_url::integer")
         batch_op.alter_column('price',
                existing_type=sa.INTEGER(),
                nullable=True)
@@ -93,7 +95,8 @@ def upgrade():
         batch_op.alter_column('size_guide_url',
                existing_type=sa.VARCHAR(length=300),
                type_=sa.Integer(),
-               existing_nullable=True)
+               existing_nullable=True,
+               postgresql_using="size_guide_url::integer")
         batch_op.alter_column('price',
                existing_type=sa.INTEGER(),
                nullable=True)
