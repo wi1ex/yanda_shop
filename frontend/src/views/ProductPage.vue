@@ -1,16 +1,16 @@
 <template>
   <div class="product-detail">
     <!-- 1. Загрузка -->
-    <div v-if="loading" class="loading">Загрузка...</div>
+    <div v-if="store.detailLoading" class="loading">Загрузка...</div>
 
     <!-- 2. Основная карточка -->
-    <div v-else-if="detailData" class="detail-card">
+    <div v-else-if="store.detailData" class="detail-card">
       <!-- Шапка: назад + наличие -->
       <div class="top-row">
         <button class="back-button" @click="goCatalog">← Назад</button>
         <div class="availability">
-          <span v-if="detailData.count_in_stock > 0">
-            В НАЛИЧИИ: {{ detailData.count_in_stock }}
+          <span v-if="store.detailData.count_in_stock > 0">
+            В НАЛИЧИИ: {{ store.detailData.count_in_stock }}
           </span>
           <span v-else>ПОД ЗАКАЗ</span>
         </div>
@@ -18,18 +18,18 @@
 
       <!-- Бренд, имя, артикул -->
       <div class="title-block">
-        <p class="brand">{{ detailData.brand }}</p>
-        <h1 class="name">{{ detailData.name }}</h1>
-        <p class="sku">артикул: {{ detailData.variant_sku }}</p>
+        <p class="brand">{{ store.detailData.brand }}</p>
+        <h1 class="name">{{ store.detailData.name }}</h1>
+        <p class="sku">артикул: {{ store.detailData.variant_sku }}</p>
       </div>
 
       <!-- Галерея: главное + миниатюры + свайп -->
       <div class="carousel-container">
         <div class="main-image-wrapper" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
-          <img :src="detailData.images[currentIndex]" alt="product" class="main-image"/>
+          <img :src="store.detailData.images[currentIndex]" alt="product" class="main-image"/>
         </div>
         <div class="thumbnails-wrapper" ref="thumbsRef">
-          <img v-for="(img, idx) in detailData.images" :key="idx" :src="img" alt="" class="thumbnail"
+          <img v-for="(img, idx) in store.detailData.images" :key="idx" :src="img" alt="" class="thumbnail"
                :class="{ active: idx === currentIndex }" @click="scrollToIndex(idx)"/>
         </div>
       </div>
@@ -38,17 +38,17 @@
       <div class="options-block">
         <!-- Размер -->
         <div class="option">
-          <label v-if="sizeOptions.length && detailData.size_label">Размер</label>
+          <label v-if="sizeOptions.length && store.detailData.size_label">Размер</label>
           <label v-else>Г×Ш×В (мм)</label>
 
-          <div v-if="sizeOptions.length && detailData.size_label" class="options-list">
+          <div v-if="sizeOptions.length && store.detailData.size_label" class="options-list">
             <button v-for="opt in sizeOptions" :key="opt" class="option-btn"
-                    :class="{ active: opt === detailData.size_label }" @click="selectVariantByOpt('size', opt)">
+                    :class="{ active: opt === store.detailData.size_label }" @click="selectVariantByOpt('size', opt)">
               {{ opt }}
             </button>
           </div>
           <span v-else class="value">
-            {{ detailData.height_mm }}×{{ detailData.width_mm }}×{{ detailData.depth_mm }}
+            {{ store.detailData.height_mm }}×{{ store.detailData.width_mm }}×{{ store.detailData.depth_mm }}
           </span>
         </div>
         <!-- Цвет -->
@@ -56,7 +56,7 @@
           <label>Цвет</label>
           <div class="options-list">
             <button v-for="opt in colorOptions" :key="opt" class="option-btn color-btn"
-                    :class="{ active: opt === detailData.color }" @click="selectVariantByOpt('color', opt)">
+                    :class="{ active: opt === store.detailData.color }" @click="selectVariantByOpt('color', opt)">
               {{ opt }}
             </button>
           </div>
@@ -67,29 +67,34 @@
       <div class="delivery-price-block">
         <div class="delivery">
           <label>Доставка</label>
-          <span>{{ detailData.delivery_time }}</span>
+          <div class="delivery-options">
+            <label v-for="(opt, idx) in visibleDeliveryOptions" :key="idx" class="delivery-opt">
+              <input type="radio" name="delivery" :value="opt" v-model="selectedDelivery"/>
+              {{ opt.label }} {{ computedPrice }}
+            </label>
+          </div>
         </div>
         <div class="price-row">
           <label>Цена</label>
-          <span class="price">{{ detailData.price }} ₽</span>
+          <span class="price">{{ computedPrice }} ₽</span>
         </div>
       </div>
 
       <!-- 1. Кнопка/контролы корзины + избранное -->
       <div class="actions-block">
         <div v-if="currentQuantity > 0" class="quantity-controls">
-          <button @click="onDecrease(detailData)">➖</button>
+          <button @click="store.decreaseQuantity(cartItem)">➖</button>
           <span class="quantity">{{ currentQuantity }}</span>
-          <button @click="onIncrease(detailData)">➕</button>
+          <button @click="store.increaseQuantity(cartItem)">➕</button>
         </div>
-        <button v-else type="button" class="add-cart-button" @click="store.addToCart(detailData)">
+        <button v-else type="button" class="add-cart-button" @click="store.addToCart({...store.detailData, delivery_option: selectedDelivery, computed_price: computedPrice})">
           Добавить в корзину
         </button>
 
-        <button v-if="!store.isFavorite(detailData)" type="button" class="add-fav-button" @click="store.addToFavorites(detailData)">
+        <button v-if="!store.isFavorite(store.detailData)" type="button" class="add-fav-button" @click="store.addToFavorites(store.detailData)">
           Добавить в избранное
         </button>
-        <button v-else type="button" class="remove-fav-button" @click="store.removeFromFavorites(detailData)">
+        <button v-else type="button" class="remove-fav-button" @click="store.removeFromFavorites(store.detailData)">
           Убрать из избранного
         </button>
       </div>
@@ -101,7 +106,7 @@
           <span class="arrow">{{ showDescription ? '▼' : '▶' }}</span>
         </div>
         <div v-show="showDescription" class="section-body">
-          <p>{{ detailData.description }}</p>
+          <p>{{ store.detailData.description }}</p>
         </div>
       </div>
 
@@ -112,14 +117,11 @@
           <span class="arrow">{{ showCharacteristics ? '▼' : '▶' }}</span>
         </div>
         <div v-show="showCharacteristics" class="section-body">
-          <p v-if="detailData.gender" class="char-row"><strong>Пол:</strong> {{ detailData.gender }}</p>
-          <p v-if="detailData.category" class="char-row"><strong>Категория:</strong> {{ detailData.category }}</p>
-          <p v-if="detailData.subcategory" class="char-row"><strong>Подкатегория:</strong> {{ detailData.subcategory }}</p>
-          <p v-if="detailData.material" class="char-row"><strong>Материал:</strong> {{ detailData.material }}</p>
-          <p v-if="detailData.size_guide_url" class="char-row">
-            <strong>Размерная сетка:</strong>
-            <a :href="detailData.size_guide_url" target="_blank">Ссылка</a>
-          </p>
+          <p class="char-row"><strong>Пол:</strong> {{ store.detailData.gender }}</p>
+          <p class="char-row"><strong>Категория:</strong> {{ store.detailData.category }}</p>
+          <p class="char-row"><strong>Подкатегория:</strong> {{ store.detailData.subcategory }}</p>
+          <p class="char-row"><strong>Материал:</strong> {{ store.detailData.material }}</p>
+          <p class="char-row"><strong>Размерная сетка:</strong> {{ store.detailData.size_guide_url }}</p>
         </div>
       </div>
     </div>
@@ -128,82 +130,69 @@
 
 <script setup>
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/store/index.js'
 
 const store = useStore()
-const router = useRouter()
 const route = useRoute()
+const router = useRouter()
 
-const category = route.query.category
-const detailData = ref(null)
-const loading = ref(true)
+const selectedDelivery = ref(null)
 const currentIndex = ref(0)
 const thumbsRef = ref(null)
-const variants = ref([])
 const showDescription = ref(false)
 const showCharacteristics = ref(false)
 
-// Опции
 const colorOptions = computed(() =>
-  Array.from(new Set(variants.value.map(v => v.color)))
+  Array.from(new Set(store.variants.map(v => v.color)))
 )
 
 const sizeOptions = computed(() => {
-  const opts = Array.from(new Set(variants.value.map(v => v.size_label)));
-  // проверяем, все ли опции — числа
+  const opts = Array.from(new Set(store.variants.map(v => v.size_label)))
   if (opts.every(o => !isNaN(parseFloat(o)))) {
-    return opts
-      .map(o => parseFloat(o))
-      .sort((a, b) => a - b)
-      .map(n => n.toString());
+    return opts.map(o => parseFloat(o)).sort((a, b) => a - b).map(n => n.toString())
   }
-  return opts;
-});
+  return opts
+})
 
-// Количество в корзине
-const currentQuantity = ref(0)
+const computedPrice = computed(() => {
+  if (!store.detailData) return 0
+  const base = store.detailData.price
+  const mult = selectedDelivery.value?.multiplier || 1
+  return Math.round(base * mult)
+})
 
-// Логика загрузки
-async function fetchDetail() {
-  loading.value = true
-  detailData.value = null
-  try {
-    const vs = route.params.variant_sku
-    const res = await fetch(`${store.url}/api/product?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(vs)}`)
-    if (res.ok) {
-      detailData.value = await res.json()
-      currentQuantity.value = store.getProductQuantity(detailData.value)
-      await loadVariants()
-    }
-  } catch (e) {
-    console.error(e)
-  } finally {
-    loading.value = false
-  }
-}
+const visibleDeliveryOptions = computed(() => {
+  if (!store.detailData) return []
+  return store.detailData.count_in_stock > 0
+    ? store.detailData.delivery_options
+    : store.detailData.delivery_options.slice(1)
+})
 
-// Загрузка всех товаров категории и фильтр по sku
-async function loadVariants() {
-  try {
-    const res = await fetch(`${store.url}/api/products?category=${encodeURIComponent(category)}`)
-    if (res.ok && detailData.value) {
-      const all = await res.json()
-      variants.value = all.filter(p => p.sku === detailData.value.sku)
-    }
-  } catch (e) {
-    console.error(e)
-  }
-}
+const cartItem = computed(() =>
+  store.cart.items.find(i =>
+    i.variant_sku === store.detailData?.variant_sku &&
+    i.delivery_option?.label === selectedDelivery.value?.label
+  )
+)
+
+const currentQuantity = computed(() => {
+  if (!store.detailData) return 0
+  return store.cart.items.filter(i =>
+    i.variant_sku === store.detailData.variant_sku &&
+    i.delivery_option?.label === selectedDelivery.value?.label
+  ).length
+})
 
 // Переход на другой variant по опции
 function selectVariantByOpt(type, opt) {
-  const variant = variants.value.find(v => type === 'size' ? v.size_label === opt : v.color === opt)
+  const cat = route.query.category
+  const variant = store.variants.find(v => type === 'size' ? v.size_label === opt : v.color === opt)
   if (variant) {
     router.push({
       name: 'ProductDetail',
       params: { variant_sku: variant.variant_sku },
-      query: { category }
+      query: { category: cat }
     })
   }
 }
@@ -230,8 +219,8 @@ function onTouchEnd() {
 
 // Переключение по клику/свайпу
 function scrollToIndex(idx) {
-  if (!detailData.value?.images) return
-  const cnt = detailData.value.images.length
+  if (!store.detailData?.images) return
+  const cnt = store.detailData.images.length
   currentIndex.value = ((idx % cnt) + cnt) % cnt
   nextTick(() => {
     const thumb = thumbsRef.value?.children[currentIndex.value]
@@ -240,15 +229,6 @@ function scrollToIndex(idx) {
       thumbsRef.value.scrollTo({ left: offset, behavior: 'smooth' })
     }
   })
-}
-
-// Корзина / избранное контролы
-function onIncrease(item) {
-  store.increaseQuantity(item)
-}
-
-function onDecrease(item) {
-  store.decreaseQuantity(item)
 }
 
 // Аккордеоны
@@ -265,25 +245,22 @@ function goCatalog() {
   router.push({ name: 'Catalog' })
 }
 
-// Обновляем currentQuantity при изменении корзины
-watch(
-  () => store.cart.items,
-  () => {
-    if (detailData.value) {
-      currentQuantity.value = store.getProductQuantity(detailData.value)
-    }
-  },
-  { deep: true }
-)
+// Инициализация
+async function init() {
+  const sku = route.params.variant_sku
+  const cat = route.query.category
+  await store.fetchDetail(sku, cat)
+  if (store.detailData?.delivery_options?.length) {
+    selectedDelivery.value = store.detailData.delivery_options[0]
+  }
+}
 
-// Следим за сменой variant или категории
 watch(
   () => [route.params.variant_sku, route.query.category],
-  () => fetchDetail()
+  init
 )
 
-onMounted(fetchDetail)
-
+onMounted(init)
 </script>
 
 <style scoped lang="scss">
@@ -366,6 +343,8 @@ onMounted(fetchDetail)
   gap: 8px;
   overflow-x: auto;
   margin-top: 8px;
+  -webkit-overflow-scrolling: touch; /* плавный тач-скролл на iOS */
+  scroll-snap-type: x mandatory;
 }
 
 .thumbnails-wrapper::-webkit-scrollbar {
@@ -381,6 +360,7 @@ onMounted(fetchDetail)
   cursor: pointer;
   flex: 0 0 auto;
   border: 2px solid transparent;
+  scroll-snap-align: center;
 }
 
 .thumbnail.active {
@@ -439,11 +419,30 @@ label {
   color: #555;
 }
 
+.delivery {
+  margin-bottom: 12px;
+}
+.delivery-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 .delivery-price-block {
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
   border-bottom: 1px solid #eee;
+}
+
+.delivery-opt {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.delivery-opt input[type="radio"] {
+  margin-right: 6px;
 }
 
 .price-row .price {

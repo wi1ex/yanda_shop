@@ -66,20 +66,6 @@
         <button class="favorite-button remove" v-else @click.stop="store.removeFromFavorites(product)">
           Убрать из избранного
         </button>
-
-        <!-- Контролы +/– количество -->
-        <div v-if="store.getProductQuantity(product) > 0" class="cart-item-controls">
-          <button @click.stop="store.decreaseQuantity(product)">➖</button>
-          <span class="item-quantity">
-            {{ store.getProductQuantity(product) }}
-          </span>
-          <button @click.stop="store.increaseQuantity(product)">➕</button>
-        </div>
-
-        <!-- Если в корзине нет — показываем “Купить” -->
-        <button v-else class="buy-button" @click.stop="store.addToCart(product)">
-          В корзину
-        </button>
       </div>
     </div>
   </div>
@@ -272,42 +258,6 @@ h2 {
   font-size: 12px;
   color: #777;
   margin-top: 2px;
-}
-
-.buy-button {
-  width: 100%;
-  padding: 10px;
-  background: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  margin-top: 8px;
-  cursor: pointer;
-  transition: 0.3s ease;
-}
-
-.cart-item-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.cart-item-controls button {
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-.item-quantity {
-  font-size: 16px;
-  font-weight: bold;
-  padding: 4px 8px;
-  background: #007bff;
-  color: white;
-  border-radius: 5px;
 }
 
 .favorite-button {

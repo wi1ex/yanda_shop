@@ -10,28 +10,28 @@
 
         <!-- Режим редактирования ссылки -->
         <template v-if="editingUrl[cat]">
-          <input type="text" v-model="sheetUrls[cat]" :placeholder="`URL для ${cat}`" class="sheet-input"/>
-          <button @click="saveSheetUrl(cat)" :disabled="sheetLoading[cat]" class="sheet-save">
-            {{ sheetLoading[cat] ? 'Сохранение…' : 'Сохранить ссылку' }}
+          <input type="text" v-model="store.sheetUrls[cat]" :placeholder="`URL для ${cat}`" class="sheet-input"/>
+          <button @click="onSaveUrl(cat)" :disabled="store.sheetSaveLoading[cat]" class="sheet-save">
+            {{ store.sheetSaveLoading[cat] ? 'Сохранение…' : 'Сохранить ссылку' }}
           </button>
         </template>
 
         <!-- Стандартный режим -->
         <template v-else>
-          <button v-if="!sheetUrls[cat]" @click="startEdit(cat)">
+          <button v-if="!store.sheetUrls[cat]" @click="startEdit(cat)">
             Загрузить ссылку
           </button>
-          <button v-else @click="startEdit(cat)" :disabled="sheetImportLoading[cat]">
+          <button v-else @click="startEdit(cat)" :disabled="store.sheetImportLoading[cat]">
             Обновить ссылку
           </button>
 
-          <button @click="importSheet(cat)" :disabled="!sheetUrls[cat] || sheetImportLoading[cat] || editingUrl[cat]" class="sheet-import">
-            {{ sheetImportLoading[cat] ? 'Обновление…' : 'Обновить данные' }}
+          <button @click="store.importSheet(cat, adminId, adminName)" :disabled="!store.sheetUrls[cat] || store.sheetImportLoading[cat] || editingUrl[cat]" class="sheet-import">
+            {{ store.sheetImportLoading[cat] ? 'Обновление…' : 'Обновить данные' }}
           </button>
         </template>
 
-        <p v-if="sheetResult[cat]" class="upload-result">
-          {{ sheetResult[cat] }}
+        <p v-if="store.sheetResult[cat]" class="upload-result">
+          {{ store.sheetResult[cat] }}
         </p>
       </div>
     </section>
@@ -41,17 +41,17 @@
       <h2>Загрузить ZIP с изображениями</h2>
       <form @submit.prevent="submitZip">
         <input type="file" accept=".zip" @change="onZipSelected" ref="zipInput" />
-        <button type="submit" :disabled="!zipFile || zipLoading">
-          {{ zipLoading ? 'Загрузка…' : 'Загрузить ZIP' }}
+        <button type="submit" :disabled="!zipFile || store.zipLoading">
+          {{ store.zipLoading ? 'Загрузка…' : 'Загрузить ZIP' }}
         </button>
       </form>
-      <p v-if="zipResult" class="upload-result">{{ zipResult }}</p>
+      <p v-if="store.zipResult" class="upload-result">{{ store.zipResult }}</p>
     </section>
 
     <!-- === Логи изменений товаров/изображений === -->
     <section class="logs-section">
       <h2>Последние 10 изменений</h2>
-      <div v-if="logsLoading" class="loading-logs">Загрузка журналов...</div>
+      <div v-if="store.logsLoading" class="loading-logs">Загрузка журналов...</div>
       <div v-else>
         <table class="logs-table">
           <thead>
@@ -65,7 +65,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="log in logs" :key="log.id">
+            <tr v-for="log in store.logs" :key="log.id">
               <td>{{ log.id }}</td>
               <td>{{ log.author_id }}</td>
               <td>{{ log.author_name }}</td>
@@ -73,7 +73,7 @@
               <td>{{ log.description }}</td>
               <td>{{ log.timestamp }}</td>
             </tr>
-            <tr v-if="logs.length === 0">
+            <tr v-if="store.logs.length === 0">
               <td colspan="6" class="no-logs">Нет записей</td>
             </tr>
           </tbody>
@@ -91,14 +91,14 @@
         <button class="refresh-button" @click="fetchVisits">Обновить</button>
       </div>
 
-      <div v-if="visitsLoading" class="loading-visits">Загрузка данных...</div>
+      <div v-if="store.visitsLoading" class="loading-visits">Загрузка данных...</div>
 
       <div v-else class="chart-wrapper">
         <!-- Если нет данных, выводим сообщение -->
-        <div v-if="!visitsData.hours.length" class="no-data">Нет данных за выбранный день</div>
+        <div v-if="!store.visitsData.hours.length" class="no-data">Нет данных за выбранный день</div>
         <!-- Иначе: «самописный» бар-чарт -->
         <div v-else class="bar-chart">
-          <div v-for="h in visitsData.hours" :key="h.hour" class="bar" :style="{ height: (h.total / maxTotal * 100) + '%' }">
+          <div v-for="h in store.visitsData.hours" :key="h.hour" class="bar" :style="{ height: (h.total / maxTotal * 100) + '%' }">
             <div class="bar-label">{{ Number(h.hour) }}</div>
             <div class="bar-value">{{ h.total }}</div>
           </div>
@@ -109,188 +109,48 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useStore } from '@/store/index.js'
 
 const store = useStore()
-const adminId = store.user?.id
-const adminName = store.user?.username
+const adminId = store.user.id
+const adminName = store.user.username
 
 const zipFile = ref(null)
-const zipResult = ref('')
-const zipLoading = ref(false)
-const zipInput = ref(null)
+const editingUrl = reactive({ shoes:false, clothing:false, accessories:false })
+const selectedDate = ref(new Date().toISOString().slice(0,10))
 
-// Google Sheets
-const sheetUrls = reactive({ shoes: '', clothing: '', accessories: '' })
-const editingUrl = reactive({ shoes: false, clothing: false, accessories: false })
-const sheetLoading = reactive({ shoes: false, clothing: false, accessories: false })
-const sheetImportLoading = reactive({ shoes: false, clothing: false, accessories: false })
-const sheetResult = reactive({ shoes: '', clothing: '', accessories: '' })
-
-// Логи
-const logs = ref([])
-const logsLoading = ref(false)
-
-// Посещения
-const selectedDate = ref('')
-const visitsData = ref({ date: '', hours: [] })
-const visitsLoading = ref(false)
-
-
-// --- ZIP handlers ---
-function onZipSelected(event) {
-  zipFile.value = event.target.files[0] || null
-  zipResult.value = ''
-}
-
-async function submitZip() {
-  if (!zipFile.value) return
-  zipLoading.value = true
-  zipResult.value = 'Загрузка…'
-  const form = new FormData()
-  form.append('file', zipFile.value)
-  form.append('author_id', adminId)
-  form.append('author_name', adminName)
-  try {
-    const resp = await fetch(`${store.url}/api/upload_images`, {
-      method: 'POST',
-      body: form
-    })
-    const data = await resp.json()
-    if (resp.status === 201) {
-      zipResult.value = `Успех: Добавлено ${data.added||0}, Заменено ${data.replaced||0}, Удалено ${data.deleted||0}`
-      fetchLogs()
-    } else {
-      zipResult.value = `Ошибка ${resp.status}: ${data.error||JSON.stringify(data)}`
-    }
-  } catch (e) {
-    console.error('ZIP upload error:', e)
-    zipResult.value = `Ошибка сети: ${e.message}`
-  } finally {
-    zipLoading.value = false
-    zipFile.value = null
-    if (zipInput.value) {
-      zipInput.value.value = ""
-    }
-  }
-}
-
-// --- Logs ---
-async function fetchLogs() {
-  logsLoading.value = true
-  try {
-    const resp = await fetch(`${store.url}/api/logs?limit=10`)
-    if (resp.ok) {
-      const j = await resp.json()
-      logs.value = j.logs || []
-    }
-  } catch (e) {
-    console.error('fetchLogs error:', e)
-    logs.value = []
-  } finally {
-    logsLoading.value = false
-  }
-}
-
-// --- Visits ---
 const maxTotal = computed(() => {
-  if (!visitsData.value.hours.length) return 1
-  return Math.max(...visitsData.value.hours.map(h => h.total), 1)
+  const hours = store.visitsData.hours || []
+  if (!hours.length) return 1
+  return Math.max(...hours.map(h => h.total), 1)
 })
 
-async function fetchVisits() {
-  visitsLoading.value = true
-  try {
-    const date = selectedDate.value || new Date().toISOString().slice(0,10)
-    const resp = await fetch(`${store.url}/api/visits?date=${date}`)
-    if (resp.ok) {
-      const j = await resp.json()
-      visitsData.value = { date: j.date, hours: j.hours }
-    }
-  } catch (e) {
-    console.error('fetchVisits error:', e)
-    visitsData.value = { date: '', hours: [] }
-  } finally {
-    visitsLoading.value = false
-  }
-}
-
-// --- Sheets ---
 function startEdit(cat) {
   editingUrl[cat] = true
-  sheetResult[cat] = ''
+}
+function onZipSelected(e) {
+  zipFile.value = e.target.files[0]
+}
+function submitZip() {
+  store.uploadZip(zipFile.value, adminId, adminName)
+}
+function fetchVisits() {
+  store.loadVisits(selectedDate.value)
 }
 
-async function saveSheetUrl(cat) {
-  sheetLoading[cat] = true
-  sheetResult[cat] = ''
-  try {
-    const resp = await fetch(`${store.url}/api/admin/sheet_url`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category: cat, url: sheetUrls[cat] }),
-    })
-    const j = await resp.json()
-    if (resp.ok) {
-      sheetResult[cat] = 'Ссылка сохранена'
-      editingUrl[cat] = false   // выходим из режима редактирования
-    } else {
-      sheetResult[cat] = `Ошибка: ${j.error || resp.status}`
-    }
-  } catch (e) {
-    sheetResult[cat] = `Ошибка сети: ${e.message}`
-  } finally {
-    sheetLoading[cat] = false
-  }
-}
-
-async function importSheet(cat) {
-  sheetImportLoading[cat] = true
-  sheetResult[cat] = ''
-  try {
-    const resp = await fetch(`${store.url}/api/import_sheet`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        category: cat,
-        author_id: adminId,
-        author_name: adminName
-      })
-    })
-    const j = await resp.json()
-    if (resp.status === 201 && j.status === 'ok') {
-      sheetResult[cat] = `Добавлено ${j.added}, Обновлено ${j.updated}, Удалено ${j.deleted}`
-      fetchLogs()
-    } else {
-      sheetResult[cat] = `Ошибка: ${j.error || JSON.stringify(j)}`
-    }
-  } catch (e) {
-    sheetResult[cat] = `Ошибка сети: ${e.message}`
-  } finally {
-    sheetImportLoading[cat] = false
-  }
-}
-
-// При инициализации подгружаем существующие URL
-async function fetchSheetUrls() {
-  try {
-    const resp = await fetch(`${store.url}/api/admin/sheet_urls`)
-    const j = await resp.json()
-    Object.keys(sheetUrls).forEach(cat => {
-      sheetUrls[cat] = j[cat] || ''
-    })
-  } catch (e) {
-    console.error('fetchSheetUrls error:', e)
+async function onSaveUrl(cat) {
+  const ok = await store.saveSheetUrl(cat)
+  // Сбрасываем режим редактирования только при успехе
+  if (ok) {
+    editingUrl[cat] = false
   }
 }
 
 onMounted(() => {
-  fetchLogs()
-  const today = new Date().toISOString().slice(0,10)
-  selectedDate.value = today
-  fetchVisits()
-  fetchSheetUrls()
+  store.loadSheetUrls()
+  store.loadLogs()
+  store.loadVisits(selectedDate.value)
 })
 </script>
 
