@@ -4,11 +4,9 @@
       <!-- Первая колонка -->
       <div class="column">
         <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">О нас</a>
-        <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Лайфстайл</a>
         <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Доставка и оплата</a>
         <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Возврат</a>
         <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Telegram</a>
-        <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">WhatsApp</a>
         <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Instagram</a>
       </div>
       <!-- Вторая колонка -->

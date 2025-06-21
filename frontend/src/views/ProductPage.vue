@@ -7,7 +7,7 @@
     <div v-else-if="detailData" class="detail-card">
       <!-- Шапка: назад + наличие -->
       <div class="top-row">
-        <button class="back-button" @click="goBack">← Назад</button>
+        <button class="back-button" @click="goCatalog">← Назад</button>
         <div class="availability">
           <span v-if="detailData.count_in_stock > 0">
             В НАЛИЧИИ: {{ detailData.count_in_stock }}
@@ -261,7 +261,7 @@ function toggleCharacteristics() {
 }
 
 // ← Назад → каталог
-function goBack() {
+function goCatalog() {
   router.push({ name: 'Catalog' })
 }
 
