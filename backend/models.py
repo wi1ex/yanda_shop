@@ -6,10 +6,10 @@ db = SQLAlchemy()
 class Users(db.Model):
     __tablename__  = 'users'
     user_id        = db.Column(db.BigInteger, primary_key=True)
-    first_name     = db.Column(db.String(100))
-    last_name      = db.Column(db.String(100))
-    username       = db.Column(db.String(100))
-    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    username       = db.Column(db.String(100), nullable=False)
+    first_name     = db.Column(db.String(100), nullable=False)
+    last_name      = db.Column(db.String(100), nullable=False)
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
 class ChangeLog(db.Model):
     __tablename__  = 'change_logs'
@@ -23,16 +23,18 @@ class ChangeLog(db.Model):
 class AdminSetting(db.Model):
     __tablename__  = 'admin_settings'
     key            = db.Column(db.String(100), primary_key=True)
-    value          = db.Column(db.Text, nullable=False)
+    value          = db.Column(db.Text)
     updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                           onupdate=lambda: datetime.now(timezone.utc))
+                           onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
 class Shoe(db.Model):
     __tablename__  = "shoes"
     id             = db.Column(db.Integer, primary_key=True)
     variant_sku    = db.Column(db.String(100), unique=True, nullable=False, index=True)
-    sku            = db.Column(db.String(100), nullable=False, index=True)
-    name           = db.Column(db.String(200), nullable=False)
+    color_sku      = db.Column(db.String(100), index=True)
+    world_sku      = db.Column(db.String(100), index=True)
+    sku            = db.Column(db.String(100), index=True)
+    name           = db.Column(db.String(200))
     gender         = db.Column(db.String(20))
     category       = db.Column(db.String(100))
     subcategory    = db.Column(db.String(100), index=True)
@@ -42,21 +44,23 @@ class Shoe(db.Model):
     color          = db.Column(db.String(100), index=True)
     size_label     = db.Column(db.Float)
     depth_mm       = db.Column(db.Float)
-    size_guide_url = db.Column(db.String(300))
-    price          = db.Column(db.Integer, nullable=False, index=True)
-    count_in_stock = db.Column(db.Integer, default=0, index=True)
-    delivery_time  = db.Column(db.String(100))
-    count_images   = db.Column(db.Integer, default=10)
-    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    size_guide_url = db.Column(db.Integer)
+    price          = db.Column(db.Integer, index=True)
+    count_in_stock = db.Column(db.Integer, index=True)
+    count_images   = db.Column(db.Integer)
+    count_sales    = db.Column(db.Integer, default=0, nullable=False)
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                               onupdate=lambda: datetime.now(timezone.utc))
+                               onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
 class Clothing(db.Model):
     __tablename__  = "clothing"
     id             = db.Column(db.Integer, primary_key=True)
     variant_sku    = db.Column(db.String(100), unique=True, nullable=False, index=True)
-    sku            = db.Column(db.String(100), nullable=False, index=True)
-    name           = db.Column(db.String(200), nullable=False)
+    color_sku      = db.Column(db.String(100), index=True)
+    world_sku      = db.Column(db.String(100), index=True)
+    sku            = db.Column(db.String(100), index=True)
+    name           = db.Column(db.String(200))
     gender         = db.Column(db.String(20))
     category       = db.Column(db.String(100))
     subcategory    = db.Column(db.String(100), index=True)
@@ -67,21 +71,23 @@ class Clothing(db.Model):
     size_label     = db.Column(db.String(20))
     width_mm       = db.Column(db.Float)
     height_mm      = db.Column(db.Float)
-    size_guide_url = db.Column(db.String(300))
-    price          = db.Column(db.Integer, nullable=False, index=True)
-    count_in_stock = db.Column(db.Integer, default=0, index=True)
-    delivery_time  = db.Column(db.String(100))
-    count_images   = db.Column(db.Integer, default=10)
-    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    size_guide_url = db.Column(db.Integer)
+    price          = db.Column(db.Integer, index=True)
+    count_in_stock = db.Column(db.Integer, index=True)
+    count_images   = db.Column(db.Integer)
+    count_sales    = db.Column(db.Integer, default=0, nullable=False)
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                               onupdate=lambda: datetime.now(timezone.utc))
+                               onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
 class Accessory(db.Model):
     __tablename__  = "accessories"
     id             = db.Column(db.Integer, primary_key=True)
     variant_sku    = db.Column(db.String(100), unique=True, nullable=False, index=True)
-    sku            = db.Column(db.String(100), nullable=False, index=True)
-    name           = db.Column(db.String(200), nullable=False)
+    color_sku      = db.Column(db.String(100), index=True)
+    world_sku      = db.Column(db.String(100), index=True)
+    sku            = db.Column(db.String(100), index=True)
+    name           = db.Column(db.String(200))
     gender         = db.Column(db.String(20))
     category       = db.Column(db.String(100))
     subcategory    = db.Column(db.String(100), index=True)
@@ -92,11 +98,11 @@ class Accessory(db.Model):
     width_mm       = db.Column(db.Float)
     height_mm      = db.Column(db.Float)
     depth_mm       = db.Column(db.Float)
-    size_guide_url = db.Column(db.String(300))
-    price          = db.Column(db.Integer, nullable=False, index=True)
-    count_in_stock = db.Column(db.Integer, default=0, index=True)
-    delivery_time  = db.Column(db.String(100))
-    count_images   = db.Column(db.Integer, default=10)
-    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    size_guide_url = db.Column(db.Integer)
+    price          = db.Column(db.Integer, index=True)
+    count_in_stock = db.Column(db.Integer, index=True)
+    count_images   = db.Column(db.Integer)
+    count_sales    = db.Column(db.Integer, default=0, nullable=False)
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                               onupdate=lambda: datetime.now(timezone.utc))
+                               onupdate=lambda: datetime.now(timezone.utc), nullable=False)
