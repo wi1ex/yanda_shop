@@ -2,53 +2,41 @@
   <div class="admin-page">
     <h1>Админ-панель</h1>
 
-  <!-- === Секция 1: Google Sheets === -->
-  <section class="sheets-section">
-    <h2>Импорт из Google Sheets</h2>
-    <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="sheet-block">
-      <h3>{{ cat.charAt(0).toUpperCase() + cat.slice(1) }}</h3>
+    <!-- === Google Sheets === -->
+    <section class="sheets-section">
+      <h2>Импорт из Google Sheets</h2>
+      <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="sheet-block">
+        <h3>{{ cat.charAt(0).toUpperCase() + cat.slice(1) }}</h3>
 
-      <!-- Режим редактирования ссылки -->
-      <template v-if="editingUrl[cat]">
-        <input type="text" v-model="sheetUrls[cat]" :placeholder="`URL для ${cat}`" class="sheet-input"/>
-        <button @click="saveSheetUrl(cat)" :disabled="sheetLoading[cat]" class="sheet-save">
-          {{ sheetLoading[cat] ? 'Сохранение…' : 'Сохранить ссылку' }}
-        </button>
-      </template>
+        <!-- Режим редактирования ссылки -->
+        <template v-if="editingUrl[cat]">
+          <input type="text" v-model="sheetUrls[cat]" :placeholder="`URL для ${cat}`" class="sheet-input"/>
+          <button @click="saveSheetUrl(cat)" :disabled="sheetLoading[cat]" class="sheet-save">
+            {{ sheetLoading[cat] ? 'Сохранение…' : 'Сохранить ссылку' }}
+          </button>
+        </template>
 
-      <!-- Стандартный режим -->
-      <template v-else>
-        <button v-if="!sheetUrls[cat]" @click="startEdit(cat)">
-          Загрузить ссылку
-        </button>
-        <button v-else @click="startEdit(cat)" :disabled="sheetImportLoading[cat]">
-          Обновить ссылку
-        </button>
+        <!-- Стандартный режим -->
+        <template v-else>
+          <button v-if="!sheetUrls[cat]" @click="startEdit(cat)">
+            Загрузить ссылку
+          </button>
+          <button v-else @click="startEdit(cat)" :disabled="sheetImportLoading[cat]">
+            Обновить ссылку
+          </button>
 
-        <button @click="importSheet(cat)" :disabled="!sheetUrls[cat] || sheetImportLoading[cat] || editingUrl[cat]" class="sheet-import">
-          {{ sheetImportLoading[cat] ? 'Обновление…' : 'Обновить данные' }}
-        </button>
-      </template>
+          <button @click="importSheet(cat)" :disabled="!sheetUrls[cat] || sheetImportLoading[cat] || editingUrl[cat]" class="sheet-import">
+            {{ sheetImportLoading[cat] ? 'Обновление…' : 'Обновить данные' }}
+          </button>
+        </template>
 
-      <p v-if="sheetResult[cat]" class="upload-result">
-        {{ sheetResult[cat] }}
-      </p>
-    </div>
-  </section>
-
-    <!-- === Секция 2: Загрузка CSV === -->
-    <section class="upload-section">
-      <h2>Загрузить CSV для товаров</h2>
-      <form @submit.prevent="submitCsv">
-        <input type="file" accept=".csv" @change="onCsvSelected" ref="csvInput" />
-        <button type="submit" :disabled="!csvFile || csvLoading">
-          {{ csvLoading ? 'Загрузка…' : 'Загрузить CSV' }}
-        </button>
-      </form>
-      <p v-if="csvResult" class="upload-result">{{ csvResult }}</p>
+        <p v-if="sheetResult[cat]" class="upload-result">
+          {{ sheetResult[cat] }}
+        </p>
+      </div>
     </section>
 
-    <!-- === Секция 3: Загрузка ZIP === -->
+    <!-- === Загрузка ZIP === -->
     <section class="upload-section">
       <h2>Загрузить ZIP с изображениями</h2>
       <form @submit.prevent="submitZip">
@@ -60,7 +48,7 @@
       <p v-if="zipResult" class="upload-result">{{ zipResult }}</p>
     </section>
 
-    <!-- === Секция 4: Логи изменений товаров/изображений === -->
+    <!-- === Логи изменений товаров/изображений === -->
     <section class="logs-section">
       <h2>Последние 10 изменений</h2>
       <div v-if="logsLoading" class="loading-logs">Загрузка журналов...</div>
@@ -93,7 +81,7 @@
       </div>
     </section>
 
-    <!-- === Секция 5: Статистика посещений (бар-чарт) === -->
+    <!-- === Статистика посещений (бар-чарт) === -->
     <section class="visits-section">
       <h2>Статистика посещений</h2>
 
@@ -128,16 +116,9 @@ const store = useStore()
 const adminId = store.user?.id
 const adminName = store.user?.username
 
-// CSV/ZIP
-const csvFile = ref(null)
-const csvResult = ref('')
-const csvLoading = ref(false)
-
 const zipFile = ref(null)
 const zipResult = ref('')
 const zipLoading = ref(false)
-
-const csvInput = ref(null)
 const zipInput = ref(null)
 
 // Google Sheets
@@ -156,43 +137,6 @@ const selectedDate = ref('')
 const visitsData = ref({ date: '', hours: [] })
 const visitsLoading = ref(false)
 
-// --- CSV handlers ---
-function onCsvSelected(event) {
-  csvFile.value = event.target.files[0] || null
-  csvResult.value = ''
-}
-
-async function submitCsv() {
-  if (!csvFile.value) return
-  csvLoading.value = true
-  csvResult.value = 'Загрузка…'
-  const form = new FormData()
-  form.append('file', csvFile.value)
-  form.append('author_id', adminId)
-  form.append('author_name', adminName)
-  try {
-    const resp = await fetch(`${store.url}/api/import_products`, {
-      method: 'POST',
-      body: form
-    })
-    const data = await resp.json()
-    if (resp.status === 201) {
-      csvResult.value = `Успех: Добавлено ${data.added||0}, Обновлено ${data.updated||0}, Удалено ${data.deleted||0}`
-      fetchLogs()
-    } else {
-      csvResult.value = `Ошибка ${resp.status}: ${data.error||JSON.stringify(data)}`
-    }
-  } catch (e) {
-    console.error('CSV upload error:', e)
-    csvResult.value = `Ошибка сети: ${e.message}`
-  } finally {
-    csvLoading.value = false
-    csvFile.value = null
-    if (csvInput.value) {
-      csvInput.value.value = ""
-    }
-  }
-}
 
 // --- ZIP handlers ---
 function onZipSelected(event) {
