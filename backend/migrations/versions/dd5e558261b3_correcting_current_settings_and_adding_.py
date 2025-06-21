@@ -21,7 +21,7 @@ def upgrade():
     with op.batch_alter_table('accessories', schema=None) as batch_op:
         batch_op.add_column(sa.Column('color_sku', sa.String(length=100), nullable=True))
         batch_op.add_column(sa.Column('world_sku', sa.String(length=100), nullable=True))
-        batch_op.add_column(sa.Column('count_sales', sa.Integer(), nullable=False))
+        batch_op.add_column(sa.Column('count_sales', sa.Integer(), nullable=False, server_default='0'))
         batch_op.alter_column('sku',
                existing_type=sa.VARCHAR(length=100),
                nullable=True)
@@ -57,7 +57,7 @@ def upgrade():
     with op.batch_alter_table('clothing', schema=None) as batch_op:
         batch_op.add_column(sa.Column('color_sku', sa.String(length=100), nullable=True))
         batch_op.add_column(sa.Column('world_sku', sa.String(length=100), nullable=True))
-        batch_op.add_column(sa.Column('count_sales', sa.Integer(), nullable=False))
+        batch_op.add_column(sa.Column('count_sales', sa.Integer(), nullable=False, server_default='0'))
         batch_op.alter_column('sku',
                existing_type=sa.VARCHAR(length=100),
                nullable=True)
@@ -85,7 +85,7 @@ def upgrade():
     with op.batch_alter_table('shoes', schema=None) as batch_op:
         batch_op.add_column(sa.Column('color_sku', sa.String(length=100), nullable=True))
         batch_op.add_column(sa.Column('world_sku', sa.String(length=100), nullable=True))
-        batch_op.add_column(sa.Column('count_sales', sa.Integer(), nullable=False))
+        batch_op.add_column(sa.Column('count_sales', sa.Integer(), nullable=False, server_default='0'))
         batch_op.alter_column('sku',
                existing_type=sa.VARCHAR(length=100),
                nullable=True)
