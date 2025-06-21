@@ -23,7 +23,7 @@
               <p class="item-brand">{{ item.brand }}</p>
               <div class="item-title-price">
                 <p class="item-name">{{ item.name }}</p>
-                <p class="item-price">{{ formatPrice(item.price) }} ₽</p>
+                <p class="item-price">{{ formatPrice(item.unit_price) }} ₽</p>
               </div>
 
               <div class="item-quantity-controls">
@@ -43,7 +43,7 @@
                 </p>
                 <p class="item-info">
                   Доставка:
-                  <span class="item-info-value">{{ item.delivery_time }}</span>
+                  <span class="item-info-value">{{ item.delivery_option?.label || '—' }}</span>
                 </p>
                 <button class="remove-btn" @click="removeItem(item)">
                   <span class="remove-text">Удалить</span>

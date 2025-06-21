@@ -38,12 +38,12 @@ def get_sheet_url(category: str) -> Optional[str]:
     return setting.value if setting else None
 
 
-def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, int]:
+def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, int, int]:
     Model = model_by_category(category)
     if Model is None:
         raise ValueError(f"Unknown category {category}")
 
-    added = updated = deleted = 0
+    added = updated = deleted = warns = 0
     # Собираем все variant_sku
     variants = [row["variant_sku"].strip() for row in rows]
     # Подгружаем существующие объекты по variant_sku
@@ -51,8 +51,7 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
 
     for row in rows:
         variant = row["variant_sku"].strip()
-        sku = row["sku"].strip()
-        data = {k: row[k].strip() for k in row if k not in ("sku", "variant_sku")}
+        data = {k: row[k].strip() for k in row if k != "variant_sku"}
         # Удаление, если все поля пусты
         if variant and all(not v for v in data.values()):
             obj = existing.get(variant)
@@ -64,18 +63,19 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
         obj = existing.get(variant)
         if not obj:
             # Создаём новую запись
-            obj = Model(variant_sku=variant, sku=sku)
+            obj = Model(variant_sku=variant)
             for k, v in data.items():
                 if not hasattr(obj, k):
                     continue
-                # price, count_in_stock, count_images  → integer
-                if k in ("price", "count_in_stock", "count_images"):
+                # price, count_in_stock, count_images → integer
+                if k in ("price", "count_in_stock", "count_images", "size_guide_url"):
                     raw = v.replace(" ", "")
                     try:
                         val = int(raw)
                     except ValueError:
-                        val = 0
-                # size_label  → string for Clothing, float otherwise
+                        val = None
+                        warns += 1
+                # size_label → string for Clothing, float otherwise
                 elif k == "size_label":
                     if Model is Clothing:
                         val = v  # оставляем строку
@@ -85,6 +85,7 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
                             val = float(raw)
                         except ValueError:
                             val = None
+                            warns += 1
                 # width_mm, height_mm, depth_mm → float
                 elif k in ("width_mm", "height_mm", "depth_mm"):
                     raw = v.replace(",", ".").replace(" ", "")
@@ -92,30 +93,32 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
                         val = float(raw)
                     except ValueError:
                         val = None
+                        warns += 1
                 # все прочие поля — строки
                 else:
                     val = v
+                if isinstance(val, str) and val:
+                    val = val[0].upper() + val[1:]
                 setattr(obj, k, val)
+            # Добавляем составной артикул по цвету
+            obj.color_sku = f"{obj.sku}_{obj.world_sku}"
             db.session.add(obj)
             added += 1
 
         else:
             # Обновляем существующую запись
             has_changes = False
-            # Если sku поменялся — сохранить
-            if obj.sku != sku:
-                obj.sku = sku
-                has_changes = True
             for k, v in data.items():
                 if not hasattr(obj, k):
                     continue
                 # та же нормализация, что и при создании
-                if k in ("price", "count_in_stock", "count_images"):
+                if k in ("price", "count_in_stock", "count_images", "size_guide_url"):
                     raw = v.replace(" ", "")
                     try:
                         new_val = int(raw)
                     except ValueError:
-                        new_val = 0
+                        new_val = None
+                        warns += 1
                 elif k == "size_label":
                     if Model is Clothing:
                         new_val = v
@@ -125,22 +128,31 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
                             new_val = float(raw)
                         except ValueError:
                             new_val = None
+                            warns += 1
                 elif k in ("width_mm", "height_mm", "depth_mm"):
                     raw = v.replace(",", ".").replace(" ", "")
                     try:
                         new_val = float(raw)
                     except ValueError:
                         new_val = None
+                        warns += 1
                 else:
                     new_val = v
+                if isinstance(new_val, str) and new_val:
+                    new_val = new_val[0].upper() + new_val[1:]
                 if getattr(obj, k) != new_val:
                     setattr(obj, k, new_val)
                     has_changes = True
+            # Если color_sku поменялся — сохранить
+            new_cs = f"{obj.sku}_{obj.world_sku}"
+            if obj.color_sku != new_cs:
+                obj.color_sku = new_cs
+                has_changes = True
             if has_changes:
                 obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
                 updated += 1
 
-    return added, updated, deleted
+    return added, updated, deleted, warns
 
 
 @api.route("/api/")
@@ -166,8 +178,8 @@ def save_user() -> Tuple[Response, int]:
 
     raw_id = data["id"]
     try:
-        user_id: int = int(raw_id)
-        is_tg: bool = True
+        int(raw_id)
+        is_tg = True
     except (TypeError, ValueError):
         # Неконвертируемый id — это не Telegram-пользователь, но не ошибка!
         logger.debug("save_user: non-integer id %r, skipping Postgres", raw_id)
@@ -179,9 +191,10 @@ def save_user() -> Tuple[Response, int]:
 
     # --- Postgres только для целых id ---
     if is_tg:
-        try:
-            tg_user = Users.query.get(user_id)
-            if not tg_user:
+        user_id = int(raw_id)
+        tg_user = Users.query.get(user_id)
+        if not tg_user:
+            try:
                 tg_user = Users(
                     user_id=user_id,
                     first_name=first_name,
@@ -189,21 +202,29 @@ def save_user() -> Tuple[Response, int]:
                     username=username
                 )
                 db.session.add(tg_user)
+                log = ChangeLog(
+                    author_id=user_id,
+                    author_name=username,
+                    action_type="Регистрация",
+                    description=f'Новый пользователь Telegram: {first_name} {last_name}',
+                    timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
+                )
+                db.session.add(log)
+                db.session.commit()
                 logger.info("Registered new Telegram user %d", user_id)
-            else:
-                updated = False
-                for field in ("first_name", "last_name", "username"):
-                    new_val = data.get(field)
-                    if new_val and getattr(tg_user, field) != new_val:
-                        setattr(tg_user, field, new_val)
-                        updated = True
-                if updated:
-                    logger.info("Updated Telegram user %d", user_id)
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            logger.exception("Postgres error in save_user: %s", e)
-            return jsonify({"error": "internal server error"}), 500
+            except Exception as e:
+                db.session.rollback()
+                logger.exception("Postgres error in save_user: %s", e)
+                return jsonify({"error": "internal server error"}), 500
+        else:
+            updated = False
+            for field in ("first_name", "last_name", "username"):
+                new_val = data.get(field)
+                if new_val and getattr(tg_user, field) != new_val:
+                    setattr(tg_user, field, new_val)
+                    updated = True
+            if updated:
+                logger.info("Updated Telegram user %d", user_id)
 
     # --- Redis всегда ---
     try:
@@ -246,7 +267,7 @@ def get_daily_visits() -> Tuple[Response, int]:
         return jsonify({"error": "cannot fetch data"}), 500
 
 
-@api.route("/api/products")
+@api.route("/api/list_products")
 def list_products() -> Response:
     cat: str = request.args.get("category", "").lower()
     logger.debug("list_products category=%s", cat)
@@ -256,8 +277,16 @@ def list_products() -> Response:
         logger.error("Unknown category %s", cat)
         return jsonify({"error": "unknown category"}), 400
 
+    # Формируем опции доставки из админ-таблицы
+    delivery_options = []
+    for i in range(1, 4):
+        setting_time = AdminSetting.query.get(f"delivery_time_{i}")
+        setting_price = AdminSetting.query.get(f"delivery_price_{i}")
+        if setting_time and setting_price:
+            delivery_options.append({"label": setting_time.value, "multiplier": float(setting_price.value)})
+
     ms_tz = ZoneInfo("Europe/Moscow")
-    items = Model.query.all()
+    items = Model.query.filter(Model.count_in_stock >= 0).all()
     result = []
     for obj in items:
         # 1) сериализуем все колонки
@@ -265,12 +294,16 @@ def list_products() -> Response:
         for col in obj.__table__.columns:
             val = getattr(obj, col.name)
             if isinstance(val, datetime):
-                data[col.name] = val.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S")
+                data[col.name] = val.astimezone(ms_tz).isoformat(timespec="microseconds")[:-2] + "Z"
             else:
                 data[col.name] = val
+
+        data["delivery_options"] = delivery_options
+
         # 2) добавляем картинки
-        count = getattr(obj, "count_images", 0) or 0
-        images = [f"{BACKEND_URL}/images/{obj.variant_sku}-{i}.webp" for i in range(1, count+1)]
+        count = getattr(obj, "count_images", 0)
+        folder = obj.__tablename__  # 'shoes', 'clothing' или 'accessories'
+        images = [f"{BACKEND_URL}/images/{folder}/{obj.color_sku}_{i}.webp" for i in range(1, count + 1)]
         data["images"] = images
         data["image"]  = images[0] if images else None
 
@@ -304,12 +337,22 @@ def get_product() -> Tuple[Response, int]:
     for col in obj.__table__.columns:
         val = getattr(obj, col.name)
         if isinstance(val, datetime):
-            data[col.name] = val.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S")
+            data[col.name] = val.astimezone(ms_tz).isoformat(timespec="microseconds")[:-2] + "Z"
         else:
             data[col.name] = val
 
-    count = getattr(obj, "count_images", 0) or 0
-    images = [f"{BACKEND_URL}/images/{obj.variant_sku}-{i}.webp" for i in range(1, count + 1)]
+    # Формируем опции доставки из админ-таблицы
+    delivery_options = []
+    for i in range(1, 4):
+        setting_time = AdminSetting.query.get(f"delivery_time_{i}")
+        setting_price = AdminSetting.query.get(f"delivery_price_{i}")
+        if setting_time and setting_price:
+            delivery_options.append({"label": setting_time.value, "multiplier": float(setting_price.value)})
+    data["delivery_options"] = delivery_options
+
+    count = getattr(obj, "count_images", 0)
+    folder = obj.__tablename__  # 'shoes', 'clothing' или 'accessories'
+    images = [f"{BACKEND_URL}/images/{folder}/{obj.color_sku}_{i}.webp" for i in range(1, count + 1)]
     data["images"] = images
     data["image"] = images[0] if images else None
 
@@ -321,9 +364,9 @@ def get_product() -> Tuple[Response, int]:
 def upload_images() -> Tuple[Response, int]:
     z = request.files.get("file")
     author_id_str = request.form.get("author_id", "").strip()
-    author_name = request.form.get("author_name", "").strip() or "unknown"
+    author_name = request.form.get("author_name", "").strip()
 
-    if not z or not author_id_str:
+    if not z or not author_id_str or not author_name:
         return jsonify({"error": "file and author_id required"}), 400
 
     try:
@@ -335,29 +378,40 @@ def upload_images() -> Tuple[Response, int]:
         return jsonify({"error": "not a ZIP"}), 400
 
     try:
-        # clean old
+        # 1) Определяем папку из имени ZIP
+        folder = os.path.splitext(z.filename)[0].lower()
+
+        # 2) Если это одна из трёх категорий — строим набор ожидаемых имён из БД
         expected = set()
-        for M in (Shoe, Clothing, Accessory):
-            for o in M.query:
-                cnt = getattr(o, "count_images", 0) or 0
+        if folder in ("shoes", "clothing", "accessories"):
+            Model = model_by_category(folder)
+            for obj in Model.query.all():
+                cs = obj.color_sku
+                cnt = getattr(obj, "count_images", 0) or 0
                 for i in range(1, cnt + 1):
-                    expected.add(f"{o.variant_sku}-{i}")
+                    expected.add(f"{cs}_{i}")
+        # иначе expected остаётся пустым => мы не будем ничего удалять
 
-        deleted = 0
-        for obj in minio_client.list_objects(BUCKET, recursive=True):
-            if os.path.splitext(obj.object_name)[0] not in expected:
-                minio_client.remove_object(BUCKET, obj.object_name)
-                deleted += 1
+        deleted = warns = 0
+        # 3) Перебираем только файлы в этой папке
+        for obj in minio_client.list_objects(BUCKET, prefix=f"{folder}/", recursive=True):
+            base = os.path.splitext(obj.object_name)[0].split("/", 1)[1]
+            # удаляем, только если expected непуст и имя не входит в него
+            if expected and base not in expected:
+                try:
+                    minio_client.remove_object(BUCKET, obj.object_name)
+                    deleted += 1
+                except Exception:
+                    warns += 1
 
-        # upload new
-        data = io.BytesIO(z.stream.read())
+        # 4) Загружаем новые файлы в ту же папку
         added = replaced = 0
-        with zipfile.ZipFile(data) as archive:
+        with zipfile.ZipFile(io.BytesIO(z.stream.read())) as archive:
             for info in archive.infolist():
                 if info.is_dir():
                     continue
-                key = info.filename
-                content = archive.read(key)
+                key = f"{folder}/{info.filename}"
+                content = archive.read(info.filename)
                 try:
                     minio_client.stat_object(BUCKET, key)
                     replaced += 1
@@ -365,17 +419,18 @@ def upload_images() -> Tuple[Response, int]:
                     added += 1
                 minio_client.put_object(BUCKET, key, io.BytesIO(content), len(content))
 
-        desc = f"Добавлено {added}, Заменено {replaced}, Удалено {deleted}"
+        # 5) Логируем выгрузку
+        desc = f"Добавлено: {added}. Изменено: {replaced}. Удалено: {deleted}. Ошибки: {warns}"
         log = ChangeLog(
             author_id=author_id,
             author_name=author_name,
-            action_type=f"успешная загрузка {z.filename}",
+            action_type=f"Успешная загрузка {z.filename}",
             description=desc,
             timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
         )
         db.session.add(log)
         db.session.commit()
-        return jsonify({"status": "ok", "added": added, "replaced": replaced, "deleted": deleted}), 201
+        return jsonify({"status": "ok", "added": added, "replaced": replaced, "deleted": deleted, "warns": warns}), 201
 
     except Exception as e:
         db.session.rollback()
@@ -459,6 +514,7 @@ def update_sheet_url() -> Tuple[Response, int]:
         else:
             setting = AdminSetting(key=key, value=url)
             db.session.add(setting)
+        setting.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
         db.session.commit()
         return jsonify({"status": "ok"}), 200
     except Exception as e:
@@ -490,19 +546,19 @@ def import_sheet() -> Tuple[Response, int]:
         r.raise_for_status()
         csv_text = r.content.decode("utf-8-sig")
         rows = list(csv.DictReader(io.StringIO(csv_text)))
-        a, u, d = process_rows(category, rows)
+        a, u, d, w = process_rows(category, rows)
         db.session.commit()
-        desc = f"Добавлено {a}, Изменено {u}, Удалено {d}"
+        desc = f"Добавлено: {a}. Изменено: {u}. Удалено: {d}. Ошибки: {w}"
         log = ChangeLog(
             author_id=author_id,
             author_name=author_name,
-            action_type=f"успешная загрузка {category} из Sheets",
+            action_type=f"Успешная загрузка {category}.csv",
             description=desc,
             timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
         )
         db.session.add(log)
         db.session.commit()
-        return jsonify({"status": "ok", "added": a, "updated": u, "deleted": d}), 201
+        return jsonify({"status": "ok", "added": a, "updated": u, "deleted": d, "warns": w}), 201
 
     except Exception as e:
         db.session.rollback()

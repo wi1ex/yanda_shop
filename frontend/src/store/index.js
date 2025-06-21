@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, reactive } from 'vue'
 
 export const useStore = defineStore('main', () => {
-  const admin_ids = ref([])
   const url = ref('https://shop.yanda.twc1.net')
+  const admin_ids = ref([])
   const tg = ref(null)
 
   const user = ref({
@@ -12,36 +12,59 @@ export const useStore = defineStore('main', () => {
     last_name: null,
     username: null,
     photo_url: null
-})
+  })
 
   // Категории
-  const categoryList = ref(['Одежда', 'Обувь', 'Аксессуары'])
-  const selectedCategory = ref('Одежда')
+  const categoryList       = ref(['Одежда', 'Обувь', 'Аксессуары'])
+  const selectedCategory   = ref('Одежда')
 
   // Параметры сортировки
-  const sortBy = ref('date')
-  const sortOrder = ref('desc')
+  const sortBy             = ref('date')
+  const sortOrder          = ref('desc')
 
   // Фильтры (цена, цвет)
-  const filterPriceMin = ref(null)
-  const filterPriceMax = ref(null)
-  const filterColor = ref('')
+  const filterPriceMin     = ref(null)
+  const filterPriceMax     = ref(null)
+  const filterColor        = ref('')
 
   // Список загруженных товаров (для выбранной категории)
-  const products = ref([])
+  const products           = ref([])
 
   // Корзина
-  const cartOrder = ref([])
-  const cart = ref({ count: 0, total: 0, items: [] })
+  const cartOrder          = ref([])
+  const cart               = ref({ count: 0, total: 0, items: [] })
 
   // Список избранного
-  const favoritesOrder = ref([]);
-  const favorites = ref({ items: [], count: 0 });
-  const favoritesLoaded = ref(false);
+  const favorites          = ref({ items: [], count: 0 });
+  const favoritesOrder     = ref([]);
+  const favoritesLoaded    = ref(false);
 
   // Флаг, который указывает, что корзина открыта/загружена
-  const cartLoaded = ref(false)
-  const showCartDrawer = ref(false)
+  const cartLoaded         = ref(false)
+  const showCartDrawer     = ref(false)
+
+  // === AdminPage ===
+  const sheetUrls          = ref({ shoes: '', clothing: '', accessories: '' })
+  const sheetSaveLoading   = reactive({ shoes: false, clothing: false, accessories: false })
+  const sheetImportLoading = reactive({ shoes: false, clothing: false, accessories: false })
+  const sheetResult        = reactive({ shoes: '', clothing: '', accessories: '' })
+  const logs               = ref([])
+  const logsLoading        = ref(false)
+  const visitsData         = ref({ date: '', hours: [] })
+  const visitsLoading      = ref(false)
+  const zipResult          = ref('')
+  const zipLoading         = ref(false)
+
+  // === ProductPage ===
+  const detailData         = ref(null)
+  const detailLoading      = ref(false)
+  const variants           = ref([])
+
+  // === ProfilePage ===
+  const profile            = ref(null)
+  const profileLoading     = ref(false)
+  const profileError       = ref('')
+
 
   function openCartDrawer() {
     showCartDrawer.value = true
@@ -226,7 +249,7 @@ export const useStore = defineStore('main', () => {
   const groupedCartItems = computed(() => {
     const map = {};
     for (const item of cart.value.items) {
-      const key = item.variant_sku;
+      const key = `${item.variant_sku}_${item.delivery_option?.label}`;
       if (!map[key]) {
         map[key] = { ...item, quantity: 0, totalPrice: 0 };
       }
@@ -234,7 +257,7 @@ export const useStore = defineStore('main', () => {
       map[key].totalPrice += item.price;
     }
     // Собираем в порядке cartOrder (по variant_sku)
-    return cartOrder.value.map(variant_sku => map[variant_sku]).filter(Boolean);
+    return Object.values(map);
   });
 
   // Меняем категорию (сбрасываем фильтры, сортировку)
@@ -249,14 +272,21 @@ export const useStore = defineStore('main', () => {
 
   // Добавить товар в корзину
   function addToCart(product) {
-    const exist = cart.value.items.find(i => i.variant_sku === product.variant_sku);
+    // рассчитываем цену с учётом выбранной опции доставки, если есть
+    const unitPrice = product.computed_price ?? product.price;
+    const exist = cart.value.items.find(i => i.variant_sku === product.variant_sku && i.delivery_option?.label === product.delivery_option?.label);
     if (exist) {
       increaseQuantity(exist);
     } else {
       cart.value.count++;
-      cart.value.total += product.price;
+      cart.value.total += unitPrice;
       const id = `${Date.now()}-${Math.random()}`;
-      cart.value.items.push({ ...product, id });
+      // сохраняем delivery_option и итоговую цену в каждом элементе
+      cart.value.items.push({
+        ...product,
+        id,
+        unit_price: unitPrice,
+      });
       cartOrder.value.push(product.variant_sku);
     }
     saveCartToServer();
@@ -265,24 +295,25 @@ export const useStore = defineStore('main', () => {
   // Увеличить количество выбранного товара в корзине
   function increaseQuantity(item) {
     cart.value.count++
-    cart.value.total += item.price
+    cart.value.total += item.unit_price
     cart.value.items.push(item)
     saveCartToServer()
   }
 
   // Уменьшить количество
   function decreaseQuantity(product) {
-    const idx = cart.value.items.findIndex(i => i.variant_sku === product.variant_sku)
+    const idx = cart.value.items.findIndex(i => i.variant_sku === product.variant_sku && i.delivery_option?.label === product.delivery_option?.label)
     if (idx === -1) return
 
-    const qty = cart.value.items.filter(i => i.variant_sku === product.variant_sku).length
+    const qty = cart.value.items.filter(i => i.variant_sku === product.variant_sku && i.delivery_option?.label === product.delivery_option?.label).length
     cart.value.count--
-    cart.value.total = Math.max(cart.value.total - product.price, 0)
+    const delta = product.unit_price ?? product.price
+    cart.value.total = Math.max(cart.value.total - delta, 0)
 
     if (qty > 1) {
       cart.value.items.splice(idx, 1)
     } else {
-      cart.value.items = cart.value.items.filter(i => i.variant_sku !== product.variant_sku)
+      cart.value.items = cart.value.items.filter(i => !(i.variant_sku === product.variant_sku && i.delivery_option?.label === product.delivery_option?.label))
       cartOrder.value = cartOrder.value.filter(variant_sku => variant_sku !== product.variant_sku)
     }
     saveCartToServer()
@@ -290,7 +321,7 @@ export const useStore = defineStore('main', () => {
 
   // Получить текущее количество единиц товара в корзине
   function getProductQuantity(product) {
-    return cart.value.items.filter(i => i.variant_sku === product.variant_sku).length;
+    return cart.value.items.filter(i => i.variant_sku === product.variant_sku && i.delivery_option?.label === product.delivery_option?.label).length;
   }
 
   // Оформление заказа (тут просто чистим корзину и показываем alert)
@@ -308,9 +339,12 @@ export const useStore = defineStore('main', () => {
   }
 
   // Fetch: загрузка товаров по category
-  async function fetchProducts() {
+  async function fetchProducts(cat) {
+    if (cat) {
+      selectedCategory.value = cat
+    }
     try {
-      const res = await fetch(`${url.value}/api/products?category=${encodeURIComponent(selectedCategory.value)}`)
+      const res = await fetch(`${url.value}/api/list_products?category=${encodeURIComponent(selectedCategory.value)}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       products.value = await res.json()
     } catch (e) {
@@ -318,11 +352,155 @@ export const useStore = defineStore('main', () => {
     }
   }
 
+  // --- Экшен: загрузить URL таблиц ---
+  async function loadSheetUrls() {
+    try {
+      const res = await fetch(`${url.value}/api/admin/sheet_urls`)
+      const data = await res.json()
+      Object.assign(sheetUrls.value, data)
+    } catch (e) { console.error(e) }
+  }
+
+  // --- Экшен: сохранить URL ---
+  async function saveSheetUrl(cat) {
+    sheetSaveLoading[cat] = true
+    sheetResult[cat] = ''
+    try {
+      const res = await fetch(`${url.value}/api/admin/sheet_url`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ category: cat, url: sheetUrls.value[cat] })
+      })
+      const j = await res.json()
+      if (res.ok) {
+        sheetResult[cat] = 'Ссылка сохранена'
+        return true
+      } else {
+        sheetResult[cat] = `Ошибка: ${j.error || res.status}`
+        return false
+      }
+    } catch (e) {
+      sheetResult[cat] = `Ошибка сети`
+      return false
+    } finally {
+      sheetSaveLoading[cat] = false
+    }
+  }
+
+  // --- Экшен: импорт данных из Google Sheets ---
+  async function importSheet(cat, authorId, authorName) {
+    sheetImportLoading[cat] = true
+    sheetResult[cat] = ''
+    try {
+      const res = await fetch(`${url.value}/api/import_sheet`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ category: cat, author_id: authorId, author_name: authorName })
+      })
+      const j = await res.json()
+      if (res.ok && j.status==='ok') {
+        sheetResult[cat] = `Добавлено: ${j.added}. Обновлено: ${j.updated}. Удалено: ${j.deleted}. Ошибки: ${j.warns}.`
+        await loadLogs()
+      } else {
+        sheetResult[cat] = `Ошибка: ${j.error||res.status}`
+      }
+    } catch (e) {
+      sheetResult[cat] = `Ошибка сети`
+    } finally {
+      sheetImportLoading[cat] = false
+    }
+  }
+
+  // --- Экшен: загрузить логи ---
+  async function loadLogs(limit = 10) {
+    logsLoading.value = true
+    try {
+      const res = await fetch(`${url.value}/api/logs?limit=${limit}`)
+      logs.value = res.ok ? (await res.json()).logs : []
+    } catch (e) {
+      console.error(e)
+      logs.value = []
+    } finally {
+      logsLoading.value = false
+    }
+  }
+
+  // --- Экшен: загрузить статистику посещений ---
+  async function loadVisits(date) {
+    visitsLoading.value = true
+    try {
+      const res = await fetch(`${url.value}/api/visits?date=${date}`)
+      const j   = await res.json()
+      visitsData.value = { date: j.date, hours: j.hours }
+    } catch (e) {
+      console.error(e)
+      visitsData.value = { date:'', hours:[] }
+    } finally {
+      visitsLoading.value = false
+    }
+  }
+
+  // --- Экшен: загрузить ZIP с изображениями ---
+  async function uploadZip(file, authorId, authorName) {
+    zipLoading.value = true; zipResult.value = ''
+    const form = new FormData()
+    form.append('file', file)
+    form.append('author_id', authorId)
+    form.append('author_name', authorName)
+    try {
+      const res = await fetch(`${url.value}/api/upload_images`, { method:'POST', body: form })
+      const j   = await res.json()
+      if (res.status===201) {
+        zipResult.value = `Добавлено: ${j.added}. Обновлено: ${j.replaced}. Удалено: ${j.deleted}. Ошибки: ${j.warns}.`
+        await loadLogs()
+      } else {
+        zipResult.value = `Ошибка ${res.status}: ${j.error||res.message}`
+      }
+    } catch (e) {
+      zipResult.value = `Ошибка сети`
+    } finally {
+      zipLoading.value = false
+    }
+  }
+
+  // --- Экшен: получить детали продукта + варианты ---
+  async function fetchDetail(variantSku, category) {
+    detailLoading.value = true
+    detailData.value = null
+    try {
+      const pRes = await fetch(`${url.value}/api/product?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(variantSku)}`)
+      detailData.value = await pRes.json()
+      // подгружаем весь список и фильтруем по sku
+      await fetchProducts(category)
+      variants.value = products.value.filter(p => p.sku === detailData.value.sku)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      detailLoading.value = false
+    }
+  }
+
+  // --- Экшен: получить профиль пользователя ---
+  async function fetchUserProfile(userId) {
+    profileLoading.value = true; profileError.value = ''
+    try {
+      const res = await fetch(`${url.value}/api/user?user_id=${userId}`)
+      if (!res.ok) {
+        profileError.value = res.status===404 ? 'Пользователь не найден' : `Ошибка ${res.status}`
+        return
+      }
+      profile.value = await res.json()
+    } catch (e) {
+      console.error(e)
+      profileError.value = 'Ошибка сети'
+    } finally {
+      profileLoading.value = false
+    }
+  }
+
   return {
     url,
+    admin_ids,
     tg,
     user,
-    admin_ids,
 
     categoryList,
     selectedCategory,
@@ -338,14 +516,35 @@ export const useStore = defineStore('main', () => {
 
     cartOrder,
     cart,
-    showCartDrawer,
 
     favorites,
     favoritesOrder,
     favoritesLoaded,
 
+    cartLoaded,
+    showCartDrawer,
+
     filteredProducts,
     groupedCartItems,
+
+    sheetUrls,
+    sheetSaveLoading,
+    sheetImportLoading,
+    sheetResult,
+    logs,
+    logsLoading,
+    visitsData,
+    visitsLoading,
+    zipResult,
+    zipLoading,
+
+    detailData,
+    detailLoading,
+    variants,
+
+    profile,
+    profileLoading,
+    profileError,
 
     isTelegramUserId,
     changeCategory,
@@ -362,5 +561,13 @@ export const useStore = defineStore('main', () => {
     isFavorite,
     openCartDrawer,
     closeCartDrawer,
+    loadSheetUrls,
+    saveSheetUrl,
+    importSheet,
+    loadLogs,
+    loadVisits,
+    uploadZip,
+    fetchDetail,
+    fetchUserProfile,
   }
 })
