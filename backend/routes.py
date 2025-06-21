@@ -317,44 +317,6 @@ def get_product() -> Tuple[Response, int]:
     return jsonify(data), 200
 
 
-@api.route("/api/import_products", methods=["POST"])
-def import_products() -> Tuple[Response, int]:
-    f = request.files.get("file")
-    author_id_str = request.form.get("author_id", "").strip()
-    author_name = request.form.get("author_name", "").strip() or "unknown"
-
-    if not f or not author_id_str:
-        return jsonify({"error": "file and author_id required"}), 400
-
-    try:
-        author_id = int(author_id_str)
-    except ValueError:
-        return jsonify({"error": "invalid author_id"}), 400
-
-    name, ext = os.path.splitext(f.filename.lower())
-    if ext != ".csv":
-        return jsonify({"error": "not a CSV"}), 400
-    csv_text = f.stream.read().decode("utf-8-sig")
-    try:
-        rows = list(csv.DictReader(io.StringIO(csv_text)))
-        a, u, d = process_rows(name, rows)
-        db.session.commit()
-        desc = f"Добавлено {a}, Изменено {u}, Удалено {d}"
-        log = ChangeLog(
-            author_id=author_id,
-            author_name=author_name,
-            action_type=f"успешная загрузка {name} из CSV",
-            description=desc,
-            timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
-        )
-        db.session.add(log)
-        db.session.commit()
-        return jsonify({"status": "ok", "added": a, "updated": u, "deleted": d}), 201
-    except Exception as e:
-        logger.exception("Error in import_products: %s", e)
-        return jsonify({"error": "import_products failed", "message": str(e)}), 500
-
-
 @api.route("/api/upload_images", methods=["POST"])
 def upload_images() -> Tuple[Response, int]:
     z = request.files.get("file")
@@ -524,18 +486,11 @@ def import_sheet() -> Tuple[Response, int]:
         return jsonify({"error": "sheet url not set"}), 400
 
     try:
-        # 1) Скачиваем и ДЕКОДИРУЕМ с BOM
         r = requests.get(url, timeout=30)
         r.raise_for_status()
         csv_text = r.content.decode("utf-8-sig")
-
-        # 2) Читаем строки как раньше
         rows = list(csv.DictReader(io.StringIO(csv_text)))
-
-        # 3) Применяем переписанный process_rows (см. ниже)
         a, u, d = process_rows(category, rows)
-
-        # 4) Коммитим и пишем лог
         db.session.commit()
         desc = f"Добавлено {a}, Изменено {u}, Удалено {d}"
         log = ChangeLog(
