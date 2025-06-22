@@ -34,7 +34,10 @@ onMounted(() => {
 
 // вычисляем реальный список products по каждому color_sku
 const favoriteProducts = computed(() =>
-  store.favorites.items.map(cs => store.groupedByColor.find(p => p.color_sku === cs)).filter(Boolean)
+  store.favorites.items
+    .map(cs => store.colorGroups.find(g => g.color_sku === cs))
+    .filter(Boolean)
+    .map(g => g.minPriceVariant)
 )
 </script>
 

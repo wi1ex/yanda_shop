@@ -13,7 +13,7 @@
         <p class="subtitle">в деталях.</p>
       </div>
       <div class="marquee-wrap">
-        <div class="marquee-content">{{ runningText }}</div>
+        <div class="marquee-content">ЧЕСТНОСТЬ ОРИГИНАЛЬНОСТЬ СТИЛЬ ГАРАНТИИ ВЫГОДА</div>
       </div>
     </section>
 
@@ -102,7 +102,7 @@
     <section class="section community">
       <h2 class="section-title">Сообщество</h2>
       <p class="community-text">Пиши нам в Телеграм — это самый быстрый и легкий способ для связи.</p>
-      <button class="join-button" @click="joinTelegram">Присоединиться</button>
+      <a v-if="store.adminSettings.url_telegram" :href="store.adminSettings.url_telegram" target="_blank" rel="noopener" class="join-button">Telegram</a>
       <div class="community-images">
         <div class="img-item"><img :src="about_image11" alt="" /></div>
         <div class="img-item">
@@ -118,6 +118,7 @@
 </template>
 
 <script setup>
+import { useStore } from '@/store/index.js'
 import about_image1 from '@/assets/images/about_image1.png'
 import about_image2 from '@/assets/images/about_image2.png'
 import about_image3 from '@/assets/images/about_image3.png'
@@ -132,11 +133,7 @@ import about_image11 from '@/assets/images/about_image11.png'
 import about_image12 from '@/assets/images/about_image12.png'
 import about_text_logo from '@/assets/images/about_text_logo.svg'
 
-const runningText = 'ЧЕСТНОСТЬ ОРИГИНАЛЬНОСТЬ СТИЛЬ ГАРАНТИИ ВЫГОДА'
-
-function joinTelegram() {
-  window.open('https://t.me/yanda_shop', '_blank');
-}
+const store = useStore()
 </script>
 
 <style scoped lang="scss">
