@@ -1,6 +1,4 @@
-@import 'variables';
-@import 'mixins';
-@import "fonts";
+@use "./index" as *;
 
 body {
   font-family: 'Inter', sans-serif;
