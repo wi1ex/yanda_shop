@@ -171,7 +171,7 @@ const origBlocks = [
 function toggleOrig(b){ b.open = !b.open }
 
 // BESTSELLERS
-const bests = computed(() => store.filteredProducts.slice(0,2))
+const bests = computed(() => store.groupedByColor.slice(0,2))
 const bestIndex = ref(0)
 
 function prevBest() {
@@ -183,10 +183,10 @@ function nextBest() {
 }
 
 function toggleFav(p) {
-  if (store.isFavorite(p)) {
-    store.removeFromFavorites(p)
+  if (store.isFavorite(p.color_sku)) {
+    store.removeFromFavorites(p.color_sku)
   } else {
-    store.addToFavorites(p)
+    store.addToFavorites(p.color_sku)
   }
 }
 
@@ -215,6 +215,7 @@ const faqs = [
   { question:'Какие гарантии я получаю при заказе?', answer:'Гарантия оригинальности и возврат в течение 14 дней.', open:false },
   { question:'Как я могу посмотреть статус моего заказа?', answer:'В личном кабинете или через Telegram-бота.', open:false },
 ]
+
 function toggleFaq(i){ faqs[i].open = !faqs[i].open }
 
 onMounted(() => {

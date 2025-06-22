@@ -48,7 +48,7 @@
 
     <!-- Сетка товаров -->
     <div class="products-grid">
-      <div v-for="product in store.filteredProducts" :key="product.variant_sku" class="product-card">
+      <div v-for="product in store.groupedByColor" :key="product.variant_sku" class="product-card">
         <!-- Нажатие на карточку — переходим на страницу ProductDetail -->
         <div @click="goToProductDetail(product)" class="clickable-area">
           <img :src="product.image" alt="product" class="product-image" />
@@ -60,10 +60,10 @@
         </div>
 
         <!-- Избранное -->
-        <button class="favorite-button" v-if="!store.isFavorite(product)" @click.stop="store.addToFavorites(product)">
+        <button class="favorite-button" v-if="!store.isFavorite(product.color_sku)" @click.stop="store.addToFavorites(product.color_sku)">
           В избранное
         </button>
-        <button class="favorite-button remove" v-else @click.stop="store.removeFromFavorites(product)">
+        <button class="favorite-button remove" v-else @click.stop="store.removeFromFavorites(product.color_sku)">
           Убрать из избранного
         </button>
       </div>
@@ -115,9 +115,20 @@ function onCategoryClick(cat) {
 
 // Функция: открыть страницу "Карточка товара"
 function goToProductDetail(product) {
+  // из всех вариантов того же цвета выбираем минимальный размер
+  const sameColor = store.products.filter(p => p.color_sku === product.color_sku && p.count_in_stock >= 0)
+  // сортируем по числовому размеру, нечисловые — в конец
+  sameColor.sort((a, b) => {
+    const na = parseFloat(a.size_label), nb = parseFloat(b.size_label)
+    if (!isNaN(na) && !isNaN(nb)) return na - nb
+    if (isNaN(na)) return 1
+    if (isNaN(nb)) return -1
+    return String(a.size_label).localeCompare(b.size_label)
+  })
+  const target = sameColor[0] || product
   router.push({
     name: 'ProductDetail',
-    params: { variant_sku: product.variant_sku },
+    params: { variant_sku: target.variant_sku },
     query: { category: product.category }
   })
 }

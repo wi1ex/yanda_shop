@@ -106,10 +106,9 @@
       <div class="community-images">
         <div class="img-item"><img :src="about_image11" alt="" /></div>
         <div class="img-item">
-          <a href="https://t.me/your_telegram" target="_blank" rel="noopener" class="link">Telegram</a>
-          <a href="https://wa.me/your_whatsapp_number" target="_blank" rel="noopener" class="link">WhatsApp</a>
-          <a href="https://instagram.com/your_instagram" target="_blank" rel="noopener" class="link">Instagram</a>
-          <a href="mailto:youremail@example.com" class="link">E-mail</a>
+          <a v-if="store.adminSettings.url_telegram" :href="store.adminSettings.url_telegram" target="_blank" rel="noopener" class="link">Telegram</a>
+          <a v-if="store.adminSettings.url_instagram" :href="store.adminSettings.url_instagram" target="_blank" rel="noopener" class="link">Instagram</a>
+          <a v-if="store.adminSettings.url_email" :href="`mailto:${store.adminSettings.url_email}`" rel="noopener" class="link">E-mail</a>
         </div>
         <div class="img-item"><img :src="about_image10" alt="" /></div>
         <div class="img-item"><img :src="about_image12" alt="" /></div>

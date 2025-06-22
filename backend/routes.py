@@ -294,7 +294,7 @@ def list_products() -> Response:
         for col in obj.__table__.columns:
             val = getattr(obj, col.name)
             if isinstance(val, datetime):
-                data[col.name] = val.astimezone(ms_tz).isoformat(timespec="microseconds")[:-2] + "Z"
+                data[col.name] = val.astimezone(ms_tz).isoformat(timespec="microseconds") + "Z"
             else:
                 data[col.name] = val
 
@@ -337,7 +337,7 @@ def get_product() -> Tuple[Response, int]:
     for col in obj.__table__.columns:
         val = getattr(obj, col.name)
         if isinstance(val, datetime):
-            data[col.name] = val.astimezone(ms_tz).isoformat(timespec="microseconds")[:-2] + "Z"
+            data[col.name] = val.astimezone(ms_tz).isoformat(timespec="microseconds") + "Z"
         else:
             data[col.name] = val
 
@@ -489,6 +489,13 @@ def get_user_profile() -> Tuple[Response, int]:
     except Exception as e:
         logger.exception("Error fetching user %d: %s", uid, e)
         return jsonify({"error": "internal error"}), 500
+
+
+@api.route("/api/admin/settings")
+def get_admin_settings() -> Tuple[Response, int]:
+    keys = ("url_telegram", "url_instagram", "url_email")
+    res = {k: AdminSetting.query.get(k).value for k in keys if AdminSetting.query.get(k)}
+    return jsonify(res), 200
 
 
 @api.route("/api/admin/sheet_urls")

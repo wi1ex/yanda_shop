@@ -20,7 +20,7 @@
       <div class="title-block">
         <p class="brand">{{ store.detailData.brand }}</p>
         <h1 class="name">{{ store.detailData.name }}</h1>
-        <p class="sku">артикул: {{ store.detailData.variant_sku }}</p>
+        <p class="sku">артикул: {{ store.detailData.world_sku }}</p>
       </div>
 
       <!-- Галерея: главное + миниатюры + свайп -->
@@ -69,8 +69,8 @@
           <label>Доставка</label>
           <div class="delivery-options">
             <label v-for="(opt, idx) in visibleDeliveryOptions" :key="idx" class="delivery-opt">
-              <input type="radio" name="delivery" :value="opt" v-model="selectedDelivery"/>
-              {{ opt.label }} {{ computedPrice }}
+              <input type="radio" name="delivery" :value="idx" v-model="selectedDeliveryIndex"/>
+              {{ opt.label }} {{ Math.round(store.detailData.price * opt.multiplier) }} ₽
             </label>
           </div>
         </div>
@@ -87,27 +87,30 @@
           <span class="quantity">{{ currentQuantity }}</span>
           <button @click="store.increaseQuantity(cartItem)">➕</button>
         </div>
-        <button v-else type="button" class="add-cart-button" @click="store.addToCart({...store.detailData, delivery_option: selectedDelivery, computed_price: computedPrice})">
+        <button v-else type="button" class="add-cart-button" @click="store.addToCart({...store.detailData,
+        delivery_option: visibleDeliveryOptions[selectedDeliveryIndex], computed_price: computedPrice})">
           Добавить в корзину
         </button>
 
-        <button v-if="!store.isFavorite(store.detailData)" type="button" class="add-fav-button" @click="store.addToFavorites(store.detailData)">
+        <button v-if="!store.isFavorite(store.detailData.color_sku)" type="button" class="add-fav-button" @click="store.addToFavorites(store.detailData.color_sku)">
           Добавить в избранное
         </button>
-        <button v-else type="button" class="remove-fav-button" @click="store.removeFromFavorites(store.detailData)">
+        <button v-else type="button" class="remove-fav-button" @click="store.removeFromFavorites(store.detailData.color_sku)">
           Убрать из избранного
         </button>
       </div>
 
       <!-- Описание -->
-      <div class="section">
+      <div v-if="store.detailData.description" class="section">
         <div class="section-header" @click="toggleDescription">
           <span>Описание</span>
-          <span class="arrow">{{ showDescription ? '▼' : '▶' }}</span>
+          <span class="arrow">{{ showDescription ? '⯅' : '▼' }}</span>
         </div>
-        <div v-show="showDescription" class="section-body">
-          <p>{{ store.detailData.description }}</p>
-        </div>
+        <transition name="accordion">
+          <div v-show="showDescription" class="section-body">
+            <p>{{ store.detailData.description }}</p>
+          </div>
+        </transition>
       </div>
 
       <!-- Характеристики -->
@@ -116,13 +119,15 @@
           <span>Характеристики</span>
           <span class="arrow">{{ showCharacteristics ? '▼' : '▶' }}</span>
         </div>
-        <div v-show="showCharacteristics" class="section-body">
-          <p class="char-row"><strong>Пол:</strong> {{ store.detailData.gender }}</p>
-          <p class="char-row"><strong>Категория:</strong> {{ store.detailData.category }}</p>
-          <p class="char-row"><strong>Подкатегория:</strong> {{ store.detailData.subcategory }}</p>
-          <p class="char-row"><strong>Материал:</strong> {{ store.detailData.material }}</p>
-          <p class="char-row"><strong>Размерная сетка:</strong> {{ store.detailData.size_guide_url }}</p>
-        </div>
+        <transition name="accordion">
+          <div v-show="showCharacteristics" class="section-body">
+            <p class="char-row"><strong>Пол:</strong> {{ store.detailData.gender }}</p>
+            <p class="char-row"><strong>Категория:</strong> {{ store.detailData.category }}</p>
+            <p class="char-row"><strong>Подкатегория:</strong> {{ store.detailData.subcategory }}</p>
+            <p class="char-row"><strong>Материал:</strong> {{ store.detailData.material }}</p>
+            <p class="char-row"><strong>Размерная сетка:</strong> {{ store.detailData.size_guide_url }}</p>
+          </div>
+        </transition>
       </div>
     </div>
   </div>
@@ -137,7 +142,7 @@ const store = useStore()
 const route = useRoute()
 const router = useRouter()
 
-const selectedDelivery = ref(null)
+const selectedDeliveryIndex  = ref(2)
 const currentIndex = ref(0)
 const thumbsRef = ref(null)
 const showDescription = ref(false)
@@ -157,9 +162,8 @@ const sizeOptions = computed(() => {
 
 const computedPrice = computed(() => {
   if (!store.detailData) return 0
-  const base = store.detailData.price
-  const mult = selectedDelivery.value?.multiplier || 1
-  return Math.round(base * mult)
+  const opt = visibleDeliveryOptions.value[selectedDeliveryIndex.value] || { multiplier: 1 }
+  return Math.round(store.detailData.price * opt.multiplier)
 })
 
 const visibleDeliveryOptions = computed(() => {
@@ -172,7 +176,7 @@ const visibleDeliveryOptions = computed(() => {
 const cartItem = computed(() =>
   store.cart.items.find(i =>
     i.variant_sku === store.detailData?.variant_sku &&
-    i.delivery_option?.label === selectedDelivery.value?.label
+    i.delivery_option?.label === visibleDeliveryOptions[selectedDeliveryIndex]?.label
   )
 )
 
@@ -180,20 +184,53 @@ const currentQuantity = computed(() => {
   if (!store.detailData) return 0
   return store.cart.items.filter(i =>
     i.variant_sku === store.detailData.variant_sku &&
-    i.delivery_option?.label === selectedDelivery.value?.label
+    i.delivery_option?.label === visibleDeliveryOptions[selectedDeliveryIndex]?.label
   ).length
 })
 
 // Переход на другой variant по опции
 function selectVariantByOpt(type, opt) {
   const cat = route.query.category
-  const variant = store.variants.find(v => type === 'size' ? v.size_label === opt : v.color === opt)
-  if (variant) {
-    router.push({
-      name: 'ProductDetail',
-      params: { variant_sku: variant.variant_sku },
-      query: { category: cat }
+
+  if (type === 'size') {
+    // ищем вариант с точно таким же size_label (строкой)
+    const variant = store.variants.find(v => String(v.size_label) === opt)
+    if (variant) {
+      selectedDeliveryIndex.value = 2
+      router.push({
+        name: 'ProductDetail',
+        params: { variant_sku: variant.variant_sku },
+        query: { category: cat }
+      })
+    }
+    return
+  }
+
+  if (type === 'color') {
+    // все варианты того же цвета, в наличии
+    const sameColor = store.variants.filter(v => v.color === opt && v.count_in_stock >= 0)
+
+    // сортируем по «минимальному» размеру: числовые сначала
+    sameColor.sort((a, b) => {
+      const na = parseFloat(a.size_label)
+      const nb = parseFloat(b.size_label)
+      if (!isNaN(na) && !isNaN(nb)) return na - nb
+      if (isNaN(na)) return 1
+      if (isNaN(nb)) return -1
+      // обе не числа — лексикографически
+      return String(a.size_label).localeCompare(b.size_label)
     })
+
+    const target = sameColor[0]
+    if (target) {
+      selectedDeliveryIndex.value = 2
+      router.push({
+        name: 'ProductDetail',
+        params: { variant_sku: target.variant_sku },
+        query: { category: cat }
+      })
+    }
+    return
   }
 }
 
@@ -250,9 +287,7 @@ async function init() {
   const sku = route.params.variant_sku
   const cat = route.query.category
   await store.fetchDetail(sku, cat)
-  if (store.detailData?.delivery_options?.length) {
-    selectedDelivery.value = store.detailData.delivery_options[0]
-  }
+  selectedDeliveryIndex.value = Math.min(2, visibleDeliveryOptions.value.length - 1)
 }
 
 watch(
@@ -531,6 +566,22 @@ label {
   padding: 4px 0;
   border-bottom: 1px solid #f0f0f0;
   font-size: 14px;
+}
+
+/* Новые стили для плавного аккордеона */
+.accordion-enter-from,
+.accordion-leave-to {
+  height: 0;
+  opacity: 0;
+}
+.accordion-enter-active,
+.accordion-leave-active {
+  transition: all 0.3s ease;
+}
+.accordion-enter-to,
+.accordion-leave-from {
+  height: auto;
+  opacity: 1;
 }
 
 @media (max-width: 600px) {
