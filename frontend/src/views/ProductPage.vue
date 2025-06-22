@@ -4,129 +4,128 @@
     <div v-if="store.detailLoading" class="loading">Загрузка...</div>
 
     <!-- 2. Основная карточка -->
-    <div v-else-if="store.detailData" class="detail-card">
-      <!-- Шапка: назад + наличие -->
-      <div class="top-row">
-        <button class="back-button" @click="goCatalog">← Назад</button>
-        <div class="availability">
-          <span v-if="store.detailData.count_in_stock > 0">
-            В НАЛИЧИИ: {{ store.detailData.count_in_stock }}
-          </span>
-          <span v-else>ПОД ЗАКАЗ</span>
-        </div>
-      </div>
-
-      <!-- Бренд, имя, артикул -->
-      <div class="title-block">
-        <p class="brand">{{ store.detailData.brand }}</p>
-        <h1 class="name">{{ store.detailData.name }}</h1>
-        <p class="sku">артикул: {{ store.detailData.world_sku }}</p>
-      </div>
-
-      <!-- Галерея: главное + миниатюры + свайп -->
-      <div class="carousel-container">
-        <div class="main-image-wrapper" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
-          <img :src="store.detailData.images[currentIndex]" alt="product" class="main-image"/>
-        </div>
-        <div class="thumbnails-wrapper" ref="thumbsRef">
-          <img v-for="(img, idx) in store.detailData.images" :key="idx" :src="img" alt="" class="thumbnail"
-               :class="{ active: idx === currentIndex }" @click="scrollToIndex(idx)"/>
-        </div>
-      </div>
-
-      <!-- 4. Параметры: Размер или Г×Ш×В + Цвет -->
-      <div class="options-block">
-        <!-- Размер -->
-        <div class="option">
-          <label v-if="sizeOptions.length && store.detailData.size_label">Размер</label>
-          <label v-else>Г×Ш×В (мм)</label>
-
-          <div v-if="sizeOptions.length && store.detailData.size_label" class="options-list">
-            <button v-for="opt in sizeOptions" :key="opt" class="option-btn" @click="selectVariantByOpt('size', opt)"
-                    :class="{ active: String(opt) === String(store.detailData.size_label) }">
-              {{ opt }}
-            </button>
-          </div>
-          <span v-else class="value">
-            {{ store.detailData.height_mm }}×{{ store.detailData.width_mm }}×{{ store.detailData.depth_mm }}
-          </span>
-        </div>
-        <!-- Цвет -->
-        <div class="option">
-          <label>Цвет</label>
-          <div class="options-list">
-            <button v-for="opt in colorOptions" :key="opt" class="option-btn color-btn"
-                    :class="{ active: opt === store.detailData.color }" @click="selectVariantByOpt('color', opt)">
-              {{ opt }}
-            </button>
+    <div v-else-if="store.detailData" class="detail-wrapper">
+      <div v-if="variantLoading" class="variant-spinner">Загрузка...</div>
+      <div v-else class="detail-card">
+        <!-- Шапка: назад + наличие -->
+        <div class="top-row">
+          <button class="back-button" @click="goCatalog">← Назад</button>
+          <div class="availability">
+            <span v-if="store.detailData.count_in_stock > 0">
+              В НАЛИЧИИ: {{ store.detailData.count_in_stock }}
+            </span>
+            <span v-else>ПОД ЗАКАЗ</span>
           </div>
         </div>
-      </div>
 
-      <!-- Доставка и цена -->
-      <div class="delivery-price-block">
-        <div class="delivery">
-          <label>Доставка</label>
-          <div class="options-list">
-            <button v-for="(opt, idx) in visibleDeliveryOptions" :key="idx" class="option-btn"
-                    :class="{ active: idx === selectedDeliveryIndex }" @click="selectedDeliveryIndex = idx">
-              {{ opt.label }} {{ Math.round(store.detailData.price * opt.multiplier) }} ₽
-            </button>
+        <!-- Бренд, имя, артикул -->
+        <div class="title-block">
+          <p class="brand">{{ store.detailData.brand }}</p>
+          <h1 class="name">{{ store.detailData.name }}</h1>
+          <p class="sku">артикул: {{ store.detailData.world_sku }}</p>
+        </div>
+
+        <!-- Галерея: главное + миниатюры + свайп -->
+        <div class="carousel-container">
+          <div class="main-image-wrapper" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
+            <img :src="store.detailData.images[currentIndex]" alt="product" class="main-image"/>
+          </div>
+          <div class="thumbnails-wrapper" ref="thumbsRef">
+            <img v-for="(img, idx) in store.detailData.images" :key="idx" :src="img" alt="" class="thumbnail"
+                 :class="{ active: idx === currentIndex }" @click="scrollToIndex(idx)"/>
           </div>
         </div>
-        <div class="price-row">
-          <label>Цена</label>
-          <span class="price">{{ computedPrice }} ₽</span>
-        </div>
-      </div>
 
-      <!-- 1. Кнопка/контролы корзины + избранное -->
-      <div class="actions-block">
-        <div v-if="currentQuantity > 0" class="quantity-controls">
-          <button @click="store.decreaseQuantity(cartItem)">➖</button>
-          <span class="quantity">{{ currentQuantity }}</span>
-          <button @click="store.increaseQuantity(cartItem)">➕</button>
-        </div>
-        <button v-else type="button" class="add-cart-button" @click="handleAddToCart">
-          Добавить в корзину
-        </button>
+        <!-- 4. Параметры: Размер или Г×Ш×В + Цвет -->
+        <div class="options-block">
+          <!-- Размер -->
+          <div class="option">
+            <label v-if="sizeOptions.length && store.detailData.size_label">Размер</label>
+            <label v-else>Г×Ш×В (мм)</label>
 
-        <button v-if="!store.isFavorite(store.detailData.color_sku)" type="button" class="add-fav-button" @click="store.addToFavorites(store.detailData.color_sku)">
-          Добавить в избранное
-        </button>
-        <button v-else type="button" class="remove-fav-button" @click="store.removeFromFavorites(store.detailData.color_sku)">
-          Убрать из избранного
-        </button>
-      </div>
-
-      <!-- Описание -->
-      <div v-if="store.detailData.description" class="section">
-        <div class="section-header" @click="toggleDescription">
-          <span>Описание</span>
-          <span class="arrow">{{ showDescription ? '⯅' : '▼' }}</span>
+            <div v-if="sizeOptions.length && store.detailData.size_label" class="options-list">
+              <button v-for="opt in sizeOptions" :key="opt" class="option-btn" @click="selectVariantByOpt('size', opt)"
+                      :class="{ active: String(opt) === String(store.detailData.size_label) }">
+                {{ opt }}
+              </button>
+            </div>
+            <span v-else class="value">
+              {{ store.detailData.height_mm }}×{{ store.detailData.width_mm }}×{{ store.detailData.depth_mm }}
+            </span>
+          </div>
+          <!-- Цвет -->
+          <div class="option">
+            <label>Цвет</label>
+            <div class="options-list">
+              <button v-for="opt in colorOptions" :key="opt" class="option-btn color-btn"
+                      :class="{ active: opt === store.detailData.color }" @click="selectVariantByOpt('color', opt)">
+                {{ opt }}
+              </button>
+            </div>
+          </div>
         </div>
-        <transition name="accordion" appear>
-          <div v-show="showDescription" class="section-body">
+
+        <!-- Доставка и цена -->
+        <div class="delivery-price-block">
+          <div class="delivery">
+            <label>Доставка</label>
+            <div class="options-list">
+              <button v-for="(opt, idx) in visibleDeliveryOptions" :key="idx" class="option-btn"
+                      :class="{ active: idx === selectedDeliveryIndex }" @click="selectedDeliveryIndex = idx">
+                {{ opt.label }} {{ Math.round(store.detailData.price * opt.multiplier) }} ₽
+              </button>
+            </div>
+          </div>
+          <div class="price-row">
+            <label>Цена</label>
+            <span class="price">{{ computedPrice }} ₽</span>
+          </div>
+        </div>
+
+        <!-- 1. Кнопка/контролы корзины + избранное -->
+        <div class="actions-block">
+          <div v-if="currentQuantity > 0" class="quantity-controls">
+            <button @click="store.decreaseQuantity(cartItem)">➖</button>
+            <span class="quantity">{{ currentQuantity }}</span>
+            <button @click="store.increaseQuantity(cartItem)">➕</button>
+          </div>
+          <button v-else type="button" class="add-cart-button" @click="handleAddToCart">
+            Добавить в корзину
+          </button>
+
+          <button v-if="!store.isFavorite(store.detailData.color_sku)" type="button" class="add-fav-button" @click="store.addToFavorites(store.detailData.color_sku)">
+            Добавить в избранное
+          </button>
+          <button v-else type="button" class="remove-fav-button" @click="store.removeFromFavorites(store.detailData.color_sku)">
+            Убрать из избранного
+          </button>
+        </div>
+
+        <!-- Описание -->
+        <div v-if="store.detailData.description" class="section">
+          <div class="section-header" @click="toggleDescription">
+            <span>Описание</span>
+            <span class="arrow">{{ showDescription ? '⯅' : '▼' }}</span>
+          </div>
+          <div class="section-body" :class="{ open: showDescription }">
             <p>{{ store.detailData.description }}</p>
           </div>
-        </transition>
-      </div>
-
-      <!-- Характеристики -->
-      <div class="section">
-        <div class="section-header" @click="toggleCharacteristics">
-          <span>Характеристики</span>
-          <span class="arrow">{{ showCharacteristics ? '⯅' : '▼' }}</span>
         </div>
-        <transition name="accordion">
-          <div v-show="showCharacteristics" class="section-body">
+
+        <!-- Характеристики -->
+        <div class="section">
+          <div class="section-header" @click="toggleCharacteristics">
+            <span>Характеристики</span>
+            <span class="arrow">{{ showCharacteristics ? '⯅' : '▼' }}</span>
+          </div>
+          <div class="section-body" :class="{ open: showCharacteristics }">
             <p class="char-row"><strong>Пол:</strong> {{ store.detailData.gender }}</p>
             <p class="char-row"><strong>Категория:</strong> {{ store.detailData.category }}</p>
             <p class="char-row"><strong>Подкатегория:</strong> {{ store.detailData.subcategory }}</p>
             <p class="char-row"><strong>Материал:</strong> {{ store.detailData.material }}</p>
             <p class="char-row"><strong>Размерная сетка:</strong> {{ store.detailData.size_guide_url }}</p>
           </div>
-        </transition>
+        </div>
       </div>
     </div>
   </div>
@@ -146,6 +145,7 @@ const currentIndex = ref(0)
 const thumbsRef = ref(null)
 const showDescription = ref(false)
 const showCharacteristics = ref(false)
+const variantLoading = ref(false)
 
 const colorOptions = computed(() =>
   Array.from(new Set(store.variants.map(v => v.color)))
@@ -203,13 +203,12 @@ async function handleAddToCart() {
 // Переход на другой variant по опции
 function selectVariantByOpt(type, opt) {
   const cat = route.query.category
-
   if (type === 'size') {
     // ищем вариант с точно таким же size_label (строкой)
     const variant = store.variants.find(v => String(v.size_label) === opt)
     if (variant) {
       selectedDeliveryIndex.value = 2
-      router.push({
+      router.replace({
         name: 'ProductDetail',
         params: { variant_sku: variant.variant_sku },
         query: { category: cat }
@@ -221,7 +220,6 @@ function selectVariantByOpt(type, opt) {
   if (type === 'color') {
     // все варианты того же цвета, в наличии
     const sameColor = store.variants.filter(v => v.color === opt && v.count_in_stock >= 0)
-
     // сортируем по «минимальному» размеру: числовые сначала
     sameColor.sort((a, b) => {
       const na = parseFloat(a.size_label)
@@ -232,11 +230,10 @@ function selectVariantByOpt(type, opt) {
       // обе не числа — лексикографически
       return String(a.size_label).localeCompare(b.size_label)
     })
-
     const target = sameColor[0]
     if (target) {
       selectedDeliveryIndex.value = 2
-      router.push({
+      router.replace({
         name: 'ProductDetail',
         params: { variant_sku: target.variant_sku },
         query: { category: cat }
@@ -296,9 +293,14 @@ function goCatalog() {
 
 // Инициализация
 async function init() {
-  const sku = route.params.variant_sku
-  const cat = route.query.category
-  await store.fetchDetail(sku, cat)
+  variantLoading.value = true
+  try {
+    const sku = route.params.variant_sku
+    const cat = route.query.category
+    await store.fetchDetail(sku, cat)
+  } finally {
+    variantLoading.value = false
+  }
   selectedDeliveryIndex.value = Math.min(2, visibleDeliveryOptions.value.length - 1)
   currentIndex.value = 0
 }
@@ -549,10 +551,14 @@ label {
 }
 
 .section-body {
-  padding: 8px 0;
-  color: #555;
+  max-height: 0;
+  opacity: 0;
   overflow: hidden;
-  transition: height 0.2s ease, opacity 0.2s ease;
+  transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
+}
+.section-body.open {
+  max-height: 800px;
+  opacity: 1;
 }
 
 .arrow {
@@ -567,20 +573,21 @@ label {
   font-size: 14px;
 }
 
-/* Новые стили для плавного аккордеона */
-.accordion-enter-from,
-.accordion-leave-to {
-  height: 0;
-  opacity: 0;
+.detail-wrapper {
+  position: relative;
 }
-.accordion-enter-to,
-.accordion-leave-from {
-  height: auto;
-  opacity: 1;
-}
-.accordion-enter-active,
-.accordion-leave-active {
-  transition: height 0.25s ease-in-out, opacity 0.25s ease-in-out;
+
+.variant-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  color: #666;
+  background: rgba(255,255,255,0.8);
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 @media (max-width: 600px) {

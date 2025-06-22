@@ -54,7 +54,7 @@
           <div class="product-info">
             <p class="product-brand">{{ group.minPriceVariant.brand }}</p>
             <p class="product-name">{{ group.minPriceVariant.name }}</p>
-            <p class="product-price">{{ group.minPrice }} ₽</p>
+            <p class="product-price">от {{ group.minPrice }} ₽</p>
           </div>
         </div>
 
