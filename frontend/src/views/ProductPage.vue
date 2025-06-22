@@ -6,7 +6,7 @@
     <!-- 2. Основная карточка -->
     <div v-else-if="store.detailData" class="detail-wrapper">
       <div v-if="variantLoading" class="variant-spinner">Загрузка...</div>
-      <div v-else class="detail-card">
+      <div v-else class="detail-card" :class="{ blurred: variantLoading }">
         <!-- Шапка: назад + наличие -->
         <div class="top-row">
           <button class="back-button" @click="goCatalog">← Назад</button>
@@ -333,6 +333,11 @@ onMounted(init)
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  will-change: filter;
+}
+.blurred {
+  filter: blur(4px);
+  transition: filter 0.2s ease-in-out;
 }
 
 .top-row {
