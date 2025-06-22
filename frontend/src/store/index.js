@@ -495,7 +495,6 @@ export const useStore = defineStore('main', () => {
   // --- Экшен: получить детали продукта + варианты ---
   async function fetchDetail(variantSku, category) {
     detailLoading.value = true
-    detailData.value = null
     try {
       const pRes = await fetch(`${url.value}/api/product?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(variantSku)}`)
       detailData.value = await pRes.json()

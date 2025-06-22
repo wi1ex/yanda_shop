@@ -1,17 +1,17 @@
 <template>
   <div class="product-detail">
     <!-- 1. Загрузка -->
-    <div v-if="store.detailLoading" class="loading">
+    <div v-if="!store.detailData && !variantLoading" class="loading">
       Загрузка...
     </div>
 
     <!-- 2. Основная карточка -->
-    <div v-else-if="store.detailData" class="detail-wrapper">
-      <div v-if="variantLoading" class="variant-spinner">
+    <div v-else class="detail-wrapper">
+      <div v-if="store.detailLoading || variantLoading" class="variant-spinner">
         Загрузка...
       </div>
 
-      <div class="detail-card" :class="{ blurred: variantLoading }">
+      <div class="detail-card" :class="{ blurred: store.detailLoading || variantLoading }">
         <!-- Шапка: назад + наличие -->
         <div class="top-row">
           <button class="back-button" @click="goCatalog">← Назад</button>
