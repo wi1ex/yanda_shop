@@ -42,8 +42,8 @@
           <label v-else>Г×Ш×В (мм)</label>
 
           <div v-if="sizeOptions.length && store.detailData.size_label" class="options-list">
-            <button v-for="opt in sizeOptions" :key="opt" class="option-btn"
-                    :class="{ active: opt === store.detailData.size_label }" @click="selectVariantByOpt('size', opt)">
+            <button v-for="opt in sizeOptions" :key="opt" class="option-btn" @click="selectVariantByOpt('size', opt)"
+                    :class="{ active: String(opt) === String(store.detailData.size_label) }">
               {{ opt }}
             </button>
           </div>
@@ -67,11 +67,11 @@
       <div class="delivery-price-block">
         <div class="delivery">
           <label>Доставка</label>
-          <div class="delivery-options">
-            <label v-for="(opt, idx) in visibleDeliveryOptions" :key="idx" class="delivery-opt">
-              <input type="radio" name="delivery" :value="idx" v-model="selectedDeliveryIndex"/>
+          <div class="options-list">
+            <button v-for="(opt, idx) in visibleDeliveryOptions" :key="idx" class="option-btn"
+                    :class="{ active: idx === selectedDeliveryIndex }" @click="selectedDeliveryIndex = idx">
               {{ opt.label }} {{ Math.round(store.detailData.price * opt.multiplier) }} ₽
-            </label>
+            </button>
           </div>
         </div>
         <div class="price-row">
@@ -87,8 +87,7 @@
           <span class="quantity">{{ currentQuantity }}</span>
           <button @click="store.increaseQuantity(cartItem)">➕</button>
         </div>
-        <button v-else type="button" class="add-cart-button" @click="store.addToCart({...store.detailData,
-        delivery_option: visibleDeliveryOptions[selectedDeliveryIndex], computed_price: computedPrice})">
+        <button v-else type="button" class="add-cart-button" @click="handleAddToCart">
           Добавить в корзину
         </button>
 
@@ -106,7 +105,7 @@
           <span>Описание</span>
           <span class="arrow">{{ showDescription ? '⯅' : '▼' }}</span>
         </div>
-        <transition name="accordion">
+        <transition name="accordion" appear>
           <div v-show="showDescription" class="section-body">
             <p>{{ store.detailData.description }}</p>
           </div>
@@ -117,7 +116,7 @@
       <div class="section">
         <div class="section-header" @click="toggleCharacteristics">
           <span>Характеристики</span>
-          <span class="arrow">{{ showCharacteristics ? '▼' : '▶' }}</span>
+          <span class="arrow">{{ showCharacteristics ? '⯅' : '▼' }}</span>
         </div>
         <transition name="accordion">
           <div v-show="showCharacteristics" class="section-body">
@@ -187,6 +186,19 @@ const currentQuantity = computed(() => {
     i.delivery_option?.label === visibleDeliveryOptions[selectedDeliveryIndex]?.label
   ).length
 })
+
+async function handleAddToCart() {
+  // 1) добавляем в корзину
+  store.addToCart({
+    ...store.detailData,
+    delivery_option: visibleDeliveryOptions.value[selectedDeliveryIndex.value],
+    computed_price: computedPrice.value
+  })
+  // 2) сбрасываем карусель на первый слайд
+  currentIndex.value = 0
+  // 3) перезагружаем детали (и вновь выставляем 3-й тип доставки)
+  await init()
+}
 
 // Переход на другой variant по опции
 function selectVariantByOpt(type, opt) {
@@ -288,6 +300,7 @@ async function init() {
   const cat = route.query.category
   await store.fetchDetail(sku, cat)
   selectedDeliveryIndex.value = Math.min(2, visibleDeliveryOptions.value.length - 1)
+  currentIndex.value = 0
 }
 
 watch(
@@ -457,27 +470,11 @@ label {
 .delivery {
   margin-bottom: 12px;
 }
-.delivery-options {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 .delivery-price-block {
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
   border-bottom: 1px solid #eee;
-}
-
-.delivery-opt {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.delivery-opt input[type="radio"] {
-  margin-right: 6px;
 }
 
 .price-row .price {
@@ -554,6 +551,8 @@ label {
 .section-body {
   padding: 8px 0;
   color: #555;
+  overflow: hidden;
+  transition: height 0.2s ease, opacity 0.2s ease;
 }
 
 .arrow {
@@ -574,14 +573,14 @@ label {
   height: 0;
   opacity: 0;
 }
-.accordion-enter-active,
-.accordion-leave-active {
-  transition: all 0.3s ease;
-}
 .accordion-enter-to,
 .accordion-leave-from {
   height: auto;
   opacity: 1;
+}
+.accordion-enter-active,
+.accordion-leave-active {
+  transition: height 0.25s ease-in-out, opacity 0.25s ease-in-out;
 }
 
 @media (max-width: 600px) {

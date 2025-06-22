@@ -48,22 +48,20 @@
 
     <!-- Сетка товаров -->
     <div class="products-grid">
-      <div v-for="product in store.groupedByColor" :key="product.variant_sku" class="product-card">
-        <!-- Нажатие на карточку — переходим на страницу ProductDetail -->
-        <div @click="goToProductDetail(product)" class="clickable-area">
-          <img :src="product.image" alt="product" class="product-image" />
+      <div v-for="group in store.displayedProducts" :key="group.color_sku" class="product-card">
+        <div @click="goToProductDetail(group)" class="clickable-area">
+          <img :src="group.minPriceVariant.image" alt="product" class="product-image"/>
           <div class="product-info">
-            <p class="product-brand">{{ product.brand }}</p>
-            <p class="product-name">{{ product.name }}</p>
-            <p class="product-price">{{ product.price }} ₽</p>
+            <p class="product-brand">{{ group.minPriceVariant.brand }}</p>
+            <p class="product-name">{{ group.minPriceVariant.name }}</p>
+            <p class="product-price">{{ group.minPrice }} ₽</p>
           </div>
         </div>
 
-        <!-- Избранное -->
-        <button class="favorite-button" v-if="!store.isFavorite(product.color_sku)" @click.stop="store.addToFavorites(product.color_sku)">
+        <button class="favorite-button" v-if="!store.isFavorite(group.color_sku)" @click.stop="store.addToFavorites(group.color_sku)">
           В избранное
         </button>
-        <button class="favorite-button remove" v-else @click.stop="store.removeFromFavorites(product.color_sku)">
+        <button class="favorite-button remove" v-else @click.stop="store.removeFromFavorites(group.color_sku)">
           Убрать из избранного
         </button>
       </div>
@@ -81,55 +79,54 @@ const router = useRouter()
 
 // При монтировании грузим товары
 onMounted(store.fetchProducts)
+watch(() => store.selectedCategory, () => store.fetchProducts())
 
-// При изменении выбранной категории — заново грузим товары
-watch(
-  () => store.selectedCategory,
-  () => {
-    store.fetchProducts()
-  }
-)
-
-// Двухсторонняя привязка sortBy и sortOrder
 const sortOption = computed({
-  get() {
-    return `${store.sortBy}_${store.sortOrder}`
-  },
-  set(value) {
-    const [by, order] = value.split('_')
+  get() { return `${store.sortBy}_${store.sortOrder}` },
+  set(v) {
+    const [by, order] = v.split('_')
     store.sortBy = by
     store.sortOrder = order
   }
 })
 
-// Получаем список уникальных цветов
-const distinctColors = computed(() => {
-  // берем цвета из всего массива store.products
-  const set = new Set(store.products.map(p => p.color).filter(c => c))
-  return Array.from(set)
-})
+const distinctColors = computed(() =>
+  Array.from(new Set(store.products.map(p => p.color).filter(Boolean)))
+)
 
 function onCategoryClick(cat) {
   store.changeCategory(cat)
 }
 
-// Функция: открыть страницу "Карточка товара"
-function goToProductDetail(product) {
-  // из всех вариантов того же цвета выбираем минимальный размер
-  const sameColor = store.products.filter(p => p.color_sku === product.color_sku && p.count_in_stock >= 0)
-  // сортируем по числовому размеру, нечисловые — в конец
-  sameColor.sort((a, b) => {
+function goToProductDetail(group) {
+  // из всех вариантов данного цвета выбираем сначала подходящие по фильтру цены (если есть)
+  let candidates = group.variants.filter(v => v.count_in_stock >= 0)
+
+  if (store.filterPriceMin != null || store.filterPriceMax != null) {
+    candidates = candidates.filter(v =>
+      (store.filterPriceMin == null || v.price >= store.filterPriceMin) &&
+      (store.filterPriceMax == null || v.price <= store.filterPriceMax)
+    )
+    if (!candidates.length) {
+      // если внутри не попало ни одного — возвращаемся к всем
+      candidates = group.variants.filter(v => v.count_in_stock >= 0)
+    }
+  }
+
+  // сортируем кандидатов по минимальному размеру
+  candidates.sort((a, b) => {
     const na = parseFloat(a.size_label), nb = parseFloat(b.size_label)
     if (!isNaN(na) && !isNaN(nb)) return na - nb
     if (isNaN(na)) return 1
     if (isNaN(nb)) return -1
     return String(a.size_label).localeCompare(b.size_label)
   })
-  const target = sameColor[0] || product
+
+  const target = candidates[0]
   router.push({
     name: 'ProductDetail',
     params: { variant_sku: target.variant_sku },
-    query: { category: product.category }
+    query: { category: store.selectedCategory }
   })
 }
 </script>

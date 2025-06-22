@@ -222,42 +222,58 @@ export const useStore = defineStore('main', () => {
 
   // -------------------------------------------------
 
-  const filteredProducts = computed(() => {
-    // работаем со всеми пришедшими товарами сразу
-    let list = products.value.slice()
-    // фильтр по цене
-    if (filterPriceMin.value != null) {
-      list = list.filter(p => p.price >= filterPriceMin.value)
-    }
-    if (filterPriceMax.value != null) {
-      list = list.filter(p => p.price <= filterPriceMax.value)
-    }
-    // фильтр по цвету
-    if (filterColor.value) {
-      list = list.filter(p => p.color === filterColor.value)
-    }
-    // сортировка
-    const modifier = sortOrder.value === 'asc' ? 1 : -1
-    return list.slice().sort((a, b) => {
-      if (sortBy.value === 'price') {
-        return modifier * (a.price - b.price)
-      } else {
-        // сортируем по дате создания, ISO-строку парсим корректно
-        return modifier * (new Date(a.created_at) - new Date(b.created_at))
+  // Группируем все варианты по color_sku
+  const colorGroups = computed(() => {
+    const map = {}
+    products.value.forEach(p => {
+      const key = p.color_sku
+      if (!map[key]) map[key] = { color_sku: key, variants: [] }
+      map[key].variants.push(p)
+    })
+    return Object.values(map).map(group => {
+      // самый дешёвый вариант
+      const minPriceVariant = group.variants.reduce((prev, cur) => prev.price <= cur.price ? prev : cur)
+      // самая ранняя дата (строковое сравнение ISO учитывает микросекунды)
+      const minDateVariant = group.variants.reduce((prev, cur) => prev.created_at <= cur.created_at ? prev : cur)
+      return {
+        color_sku: group.color_sku,
+        variants: group.variants,
+        minPriceVariant,
+        minDateVariant,
+        minPrice: minPriceVariant.price,
+        minDate: minDateVariant.created_at
       }
     })
   })
 
-  const groupedByColor = computed(() => {
-    const map = {}
-    products.value.forEach(p => {
-      const key = p.color_sku
-      // берём минимальную цену (или критерий минимального размера)
-      if (!map[key] || p.price < map[key].price) {
-        map[key] = p
-      }
-    })
-    return Object.values(map)
+  // «Отображаемые» продукты: group → фильтрация по цвету, цене и сортировка
+  const displayedProducts = computed(() => {
+    let list = colorGroups.value.slice()
+
+    // Фильтр по цвету (если задан)
+    if (filterColor.value) {
+      list = list.filter(g => g.variants[0].color === filterColor.value)
+    }
+    // Фильтр по цене диапазонам
+    if (filterPriceMin.value != null) {
+      list = list.filter(g =>
+        g.variants.some(v => v.price >= filterPriceMin.value)
+      )
+    }
+    if (filterPriceMax.value != null) {
+      list = list.filter(g =>
+        g.variants.some(v => v.price <= filterPriceMax.value)
+      )
+    }
+    // Сортировка
+    const mod = sortOrder.value === 'asc' ? 1 : -1
+    if (sortBy.value === 'price') {
+      list.sort((a, b) => mod * (a.minPrice - b.minPrice))
+    } else {
+      // по дате ISO-строку сравним напрямую, чтобы учесть все знаки
+      list.sort((a, b) => mod * a.minDate.localeCompare(b.minDate))
+    }
+    return list
   })
 
   // Группируем товары в корзине по variant_sku, считаем количество и суммарную цену
@@ -539,8 +555,8 @@ export const useStore = defineStore('main', () => {
     cartLoaded,
     showCartDrawer,
 
-    groupedByColor,
-    filteredProducts,
+    colorGroups,
+    displayedProducts,
     groupedCartItems,
 
     sheetUrls,

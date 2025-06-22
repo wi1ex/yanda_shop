@@ -67,7 +67,7 @@
         <button @click="prevBest" aria-label="Назад">←</button>
         <div class="best-item" v-for="(p, i) in bests" :key="p.variant_sku" v-show="i === bestIndex">
           <button class="fav-btn" @click="toggleFav(p)">
-            {{ store.isFavorite(p) ? '❤️' : '♡' }}
+            {{ store.isFavorite(p.color_sku) ? '❤️' : '♡' }}
           </button>
           <img :src="p.image" alt="" class="product-image"/>
           <p class="brand">{{ p.brand }}</p>
@@ -171,8 +171,8 @@ const origBlocks = [
 function toggleOrig(b){ b.open = !b.open }
 
 // BESTSELLERS
-const bests = computed(() => store.groupedByColor.slice(0,2))
 const bestIndex = ref(0)
+const bests = computed(() => store.displayedProducts .slice(0, 2) .map(g => g.minPriceVariant))
 
 function prevBest() {
   bestIndex.value = (bestIndex.value + bests.value.length -1) % bests.value.length
