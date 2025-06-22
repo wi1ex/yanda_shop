@@ -1,12 +1,17 @@
 <template>
   <div class="product-detail">
     <!-- 1. Загрузка -->
-    <div v-if="store.detailLoading" class="loading">Загрузка...</div>
+    <div v-if="store.detailLoading" class="loading">
+      Загрузка...
+    </div>
 
     <!-- 2. Основная карточка -->
     <div v-else-if="store.detailData" class="detail-wrapper">
-      <div v-if="variantLoading" class="variant-spinner">Загрузка...</div>
-      <div v-else class="detail-card" :class="{ blurred: variantLoading }">
+      <div v-if="variantLoading" class="variant-spinner">
+        Загрузка...
+      </div>
+
+      <div class="detail-card" :class="{ blurred: variantLoading }">
         <!-- Шапка: назад + наличие -->
         <div class="top-row">
           <button class="back-button" @click="goCatalog">← Назад</button>
@@ -175,7 +180,7 @@ const visibleDeliveryOptions = computed(() => {
 const cartItem = computed(() =>
   store.cart.items.find(i =>
     i.variant_sku === store.detailData?.variant_sku &&
-    i.delivery_option?.label === visibleDeliveryOptions[selectedDeliveryIndex]?.label
+    i.delivery_option?.label === visibleDeliveryOptions.value[selectedDeliveryIndex.value]?.label
   )
 )
 
@@ -183,7 +188,7 @@ const currentQuantity = computed(() => {
   if (!store.detailData) return 0
   return store.cart.items.filter(i =>
     i.variant_sku === store.detailData.variant_sku &&
-    i.delivery_option?.label === visibleDeliveryOptions[selectedDeliveryIndex]?.label
+    i.delivery_option?.label === visibleDeliveryOptions.value[selectedDeliveryIndex.value]?.label
   ).length
 })
 
@@ -332,10 +337,10 @@ onMounted(init)
   padding: 16px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   will-change: filter;
+  transition: filter 0.2s ease-in-out;
 }
 .blurred {
   filter: blur(4px);
-  transition: filter 0.2s ease-in-out;
 }
 
 .top-row {
