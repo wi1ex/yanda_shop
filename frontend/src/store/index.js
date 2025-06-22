@@ -65,6 +65,12 @@ export const useStore = defineStore('main', () => {
   const profileLoading     = ref(false)
   const profileError       = ref('')
 
+  const adminSettings      = reactive({ url_telegram: '', url_instagram: '', url_email: '' })
+
+  async function loadAdminSettings() {
+    const r = await fetch(`${url.value}/api/admin/settings`)
+    Object.assign(adminSettings, await r.json())
+  }
 
   function openCartDrawer() {
     showCartDrawer.value = true
@@ -157,9 +163,8 @@ export const useStore = defineStore('main', () => {
       const resp = await fetch(`${url.value}/api/favorites?user_id=${user.value.id}`);
       if (!resp.ok) throw new Error(resp.statusText);
       const data = await resp.json();
-      favorites.value = data;
-      // порядок variant_sku
-      favoritesOrder.value = data.items.map(i => i.variant_sku);
+      favorites.value.items = data.items || [];
+      favorites.value.count = data.count || favorites.value.items.length;
     } catch (e) {
       console.error('Cannot load favorites:', e);
     } finally {
@@ -187,21 +192,19 @@ export const useStore = defineStore('main', () => {
   }
 
   // Добавить/удалить из избранного
-  function addToFavorites(product) {
-    if (favorites.value.items.find(i => i.variant_sku === product.variant_sku)) return;
-    favorites.value.items.push(product);
+  function addToFavorites(color_sku) {
+    if (favorites.value.items.includes(color_sku)) return;
+    favorites.value.items.push(color_sku);
     favorites.value.count = favorites.value.items.length;
-    favoritesOrder.value.push(product.variant_sku);
     saveFavoritesToServer();
   }
-  function removeFromFavorites(product) {
-    favorites.value.items = favorites.value.items.filter(i => i.variant_sku !== product.variant_sku);
+  function removeFromFavorites(color_sku) {
+    favorites.value.items = favorites.value.items.filter(cs => cs !== color_sku);
     favorites.value.count = favorites.value.items.length;
-    favoritesOrder.value = favoritesOrder.value.filter(sku => sku !== product.variant_sku);
     saveFavoritesToServer();
   }
-  function isFavorite(product) {
-    return favorites.value.items.some(i => i.variant_sku === product.variant_sku);
+  function isFavorite(color_sku) {
+    return favorites.value.items.includes(color_sku);
   }
 
   // Будем следить за тем, когда пользователь определится (инициализируется)
@@ -243,6 +246,18 @@ export const useStore = defineStore('main', () => {
         return modifier * (new Date(a.created_at) - new Date(b.created_at))
       }
     })
+  })
+
+  const groupedByColor = computed(() => {
+    const map = {}
+    products.value.forEach(p => {
+      const key = p.color_sku
+      // берём минимальную цену (или критерий минимального размера)
+      if (!map[key] || p.price < map[key].price) {
+        map[key] = p
+      }
+    })
+    return Object.values(map)
   })
 
   // Группируем товары в корзине по variant_sku, считаем количество и суммарную цену
@@ -524,6 +539,7 @@ export const useStore = defineStore('main', () => {
     cartLoaded,
     showCartDrawer,
 
+    groupedByColor,
     filteredProducts,
     groupedCartItems,
 
@@ -546,6 +562,9 @@ export const useStore = defineStore('main', () => {
     profileLoading,
     profileError,
 
+    adminSettings,
+
+    loadAdminSettings,
     isTelegramUserId,
     changeCategory,
     addToCart,

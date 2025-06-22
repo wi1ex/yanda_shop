@@ -1,27 +1,20 @@
 <template>
   <div class="favorites-container">
-    <h2 v-if="store.favorites.items.length">Избранное</h2>
+    <h2 v-if="favoriteProducts.length">Избранное</h2>
     <div v-else class="empty">Список избранного пуст</div>
 
-    <!-- Новый грид -->
-    <div v-if="store.favorites.items.length" class="products-grid">
-      <router-link v-for="product in store.favorites.items" :key="product.variant_sku" class="product-card"
+    <div v-if="favoriteProducts.length" class="products-grid">
+      <router-link v-for="product in favoriteProducts" :key="product.color_sku" class="product-card"
                    :to="{ name: 'ProductDetail', params: { variant_sku: product.variant_sku }, query: { category: product.category }}">
-        <!-- кнопка “×” для удаления -->
-        <button type="button" class="remove-fav-btn" @click.prevent.stop="store.removeFromFavorites(product)" aria-label="Удалить из избранного">
+        <button type="button" class="remove-fav-btn" @click.prevent.stop="store.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">
           ×
         </button>
-        <img :src="product.image" alt="product" class="product-image"/>
+
+        <img :src="product.image" alt="product" class="product-image" />
         <div class="product-info">
-          <p class="product-price">
-            {{ product.price }} ₽
-          </p>
-          <p class="product-name">
-            {{ product.name }}
-          </p>
-          <p v-if="product.color" class="product-color">
-            Цвет: {{ product.color }}
-          </p>
+          <p class="product-price">{{ product.price }} ₽</p>
+          <p class="product-name">{{ product.name }}</p>
+          <p v-if="product.color" class="product-color">Цвет: {{ product.color }}</p>
         </div>
       </router-link>
     </div>
@@ -29,13 +22,20 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useStore } from '@/store/index.js'
+
 const store = useStore()
 
+// грузим массив color_sku
 onMounted(() => {
   store.loadFavoritesFromServer()
 })
+
+// вычисляем реальный список products по каждому color_sku
+const favoriteProducts = computed(() =>
+  store.favorites.items.map(cs => store.groupedByColor.find(p => p.color_sku === cs)).filter(Boolean)
+)
 </script>
 
 <style scoped lang="scss">
