@@ -192,8 +192,7 @@ onBeforeUnmount(() => {
   opacity: 0;
 }
 
-/* адаптив */
-@media (max-width: 600px) {
+@media (max-width: 500px) {
   .dropdown-menu {
     left: 1vw;
     min-width: 60%;

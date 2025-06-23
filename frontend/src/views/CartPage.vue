@@ -382,7 +382,7 @@ function onRegister() {
   transform: translateX(0);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 500px) {
   .cart-drawer {
     max-width: 100vw;
   }

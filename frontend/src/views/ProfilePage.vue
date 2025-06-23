@@ -125,17 +125,7 @@ onMounted(() => {
   cursor: pointer;
 }
 
-/* Уже есть внизу: */
-@media (min-width: 600px) {
-  form input,
-  form button {
-    width: 100%;
-    font-size: 14px;
-  }
-}
-
-/* Добавьте ниже этого блока: */
-@media (max-width: 600px) {
+@media (max-width: 500px) {
   .profile-page {
     padding: 4vw;
     margin-top: 8vh;
