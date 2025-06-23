@@ -13,7 +13,7 @@
 
       <div class="detail-card" :class="{ blurred: store.detailLoading || variantLoading }">
         <!-- Шапка: назад + наличие -->
-        <div class="top-row">
+        <div v-if="store.detailData" class="top-row">
           <button class="back-button" @click="goCatalog">← Назад</button>
           <div class="availability">
             <span v-if="store.detailData?.count_in_stock > 0">
@@ -24,14 +24,14 @@
         </div>
 
         <!-- Бренд, имя, артикул -->
-        <div class="title-block">
+        <div v-if="store.detailData" class="title-block">
           <p class="brand">{{ store.detailData.brand }}</p>
           <h1 class="name">{{ store.detailData.name }}</h1>
           <p class="sku">артикул: {{ store.detailData.world_sku }}</p>
         </div>
 
         <!-- Галерея: главное + миниатюры + свайп -->
-        <div class="carousel-container">
+        <div v-if="store.detailData" class="carousel-container">
           <div class="main-image-wrapper" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
             <img :src="store.detailData.images[currentIndex]" alt="product" class="main-image"/>
           </div>
@@ -42,7 +42,7 @@
         </div>
 
         <!-- 4. Параметры: Размер или Г×Ш×В + Цвет -->
-        <div class="options-block">
+        <div v-if="store.detailData" class="options-block">
           <!-- Размер -->
           <div class="option">
             <label v-if="sizeOptions.length && store.detailData.size_label">Размер</label>
@@ -71,7 +71,7 @@
         </div>
 
         <!-- Доставка и цена -->
-        <div class="delivery-price-block">
+        <div v-if="store.detailData" class="delivery-price-block">
           <div class="delivery">
             <label>Доставка</label>
             <div class="options-list">
@@ -88,7 +88,7 @@
         </div>
 
         <!-- 1. Кнопка/контролы корзины + избранное -->
-        <div class="actions-block">
+        <div v-if="store.detailData" class="actions-block">
           <div v-if="currentQuantity > 0" class="quantity-controls">
             <button @click="store.decreaseQuantity(cartItem)">➖</button>
             <span class="quantity">{{ currentQuantity }}</span>
@@ -107,7 +107,7 @@
         </div>
 
         <!-- Описание -->
-        <div class="section" :class="{ 'section-disabled': !store.detailData?.description }">
+        <div v-if="store.detailData" class="section" :class="{ 'section-disabled': !store.detailData?.description }">
           <div class="section-header" @click="store.detailData?.description && toggleDescription">
             <span>Описание</span>
             <span class="arrow">{{ showDescription ? '⯅' : '▼' }}</span>
@@ -120,7 +120,7 @@
         </div>
 
         <!-- Характеристики -->
-        <div class="section">
+        <div v-if="store.detailData" class="section">
           <div class="section-header" @click="toggleCharacteristics">
             <span>Характеристики</span>
             <span class="arrow">{{ showCharacteristics ? '⯅' : '▼' }}</span>
