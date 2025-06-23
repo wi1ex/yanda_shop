@@ -41,13 +41,13 @@
       </select>
 
       <!-- Кнопка сброса фильтров -->
-      <button @click="store.clearFilters" class="clear-filters-button">
+      <button @click="handleClearFilters" class="clear-filters-button">
         Сбросить фильтры
       </button>
     </div>
 
     <!-- Сетка товаров -->
-    <div class="products-grid">
+    <div class="products-grid" :class="{ blurred: productsLoading }">
       <div v-for="group in store.displayedProducts" :key="group.color_sku" class="product-card">
         <div @click="goToProductDetail(group)" class="clickable-area">
           <img :src="group.minPriceVariant.image" alt="product" class="product-image"/>
@@ -70,16 +70,14 @@
 </template>
 
 <script setup>
-import { onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, nextTick } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 
 const store = useStore()
 const router = useRouter()
 
-// При монтировании грузим товары
-onMounted(store.fetchProducts)
-watch(() => store.selectedCategory, () => store.fetchProducts())
+const productsLoading = ref(false)
 
 const sortOption = computed({
   get() { return `${store.sortBy}_${store.sortOrder}` },
@@ -93,6 +91,11 @@ const sortOption = computed({
 const distinctColors = computed(() =>
   Array.from(new Set(store.products.map(p => p.color).filter(Boolean)))
 )
+
+function handleClearFilters() {
+  animateGrid()
+  store.clearFilters()
+}
 
 function onCategoryClick(cat) {
   store.changeCategory(cat)
@@ -129,6 +132,37 @@ function goToProductDetail(group) {
     query: { category: store.selectedCategory }
   })
 }
+
+// вспомогательная функция «анимации» (браур → снятие)
+function animateGrid() {
+  productsLoading.value = true
+  // после следующего рендера через 200 мс убираем блюр
+  nextTick(() => {
+    setTimeout(() => {
+      productsLoading.value = false
+    }, 200)
+  })
+}
+
+async function loadCategory(cat) {
+  productsLoading.value = true
+  await store.fetchProducts(cat)
+  productsLoading.value = false
+}
+
+watch(() => store.selectedCategory, loadCategory)
+// следим за сортировкой
+watch(() => sortOption.value, animateGrid)
+// за цветом
+watch(() => store.filterColor, animateGrid)
+// за диапазоном цен
+watch(() => [store.filterPriceMin, store.filterPriceMax], animateGrid)
+
+// При монтировании грузим товары
+onMounted(() => {
+  animateGrid()
+  loadCategory(store.selectedCategory)
+})
 </script>
 
 <style scoped lang="scss">
@@ -224,7 +258,13 @@ h2 {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
   gap: 16px;
+  transition: filter 0.2s ease-in-out;
+  will-change: filter;
 }
+.blurred {
+  filter: blur(4px);
+}
+
 
 .product-card {
   background: $background-color;

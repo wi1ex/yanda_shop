@@ -82,8 +82,8 @@
             </div>
           </div>
           <div class="price-row">
-            <label>Цена</label>
-            <span class="price">{{ computedPrice }} ₽</span>
+            <label>Цена:</label>
+            <span class="price">{{ computedPrice }}₽</span>
           </div>
         </div>
 
@@ -93,6 +93,7 @@
             <button @click="store.decreaseQuantity(cartItem)">➖</button>
             <span class="quantity">{{ currentQuantity }}</span>
             <button @click="store.increaseQuantity(cartItem)">➕</button>
+            <button class="add-fav-button">Товар в корзине</button>
           </div>
           <button v-else type="button" class="add-cart-button" @click="handleAddToCart">
             Добавить в корзину
@@ -113,9 +114,7 @@
             <span class="arrow">{{ showDescription ? '⯅' : '▼' }}</span>
           </div>
           <div class="section-body" :class="{ open: showDescription }">
-            <p v-if="store.detailData?.description">
-              {{ store.detailData.description }}
-            </p>
+            <p v-if="store.detailData?.description">{{ store.detailData.description }}</p>
           </div>
         </div>
 
@@ -126,11 +125,11 @@
             <span class="arrow">{{ showCharacteristics ? '⯅' : '▼' }}</span>
           </div>
           <div class="section-body" :class="{ open: showCharacteristics }">
-            <p class="char-row"><strong>Пол:</strong> {{ store.detailData.gender }}</p>
-            <p class="char-row"><strong>Категория:</strong> {{ store.detailData.category }}</p>
-            <p class="char-row"><strong>Подкатегория:</strong> {{ store.detailData.subcategory }}</p>
-            <p class="char-row"><strong>Материал:</strong> {{ store.detailData.material }}</p>
-            <p class="char-row"><strong>Размерная сетка:</strong> {{ store.detailData.size_guide_url }}</p>
+            <p class="char-row"><strong>Пол:</strong>{{ store.detailData.gender }}</p>
+            <p class="char-row"><strong>Категория:</strong>{{ store.detailData.category }}</p>
+            <p class="char-row"><strong>Подкатегория:</strong>{{ store.detailData.subcategory }}</p>
+            <p class="char-row"><strong>Материал:</strong>{{ store.detailData.material }}</p>
+            <p class="char-row"><strong>Размерная сетка:</strong>{{ store.detailData.size_guide_url }}</p>
           </div>
         </div>
       </div>
