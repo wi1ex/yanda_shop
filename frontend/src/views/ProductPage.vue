@@ -46,7 +46,7 @@
           <!-- Размер -->
           <div class="option">
             <label v-if="sizeOptions.length && store.detailData.size_label">Размер</label>
-            <label v-else>Г×Ш×В (мм)</label>
+            <label v-else>Г×Ш×В(мм):</label>
 
             <div v-if="sizeOptions.length && store.detailData.size_label" class="options-list">
               <button v-for="opt in sizeOptions" :key="opt" class="option-btn" @click="selectVariantByOpt('size', opt)"
@@ -55,7 +55,7 @@
               </button>
             </div>
             <span v-else class="value">
-              {{ store.detailData.height_mm }}×{{ store.detailData.width_mm }}×{{ store.detailData.depth_mm }}
+              {{ store.detailData.depth_mm }}×{{ store.detailData.width_mm }}×{{ store.detailData.height_mm }}
             </span>
           </div>
           <!-- Цвет -->
@@ -474,6 +474,7 @@ label {
 
 .value {
   color: #555;
+  margin-left: 5px;
 }
 
 .delivery {
@@ -609,7 +610,7 @@ label {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
   /* общий контейнер */
   .product-detail {
     padding: 1vh;

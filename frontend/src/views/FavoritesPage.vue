@@ -122,7 +122,7 @@ const favoriteProducts = computed(() =>
   transition: background 0.2s;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
