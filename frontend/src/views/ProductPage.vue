@@ -609,7 +609,7 @@ label {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 500px) {
   /* общий контейнер */
   .product-detail {
     padding: 1vh;

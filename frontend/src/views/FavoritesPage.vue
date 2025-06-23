@@ -122,16 +122,7 @@ const favoriteProducts = computed(() =>
   transition: background 0.2s;
 }
 
-/* сначала мобильные до 360px: 1 колонка */
-@media (max-width: 360px) {
-  .products-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-}
-
-/* затем до 600px: 2 колонки */
-@media (max-width: 600px) {
+@media (max-width: 500px) {
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;

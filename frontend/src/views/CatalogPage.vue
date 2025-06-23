@@ -325,17 +325,7 @@ h2 {
   color: #fff;
 }
 
-/* Брейкпоинт 360px (уже есть) */
-@media (max-width: 360px) {
-  .products-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .product-card { width: 100%; }
-}
-
-/* Новый брейкпоинт для мобильных до 600px */
-@media (max-width: 600px) {
+@media (max-width: 500px) {
   /* 1. Две колонки товаров */
   .products-grid {
     grid-template-columns: repeat(2, 1fr);

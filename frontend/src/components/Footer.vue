@@ -90,7 +90,7 @@ onMounted(() => {
   font-size: 12px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 500px) {
   .footer-columns {
     flex-direction: column;
     align-items: center;
