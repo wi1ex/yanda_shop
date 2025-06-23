@@ -125,7 +125,7 @@ onMounted(() => {
   cursor: pointer;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
   .profile-page {
     padding: 4vw;
     margin-top: 8vh;

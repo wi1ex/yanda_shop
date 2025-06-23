@@ -294,7 +294,7 @@ onMounted(() => {
   color: #ccc;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
   /* Google Sheets */
   .sheet-block {
     display: flex;

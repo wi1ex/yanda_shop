@@ -333,7 +333,7 @@ const store = useStore()
   object-fit: cover;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
   .section {
     padding: 40px 16px;
   }

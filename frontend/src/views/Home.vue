@@ -530,7 +530,7 @@ onMounted(() => {
   padding: 8px 0;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
   .hero .image-placeholder {
     height: 200px;
   }

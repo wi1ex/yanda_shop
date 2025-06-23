@@ -325,7 +325,7 @@ h2 {
   color: #fff;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
   /* 1. Две колонки товаров */
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
