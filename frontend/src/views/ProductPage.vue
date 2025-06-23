@@ -16,7 +16,7 @@
         <div class="top-row">
           <button class="back-button" @click="goCatalog">← Назад</button>
           <div class="availability">
-            <span v-if="store.detailData.count_in_stock > 0">
+            <span v-if="store.detailData?.count_in_stock > 0">
               В НАЛИЧИИ: {{ store.detailData.count_in_stock }}
             </span>
             <span v-else>ПОД ЗАКАЗ</span>
@@ -107,13 +107,15 @@
         </div>
 
         <!-- Описание -->
-        <div v-if="store.detailData.description" class="section">
-          <div class="section-header" @click="toggleDescription">
+        <div class="section" :class="{ 'section-disabled': !store.detailData?.description }">
+          <div class="section-header" @click="store.detailData?.description && toggleDescription">
             <span>Описание</span>
             <span class="arrow">{{ showDescription ? '⯅' : '▼' }}</span>
           </div>
           <div class="section-body" :class="{ open: showDescription }">
-            <p>{{ store.detailData.description }}</p>
+            <p v-if="store.detailData?.description">
+              {{ store.detailData.description }}
+            </p>
           </div>
         </div>
 
@@ -172,9 +174,7 @@ const computedPrice = computed(() => {
 
 const visibleDeliveryOptions = computed(() => {
   if (!store.detailData) return []
-  return store.detailData.count_in_stock > 0
-    ? store.detailData.delivery_options
-    : store.detailData.delivery_options.slice(1)
+  return store.detailData.count_in_stock > 0 ? store.detailData.delivery_options : store.detailData.delivery_options.slice(1)
 })
 
 const cartItem = computed(() =>
@@ -567,6 +567,18 @@ label {
 .section-body.open {
   max-height: 800px;
   opacity: 1;
+}
+/* «Неактивный» стиль для секции без описания */
+.section-disabled {
+  opacity: 0.6;
+}
+.section-disabled .section-header {
+  color: #999;
+  cursor: default;
+  pointer-events: none;
+}
+.section-disabled .arrow {
+  opacity: 0.5;
 }
 
 .arrow {
