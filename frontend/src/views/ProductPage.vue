@@ -45,18 +45,13 @@
         <div v-if="store.detailData" class="options-block">
           <!-- Размер -->
           <div class="option">
-            <label v-if="sizeOptions.length && store.detailData.size_label">Размер</label>
-            <label v-else>Г×Ш×В(мм):</label>
-
-            <div v-if="sizeOptions.length && store.detailData.size_label" class="options-list">
+            <label>Размер</label>
+            <div class="options-list">
               <button v-for="opt in sizeOptions" :key="opt" class="option-btn" @click="selectVariantByOpt('size', opt)"
                       :class="{ active: String(opt) === String(store.detailData.size_label) }">
                 {{ opt }}
               </button>
             </div>
-            <span v-else class="value">
-              {{ store.detailData.depth_mm }}×{{ store.detailData.width_mm }}×{{ store.detailData.height_mm }}
-            </span>
           </div>
           <!-- Цвет -->
           <div class="option">
@@ -100,10 +95,10 @@
           </button>
 
           <button v-if="!store.isFavorite(store.detailData.color_sku)" type="button" class="add-fav-button" @click="store.addToFavorites(store.detailData.color_sku)">
-            Добавить в избранное
+            Добавить в избранное ♡
           </button>
           <button v-else type="button" class="remove-fav-button" @click="store.removeFromFavorites(store.detailData.color_sku)">
-            Убрать из избранного
+            Товар в избранном ♥
           </button>
         </div>
 
@@ -129,7 +124,18 @@
             <p class="char-row"><strong>Категория:</strong>{{ store.detailData.category }}</p>
             <p class="char-row"><strong>Подкатегория:</strong>{{ store.detailData.subcategory }}</p>
             <p class="char-row"><strong>Материал:</strong>{{ store.detailData.material }}</p>
-            <p class="char-row"><strong>Размерная сетка:</strong>{{ store.detailData.size_guide_url }}</p>
+            <p class="char-row" v-if="store.detailData.category === 'Обувь'">
+              <strong>Глубина:</strong>{{ store.detailData.depth_mm }}
+            </p>
+            <p class="char-row" v-else-if="store.detailData.category === 'Одежда'">
+              <strong>Плечи:</strong>{{ store.detailData.chest_cm }}
+              <strong>Высота:</strong>{{ store.detailData.height_cm }}
+            </p>
+            <p class="char-row" v-else-if="store.detailData.category === 'Аксессуары'">
+              <strong>Ширина:</strong>{{ store.detailData.width_cm }}
+              <strong>Высота:</strong>{{ store.detailData.height_cm }}
+              <strong>Глубина:</strong>{{ store.detailData.depth_cm }}
+            </p>
           </div>
         </div>
       </div>

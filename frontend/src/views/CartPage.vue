@@ -39,7 +39,7 @@
               <div class="item-info-row">
                 <p class="item-info">
                   Размер:
-                  <span class="item-info-value">{{ item.size_label || 'one size'}}</span>
+                  <span class="item-info-value">{{ item.size_label }}</span>
                 </p>
                 <p class="item-info">
                   Доставка:

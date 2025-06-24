@@ -67,34 +67,30 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
             for k, v in data.items():
                 if not hasattr(obj, k):
                     continue
-                # price, count_in_stock, count_images → integer
-                if k in ("price", "count_in_stock", "count_images", "size_guide_url"):
+                if k in ("price", "count_in_stock", "count_images", "size_category"):
                     raw = v.replace(" ", "")
                     try:
                         val = int(raw)
                     except ValueError:
                         val = None
                         warns += 1
-                # size_label → string for Clothing, float otherwise
                 elif k == "size_label":
-                    if Model is Clothing:
-                        val = v  # оставляем строку
-                    else:
+                    if Model is Shoe:
                         raw = v.replace(",", ".").replace(" ", "")
                         try:
                             val = float(raw)
                         except ValueError:
                             val = None
                             warns += 1
-                # width_mm, height_mm, depth_mm → float
-                elif k in ("width_mm", "height_mm", "depth_mm"):
+                    else:
+                        val = v
+                elif k in ("chest_cm", "width_cm", "height_cm", "depth_cm", "depth_mm"):
                     raw = v.replace(",", ".").replace(" ", "")
                     try:
                         val = float(raw)
                     except ValueError:
                         val = None
                         warns += 1
-                # все прочие поля — строки
                 else:
                     val = v
                 if isinstance(val, str) and val:
@@ -111,8 +107,7 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
             for k, v in data.items():
                 if not hasattr(obj, k):
                     continue
-                # та же нормализация, что и при создании
-                if k in ("price", "count_in_stock", "count_images", "size_guide_url"):
+                if k in ("price", "count_in_stock", "count_images", "size_category"):
                     raw = v.replace(" ", "")
                     try:
                         new_val = int(raw)
@@ -120,16 +115,16 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
                         new_val = None
                         warns += 1
                 elif k == "size_label":
-                    if Model is Clothing:
-                        new_val = v
-                    else:
+                    if Model is Shoe:
                         raw = v.replace(",", ".").replace(" ", "")
                         try:
                             new_val = float(raw)
                         except ValueError:
                             new_val = None
                             warns += 1
-                elif k in ("width_mm", "height_mm", "depth_mm"):
+                    else:
+                        new_val = v
+                elif k in ("chest_cm", "width_cm", "height_cm", "depth_cm", "depth_mm"):
                     raw = v.replace(",", ".").replace(" ", "")
                     try:
                         new_val = float(raw)
