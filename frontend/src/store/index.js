@@ -99,15 +99,14 @@ export const useStore = defineStore('main', () => {
     }
   }
 
-  // Загрузка корзины из backend (GET /api/cart?user_id=…)
+  // Загрузка корзины из backend (GET /api/get_cart?user_id=…)
   async function loadCartFromServer() {
     if (!user.value || !user.value.id || !isTelegramUserId(user.value.id)) {
       cartLoaded.value = true;
       return;
     }
-
     try {
-      const resp = await fetch(`${url.value}/api/cart?user_id=${user.value.id}`);
+      const resp = await fetch(`${url.value}/api/get_cart?user_id=${user.value.id}`);
       if (!resp.ok) {
         console.error('Cannot load cart:', resp.statusText);
         return;
@@ -126,28 +125,23 @@ export const useStore = defineStore('main', () => {
     }
   }
 
-  // Сохранение корзины в backend (POST /api/cart)
+  // Сохранение корзины в backend (POST /api/save_cart)
   async function saveCartToServer() {
     // Сохраняем только Telegram-пользователя
-    if (!user.value || !user.value.id || !isTelegramUserId(user.value.id)) {
-      return
-    }
-
+    if (!user.value?.id || !isTelegramUserId(user.value.id)) return
     const payload = {
       user_id: user.value.id,
-      items: cart.value.items,
-      count: cart.value.count,
-      total: cart.value.total
+      items: cart.value.items.map(i => ({
+        variant_sku: i.variant_sku,
+        delivery_label: i.delivery_option?.label || null
+      }))
     }
     try {
-      const resp = await fetch(`${url.value}/api/cart`, {
+      await fetch(`${url.value}/api/cart`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      if (!resp.ok) {
-        console.error('Cannot save cart:', resp.statusText)
-      }
     } catch (e) {
       console.error('Error saving cart to server:', e)
     }
@@ -160,7 +154,7 @@ export const useStore = defineStore('main', () => {
       return;
     }
     try {
-      const resp = await fetch(`${url.value}/api/favorites?user_id=${user.value.id}`);
+      const resp = await fetch(`${url.value}/api/get_favorites?user_id=${user.value.id}`);
       if (!resp.ok) throw new Error(resp.statusText);
       const data = await resp.json();
       favorites.value.items = data.items || [];
@@ -180,7 +174,7 @@ export const useStore = defineStore('main', () => {
       items: favorites.value.items
     };
     try {
-      const resp = await fetch(`${url.value}/api/favorites`, {
+      const resp = await fetch(`${url.value}/api/save_favorites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

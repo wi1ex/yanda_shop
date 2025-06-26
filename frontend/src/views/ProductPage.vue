@@ -330,6 +330,7 @@ watch(
 )
 
 onMounted(init)
+
 </script>
 
 <style scoped lang="scss">
