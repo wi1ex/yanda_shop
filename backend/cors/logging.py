@@ -1,6 +1,6 @@
 import logging
 import sys
-from cors.config import LOG_LEVEL
+from .config import LOG_LEVEL
 
 LOGGER_NAME = "yanda_shop"
 
