@@ -125,16 +125,16 @@
             <p class="char-row"><strong>Подкатегория:</strong>{{ store.detailData.subcategory }}</p>
             <p class="char-row"><strong>Материал:</strong>{{ store.detailData.material }}</p>
             <p class="char-row" v-if="store.detailData.category === 'Обувь'">
-              <strong>Глубина:</strong>{{ store.detailData.depth_mm }}
+              <strong>Глубина:</strong>{{ store.detailData.depth_mm }} мм
             </p>
             <p class="char-row" v-else-if="store.detailData.category === 'Одежда'">
-              <strong>Плечи:</strong>{{ store.detailData.chest_cm }}
-              <strong>Высота:</strong>{{ store.detailData.height_cm }}
+              <strong>Плечи:</strong>{{ store.detailData.chest_cm }} см
+              <strong>Высота:</strong>{{ store.detailData.height_cm }} см
             </p>
             <p class="char-row" v-else-if="store.detailData.category === 'Аксессуары'">
-              <strong>Ширина:</strong>{{ store.detailData.width_cm }}
-              <strong>Высота:</strong>{{ store.detailData.height_cm }}
-              <strong>Глубина:</strong>{{ store.detailData.depth_cm }}
+              <strong>Ширина:</strong>{{ store.detailData.width_cm }} см
+              <strong>Высота:</strong>{{ store.detailData.height_cm }} см
+              <strong>Глубина:</strong>{{ store.detailData.depth_cm }} см
             </p>
           </div>
         </div>
@@ -163,11 +163,20 @@ const colorOptions = computed(() =>
   Array.from(new Set(store.variants.map(v => v.color)))
 )
 
+// Показываем размеры только для текущего цвета
 const sizeOptions = computed(() => {
-  const opts = Array.from(new Set(store.variants.map(v => v.size_label)))
-  if (opts.every(o => !isNaN(parseFloat(o)))) {
+  if (!store.detailData) return []
+  const currentColor = store.detailData.color
+  // фильтруем варианты по текущему цвету
+  let opts = store.variants.filter(v => v.color === currentColor).map(v => v.size_label)
+  // уникальность
+  opts = Array.from(new Set(opts))
+  // считаем числовыми только чистые цифры или с точкой
+  const numericRe = /^\d+(\.\d+)?$/
+  if (opts.every(o => numericRe.test(o))) {
     return opts.map(o => parseFloat(o)).sort((a, b) => a - b).map(n => n.toString())
   }
+  // иначе — оставляем оригинальные строки (например "200-300-400")
   return opts
 })
 
@@ -213,9 +222,9 @@ function selectVariantByOpt(type, opt) {
   const cat = route.query.category
   if (type === 'size') {
     // ищем вариант с точно таким же size_label (строкой)
-    const variant = store.variants.find(v => String(v.size_label) === opt)
-    if (variant) {
-      selectedDeliveryIndex.value = 2
+    const currentColor = store.detailData?.color
+    const variant = store.variants.find(v => String(v.size_label) === opt && v.color === currentColor)
+    if (variant && variant.variant_sku !== store.detailData.variant_sku) {
       router.replace({
         name: 'ProductDetail',
         params: { variant_sku: variant.variant_sku },
@@ -239,8 +248,7 @@ function selectVariantByOpt(type, opt) {
       return String(a.size_label).localeCompare(b.size_label)
     })
     const target = sameColor[0]
-    if (target) {
-      selectedDeliveryIndex.value = 2
+    if (target && target.variant_sku !== store.detailData.variant_sku) {
       router.replace({
         name: 'ProductDetail',
         params: { variant_sku: target.variant_sku },
@@ -301,6 +309,8 @@ function goCatalog() {
 
 // Инициализация
 async function init() {
+  showDescription.value = false
+  showCharacteristics.value = false
   variantLoading.value = true
   try {
     const sku = route.params.variant_sku
