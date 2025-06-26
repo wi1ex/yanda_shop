@@ -3,7 +3,7 @@
     <h2 v-if="favoriteProducts.length">Избранное</h2>
     <div v-else class="empty">Список избранного пуст</div>
 
-    <div v-if="favoriteProducts.length" class="products-grid">
+    <div v-if="favoriteProducts.length" class="products-grid" :class="{ blurred: favoritesLoading }">
       <router-link v-for="product in favoriteProducts" :key="product.color_sku" class="product-card"
                    :to="{ name: 'ProductDetail', params: { variant_sku: product.variant_sku }, query: { category: product.category }}">
         <button type="button" class="remove-fav-btn" @click.prevent.stop="store.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">
@@ -22,23 +22,32 @@
 </template>
 
 <script setup>
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, ref, nextTick } from 'vue'
 import { useStore } from '@/store/index.js'
 
 const store = useStore()
 
-// грузим массив color_sku
+const favoritesLoading = ref(false)
+
+// при монтировании: плавно показываем, грузим ВСЕ товары + избранное, убираем эффект
 onMounted(async () => {
+  favoritesLoading.value = true
   await store.fetchAllProducts()
   await store.loadFavoritesFromServer()
+  await nextTick()
+  // совпадает со временем blur-анимации в CSS
+  setTimeout(() => {
+    favoritesLoading.value = false
+  }, 200)
 })
 
 // вычисляем реальный список products по каждому color_sku
 const favoriteProducts = computed(() =>
   store.favorites.items
-    .map(cs => store.colorGroups.find(g => g.color_sku === cs))
-    .filter(Boolean)
-    .map(g => g.minPriceVariant)
+      .slice().reverse()
+      .map(cs => store.colorGroups.find(g => g.color_sku === cs))
+      .filter(Boolean)
+      .map(g => g.minPriceVariant)
 )
 </script>
 
@@ -54,6 +63,12 @@ const favoriteProducts = computed(() =>
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
   gap: 16px;
+  transition: filter 0.2s ease-in-out;
+}
+
+/* эффект размытия при загрузке */
+.blurred {
+  filter: blur(4px);
 }
 
 /* Карточка товара */
