@@ -150,6 +150,41 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
     return added, updated, deleted, warns
 
 
+def serialize_product(obj):
+    """
+    Из SQLAlchemy-объекта любого типа собираем словарь
+    колонок + delivery_options + списки картинок exactly
+    как в list_products/get_product.
+    """
+    ms_tz = ZoneInfo("Europe/Moscow")
+    data = {}
+    for col in obj.__table__.columns:
+        val = getattr(obj, col.name)
+        if isinstance(val, datetime):
+            data[col.name] = val.astimezone(ms_tz).isoformat(timespec="microseconds") + "Z"
+        else:
+            data[col.name] = val
+
+    # delivery_options
+    delivery_options = []
+    for i in range(1, 4):
+        st_time  = AdminSetting.query.get(f"delivery_time_{i}")
+        st_price = AdminSetting.query.get(f"delivery_price_{i}")
+        if st_time and st_price:
+            delivery_options.append({"label": st_time.value,
+                                     "multiplier": float(st_price.value)})
+    data["delivery_options"] = delivery_options
+
+    # картинки
+    cnt = getattr(obj, "count_images", 0) or 0
+    folder = obj.__tablename__
+    images = [f"{BACKEND_URL}/images/{folder}/{obj.color_sku}_{i}.webp" for i in range(1, cnt+1)]
+    data["images"] = images
+    data["image"] = images[0] if images else None
+
+    return data
+
+
 @api.route("/api/")
 def home() -> Tuple[Response, int]:
     logger.debug("Health check: /api/ called")
@@ -571,7 +606,7 @@ def import_sheet() -> Tuple[Response, int]:
         return jsonify({"error": "import_sheet failed", "message": str(e)}), 500
 
 
-@api.route("/api/cart", methods=["GET"])
+@api.route("/api/get_cart", methods=["GET"])
 def get_cart() -> Tuple[Response, int]:
     uid_str = request.args.get("user_id")
     if not uid_str:
@@ -584,10 +619,45 @@ def get_cart() -> Tuple[Response, int]:
 
     try:
         key = f"cart:{uid}"
-        stored = redis_client.get(key)
-        if not stored:
+        raw = redis_client.get(key)
+        if not raw:
             return jsonify({"items": [], "count": 0, "total": 0}), 200
-        return jsonify(json.loads(stored)), 200
+
+        payload = json.loads(raw)
+        records = payload.get("items", [])
+
+        result_items = []
+        total = 0
+
+        for rec in records:
+            sku = rec.get("variant_sku")
+            lbl = rec.get("delivery_label")
+
+            # ищем товар по SKU во всех трёх таблицах
+            obj = (Shoe.query.filter_by(variant_sku=sku).first()
+                   or Clothing.query.filter_by(variant_sku=sku).first()
+                   or Accessory.query.filter_by(variant_sku=sku).first())
+
+            if not obj:
+                continue  # товар удалён
+
+            data = serialize_product(obj)
+
+            # рассчитываем «финальную» цену с учётом доставки
+            opt = next((o for o in data["delivery_options"] if o["label"] == lbl), None)
+            unit = round(obj.price * (opt["multiplier"] if opt else 1))
+
+            # затираем базовую цену, навешиваем delivery_option
+            data["price"] = unit
+            data["delivery_option"] = opt
+
+            result_items.append(data)
+            total += unit
+
+        return jsonify({"items": result_items,
+                        "count": len(result_items),
+                        "total": total}), 200
+
     except Exception as e:
         logger.exception("Redis error in get_cart: %s", e)
         return jsonify({"error": "internal redis error"}), 500
@@ -605,12 +675,10 @@ def save_cart() -> Tuple[Response, int]:
         return jsonify({"error": "invalid user_id"}), 400
 
     items = data.get("items", [])
-    count = data.get("count", 0)
-    total = data.get("total", 0)
 
     try:
         key = f"cart:{uid}"
-        redis_client.set(key, json.dumps({"items": items, "count": count, "total": total}))
+        redis_client.set(key, json.dumps({"items": items}))
         ttl = 60 * 60 * 24 * 365
         redis_client.expire(key, ttl)
         return jsonify({"status": "ok"}), 200
@@ -619,7 +687,7 @@ def save_cart() -> Tuple[Response, int]:
         return jsonify({"error": "internal redis error"}), 500
 
 
-@api.route("/api/favorites", methods=["GET"])
+@api.route("/api/get_favorites", methods=["GET"])
 def get_favorites() -> Tuple[Response, int]:
     uid_str = request.args.get("user_id")
     if not uid_str:
@@ -641,7 +709,7 @@ def get_favorites() -> Tuple[Response, int]:
         return jsonify({"error": "internal redis error"}), 500
 
 
-@api.route("/api/favorites", methods=["POST"])
+@api.route("/api/save_favorites", methods=["POST"])
 def save_favorites() -> Tuple[Response, int]:
     data = request.get_json(force=True, silent=True) or {}
     if "user_id" not in data:
