@@ -1,6 +1,6 @@
-from .cors.logging import logger
 from redis import Redis
 from minio import Minio
+from .cors.logging import logger
 from .cors.config import (
     REDIS_HOST,
     REDIS_PORT,

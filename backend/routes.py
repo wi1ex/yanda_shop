@@ -1,12 +1,12 @@
 import json
-from cors.logging import logger
 from datetime import datetime
 from typing import Any, Dict, Tuple
 from zoneinfo import ZoneInfo
 from flask import Blueprint, Flask, jsonify, request, Response
-from db_utils import session_scope
-from extensions import redis_client
-from models import (
+from .extensions import redis_client
+from .db_utils import session_scope
+from .cors.logging import logger
+from .models import (
     Shoe,
     Clothing,
     Accessory,
@@ -14,7 +14,7 @@ from models import (
     ChangeLog,
     AdminSetting,
 )
-from utils import (
+from .utils import (
     serialize_product,
     model_by_category,
 )
