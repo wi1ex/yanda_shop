@@ -35,6 +35,3 @@ def create_app() -> Flask:
         logger.debug("Delivery options cached")
 
     return app
-
-# для импортов вида `from backend import app`
-app = create_app()
