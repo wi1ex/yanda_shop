@@ -6,9 +6,9 @@
         <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">О нас</a>
         <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Доставка и оплата</a>
         <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Возврат</a>
-        <a v-if="store.adminSettings.url_telegram" :href="store.adminSettings.url_telegram" target="_blank" rel="noopener" class="footer-link">Telegram</a>
-        <a v-if="store.adminSettings.url_instagram" :href="store.adminSettings.url_instagram" target="_blank" rel="noopener" class="footer-link">Instagram</a>
-        <a v-if="store.adminSettings.url_email" :href="`mailto:${store.adminSettings.url_email}`" rel="noopener" class="footer-link">E-mail</a>
+        <a v-if="store.socialUrls.url_telegram" :href="store.socialUrls.url_telegram" target="_blank" rel="noopener" class="footer-link">Telegram</a>
+        <a v-if="store.socialUrls.url_instagram" :href="store.socialUrls.url_instagram" target="_blank" rel="noopener" class="footer-link">Instagram</a>
+        <a v-if="store.socialUrls.url_email" :href="`mailto:${store.socialUrls.url_email}`" rel="noopener" class="footer-link">E-mail</a>
       </div>
       <!-- Вторая колонка -->
       <div class="column">
