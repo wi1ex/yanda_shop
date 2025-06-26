@@ -220,8 +220,3 @@ def save_favorites() -> Tuple[Response, int]:
     except Exception as e:
         logger.exception("Exception in save_favorites: %s", e)
         return jsonify({"error": "internal redis error"}), 500
-
-
-def register_routes(app: Flask) -> None:
-    # Регистрируем все ваши @api маршруты
-    app.register_blueprint(product_api)
