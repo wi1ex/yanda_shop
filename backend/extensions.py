@@ -1,4 +1,4 @@
-import logging
+from cors.logging import logger
 from redis import Redis
 from minio import Minio
 from cors.config import (
@@ -11,7 +11,6 @@ from cors.config import (
     MINIO_BUCKET,
 )
 
-logger: logging.Logger = logging.getLogger(__name__)
 
 # Redis клиент
 redis_client: Redis = Redis(

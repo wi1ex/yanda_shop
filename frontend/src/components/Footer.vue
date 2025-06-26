@@ -45,7 +45,7 @@ function goHomeOrScroll() {
 }
 
 onMounted(() => {
-  store.loadAdminSettings()
+  store.loadSocialUrls()
 })
 </script>
 

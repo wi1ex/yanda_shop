@@ -65,11 +65,11 @@ export const useStore = defineStore('main', () => {
   const profileLoading     = ref(false)
   const profileError       = ref('')
 
-  const adminSettings      = reactive({ url_telegram: '', url_instagram: '', url_email: '' })
+  const socialUrls      = reactive({ url_telegram: '', url_instagram: '', url_email: '' })
 
-  async function loadAdminSettings() {
-    const r = await fetch(`${url.value}/api/admin/settings`)
-    Object.assign(adminSettings, await r.json())
+  async function loadSocialUrls() {
+    const r = await fetch(`${url.value}/api/get_social_urls`)
+    Object.assign(socialUrls, await r.json())
   }
 
   function openCartDrawer() {
@@ -89,7 +89,7 @@ export const useStore = defineStore('main', () => {
 
   async function fetchAdminIds() {
     try {
-      const res = await fetch(`${url.value}/api/admin_ids`)
+      const res = await fetch(`${url.value}/api/admin/get_admin_ids`)
       if (res.ok) {
         const data = await res.json()
         admin_ids.value = data.admin_ids || []
@@ -137,7 +137,7 @@ export const useStore = defineStore('main', () => {
       }))
     }
     try {
-      await fetch(`${url.value}/api/cart`, {
+      await fetch(`${url.value}/api/save_cart`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -409,7 +409,7 @@ export const useStore = defineStore('main', () => {
   // --- Экшен: загрузить URL таблиц ---
   async function loadSheetUrls() {
     try {
-      const res = await fetch(`${url.value}/api/admin/sheet_urls`)
+      const res = await fetch(`${url.value}/api/admin/get_sheet_urls`)
       const data = await res.json()
       Object.assign(sheetUrls.value, data)
     } catch (e) { console.error(e) }
@@ -420,7 +420,7 @@ export const useStore = defineStore('main', () => {
     sheetSaveLoading[cat] = true
     sheetResult[cat] = ''
     try {
-      const res = await fetch(`${url.value}/api/admin/sheet_url`, {
+      const res = await fetch(`${url.value}/api/admin/update_sheet_url`, {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ category: cat, url: sheetUrls.value[cat] })
       })
@@ -445,7 +445,7 @@ export const useStore = defineStore('main', () => {
     sheetImportLoading[cat] = true
     sheetResult[cat] = ''
     try {
-      const res = await fetch(`${url.value}/api/import_sheet`, {
+      const res = await fetch(`${url.value}/api/admin/import_sheet`, {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ category: cat, author_id: authorId, author_name: authorName })
       })
@@ -467,7 +467,7 @@ export const useStore = defineStore('main', () => {
   async function loadLogs(limit = 10) {
     logsLoading.value = true
     try {
-      const res = await fetch(`${url.value}/api/logs?limit=${limit}`)
+      const res = await fetch(`${url.value}/api/admin/get_logs?limit=${limit}`)
       logs.value = res.ok ? (await res.json()).logs : []
     } catch (e) {
       console.error(e)
@@ -481,7 +481,7 @@ export const useStore = defineStore('main', () => {
   async function loadVisits(date) {
     visitsLoading.value = true
     try {
-      const res = await fetch(`${url.value}/api/visits?date=${date}`)
+      const res = await fetch(`${url.value}/api/admin/get_daily_visits?date=${date}`)
       const j   = await res.json()
       visitsData.value = { date: j.date, hours: j.hours }
     } catch (e) {
@@ -500,7 +500,7 @@ export const useStore = defineStore('main', () => {
     form.append('author_id', authorId)
     form.append('author_name', authorName)
     try {
-      const res = await fetch(`${url.value}/api/upload_images`, { method:'POST', body: form })
+      const res = await fetch(`${url.value}/api/admin/upload_images`, { method:'POST', body: form })
       const j   = await res.json()
       if (res.status===201) {
         zipResult.value = `Добавлено: ${j.added}. Обновлено: ${j.replaced}. Удалено: ${j.deleted}. Ошибки: ${j.warns}.`
@@ -519,7 +519,7 @@ export const useStore = defineStore('main', () => {
   async function fetchDetail(variantSku, category) {
     detailLoading.value = true
     try {
-      const pRes = await fetch(`${url.value}/api/product?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(variantSku)}`)
+      const pRes = await fetch(`${url.value}/api/get_product?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(variantSku)}`)
       detailData.value = await pRes.json()
       // подгружаем весь список и фильтруем по sku
       await fetchProducts(category)
@@ -535,7 +535,7 @@ export const useStore = defineStore('main', () => {
   async function fetchUserProfile(userId) {
     profileLoading.value = true; profileError.value = ''
     try {
-      const res = await fetch(`${url.value}/api/user?user_id=${userId}`)
+      const res = await fetch(`${url.value}/api/get_user_profile?user_id=${userId}`)
       if (!res.ok) {
         profileError.value = res.status===404 ? 'Пользователь не найден' : `Ошибка ${res.status}`
         return
@@ -600,9 +600,9 @@ export const useStore = defineStore('main', () => {
     profileLoading,
     profileError,
 
-    adminSettings,
+    socialUrls,
 
-    loadAdminSettings,
+    loadSocialUrls,
     isTelegramUserId,
     changeCategory,
     addToCart,
