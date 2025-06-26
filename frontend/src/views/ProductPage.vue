@@ -256,7 +256,6 @@ function selectVariantByOpt(type, opt) {
         query: { category: cat }
       })
     }
-    return
   }
 }
 
