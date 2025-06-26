@@ -264,13 +264,18 @@ def get_daily_visits() -> Tuple[Response, int]:
 
 @api.route("/api/list_products")
 def list_products() -> Response:
-    cat: str = request.args.get("category", "").lower()
+    cat = request.args.get("category", "").lower()
     logger.debug("list_products category=%s", cat)
 
-    Model = model_by_category(cat)
-    if not Model:
-        logger.error("Unknown category %s", cat)
-        return jsonify({"error": "unknown category"}), 400
+    # если категория указана — фильтруем по ней, иначе — все три модели
+    if cat:
+        Model = model_by_category(cat)
+        if not Model:
+            logger.error("Unknown category %s", cat)
+            return jsonify({"error": "unknown category"}), 400
+        models = [Model]
+    else:
+        models = [Shoe, Clothing, Accessory]
 
     # Формируем опции доставки из админ-таблицы
     delivery_options = []
@@ -281,28 +286,26 @@ def list_products() -> Response:
             delivery_options.append({"label": setting_time.value, "multiplier": float(setting_price.value)})
 
     ms_tz = ZoneInfo("Europe/Moscow")
-    items = Model.query.filter(Model.count_in_stock >= 0).all()
     result = []
-    for obj in items:
-        # 1) сериализуем все колонки
-        data: Dict[str, Any] = {}
-        for col in obj.__table__.columns:
-            val = getattr(obj, col.name)
-            if isinstance(val, datetime):
-                data[col.name] = val.astimezone(ms_tz).isoformat(timespec="microseconds") + "Z"
-            else:
-                data[col.name] = val
+    for Model in models:
+        for obj in Model.query.filter(Model.count_in_stock >= 0).all():
+            # 1) сериализуем все колонки
+            data: Dict[str, Any] = {}
+            for col in obj.__table__.columns:
+                val = getattr(obj, col.name)
+                if isinstance(val, datetime):
+                    data[col.name] = val.astimezone(ms_tz).isoformat(timespec="microseconds") + "Z"
+                else:
+                    data[col.name] = val
+            data["delivery_options"] = delivery_options
+            # 2) добавляем картинки
+            count = getattr(obj, "count_images", 0)
+            folder = obj.__tablename__  # 'shoes', 'clothing' или 'accessories'
+            images = [f"{BACKEND_URL}/images/{folder}/{obj.color_sku}_{i}.webp" for i in range(1, count + 1)]
+            data["images"] = images
+            data["image"]  = images[0] if images else None
 
-        data["delivery_options"] = delivery_options
-
-        # 2) добавляем картинки
-        count = getattr(obj, "count_images", 0)
-        folder = obj.__tablename__  # 'shoes', 'clothing' или 'accessories'
-        images = [f"{BACKEND_URL}/images/{folder}/{obj.color_sku}_{i}.webp" for i in range(1, count + 1)]
-        data["images"] = images
-        data["image"]  = images[0] if images else None
-
-        result.append(data)
+            result.append(data)
 
     return jsonify(result), 200
 

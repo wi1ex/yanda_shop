@@ -28,8 +28,9 @@ import { useStore } from '@/store/index.js'
 const store = useStore()
 
 // грузим массив color_sku
-onMounted(() => {
-  store.loadFavoritesFromServer()
+onMounted(async () => {
+  await store.fetchAllProducts()
+  await store.loadFavoritesFromServer()
 })
 
 // вычисляем реальный список products по каждому color_sku

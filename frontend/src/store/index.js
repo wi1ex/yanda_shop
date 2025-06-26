@@ -391,15 +391,24 @@ export const useStore = defineStore('main', () => {
 
   // Fetch: загрузка товаров по category
   async function fetchProducts(cat) {
-    if (cat) {
-      selectedCategory.value = cat
-    }
+    if (cat) selectedCategory.value = cat
     try {
       const res = await fetch(`${url.value}/api/list_products?category=${encodeURIComponent(selectedCategory.value)}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       products.value = await res.json()
     } catch (e) {
       console.error('Не удалось загрузить товары:', e)
+    }
+  }
+
+  // Загрузка **всех** товаров (для страницы «Избранное»)
+  async function fetchAllProducts() {
+    try {
+      const res = await fetch(`${url.value}/api/list_products`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      products.value = await res.json()
+    } catch (e) {
+      console.error('Не удалось загрузить все товары:', e)
     }
   }
 
@@ -609,6 +618,7 @@ export const useStore = defineStore('main', () => {
     checkout,
     clearFilters,
     fetchProducts,
+    fetchAllProducts,
     loadFavoritesFromServer,
     addToFavorites,
     removeFromFavorites,
