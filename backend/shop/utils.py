@@ -57,12 +57,11 @@ def load_delivery_options():
 
 
 def serialize_product(obj):
-    ms_tz = ZoneInfo("Europe/Moscow")
     data = {}
     for col in obj.__table__.columns:
         val = getattr(obj, col.name)
         if isinstance(val, datetime):
-            data[col.name] = val.astimezone(ms_tz).isoformat(timespec="microseconds") + "Z"
+            data[col.name] = val.astimezone(ZoneInfo("Europe/Moscow")).isoformat(timespec="microseconds") + "Z"
         else:
             data[col.name] = val
 
