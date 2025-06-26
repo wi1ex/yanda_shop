@@ -2,8 +2,8 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_cors import CORS
 
-from cors.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS
-from cors.logging import setup_logging, logger
+from .cors.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS
+from .cors.logging import setup_logging, logger
 from models import db
 from utils import load_delivery_options
 from routes import register_routes
