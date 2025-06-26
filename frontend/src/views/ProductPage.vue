@@ -103,8 +103,8 @@
         </div>
 
         <!-- Описание -->
-        <div v-if="store.detailData" class="section" :class="{ 'section-disabled': !store.detailData?.description }">
-          <div class="section-header" @click="store.detailData?.description && toggleDescription">
+        <div v-if="store.detailData" class="section" :class="{ 'section-disabled': !store.detailData?.description?.trim() }">
+          <div class="section-header" @click="toggleDescription">
             <span>Описание</span>
             <span class="arrow">{{ showDescription ? '⯅' : '▼' }}</span>
           </div>
@@ -235,6 +235,7 @@ function selectVariantByOpt(type, opt) {
   }
 
   if (type === 'color') {
+    if (opt === store.detailData.color) return
     // все варианты того же цвета, в наличии
     const sameColor = store.variants.filter(v => v.color === opt && v.count_in_stock >= 0)
     // сортируем по «минимальному» размеру: числовые сначала
@@ -295,6 +296,7 @@ function scrollToIndex(idx) {
 
 // Аккордеоны
 function toggleDescription() {
+  if (!store.detailData?.description?.trim()) return
   showDescription.value = !showDescription.value
 }
 
