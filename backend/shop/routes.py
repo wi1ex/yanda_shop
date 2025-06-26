@@ -154,8 +154,10 @@ def get_product() -> Tuple[Response, int]:
         if not obj:
             logger.warning("Product not found %s/%s", category, variant_sku)
             return jsonify({"error": "not found"}), 404
+        # сериализуем пока сессия ещё жива
+        data = serialize_product(obj)
 
-    return jsonify(serialize_product(obj)), 200
+    return jsonify(data), 200
 
 
 @api.route("/get_user_profile")
@@ -175,14 +177,15 @@ def get_user_profile() -> Tuple[Response, int]:
             if not u:
                 return jsonify({"error": "not found"}), 404
 
-        ms_tz = ZoneInfo("Europe/Moscow")
-        return jsonify({
-            "user_id": u.user_id,
-            "first_name": u.first_name,
-            "last_name": u.last_name,
-            "username": u.username,
-            "created_at": u.created_at.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S")
-        }), 200
+            profile = {
+                "user_id": u.user_id,
+                "first_name": u.first_name,
+                "last_name": u.last_name,
+                "username": u.username,
+                "created_at": u.created_at.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d %H:%M:%S")
+            }
+
+        return jsonify(profile), 200
 
     except Exception as e:
         logger.exception("Error fetching user %d: %s", uid, e)
@@ -192,136 +195,162 @@ def get_user_profile() -> Tuple[Response, int]:
 @api.route("/get_social_urls")
 def get_social_urls() -> Tuple[Response, int]:
     keys = ["url_telegram", "url_instagram", "url_email"]
-    with session_scope() as session:
-        settings = session.query(AdminSetting).filter(AdminSetting.key.in_(keys)).all()
-    return jsonify({s.key: s.value for s in settings}), 200
+    try:
+        # сразу формируем результат внутри сессии
+        with session_scope() as session:
+            raw = session.query(AdminSetting).filter(AdminSetting.key.in_(keys)).all()
+            result = {k: "" for k in keys}
+            for s in raw:
+                # s.value уже подгружен, т. е. нет lazy-load после закрытия
+                result[s.key] = s.value or ""
+        return jsonify(result), 200
+
+    except Exception as e:
+        logger.exception("Error in get_social_urls: %s", e)
+        return jsonify({k: "" for k in keys}), 200
 
 
 @api.route("/get_cart", methods=["GET"])
 def get_cart() -> Tuple[Response, int]:
     uid_str = request.args.get("user_id")
+    logger.debug("get_cart called with user_id=%r", uid_str)
     if not uid_str:
+        logger.warning("get_cart: missing user_id")
         return jsonify({"error": "user_id required"}), 400
 
     try:
         uid = int(uid_str)
     except ValueError:
+        logger.warning("get_cart: invalid user_id %r", uid_str)
         return jsonify({"error": "invalid user_id"}), 400
 
     try:
         key = f"cart:{uid}"
         raw = redis_client.get(key)
+        logger.debug("Redis GET %s → %r", key, raw)
         if not raw:
+            logger.info("get_cart: no cart found for user %d", uid)
             return jsonify({"items": [], "count": 0, "total": 0}), 200
 
         payload = json.loads(raw)
         records = payload.get("items", [])
+        logger.debug("Found %d records in cart payload", len(records))
 
         result_items = []
         total = 0
 
-        for rec in records:
-            sku = rec.get("variant_sku")
-            lbl = rec.get("delivery_label")
+        with session_scope() as session:
+            for rec in records:
+                sku = rec.get("variant_sku")
+                lbl = rec.get("delivery_label")
+                logger.debug("Processing record sku=%r, label=%r", sku, lbl)
 
-            # ищем товар по SKU во всех трёх таблицах
-            obj = (Shoe.query.filter_by(variant_sku=sku).first()
-                   or Clothing.query.filter_by(variant_sku=sku).first()
-                   or Accessory.query.filter_by(variant_sku=sku).first())
+                obj = (
+                    session.query(Shoe).filter_by(variant_sku=sku).first() or
+                    session.query(Clothing).filter_by(variant_sku=sku).first() or
+                    session.query(Accessory).filter_by(variant_sku=sku).first()
+                )
+                if not obj:
+                    logger.warning("Item %r not found in DB, skipping", sku)
+                    continue
 
-            if not obj:
-                continue  # товар удалён
+                data = serialize_product(obj)
+                opt = next((o for o in data["delivery_options"] if o["label"] == lbl), None)
+                unit_price = round(obj.price * (opt["multiplier"] if opt else 1))
 
-            data = serialize_product(obj)
+                data["price"] = unit_price
+                data["delivery_option"] = opt
 
-            # рассчитываем «финальную» цену с учётом доставки
-            opt = next((o for o in data["delivery_options"] if o["label"] == lbl), None)
-            unit = round(obj.price * (opt["multiplier"] if opt else 1))
+                result_items.append(data)
+                total += unit_price
 
-            # затираем базовую цену, навешиваем delivery_option
-            data["price"] = unit
-            data["delivery_option"] = opt
-
-            result_items.append(data)
-            total += unit
-
-        return jsonify({"items": result_items,
-                        "count": len(result_items),
-                        "total": total}), 200
+        logger.info("get_cart: returning %d items, total=%d", len(result_items), total)
+        return jsonify({"items": result_items, "count": len(result_items), "total": total}), 200
 
     except Exception as e:
-        logger.exception("Redis error in get_cart: %s", e)
-        return jsonify({"error": "internal redis error"}), 500
+        logger.exception("Exception in get_cart:")
+        return jsonify({"error": "internal error"}), 500
 
 
 @api.route("/save_cart", methods=["POST"])
 def save_cart() -> Tuple[Response, int]:
-    data: Dict[str, Any] = request.get_json(force=True, silent=True) or {}
+    data = request.get_json(force=True, silent=True) or {}
+    logger.debug("save_cart payload: %r", data)
     if "user_id" not in data:
+        logger.warning("save_cart: missing user_id")
         return jsonify({"error": "user_id required"}), 400
 
     try:
         uid = int(data["user_id"])
     except (TypeError, ValueError):
+        logger.warning("save_cart: invalid user_id %r", data.get("user_id"))
         return jsonify({"error": "invalid user_id"}), 400
 
     items = data.get("items", [])
     try:
         key = f"cart:{uid}"
         redis_client.set(key, json.dumps({"items": items}))
-        ttl = 60 * 60 * 24 * 365
-        redis_client.expire(key, ttl)
+        redis_client.expire(key, 60 * 60 * 24 * 365)
+        logger.info("save_cart: saved %d items for user %d", len(items), uid)
         return jsonify({"status": "ok"}), 200
-    except Exception as e:
-        logger.exception("Redis error in save_cart: %s", e)
+    except Exception:
+        logger.exception("Exception in save_cart:")
         return jsonify({"error": "internal redis error"}), 500
 
 
 @api.route("/get_favorites", methods=["GET"])
 def get_favorites() -> Tuple[Response, int]:
     uid_str = request.args.get("user_id")
+    logger.debug("get_favorites called with user_id=%r", uid_str)
     if not uid_str:
+        logger.warning("get_favorites: missing user_id")
         return jsonify({"error": "user_id required"}), 400
 
     try:
         uid = int(uid_str)
     except ValueError:
+        logger.warning("get_favorites: invalid user_id %r", uid_str)
         return jsonify({"error": "invalid user_id"}), 400
 
     try:
         key = f"favorites:{uid}"
-        stored = redis_client.get(key)
-        if not stored:
+        raw = redis_client.get(key)
+        logger.debug("Redis GET %s → %r", key, raw)
+        if not raw:
+            logger.info("get_favorites: no favorites for user %d", uid)
             return jsonify({"items": [], "count": 0}), 200
-        return jsonify(json.loads(stored)), 200
-    except Exception as e:
-        logger.exception("Redis error in get_favorites: %s", e)
+        payload = json.loads(raw)
+        logger.info("get_favorites: returning %d items", payload.get("count", 0))
+        return jsonify(payload), 200
+    except Exception:
+        logger.exception("Exception in get_favorites:")
         return jsonify({"error": "internal redis error"}), 500
 
 
 @api.route("/save_favorites", methods=["POST"])
 def save_favorites() -> Tuple[Response, int]:
     data = request.get_json(force=True, silent=True) or {}
+    logger.debug("save_favorites payload: %r", data)
     if "user_id" not in data:
+        logger.warning("save_favorites: missing user_id")
         return jsonify({"error": "user_id required"}), 400
 
     try:
         uid = int(data["user_id"])
     except (TypeError, ValueError):
+        logger.warning("save_favorites: invalid user_id %r", data.get("user_id"))
         return jsonify({"error": "invalid user_id"}), 400
 
     items = data.get("items", [])
-    # count храним для фронта
     payload = {"items": items, "count": len(items)}
-
     try:
         key = f"favorites:{uid}"
         redis_client.set(key, json.dumps(payload))
-        ttl = 60 * 60 * 24 * 365
-        redis_client.expire(key, ttl)
+        redis_client.expire(key, 60 * 60 * 24 * 365)
+        logger.info("save_favorites: saved %d items for user %d", len(items), uid)
         return jsonify({"status": "ok"}), 200
-    except Exception as e:
-        logger.exception("Redis error in save_favorites: %s", e)
+    except Exception:
+        logger.exception("Exception in save_favorites:")
         return jsonify({"error": "internal redis error"}), 500
 
 

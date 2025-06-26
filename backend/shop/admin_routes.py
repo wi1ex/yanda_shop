@@ -60,15 +60,14 @@ def get_logs() -> Tuple[Response, int]:
     with session_scope() as session:
         logs_qs = (session.query(ChangeLog).order_by(ChangeLog.timestamp.desc()).limit(limit).all())
 
-    ms_tz = ZoneInfo("Europe/Moscow")
-    result = [{
-        "id":          lg.id,
-        "author_id":   lg.author_id,
-        "author_name": lg.author_name,
-        "action_type": lg.action_type,
-        "description": lg.description,
-        "timestamp":   lg.timestamp.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S")
-    } for lg in logs_qs]
+        result = [{
+            "id":          lg.id,
+            "author_id":   lg.author_id,
+            "author_name": lg.author_name,
+            "action_type": lg.action_type,
+            "description": lg.description,
+            "timestamp":   lg.timestamp.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d %H:%M:%S")
+        } for lg in logs_qs]
 
     return jsonify({"logs": result}), 200
 
@@ -188,11 +187,11 @@ def upload_images() -> Tuple[Response, int]:
         Model = model_by_category(folder)
         with session_scope() as session:
             models = session.query(Model).all()
-        for obj in models:
-            cs  = obj.color_sku
-            cnt = getattr(obj, "count_images", 0) or 0
-            for i in range(1, cnt + 1):
-                expected.add(f"{cs}_{i}")
+            for obj in models:
+                cs  = obj.color_sku
+                cnt = getattr(obj, "count_images", 0) or 0
+                for i in range(1, cnt + 1):
+                    expected.add(f"{cs}_{i}")
 
     # 3) Удаляем «лишние» файлы
     deleted, cleanup_warns = cleanup_old_images(folder, expected)
