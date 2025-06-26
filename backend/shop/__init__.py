@@ -6,8 +6,9 @@ from .cors.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS
 from .cors.logging import setup_logging, logger
 from .models import db
 from .utils import load_delivery_options
-from .routes import register_routes
-from .admin_routes import admin_api
+from .routes.general import general_api
+from .routes.product import product_api
+from .routes.admin import admin_api
 
 
 def create_app() -> Flask:
@@ -26,8 +27,9 @@ def create_app() -> Flask:
     CORS(app, resources={r"/api/*": {"origins": CORS_ORIGINS}})
 
     # 4) Blueprint’ы
-    register_routes(app)
-    app.register_blueprint(admin_api)
+    app.register_blueprint(general_api)  # общий API (/api/general/...)
+    app.register_blueprint(product_api)  # товары    (/api/product/...)
+    app.register_blueprint(admin_api)    # админка   (/api/admin/...)
 
     # 5) Кэшируем delivery options
     with app.app_context():

@@ -5,16 +5,16 @@ import requests
 from typing import Tuple
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from flask import Blueprint, jsonify, request, Response
-from .cors.config import ADMIN_IDS
-from .db_utils import session_scope
-from .extensions import redis_client
-from .cors.logging import logger
-from .models import (
+from flask import Blueprint, Flask, jsonify, request, Response
+from ..cors.config import ADMIN_IDS
+from ..db_utils import session_scope
+from ..extensions import redis_client
+from ..cors.logging import logger
+from ..models import (
     ChangeLog,
     AdminSetting,
 )
-from .utils import (
+from ..utils import (
     cleanup_old_images,
     upload_new_images,
     model_by_category,
@@ -227,3 +227,8 @@ def upload_images() -> Tuple[Response, int]:
     except Exception as e:
         logger.exception("Error saving upload_images log: %s", e)
         return jsonify({"error": "upload error"}), 500
+
+
+def register_routes(app: Flask) -> None:
+    # Регистрируем все ваши @api маршруты
+    app.register_blueprint(admin_api)
