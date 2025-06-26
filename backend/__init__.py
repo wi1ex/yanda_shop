@@ -4,10 +4,10 @@ from flask_cors import CORS
 
 from .cors.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS
 from .cors.logging import setup_logging, logger
-from models import db
-from utils import load_delivery_options
-from routes import register_routes
-from admin_routes import admin_api
+from .models import db
+from .utils import load_delivery_options
+from .routes import register_routes
+from .admin_routes import admin_api
 
 
 def create_app() -> Flask:

@@ -5,11 +5,11 @@ from datetime import datetime
 from typing import Set, Tuple, Optional, List, Dict, Any
 from zoneinfo import ZoneInfo
 from minio.error import S3Error
-from cors.config import BACKEND_URL
-from db_utils import session_scope
-from extensions import minio_client, BUCKET
-from models import AdminSetting, Shoe, Clothing, Accessory
-from cors.logging import logger
+from .cors.logging import logger
+from .cors.config import BACKEND_URL
+from .db_utils import session_scope
+from .extensions import minio_client, BUCKET
+from .models import AdminSetting, Shoe, Clothing, Accessory
 
 
 # Парсеры
