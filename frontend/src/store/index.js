@@ -65,7 +65,7 @@ export const useStore = defineStore('main', () => {
   const profileLoading     = ref(false)
   const profileError       = ref('')
 
-  const socialUrls      = reactive({ url_telegram: '', url_instagram: '', url_email: '' })
+  const socialUrls         = reactive({ url_telegram: '', url_instagram: '', url_email: '' })
 
   async function loadSocialUrls() {
     const r = await fetch(`${url.value}/api/get_social_urls`)
