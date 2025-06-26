@@ -207,8 +207,28 @@ export const useStore = defineStore('main', () => {
     return favorites.value.items.includes(color_sku);
   }
 
+  async function saveUserToServer() {
+    if (!user.value?.id) return
+    try {
+      await fetch(`${url.value}/api/save_user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id:         user.value.id,
+          first_name: user.value.first_name,
+          last_name:  user.value.last_name,
+          username:   user.value.username,
+          photo_url:  user.value.photo_url,
+        })
+      })
+    } catch (e) {
+      console.error('Не удалось сохранить пользователя:', e)
+    }
+  }
+
   // Будем следить за тем, когда пользователь определится (инициализируется)
   watch(() => user.value?.id, (newId) => {
+      if (newId) saveUserToServer()
       if (newId && isTelegramUserId(newId)) {
         fetchAdminIds();
         loadCartFromServer();

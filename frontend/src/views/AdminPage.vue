@@ -117,6 +117,7 @@ const adminId = store.user.id
 const adminName = store.user.username
 
 const zipFile = ref(null)
+const zipInput = ref(null)
 const editingUrl = reactive({ shoes:false, clothing:false, accessories:false })
 const selectedDate = ref(new Date().toISOString().slice(0,10))
 
@@ -129,12 +130,23 @@ const maxTotal = computed(() => {
 function startEdit(cat) {
   editingUrl[cat] = true
 }
+
 function onZipSelected(e) {
   zipFile.value = e.target.files[0]
 }
-function submitZip() {
-  store.uploadZip(zipFile.value, adminId, adminName)
+
+// Ждём, пока ZIP будет загружен, затем очищаем и reset input
+async function submitZip() {
+  if (!zipFile.value) return
+  await store.uploadZip(zipFile.value, adminId, adminName)
+  // сбрасываем выбранный файл
+  zipFile.value = null
+  // и сам HTML-элемент
+  if (zipInput.value) {
+    zipInput.value.value = ''
+  }
 }
+
 function fetchVisits() {
   store.loadVisits(selectedDate.value)
 }

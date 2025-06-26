@@ -39,22 +39,6 @@ watch(
 )
 
 onMounted(() => {
-  let userId
-  const stored = localStorage.getItem('visitorId')
-  if (stored) {
-    userId = stored
-  } else {
-    userId = generateVisitorId()
-    localStorage.setItem('visitorId', userId)
-  }
-  // Инициализируем user со всеми полями, включая photo_url
-  store.user = {
-    id: userId,
-    first_name: null,
-    last_name: null,
-    username: null,
-    photo_url: null
-  }
   if (window.Telegram?.WebApp) {
     store.tg = window.Telegram.WebApp
     const tgUser = store.tg.initDataUnsafe?.user
@@ -68,18 +52,15 @@ onMounted(() => {
       }
     }
   }
-  // Отправляем на бэкенд
-  fetch(`${store.url}/api/save_user`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      id: store.user.id,
-      first_name: store.user.first_name,
-      last_name: store.user.last_name,
-      username: store.user.username,
-      photo_url: store.user.photo_url
-    }),
-  }).catch(console.error)
+  if (!store.user?.id) {
+    const stored = localStorage.getItem('visitorId')
+    if (stored) {
+      store.user.id = stored
+    } else {
+      store.user.id = generateVisitorId()
+      localStorage.setItem('visitorId', store.user.id)
+    }
+  }
 })
 
 onBeforeUnmount(() => {
