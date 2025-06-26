@@ -2,6 +2,8 @@ import logging
 import sys
 from cors.config import LOG_LEVEL
 
+LOGGER_NAME = "yanda_shop"
+
 def setup_logging() -> None:
     """
     Настраивает корневой logger приложения:
@@ -17,3 +19,5 @@ def setup_logging() -> None:
     handler.setLevel(level)
     handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
     root.addHandler(handler)
+
+logger = logging.getLogger(LOGGER_NAME)

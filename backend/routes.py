@@ -1,17 +1,11 @@
-from flask import Blueprint, Flask, jsonify, request, Response
-from typing import Any, Dict, List, Optional, Tuple
-from datetime import datetime
-from zoneinfo import ZoneInfo
-import logging
-import io
-import csv
-import os
-import zipfile
 import json
-import requests
-
-from minio.error import S3Error
-from extensions import redis_client, minio_client, BUCKET
+from cors.logging import logger
+from datetime import datetime
+from typing import Any, Dict, Tuple
+from zoneinfo import ZoneInfo
+from flask import Blueprint, Flask, jsonify, request, Response
+from db_utils import session_scope
+from extensions import redis_client
 from models import (
     Shoe,
     Clothing,
@@ -19,185 +13,22 @@ from models import (
     Users,
     ChangeLog,
     AdminSetting,
-    db
 )
-from cors.config import BACKEND_URL, ADMIN_IDS
+from utils import (
+    serialize_product,
+    model_by_category,
+)
 
-logger: logging.Logger = logging.getLogger(__name__)
-api: Blueprint = Blueprint("api", __name__)
-
-
-def model_by_category(cat: str) -> Optional[type]:
-    return {"shoes": Shoe, "clothing": Clothing, "accessories": Accessory,
-            "обувь": Shoe, "одежда": Clothing, "аксессуары": Accessory}.get(cat.lower())
+api: Blueprint = Blueprint("api", __name__, url_prefix="/api")
 
 
-def get_sheet_url(category: str) -> Optional[str]:
-    key = f"sheet_url_{category}"
-    setting = AdminSetting.query.get(key)
-    return setting.value if setting else None
-
-
-def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, int, int]:
-    Model = model_by_category(category)
-    if Model is None:
-        raise ValueError(f"Unknown category {category}")
-
-    added = updated = deleted = warns = 0
-    # Собираем все variant_sku
-    variants = [row["variant_sku"].strip() for row in rows]
-    # Подгружаем существующие объекты по variant_sku
-    existing = {obj.variant_sku: obj for obj in Model.query.filter(Model.variant_sku.in_(variants)).all()}
-
-    for row in rows:
-        variant = row["variant_sku"].strip()
-        data = {k: row[k].strip() for k in row if k != "variant_sku"}
-        # Удаление, если все поля пусты
-        if variant and all(not v for v in data.values()):
-            obj = existing.get(variant)
-            if obj:
-                db.session.delete(obj)
-                deleted += 1
-            continue
-
-        obj = existing.get(variant)
-        if not obj:
-            # Создаём новую запись
-            obj = Model(variant_sku=variant)
-            for k, v in data.items():
-                if not hasattr(obj, k):
-                    continue
-                if k in ("price", "count_in_stock", "count_images", "size_category"):
-                    raw = v.replace(" ", "")
-                    try:
-                        val = int(raw)
-                    except ValueError:
-                        val = None
-                        warns += 1
-                elif k == "size_label":
-                    if Model is Shoe:
-                        raw = v.replace(",", ".").replace(" ", "")
-                        try:
-                            val = float(raw)
-                        except ValueError:
-                            val = None
-                            warns += 1
-                    else:
-                        val = v
-                elif k in ("chest_cm", "width_cm", "height_cm", "depth_cm", "depth_mm"):
-                    raw = v.replace(",", ".").replace(" ", "")
-                    try:
-                        val = float(raw)
-                    except ValueError:
-                        val = None
-                        warns += 1
-                else:
-                    val = v
-                if isinstance(val, str) and val:
-                    val = val[0].upper() + val[1:]
-                setattr(obj, k, val)
-            # Добавляем составной артикул по цвету
-            obj.color_sku = f"{obj.sku}_{obj.world_sku}"
-            db.session.add(obj)
-            added += 1
-
-        else:
-            # Обновляем существующую запись
-            has_changes = False
-            for k, v in data.items():
-                if not hasattr(obj, k):
-                    continue
-                if k in ("price", "count_in_stock", "count_images", "size_category"):
-                    raw = v.replace(" ", "")
-                    try:
-                        new_val = int(raw)
-                    except ValueError:
-                        new_val = None
-                        warns += 1
-                elif k == "size_label":
-                    if Model is Shoe:
-                        raw = v.replace(",", ".").replace(" ", "")
-                        try:
-                            new_val = float(raw)
-                        except ValueError:
-                            new_val = None
-                            warns += 1
-                    else:
-                        new_val = v
-                elif k in ("chest_cm", "width_cm", "height_cm", "depth_cm", "depth_mm"):
-                    raw = v.replace(",", ".").replace(" ", "")
-                    try:
-                        new_val = float(raw)
-                    except ValueError:
-                        new_val = None
-                        warns += 1
-                else:
-                    new_val = v
-                if isinstance(new_val, str) and new_val:
-                    new_val = new_val[0].upper() + new_val[1:]
-                if getattr(obj, k) != new_val:
-                    setattr(obj, k, new_val)
-                    has_changes = True
-            # Если color_sku поменялся — сохранить
-            new_cs = f"{obj.sku}_{obj.world_sku}"
-            if obj.color_sku != new_cs:
-                obj.color_sku = new_cs
-                has_changes = True
-            if has_changes:
-                obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
-                updated += 1
-
-    return added, updated, deleted, warns
-
-
-def serialize_product(obj):
-    """
-    Из SQLAlchemy-объекта любого типа собираем словарь
-    колонок + delivery_options + списки картинок exactly
-    как в list_products/get_product.
-    """
-    ms_tz = ZoneInfo("Europe/Moscow")
-    data = {}
-    for col in obj.__table__.columns:
-        val = getattr(obj, col.name)
-        if isinstance(val, datetime):
-            data[col.name] = val.astimezone(ms_tz).isoformat(timespec="microseconds") + "Z"
-        else:
-            data[col.name] = val
-
-    # delivery_options
-    delivery_options = []
-    for i in range(1, 4):
-        st_time  = AdminSetting.query.get(f"delivery_time_{i}")
-        st_price = AdminSetting.query.get(f"delivery_price_{i}")
-        if st_time and st_price:
-            delivery_options.append({"label": st_time.value,
-                                     "multiplier": float(st_price.value)})
-    data["delivery_options"] = delivery_options
-
-    # картинки
-    cnt = getattr(obj, "count_images", 0) or 0
-    folder = obj.__tablename__
-    images = [f"{BACKEND_URL}/images/{folder}/{obj.color_sku}_{i}.webp" for i in range(1, cnt+1)]
-    data["images"] = images
-    data["image"] = images[0] if images else None
-
-    return data
-
-
-@api.route("/api/")
+@api.route("/")
 def home() -> Tuple[Response, int]:
     logger.debug("Health check: /api/ called")
     return jsonify({"message": "App is working!"}), 200
 
 
-@api.route("/api/admin_ids")
-def get_admin_ids() -> Tuple[Response, int]:
-    logger.debug("Health check: /api/admin_ids called")
-    return jsonify({"admin_ids": ADMIN_IDS}), 200
-
-
-@api.route("/api/save_user", methods=["POST"])
+@api.route("/save_user", methods=["POST"])
 def save_user() -> Tuple[Response, int]:
     data: Dict[str, Any] = request.get_json(force=True, silent=True) or {}
     logger.debug("save_user payload: %s", data)
@@ -215,46 +46,45 @@ def save_user() -> Tuple[Response, int]:
         logger.debug("save_user: non-integer id %r, skipping Postgres", raw_id)
         is_tg = False
 
-    first_name: Optional[str] = data.get("first_name")
-    last_name: Optional[str] = data.get("last_name")
-    username: Optional[str] = data.get("username")
+    first_name = data.get("first_name")
+    last_name = data.get("last_name")
+    username = data.get("username")
 
     # --- Postgres только для целых id ---
     if is_tg:
         user_id = int(raw_id)
-        tg_user = Users.query.get(user_id)
-        if not tg_user:
-            try:
-                tg_user = Users(
-                    user_id=user_id,
-                    first_name=first_name,
-                    last_name=last_name,
-                    username=username
-                )
-                db.session.add(tg_user)
-                log = ChangeLog(
-                    author_id=user_id,
-                    author_name=username,
-                    action_type="Регистрация",
-                    description=f'Новый пользователь Telegram: {first_name} {last_name}',
-                    timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
-                )
-                db.session.add(log)
-                db.session.commit()
-                logger.info("Registered new Telegram user %d", user_id)
-            except Exception as e:
-                db.session.rollback()
-                logger.exception("Postgres error in save_user: %s", e)
-                return jsonify({"error": "internal server error"}), 500
-        else:
-            updated = False
-            for field in ("first_name", "last_name", "username"):
-                new_val = data.get(field)
-                if new_val and getattr(tg_user, field) != new_val:
-                    setattr(tg_user, field, new_val)
-                    updated = True
-            if updated:
-                logger.info("Updated Telegram user %d", user_id)
+        try:
+            with session_scope() as session:
+                # получаем пользователя из сессии
+                tg_user = session.get(Users, user_id)
+                if not tg_user:
+                    tg_user = Users(
+                        user_id=user_id,
+                        first_name=first_name,
+                        last_name=last_name,
+                        username=username
+                    )
+                    session.add(tg_user)
+                    session.add(ChangeLog(
+                        author_id=user_id,
+                        author_name=username,
+                        action_type="Регистрация",
+                        description=f"Новый пользователь Telegram: {first_name} {last_name}",
+                        timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
+                    ))
+                else:
+                    # обновляем только если изменилось
+                    changed = False
+                    for fld in ("first_name", "last_name", "username"):
+                        new = data.get(fld)
+                        if new and getattr(tg_user, fld) != new:
+                            setattr(tg_user, fld, new)
+                            changed = True
+                    if changed:
+                        session.merge(tg_user)
+        except Exception as e:
+            logger.exception("Postgres error in save_user: %s", e)
+            return jsonify({"error": "internal server error"}), 500
 
     # --- Redis всегда ---
     try:
@@ -272,32 +102,14 @@ def save_user() -> Tuple[Response, int]:
         redis_client.expire(total_key, ttl)
         redis_client.expire(unique_key, ttl)
 
-        logger.debug("Redis visit counters updated for user %r", raw_id)
+        logger.info("save_user REDIS updated visit counters for %r", raw_id)
         return jsonify({"status": "ok"}), 201
     except Exception as e:
         logger.exception("Redis error in save_user: %s", e)
         return jsonify({"error": "internal redis error"}), 500
 
 
-@api.route("/api/visits")
-def get_daily_visits() -> Tuple[Response, int]:
-    date_str: str = request.args.get("date") or datetime.now(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d")
-    logger.debug("get_daily_visits for date %s", date_str)
-
-    try:
-        hours: List[Dict[str, Any]] = []
-        for h in range(24):
-            hour = f"{h:02d}"
-            total = int(redis_client.get(f"visits:{date_str}:{hour}:total") or 0)
-            unique = int(redis_client.scard(f"visits:{date_str}:{hour}:unique") or 0)
-            hours.append({"hour": hour, "total": total, "unique": unique})
-        return jsonify({"date": date_str, "hours": hours}), 200
-    except Exception as e:
-        logger.exception("Error fetching visits for %s: %s", date_str, e)
-        return jsonify({"error": "cannot fetch data"}), 500
-
-
-@api.route("/api/list_products")
+@api.route("/list_products")
 def list_products() -> Response:
     cat = request.args.get("category", "").lower()
     logger.debug("list_products category=%s", cat)
@@ -312,40 +124,17 @@ def list_products() -> Response:
     else:
         models = [Shoe, Clothing, Accessory]
 
-    # Формируем опции доставки из админ-таблицы
-    delivery_options = []
-    for i in range(1, 4):
-        setting_time = AdminSetting.query.get(f"delivery_time_{i}")
-        setting_price = AdminSetting.query.get(f"delivery_price_{i}")
-        if setting_time and setting_price:
-            delivery_options.append({"label": setting_time.value, "multiplier": float(setting_price.value)})
-
-    ms_tz = ZoneInfo("Europe/Moscow")
     result = []
-    for Model in models:
-        for obj in Model.query.filter(Model.count_in_stock >= 0).all():
-            # 1) сериализуем все колонки
-            data: Dict[str, Any] = {}
-            for col in obj.__table__.columns:
-                val = getattr(obj, col.name)
-                if isinstance(val, datetime):
-                    data[col.name] = val.astimezone(ms_tz).isoformat(timespec="microseconds") + "Z"
-                else:
-                    data[col.name] = val
-            data["delivery_options"] = delivery_options
-            # 2) добавляем картинки
-            count = getattr(obj, "count_images", 0)
-            folder = obj.__tablename__  # 'shoes', 'clothing' или 'accessories'
-            images = [f"{BACKEND_URL}/images/{folder}/{obj.color_sku}_{i}.webp" for i in range(1, count + 1)]
-            data["images"] = images
-            data["image"]  = images[0] if images else None
-
-            result.append(data)
+    with session_scope() as session:
+        for Model in models:
+            objs = session.query(Model).filter(Model.count_in_stock >= 0).all()
+            for obj in objs:
+                result.append(serialize_product(obj))
 
     return jsonify(result), 200
 
 
-@api.route("/api/product")
+@api.route("/get_product")
 def get_product() -> Tuple[Response, int]:
     category = request.args.get("category", "").lower()
     variant_sku = request.args.get("variant_sku", "").strip()
@@ -360,142 +149,16 @@ def get_product() -> Tuple[Response, int]:
         logger.error("Unknown category %s", category)
         return jsonify({"error": "unknown category"}), 400
 
-    obj = Model.query.filter_by(variant_sku=variant_sku).first()
-    if not obj:
-        logger.warning("Product not found %s/%s", category, variant_sku)
-        return jsonify({"error": "not found"}), 404
+    with session_scope() as session:
+        obj = session.query(Model).filter_by(variant_sku=variant_sku).first()
+        if not obj:
+            logger.warning("Product not found %s/%s", category, variant_sku)
+            return jsonify({"error": "not found"}), 404
 
-    ms_tz = ZoneInfo("Europe/Moscow")
-    data: Dict[str, Any] = {}
-    for col in obj.__table__.columns:
-        val = getattr(obj, col.name)
-        if isinstance(val, datetime):
-            data[col.name] = val.astimezone(ms_tz).isoformat(timespec="microseconds") + "Z"
-        else:
-            data[col.name] = val
-
-    # Формируем опции доставки из админ-таблицы
-    delivery_options = []
-    for i in range(1, 4):
-        setting_time = AdminSetting.query.get(f"delivery_time_{i}")
-        setting_price = AdminSetting.query.get(f"delivery_price_{i}")
-        if setting_time and setting_price:
-            delivery_options.append({"label": setting_time.value, "multiplier": float(setting_price.value)})
-    data["delivery_options"] = delivery_options
-
-    count = getattr(obj, "count_images", 0)
-    folder = obj.__tablename__  # 'shoes', 'clothing' или 'accessories'
-    images = [f"{BACKEND_URL}/images/{folder}/{obj.color_sku}_{i}.webp" for i in range(1, count + 1)]
-    data["images"] = images
-    data["image"] = images[0] if images else None
-
-    logger.info("Fetched product %s/%s", category, variant_sku)
-    return jsonify(data), 200
+    return jsonify(serialize_product(obj)), 200
 
 
-@api.route("/api/upload_images", methods=["POST"])
-def upload_images() -> Tuple[Response, int]:
-    z = request.files.get("file")
-    author_id_str = request.form.get("author_id", "").strip()
-    author_name = request.form.get("author_name", "").strip()
-
-    if not z or not author_id_str or not author_name:
-        return jsonify({"error": "file and author_id required"}), 400
-
-    try:
-        author_id = int(author_id_str)
-    except ValueError:
-        return jsonify({"error": "invalid author_id"}), 400
-
-    if not z.filename.lower().endswith(".zip"):
-        return jsonify({"error": "not a ZIP"}), 400
-
-    try:
-        # 1) Определяем папку из имени ZIP
-        folder = os.path.splitext(z.filename)[0].lower()
-
-        # 2) Если это одна из трёх категорий — строим набор ожидаемых имён из БД
-        expected = set()
-        if folder in ("shoes", "clothing", "accessories"):
-            Model = model_by_category(folder)
-            for obj in Model.query.all():
-                cs = obj.color_sku
-                cnt = getattr(obj, "count_images", 0) or 0
-                for i in range(1, cnt + 1):
-                    expected.add(f"{cs}_{i}")
-        # иначе expected остаётся пустым => мы не будем ничего удалять
-
-        deleted = warns = 0
-        # 3) Перебираем только файлы в этой папке
-        for obj in minio_client.list_objects(BUCKET, prefix=f"{folder}/", recursive=True):
-            base = os.path.splitext(obj.object_name)[0].split("/", 1)[1]
-            # удаляем, только если expected непуст и имя не входит в него
-            if expected and base not in expected:
-                try:
-                    minio_client.remove_object(BUCKET, obj.object_name)
-                    deleted += 1
-                except Exception:
-                    warns += 1
-
-        # 4) Загружаем новые файлы в ту же папку
-        added = replaced = 0
-        with zipfile.ZipFile(io.BytesIO(z.stream.read())) as archive:
-            for info in archive.infolist():
-                if info.is_dir():
-                    continue
-                key = f"{folder}/{info.filename}"
-                content = archive.read(info.filename)
-                try:
-                    minio_client.stat_object(BUCKET, key)
-                    replaced += 1
-                except S3Error:
-                    added += 1
-                minio_client.put_object(BUCKET, key, io.BytesIO(content), len(content))
-
-        # 5) Логируем выгрузку
-        desc = f"Добавлено: {added}. Изменено: {replaced}. Удалено: {deleted}. Ошибки: {warns}"
-        log = ChangeLog(
-            author_id=author_id,
-            author_name=author_name,
-            action_type=f"Успешная загрузка {z.filename}",
-            description=desc,
-            timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
-        )
-        db.session.add(log)
-        db.session.commit()
-        return jsonify({"status": "ok", "added": added, "replaced": replaced, "deleted": deleted, "warns": warns}), 201
-
-    except Exception as e:
-        db.session.rollback()
-        logger.exception("Error in upload_images: %s", e)
-        return jsonify({"error": "upload error", "message": str(e)}), 500
-
-
-@api.route("/api/logs")
-def get_logs() -> Tuple[Response, int]:
-    try:
-        limit = int(request.args.get("limit", "10"))
-    except ValueError:
-        limit = 10
-
-    try:
-        logs_qs = ChangeLog.query.order_by(ChangeLog.timestamp.desc()).limit(limit).all()
-        ms_tz = ZoneInfo("Europe/Moscow")
-        result = [{
-            "id": lg.id,
-            "author_id": lg.author_id,
-            "author_name": lg.author_name,
-            "action_type": lg.action_type,
-            "description": lg.description,
-            "timestamp": lg.timestamp.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S")
-        } for lg in logs_qs]
-        return jsonify({"logs": result}), 200
-    except Exception as e:
-        logger.exception("Error fetching logs: %s", e)
-        return jsonify({"error": "cannot fetch logs"}), 500
-
-
-@api.route("/api/user")
+@api.route("/get_user_profile")
 def get_user_profile() -> Tuple[Response, int]:
     uid_str = request.args.get("user_id")
     if not uid_str:
@@ -507,9 +170,10 @@ def get_user_profile() -> Tuple[Response, int]:
         return jsonify({"error": "invalid user_id"}), 400
 
     try:
-        u = Users.query.get(uid)
-        if not u:
-            return jsonify({"error": "not found"}), 404
+        with session_scope() as session:
+            u = session.get(Users, uid)
+            if not u:
+                return jsonify({"error": "not found"}), 404
 
         ms_tz = ZoneInfo("Europe/Moscow")
         return jsonify({
@@ -519,94 +183,21 @@ def get_user_profile() -> Tuple[Response, int]:
             "username": u.username,
             "created_at": u.created_at.astimezone(ms_tz).strftime("%Y-%m-%d %H:%M:%S")
         }), 200
+
     except Exception as e:
         logger.exception("Error fetching user %d: %s", uid, e)
         return jsonify({"error": "internal error"}), 500
 
 
-@api.route("/api/admin/settings")
-def get_admin_settings() -> Tuple[Response, int]:
-    keys = ("url_telegram", "url_instagram", "url_email")
-    res = {k: AdminSetting.query.get(k).value for k in keys if AdminSetting.query.get(k)}
-    return jsonify(res), 200
+@api.route("/get_social_urls")
+def get_social_urls() -> Tuple[Response, int]:
+    keys = ["url_telegram", "url_instagram", "url_email"]
+    with session_scope() as session:
+        settings = session.query(AdminSetting).filter(AdminSetting.key.in_(keys)).all()
+    return jsonify({s.key: s.value for s in settings}), 200
 
 
-@api.route("/api/admin/sheet_urls")
-def get_sheet_urls() -> Tuple[Response, int]:
-    urls = {cat: get_sheet_url(cat) for cat in ("shoes", "clothing", "accessories")}
-    return jsonify(urls), 200
-
-
-@api.route("/api/admin/sheet_url", methods=["POST"])
-def update_sheet_url() -> Tuple[Response, int]:
-    data = request.get_json(force=True, silent=True) or {}
-    category = data.get("category", "").lower()
-    url = data.get("url", "").strip()
-    if category not in ("shoes", "clothing", "accessories"):
-        return jsonify({"error": "unknown category"}), 400
-    if not url:
-        return jsonify({"error": "url required"}), 400
-    try:
-        key = f"sheet_url_{category}"
-        setting = AdminSetting.query.get(key)
-        if setting:
-            setting.value = url
-        else:
-            setting = AdminSetting(key=key, value=url)
-            db.session.add(setting)
-        setting.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
-        db.session.commit()
-        return jsonify({"status": "ok"}), 200
-    except Exception as e:
-        logger.exception("Error setting sheet url: %s", e)
-        return jsonify({"error": "internal error"}), 500
-
-
-@api.route("/api/import_sheet", methods=["POST"])
-def import_sheet() -> Tuple[Response, int]:
-    data = request.get_json(force=True, silent=True) or {}
-    category = data.get("category", "").lower()
-    author_id = data.get("author_id")
-    author_name = data.get("author_name", "").strip() or "unknown"
-
-    if category not in ("shoes", "clothing", "accessories"):
-        return jsonify({"error": "unknown category"}), 400
-
-    try:
-        author_id = int(author_id)
-    except (TypeError, ValueError):
-        return jsonify({"error": "invalid author_id"}), 400
-
-    url = get_sheet_url(category)
-    if not url:
-        return jsonify({"error": "sheet url not set"}), 400
-
-    try:
-        r = requests.get(url, timeout=30)
-        r.raise_for_status()
-        csv_text = r.content.decode("utf-8-sig")
-        rows = list(csv.DictReader(io.StringIO(csv_text)))
-        a, u, d, w = process_rows(category, rows)
-        db.session.commit()
-        desc = f"Добавлено: {a}. Изменено: {u}. Удалено: {d}. Ошибки: {w}"
-        log = ChangeLog(
-            author_id=author_id,
-            author_name=author_name,
-            action_type=f"Успешная загрузка {category}.csv",
-            description=desc,
-            timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
-        )
-        db.session.add(log)
-        db.session.commit()
-        return jsonify({"status": "ok", "added": a, "updated": u, "deleted": d, "warns": w}), 201
-
-    except Exception as e:
-        db.session.rollback()
-        logger.exception("Error in import_sheet: %s", e)
-        return jsonify({"error": "import_sheet failed", "message": str(e)}), 500
-
-
-@api.route("/api/get_cart", methods=["GET"])
+@api.route("/get_cart", methods=["GET"])
 def get_cart() -> Tuple[Response, int]:
     uid_str = request.args.get("user_id")
     if not uid_str:
@@ -663,7 +254,7 @@ def get_cart() -> Tuple[Response, int]:
         return jsonify({"error": "internal redis error"}), 500
 
 
-@api.route("/api/cart", methods=["POST"])
+@api.route("/save_cart", methods=["POST"])
 def save_cart() -> Tuple[Response, int]:
     data: Dict[str, Any] = request.get_json(force=True, silent=True) or {}
     if "user_id" not in data:
@@ -675,7 +266,6 @@ def save_cart() -> Tuple[Response, int]:
         return jsonify({"error": "invalid user_id"}), 400
 
     items = data.get("items", [])
-
     try:
         key = f"cart:{uid}"
         redis_client.set(key, json.dumps({"items": items}))
@@ -687,7 +277,7 @@ def save_cart() -> Tuple[Response, int]:
         return jsonify({"error": "internal redis error"}), 500
 
 
-@api.route("/api/get_favorites", methods=["GET"])
+@api.route("/get_favorites", methods=["GET"])
 def get_favorites() -> Tuple[Response, int]:
     uid_str = request.args.get("user_id")
     if not uid_str:
@@ -709,7 +299,7 @@ def get_favorites() -> Tuple[Response, int]:
         return jsonify({"error": "internal redis error"}), 500
 
 
-@api.route("/api/save_favorites", methods=["POST"])
+@api.route("/save_favorites", methods=["POST"])
 def save_favorites() -> Tuple[Response, int]:
     data = request.get_json(force=True, silent=True) or {}
     if "user_id" not in data:
@@ -736,4 +326,5 @@ def save_favorites() -> Tuple[Response, int]:
 
 
 def register_routes(app: Flask) -> None:
+    # Регистрируем все ваши @api маршруты
     app.register_blueprint(api)

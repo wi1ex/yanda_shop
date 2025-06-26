@@ -3,6 +3,7 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from models import db
 from routes import register_routes
+from admin_routes import admin_api
 from cors.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS
 from cors.logging import setup_logging
 
@@ -25,7 +26,7 @@ CORS(app, resources={r"/api/*": {"origins": CORS_ORIGINS}})
 
 # 6) Регистрируем Blueprint
 register_routes(app)
+app.register_blueprint(admin_api)
 
 if __name__ == "__main__":
-    # Во встроенном режиме (для локального дебага)
     app.run(host="0.0.0.0", port=8000)
