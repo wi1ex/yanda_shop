@@ -25,11 +25,11 @@
 | ------------ | ------------------------ | ------ |
 | **db**       | PostgreSQL               | 5432   |
 | **redis**    | Redis                    | 6379   |
-| **minio**    | S3-совместимое хранилище | 9000   |
+| **minio**    | S3-хранилище (MinIO)     | 9000   |
 | **backend**  | Flask-REST API           | 8000   |
 | **bot**      | Telegram-бот             | –      |
-| **frontend** | Vue.js                   | –      |
-| **proxy**    | Nginx прокси и SSL       | 80,443 |
+| **frontend** | Vue.js SPA               | –      |
+| **proxy**    | Nginx + SSL              | 80,443 |
 
 ### Архитектурная схема
 
@@ -74,22 +74,37 @@
 
 Базовый URL: `https://shop.yourdomain.com/api`
 
-| Endpoint                                            | Метод    | Описание                                            |
-| --------------------------------------------------- | -------- | --------------------------------------------------- |
-| `/`                                                 | GET      | Проверка статуса                                    |
-| `/save_user`                                        | POST     | Лог посещения & сохранение Telegram-пользователя    |
-| `/visits?date=YYYY-MM-DD`                           | GET      | Почасовые общие и уникальные посещения              |
-| `/products?category=<shoes/clothing/accessories>`   | GET      | Список товаров (основная информация)                |
-| `/product?category=&sku=`                           | GET      | Детали товара + URL-изображения                     |
-| `/import_products`                                  | POST     | Импорт из CSV (form-data: file, author\_id, name)   |
-| `/upload_images`                                    | POST     | Загрузка ZIP в MinIO                                |
-| `/logs?limit=N`                                     | GET      | Последние логи изменений                            |
-| `/user?user_id=`                                    | GET      | Профиль Telegram-пользователя                       |
-| `/cart`                                             | GET/POST | Получить/сохранить корзину (Redis)                  |
-| `/favorites`                                        | GET/POST | Получить/сохранить избранное (Redis)                |
-| `/admin/sheet_urls`                                 | GET      | Получить URL Google Sheets                          |
-| `/admin/sheet_url`                                  | POST     | Установить URL Google Sheets                        |
-| `/import_sheet`                                     | POST     | Импорт товаров из Google Sheets                     |
+### /api/general
+
+| Endpoint                    | Method | Description                             |
+| --------------------------- | ------ | --------------------------------------- |
+| `/general/`                 | GET    | Health check                            |
+| `/general/save_user`        | POST   | Сохранение инфо о пользователе Telegram |
+| `/general/get_user_profile` | GET    | Профиль пользователя                    |
+| `/general/get_social_urls`  | GET    | URL Telegram, Instagram, email          |
+
+### /api/product
+
+| Endpoint                    | Method | Description                             |
+| --------------------------- | ------ | --------------------------------------- |
+| `/product/list_products`    | GET    | Список товаров по категории             |
+| `/product/get_product`      | GET    | Детали товара по variant\_sku           |
+| `/product/get_cart`         | GET    | Загрузка корзины (из Redis)             |
+| `/product/save_cart`        | POST   | Сохранение корзины                      |
+| `/product/get_favorites`    | GET    | Избранное (загрузка)                    |
+| `/product/save_favorites`   | POST   | Избранное (сохранение)                  |
+
+### /api/admin
+
+| Endpoint                    | Method | Description                             |
+| --------------------------- | ------ | --------------------------------------- |
+| `/admin/get_admin_ids`      | GET    | Telegram ID’s админов                   |
+| `/admin/get_daily_visits`   | GET    | Статистика посещений по часам (Redis)   |
+| `/admin/get_logs`           | GET    | Логи изменений (Postgres)               |
+| `/admin/get_sheet_urls`     | GET    | Текущие Google Sheets URL по категориям |
+| `/admin/update_sheet_url`   | POST   | Обновление URL Google Sheets            |
+| `/admin/import_sheet`       | POST   | Импорт данных из таблицы Google Sheets  |
+| `/admin/upload_images`      | POST   | ZIP архив с фото в MinIO                |
 
 ---
 

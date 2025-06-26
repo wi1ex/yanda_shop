@@ -227,8 +227,3 @@ def upload_images() -> Tuple[Response, int]:
     except Exception as e:
         logger.exception("Error saving upload_images log: %s", e)
         return jsonify({"error": "upload error"}), 500
-
-
-def register_routes(app: Flask) -> None:
-    # Регистрируем все ваши @api маршруты
-    app.register_blueprint(admin_api)

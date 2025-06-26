@@ -41,6 +41,7 @@ def save_user() -> Tuple[Response, int]:
     first_name = data.get("first_name")
     last_name = data.get("last_name")
     username = data.get("username")
+    # photo_url = data.get("photo_url")
 
     # --- Postgres только для целых id ---
     if is_tg:
@@ -94,7 +95,7 @@ def save_user() -> Tuple[Response, int]:
         redis_client.expire(total_key, ttl)
         redis_client.expire(unique_key, ttl)
 
-        logger.info("save_user REDIS updated visit counters for %r", raw_id)
+        logger.debug("save_user REDIS updated visit counters for %r", raw_id)
         return jsonify({"status": "ok"}), 201
     except Exception as e:
         logger.exception("Redis error in save_user: %s", e)
@@ -149,8 +150,3 @@ def get_social_urls() -> Tuple[Response, int]:
     except Exception as e:
         logger.exception("Error in get_social_urls: %s", e)
         return jsonify({k: "" for k in keys}), 200
-
-
-def register_routes(app: Flask) -> None:
-    # Регистрируем все ваши @api маршруты
-    app.register_blueprint(general_api)

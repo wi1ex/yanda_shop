@@ -68,7 +68,7 @@ export const useStore = defineStore('main', () => {
   const socialUrls         = reactive({ url_telegram: '', url_instagram: '', url_email: '' })
 
   async function loadSocialUrls() {
-    const r = await fetch(`${url.value}/api/get_social_urls`)
+    const r = await fetch(`${url.value}/api/general/get_social_urls`)
     Object.assign(socialUrls, await r.json())
   }
 
@@ -99,14 +99,14 @@ export const useStore = defineStore('main', () => {
     }
   }
 
-  // Загрузка корзины из backend (GET /api/get_cart?user_id=…)
+  // Загрузка корзины из backend
   async function loadCartFromServer() {
     if (!user.value || !user.value.id || !isTelegramUserId(user.value.id)) {
       cartLoaded.value = true;
       return;
     }
     try {
-      const resp = await fetch(`${url.value}/api/get_cart?user_id=${user.value.id}`);
+      const resp = await fetch(`${url.value}/api/product/get_cart?user_id=${user.value.id}`);
       if (!resp.ok) {
         console.error('Cannot load cart:', resp.statusText);
         return;
@@ -125,7 +125,7 @@ export const useStore = defineStore('main', () => {
     }
   }
 
-  // Сохранение корзины в backend (POST /api/save_cart)
+  // Сохранение корзины в backend
   async function saveCartToServer() {
     // Сохраняем только Telegram-пользователя
     if (!user.value?.id || !isTelegramUserId(user.value.id)) return
@@ -137,7 +137,7 @@ export const useStore = defineStore('main', () => {
       }))
     }
     try {
-      await fetch(`${url.value}/api/save_cart`, {
+      await fetch(`${url.value}/api/product/save_cart`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -154,7 +154,7 @@ export const useStore = defineStore('main', () => {
       return;
     }
     try {
-      const resp = await fetch(`${url.value}/api/get_favorites?user_id=${user.value.id}`);
+      const resp = await fetch(`${url.value}/api/product/get_favorites?user_id=${user.value.id}`);
       if (!resp.ok) throw new Error(resp.statusText);
       const data = await resp.json();
       favorites.value.items = data.items || [];
@@ -174,7 +174,7 @@ export const useStore = defineStore('main', () => {
       items: favorites.value.items
     };
     try {
-      const resp = await fetch(`${url.value}/api/save_favorites`, {
+      const resp = await fetch(`${url.value}/api/product/save_favorites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -204,7 +204,7 @@ export const useStore = defineStore('main', () => {
   async function saveUserToServer() {
     if (!user.value?.id) return
     try {
-      await fetch(`${url.value}/api/save_user`, {
+      await fetch(`${url.value}/api/general/save_user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -387,7 +387,7 @@ export const useStore = defineStore('main', () => {
   async function fetchProducts(cat) {
     if (cat) selectedCategory.value = cat
     try {
-      const res = await fetch(`${url.value}/api/list_products?category=${encodeURIComponent(selectedCategory.value)}`)
+      const res = await fetch(`${url.value}/api/product/list_products?category=${encodeURIComponent(selectedCategory.value)}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       products.value = await res.json()
     } catch (e) {
@@ -398,7 +398,7 @@ export const useStore = defineStore('main', () => {
   // Загрузка **всех** товаров (для страницы «Избранное»)
   async function fetchAllProducts() {
     try {
-      const res = await fetch(`${url.value}/api/list_products`)
+      const res = await fetch(`${url.value}/api/product/list_products`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       products.value = await res.json()
     } catch (e) {
@@ -519,7 +519,7 @@ export const useStore = defineStore('main', () => {
   async function fetchDetail(variantSku, category) {
     detailLoading.value = true
     try {
-      const pRes = await fetch(`${url.value}/api/get_product?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(variantSku)}`)
+      const pRes = await fetch(`${url.value}/api/product/get_product?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(variantSku)}`)
       detailData.value = await pRes.json()
       // подгружаем весь список и фильтруем по sku
       await fetchProducts(category)
@@ -535,7 +535,7 @@ export const useStore = defineStore('main', () => {
   async function fetchUserProfile(userId) {
     profileLoading.value = true; profileError.value = ''
     try {
-      const res = await fetch(`${url.value}/api/get_user_profile?user_id=${userId}`)
+      const res = await fetch(`${url.value}/api/general/get_user_profile?user_id=${userId}`)
       if (!res.ok) {
         profileError.value = res.status===404 ? 'Пользователь не найден' : `Ошибка ${res.status}`
         return
