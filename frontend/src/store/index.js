@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch, reactive } from 'vue'
 
 export const API = {
-  baseUrl: ref('https://shop.yanda.twc1.net'),
+  baseUrl: 'https://shop.yanda.twc1.net',
   general: {
     healthCheck:        '/api/general',                      // GET  - health check
     saveUser:           '/api/general/save_user',            // POST - сохранить/обновить Telegram-пользователя
@@ -95,7 +95,7 @@ export const useStore = defineStore('main', () => {
   const socialUrls         = reactive({ url_telegram: '', url_instagram: '', url_email: '' })
 
   async function loadSocialUrls() {
-    const r = await fetch(`${API.base_url}${API.general.getSocialUrls}`)
+    const r = await fetch(`${API.baseUrl}${API.general.getSocialUrls}`)
     Object.assign(socialUrls, await r.json())
   }
 
