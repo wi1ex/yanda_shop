@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 from typing import Tuple, List, Dict, Any
 from werkzeug.utils import secure_filename
 from flask import Blueprint, jsonify, request, Response
-from ..cors.config import ADMIN_IDS, BACKEND_URL
+from ..cors.config import ADMIN_IDS
 from ..db_utils import session_scope
 from ..extensions import redis_client, minio_client, BUCKET
 from ..cors.logging import logger
@@ -23,6 +23,7 @@ from ..utils import (
     model_by_category,
     get_sheet_url,
     process_rows,
+    cleanup_review_images,
 )
 
 admin_api: Blueprint = Blueprint("admin_api", __name__, url_prefix="/api/admin")
@@ -274,43 +275,64 @@ def update_setting() -> Tuple[Response, int]:
 @admin_api.route('/create_review', methods=['POST'])
 def create_review() -> Tuple[Response, int]:
     form = request.form
-    # проверка client_id
+    # 1) Проверяем client_id
     try:
-        client_id = int(form.get('client_id', ''))
+        client_id = int(form.get('client_id', '').strip())
     except ValueError:
         return jsonify({'error': 'client_id должен быть числом'}), 400
 
-    try:
-        texts = ['client_text1', 'shop_response', 'client_text2', 'link_url']
-        for fld in texts:
-            if not form.get(fld, '').strip():
-                return jsonify({'error': f'Поле {fld} не заполнено'}), 400
+    # 2) Проверяем обязательные текстовые поля (кроме client_text2)
+    required_fields = {
+        'client_text1': 'Текст клиента 1',
+        'shop_response': 'Ответ магазина',
+        'link_url': 'Ссылка'
+    }
+    for fld, fld_name in required_fields.items():
+        if not form.get(fld, '').strip():
+            return jsonify({'error': f'Поле "{fld_name}" не заполнено'}), 400
 
+    # 3) Проверяем, что хотя бы одна фотография приложена
+    photos = [request.files.get(f'photo{i}') for i in range(1, 4)]
+    if not any(photos):
+        return jsonify({'error': 'Необходимо прикрепить хотя бы одну фотографию'}), 400
+
+    try:
         with session_scope() as session:
+            # 4) Проверяем, что клиент существует
             if not session.get(Users, client_id):
                 return jsonify({'error': 'client_id не найден'}), 404
+
+            # 5) Создаём и сохраняем отзыв
             review = Review(
                 client_id=client_id,
                 client_text1=form['client_text1'].strip(),
                 shop_response=form['shop_response'].strip(),
-                client_text2=form['client_text2'].strip(),
+                client_text2=form.get('client_text2', '').strip() or None,
                 link_url=form['link_url'].strip()
             )
             session.add(review)
-            session.flush()
+            session.flush()  # получаем review.id
 
-            # сохраняем фото
+            # 6) Сохраняем фото в MinIO
             saved = 0
-            for i in range(1, 4):
-                f = request.files.get(f'photo{i}')
-                if f:
-                    ext = secure_filename(f.filename).rsplit('.', 1)[-1]
-                    key = f'reviews/{review.id}_{i}.{ext}'
-                    minio_client.put_object(BUCKET, key, f.stream, length=-1, part_size=10*1024*1024)
-                    saved += 1
+            for idx, f in enumerate(photos, start=1):
+                if not f:
+                    continue
+                ext = secure_filename(f.filename).rsplit('.', 1)[-1]
+                key = f'reviews/{review.id}_{idx}.{ext}'
+                minio_client.put_object(BUCKET, key, f.stream, length=-1, part_size=10*1024*1024)
+                saved += 1
 
-        logger.info("Review %d created, photos=%d", review.id)
-        return jsonify({'status': 'ok', 'message': 'Отзыв успешно добавлен', 'review_id': review.id}), 201
+            # 7) Логируем результат внутри сессии
+            logger.info("Review %d created, photos=%d", review.id, saved)
+            review_id = review.id  # запомним для ответа
+
+        # 8) Удаляем лишние изображения
+        removed = cleanup_review_images()
+        logger.debug("cleanup_review_images removed %d stale objects", len(removed))
+
+        # 9) Возвращаем успех
+        return jsonify({'status': 'ok', 'message': 'Отзыв успешно добавлен', 'review_id': review_id}), 201
 
     except Exception as e:
         logger.exception("Error in create_review: %s", e)
@@ -327,12 +349,11 @@ def delete_review(review_id: int) -> Tuple[Response, int]:
                 logger.info("delete_review: %d not found", review_id)
                 return jsonify({'error': 'not found'}), 404
 
-            # удаляем все файлы reviews/{review_id}_*
-            prefix = f'reviews/{review_id}_'
-            for obj in minio_client.list_objects(BUCKET, prefix=prefix, recursive=True):
-                minio_client.remove_object(BUCKET, obj.object_name)
-
             session.delete(rev)
+
+        removed = cleanup_review_images()
+        logger.debug("cleanup_review_images removed %d stale objects", len(removed))
+
         logger.info("Review %d deleted", review_id)
         return jsonify({'status': 'deleted'}), 200
 

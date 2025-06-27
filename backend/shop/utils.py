@@ -1,5 +1,6 @@
 import io
 import os
+import re
 import zipfile
 from datetime import datetime
 from typing import Set, Tuple, Optional, List, Dict, Any
@@ -9,7 +10,7 @@ from .cors.logging import logger
 from .cors.config import BACKEND_URL
 from .db_utils import session_scope
 from .extensions import minio_client, BUCKET
-from .models import AdminSetting, Shoe, Clothing, Accessory
+from .models import AdminSetting, Shoe, Clothing, Accessory, Review
 
 
 # Парсеры
@@ -235,3 +236,34 @@ def upload_new_images(folder: str, archive_bytes: bytes) -> Tuple[int, int]:
 
     logger.info("upload_new_images END added=%d replaced=%d", added, replaced)
     return added, replaced
+
+
+def cleanup_review_images() -> List[str]:
+    """
+    Удаляет из MinIO избыточные изображения отзывов.
+    Возвращает список имен удалённых объектов.
+    """
+    # 1) Собираем все существующие ID отзывов
+    with session_scope() as session:
+        existing_ids = {r.id for r in session.query(Review.id).all()}
+
+    deleted = []
+    # 2) Проходим по всем объектам с префиксом 'reviews/'
+    for obj in minio_client.list_objects(BUCKET, prefix="reviews/", recursive=True):
+        name = obj.object_name.split("/")[-1]
+        # ожидаем формат "<id>_<index>.<ext>"
+        m = re.match(r"^(\d+)_(\d+)\.\w+$", name)
+        if not m:
+            # файл не соответствует никакому шаблону — удаляем
+            minio_client.remove_object(BUCKET, obj.object_name)
+            deleted.append(obj.object_name)
+            continue
+
+        review_id = int(m.group(1))
+        index     = int(m.group(2))
+        # 3) Удаляем, если нет отзыва или индекс вне [1..3]
+        if review_id not in existing_ids or not (1 <= index <= 3):
+            minio_client.remove_object(BUCKET, obj.object_name)
+            deleted.append(obj.object_name)
+
+    return deleted
