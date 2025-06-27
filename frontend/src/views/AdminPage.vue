@@ -160,14 +160,16 @@
         <input v-model="form.client_id" placeholder="Client ID" required/>
         <textarea v-model="form.client_text1" placeholder="Текст клиента 1" required/>
         <textarea v-model="form.shop_response" placeholder="Ответ магазина" required/>
-        <textarea v-model="form.client_text2" placeholder="Текст клиента 2" required/>
+        <textarea v-model="form.client_text2" placeholder="Текст клиента 2"/>
         <input v-model="form.link_url" placeholder="Ссылка" required/>
         <div class="photos-inputs">
           <input type="file" @change="onFile($event,1)"/>
           <input type="file" @change="onFile($event,2)"/>
           <input type="file" @change="onFile($event,3)"/>
         </div>
-        <button type="submit">Добавить</button>
+        <button type="submit" :disabled="!form.client_id || !form.client_text1 || !form.shop_response || !form.link_url || (!files[1] && !files[2] && !files[3])">
+          Добавить
+        </button>
       </form>
     </section>
 
@@ -216,21 +218,53 @@ function onFile(e,i) {
   files[i] = e.target.files[0]
 }
 
-async function onSubmitReview(){
-  formError.value = formSuccess.value = '';
-  const fd = new FormData();
-  Object.entries(form).forEach(([k,v])=> fd.append(k,v));
-  Object.values(files).forEach((file,i)=> fd.append(`photo${i}`, file));
+async function onSubmitReview() {
+  // Сброс сообщений
+  formError.value = ''
+  formSuccess.value = ''
+
+  // Проверка обязательных полей
+  const { client_id, client_text1, shop_response, link_url } = form
+  if (!client_id.trim() || !client_text1.trim() || !shop_response.trim() || !link_url.trim()) {
+    formError.value = 'Пожалуйста, заполните все обязательные поля'
+    return
+  }
+
+  // Проверка хотя бы одного фото
+  if (!files[1] && !files[2] && !files[3]) {
+    formError.value = 'Требуется хотя бы одна фотография'
+    return
+  }
+
+  // Формируем FormData
+  const fd = new FormData()
+  fd.append('client_id', client_id)
+  fd.append('client_text1', client_text1)
+  fd.append('shop_response', shop_response)
+  // client_text2 может быть пустым
+  fd.append('client_text2', form.client_text2 || '')
+  fd.append('link_url', link_url)
+
+  // Добавляем фото
+  for (let i = 1; i <= 3; i++) {
+    if (files[i]) {
+      fd.append(`photo${i}`, files[i])
+    }
+  }
+
   try {
-    formSuccess.value = await store.createReview(fd);
-    // очистить форму
-    Object.keys(form).forEach(k=> form[k]='');
-    Object.keys(files).forEach(i=> delete files[i]);
-    // сразу обновить список
-    selected.value = 'all_reviews';
-    await store.fetchReviews();
+    // Отправка и получение сообщения об успехе
+    formSuccess.value = await store.createReview(fd)
+
+    // Очищаем форму и файлы
+    Object.keys(form).forEach(key => form[key] = '')
+    Object.keys(files).forEach(key => delete files[key])
+
+    // Переключаемся на список отзывов и обновляем его
+    selected.value = 'all_reviews'
+    await store.fetchReviews()
   } catch (err) {
-    formError.value = err.message;
+    formError.value = err.message
   }
 }
 
