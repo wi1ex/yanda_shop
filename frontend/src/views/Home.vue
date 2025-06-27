@@ -97,14 +97,31 @@
     <!-- TESTIMONIALS -->
     <section class="testimonials">
       <h2>Твой стиль, твои отзывы</h2>
-      <div class="messages">
-        <div v-for="msg in testimonials" :key="msg.id" :class="['message', msg.from==='user'?'user':'shop']">
-          {{ msg.text }}
-        </div>
+      <div v-if="reviews.length === 0" class="no-reviews">
+        Отзывов пока нет.
       </div>
-      <div class="author">
-        <img :src="testimonialsAuthor.avatar" alt="" class="avatar"/>
-        <div>{{ testimonialsAuthor.name }}, {{ testimonialsAuthor.year }}</div>
+      <div v-else class="carousel">
+        <button @click="prev" aria-label="Назад">←</button>
+        <div class="slide">
+          <div class="review">
+            <p class="user-text">{{ current.client_text1 }}</p>
+            <div class="photos">
+              <img v-for="url in current.photo_urls" :key="url" :src="url" alt="photo"/>
+            </div>
+            <p class="shop-text">{{ current.shop_response }}</p>
+            <p class="user-text">{{ current.client_text2 }}</p>
+            <div class="meta">
+              <div class="review-header">
+<!--                <img class="avatar" :src="current.avatar_url" alt="аватар"/>-->
+                <img class="avatar" :src="icon_default_avatar_white" alt="аватар"/>
+                <span class="client-name">{{ current.client_name }}</span>
+                <span class="review-date">{{ new Date(current.created_at).toLocaleDateString('ru-RU', { month:'2-digit', year:'numeric' }) }}</span>
+              </div>
+              <a :href="current.link_url" target="_blank">→</a>
+            </div>
+          </div>
+        </div>
+        <button @click="next" aria-label="Вперёд">→</button>
       </div>
     </section>
 
@@ -131,19 +148,40 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useStore } from '@/store/index.js'
-import { useRouter } from 'vue-router'
+import { useStore, API } from '@/store/index.js'
 
-const store = useStore()
-const router = useRouter()
+import icon_default_avatar_white from '@/assets/images/default_avatar_white.svg'
 
-// HERO
+const store   = useStore()
+
+// Reviews carousel
+const reviews = store.reviews
 const heroIndex = ref(0)
-function prevHero(){ heroIndex.value = (heroIndex.value + 1) % 1 }
-function nextHero(){ heroIndex.value = (heroIndex.value + 1) % 1 }
+const idx = ref(0)
+const current = computed(() => reviews[idx.value] || {})
+
+function prev() {
+  if (!reviews.length) return
+  idx.value = (idx.value + reviews.length - 1) % reviews.length
+}
+
+function next() {
+  if (!reviews.length) return
+  idx.value = (idx.value + 1) % reviews.length
+}
+
+// Hero
 const runningText = 'Puma //_Future_Vintage_Capsule • sale'
 
-// HOW IT WORKS
+function prevHero() {
+  heroIndex.value = (heroIndex.value + 1) % 1
+}
+
+function nextHero() {
+  heroIndex.value = (heroIndex.value + 1) % 1
+}
+
+// How it works
 const workSteps = [
   { step:1, title:'Ты выбираешь', text:'Найди товар в каталоге или пришли нам фотографию желаемой модели.' },
   { step:2, title:'Мы проверяем на оригинал', text:'Мы проверяем наличие, подлинность и цену в официальных источниках.' },
@@ -151,75 +189,81 @@ const workSteps = [
   { step:4, title:'Доставляем тебе', text:'Мы организуем доставку в твой город быстро и безопасно.' },
 ]
 
-// CATEGORIES
+// Categories
 const categorySlides = [
   { title:'Аксессуары', desc:'Сумки, ремни и игрушки от Max Mara, Coach, Pop Mart и других официальных брендов.' },
-  { title:'Одежда', desc:'Только оригинальные вещи от Nike, Adidas, Supreme и т.д.' },
-  { title:'Обувь', desc:'Хиты от New Balance, Jacquemus и других.' },
+  { title:'Одежда',     desc:'Только оригинальные вещи от Nike, Adidas, Supreme и т.д.' },
+  { title:'Обувь',      desc:'Хиты от New Balance, Jacquemus и других.' },
 ]
 const currentCat = ref(0)
-function prevCat(){ currentCat.value = (currentCat.value + categorySlides.length -1) % categorySlides.length }
-function nextCat(){ currentCat.value = (currentCat.value +1) % categorySlides.length }
 
-// PRINCIPLES
+function prevCat() {
+  currentCat.value = (currentCat.value + categorySlides.length - 1) % categorySlides.length
+}
+
+function nextCat() {
+  currentCat.value = (currentCat.value + 1) % categorySlides.length
+}
+
+// Principles
 const origBlocks = [
   { title:'Только оригиналы', text:'Работаем напрямую с официальными магазинами. Никаких подделок, никаких посредников.', open:false },
-  { title:'Честные цены', text:'Прямая закупка без посредников. Цены на 20-45% ниже, чем в розницах.', open:false },
+  { title:'Честные цены', text:'Прямая закупка без посредников. Цены на 20–45% ниже, чем в розницах.', open:false },
   { title:'Индивидуальный подход', text:'Не нашел нужную модель? Пришли фото — мы найдём и доставим.', open:false },
   { title:'Прозрачность и уверенность', text:'Открытые условия на каждом этапе без сюрпризов.', open:false },
 ]
-function toggleOrig(b){ b.open = !b.open }
+function toggleOrig(block) {
+  block.open = !block.open
+}
 
-// BESTSELLERS
+// Bestsellers
 const bestIndex = ref(0)
-const bests = computed(() => store.displayedProducts .slice(0, 2) .map(g => g.minPriceVariant))
+const bests     = computed(() =>
+  store.displayedProducts.slice(0, 2).map(g => g.minPriceVariant)
+)
 
 function prevBest() {
-  bestIndex.value = (bestIndex.value + bests.value.length -1) % bests.value.length
+  bestIndex.value = (bestIndex.value + bests.value.length - 1) % bests.value.length
 }
 
 function nextBest() {
-  bestIndex.value = (bestIndex.value +1) % bests.value.length
+  bestIndex.value = (bestIndex.value + 1) % bests.value.length
 }
 
 function toggleFav(p) {
-  if (store.isFavorite(p.color_sku)) {
-    store.removeFromFavorites(p.color_sku)
-  } else {
-    store.addToFavorites(p.color_sku)
-  }
+  store.isFavorite(p.color_sku) ? store.removeFromFavorites(p.color_sku) : store.addToFavorites(p.color_sku)
 }
 
-// REQUEST FORM
+// Request form
 const request = ref({ name:'', email:'', sku:'', file:null, agree:false })
-function onFileChange(e){ request.value.file = e.target.files[0] }
-function onSubmitRequest(){ alert('Запрос отправлен!') }
 
-// TESTIMONIALS
-const testimonials = [
-  { id:1, from:'user', text:'Привет! Я получил заказ, все отлично 🔥 Спасибо большое!' },
-  { id:2, from:'shop', text:'Привет! Круто! Мы очень рады 🙌 Как вам продукт и доставка?' },
-  { id:3, from:'user', text:'Кроссовки оригинальные, упаковка отличная.' },
-  { id:4, from:'shop', text:'Спасибо большое за ваш отзыв! 🙏' },
-]
-const testimonialsAuthor = { avatar:'', name:'Борис Шепелев', year:'2025' }
+function onFileChange(e) {
+  request.value.file = e.target.files[0]
+}
+
+function onSubmitRequest() {
+  alert('Запрос отправлен!')
+}
 
 // FAQ
 const faqs = [
-  { question:'Как я могу быть уверен, что товар оригинальный?', answer:'Все товары мы закупаем только в официальных магазинах.', open:false },
-  { question:'Как заказать товар, которого нет на сайте?', answer:'Отправьте фото или артикул в запросе выше.', open:false },
-  { question:'Какие способы оплаты доступны?', answer:'Мы принимаем карты, Apple Pay, Google Pay.', open:false },
-  { question:'Сколько времени занимает доставка?', answer:'Обычно 2–10 дней в зависимости от региона.', open:false },
-  { question:'Могу ли я вернуть товар, если он не подходит?', answer:'Да, в течение 14 дней после получения.', open:false },
-  { question:'Какие бренды представлены на сайте?', answer:'Nike, Adidas, New Balance, Jacquemus и др.', open:false },
-  { question:'Какие гарантии я получаю при заказе?', answer:'Гарантия оригинальности и возврат в течение 14 дней.', open:false },
-  { question:'Как я могу посмотреть статус моего заказа?', answer:'В личном кабинете или через Telegram-бота.', open:false },
+  { question:'Как я могу быть уверен, что товар оригинальный?',  answer:'Все товары мы закупаем только в официальных магазинах.', open:false },
+  { question:'Как заказать товар, которого нет на сайте?',       answer:'Отправьте фото или артикул в запросе выше.',             open:false },
+  { question:'Какие способы оплаты доступны?',                   answer:'Мы принимаем карты, Apple Pay, Google Pay.',             open:false },
+  { question:'Сколько времени занимает доставка?',               answer:'Обычно 2–10 дней в зависимости от региона.',             open:false },
+  { question:'Могу ли я вернуть товар, если он не подходит?',    answer:'Да, в течение 14 дней после получения.',                 open:false },
+  { question:'Какие бренды представлены на сайте?',              answer:'Nike, Adidas, New Balance, Jacquemus и др.',             open:false },
+  { question:'Какие гарантии я получаю при заказе?',             answer:'Гарантия оригинальности и возврат в течение 14 дней.',   open:false },
+  { question:'Как я могу посмотреть статус моего заказа?',       answer:'В личном кабинете или через Telegram-бота.',             open:false },
 ]
 
-function toggleFaq(i){ faqs[i].open = !faqs[i].open }
+function toggleFaq(i) {
+  faqs[i].open = !faqs[i].open
+}
 
 onMounted(() => {
   store.fetchProducts()
+  store.fetchReviews()
 })
 
 </script>
@@ -451,53 +495,125 @@ onMounted(() => {
 
 /* TESTIMONIALS */
 .testimonials {
-  padding: 24px 16px;
-  background: #f8f8f8;
+  background: #f7f7f7;
+  padding: 24px;
+  border-radius: 12px;
 }
-
-.testimonials h2 {
-  text-align: center;
-  margin-bottom: 16px;
+.no-reviews {
+  font-style: italic;
 }
-
-.messages {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: 320px;
-  margin: 0 auto;
-}
-
-.message {
-  padding: 8px;
-  border-radius: 4px;
-  max-width: 80%;
-}
-
-.message.user {
-  background: #000;
-  color: #fff;
-  align-self: flex-end;
-}
-
-.message.shop {
-  background: #fff;
-  color: #000;
-  align-self: flex-start;
-}
-
-.author {
+.carousel {
   display: flex;
   align-items: center;
-  gap: 8px;
   justify-content: center;
+  gap: 8px;
+}
+.slide {
+  width: 300px;
+}
+.review {
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 8px;
+}
+.photos {
+  margin: 8px 0;
+}
+.photos img {
+  width: 120px;
+  height: auto;
+  margin-right: 8px;
+  border-radius: 4px;
+}
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-top: 12px;
 }
-
-.author .avatar {
-  width: 32px;
-  height: 32px;
+.meta a {
+  font-size: 20px;
+  text-decoration: none;
+  color: inherit;
+}
+.review-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.avatar {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
+  object-fit: cover;
+  margin-right: 12px;
+  border: 2px solid #ddd;
+}
+.client-name {
+  color: #E94F37;
+  font-weight: 600;
+  margin-right: 8px;
+}
+.review-date {
+  color: #888;
+  font-size: 14px;
+}
+
+.user-text {
+  background: #000;
+  color: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  display: inline-block;
+  max-width: 100%;
+  margin: 8px 0;
+}
+.shop-text {
+  background: #fff;
+  color: #000;
+  padding: 12px;
+  border-radius: 8px;
+  display: inline-block;
+  max-width: 100%;
+  margin: 8px 0;
+}
+
+.brand, .name, .price {
+  margin: 4px 0;
+}
+
+.brand {
+  font-weight: 600;
+}
+
+.name {
+  font-size: 14px;
+}
+
+.price {
+  font-size: 14px;
+  color: #333;
+}
+
+.q-num {
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.toggle {
+  margin-left: 8px;
+}
+
+.principle-text {
+  margin: 8px 0 16px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.or-sep {
+  text-align: center;
+  margin: 12px 0;
+  font-weight: bold;
 }
 
 /* FAQ */
@@ -587,13 +703,6 @@ onMounted(() => {
   }
   .or-sep {
     text-align: center;
-  }
-  .messages {
-    max-width: 100%;
-    padding: 0 16px;
-  }
-  .author {
-    flex-direction: column;
   }
   .faq {
     padding: 16px 8px;

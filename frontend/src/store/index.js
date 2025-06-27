@@ -4,27 +4,32 @@ import { computed, ref, watch, reactive } from 'vue'
 export const API = {
   baseUrl: 'https://shop.yanda.twc1.net',
   general: {
-    healthCheck:        '/api/general',                      // GET  - health check
-    saveUser:           '/api/general/save_user',            // POST - сохранить/обновить Telegram-пользователя
-    getUserProfile:     '/api/general/get_user_profile',     // GET  - получить профиль
-    getSocialUrls:      '/api/general/get_social_urls',      // GET  - получить соц. ссылки
+    healthCheck:        '/api/general',                      // GET    - health check
+    saveUser:           '/api/general/save_user',            // POST   - сохранить/обновить Telegram-пользователя
+    getUserProfile:     '/api/general/get_user_profile',     // GET    - получить профиль
+    getSocialUrls:      '/api/general/get_social_urls',      // GET    - получить соц. ссылки
   },
   product: {
-    listProducts:       '/api/product/list_products',        // GET  - список товаров (фильтр по категории)
-    getProduct:         '/api/product/get_product',          // GET  - детали одного товара
-    getCart:            '/api/product/get_cart',             // GET  - получить корзину пользователя
-    saveCart:           '/api/product/save_cart',            // POST - сохранить корзину
-    getFavorites:       '/api/product/get_favorites',        // GET  - получить избранное
-    saveFavorites:      '/api/product/save_favorites',       // POST - сохранить избранное
+    listProducts:       '/api/product/list_products',        // GET    - список товаров (фильтр по категории)
+    getProduct:         '/api/product/get_product',          // GET    - детали одного товара
+    getCart:            '/api/product/get_cart',             // GET    - получить корзину пользователя
+    saveCart:           '/api/product/save_cart',            // POST   - сохранить корзину
+    getFavorites:       '/api/product/get_favorites',        // GET    - получить избранное
+    saveFavorites:      '/api/product/save_favorites',       // POST   - сохранить избранное
   },
   admin: {
-    getAdminIds:        '/api/admin/get_admin_ids',          // GET  - список admin_id
-    getDailyVisits:     '/api/admin/get_daily_visits',       // GET  - статистика визитов по часам
-    getLogs:            '/api/admin/get_logs',               // GET  - журнал
-    getSheetUrls:       '/api/admin/get_sheet_urls',         // GET  - URL Google Sheets
-    updateSheetUrl:     '/api/admin/update_sheet_url',       // POST - сохранить URL таблицы
-    importSheet:        '/api/admin/import_sheet',           // POST - импорт CSV из Sheets
-    uploadImages:       '/api/admin/upload_images',          // POST - загрузка ZIP с изображениями
+    getAdminIds:        '/api/admin/get_admin_ids',          // GET    - список admin_id
+    getDailyVisits:     '/api/admin/get_daily_visits',       // GET    - статистика визитов по часам
+    getLogs:            '/api/admin/get_logs',               // GET    - журнал
+    getSheetUrls:       '/api/admin/get_sheet_urls',         // GET    - URL Google Sheets
+    updateSheetUrl:     '/api/admin/update_sheet_url',       // POST   - сохранить URL таблицы
+    importSheet:        '/api/admin/import_sheet',           // POST   - импорт CSV из Sheets
+    uploadImages:       '/api/admin/upload_images',          // POST   - загрузка ZIP с изображениями
+    getSettings:        '/api/admin/get_settings',           // GET    - получить список настроек
+    updateSetting:      '/api/admin/update_setting',         // POST   - изменить список настроек
+    listReviews:        '/api/admin/list_reviews',           // GET    - получить список отзывов
+    createReview:       '/api/admin/create_review',          // POST   - загрузить новый отзыв
+    deleteReview:       '/api/admin/delete_review'           // DELETE - удалить отзыв
   }
 }
 
@@ -93,6 +98,48 @@ export const useStore = defineStore('main', () => {
   const profileError       = ref('')
 
   const socialUrls         = reactive({ url_telegram: '', url_instagram: '', url_email: '' })
+
+  const settings           = ref([])
+  const reviews            = ref([])
+
+
+
+  async function fetchSettings() {
+    const res = await fetch(`${API.baseUrl}${API.admin.getSettings}`)
+    if (res.ok) settings.value = (await res.json()).settings
+  }
+
+  async function saveSetting(key, value) {
+    await fetch(`${API.baseUrl}${API.admin.updateSetting}`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({key, value})
+    })
+  }
+
+  async function fetchReviews() {
+    const res = await fetch(`${API.baseUrl}${API.admin.listReviews}`)
+    if (res.ok) {
+      const j = await res.json()
+      reviews.value = j.reviews.map(r => ({ ...r, }))
+    }
+  }
+
+  async function createReview(formData) {
+    const res = await fetch(`${API.baseUrl}${API.admin.createReview}`, {
+      method:'POST', body: formData
+    })
+    if (!res.ok) throw new Error((await res.json()).error || res.status)
+    await fetchReviews()
+  }
+
+  async function deleteReview(id) {
+    const res = await fetch(`${API.baseUrl}${API.admin.deleteReview}/${id}`, {
+      method:'DELETE'
+    })
+    if (!res.ok) throw new Error((await res.json()).error || res.status)
+    await fetchReviews()
+  }
 
   async function loadSocialUrls() {
     const r = await fetch(`${API.baseUrl}${API.general.getSocialUrls}`)
@@ -581,33 +628,24 @@ export const useStore = defineStore('main', () => {
     admin_ids,
     tg,
     user,
-
     categoryList,
     selectedCategory,
-
     sortBy,
     sortOrder,
-
     filterPriceMin,
     filterPriceMax,
     filterColor,
-
     products,
-
     cartOrder,
     cart,
-
     favorites,
     favoritesOrder,
     favoritesLoaded,
-
     cartLoaded,
     showCartDrawer,
-
     colorGroups,
     displayedProducts,
     groupedCartItems,
-
     sheetUrls,
     sheetSaveLoading,
     sheetImportLoading,
@@ -618,16 +656,15 @@ export const useStore = defineStore('main', () => {
     visitsLoading,
     zipResult,
     zipLoading,
-
     detailData,
     detailLoading,
     variants,
-
     profile,
     profileLoading,
     profileError,
-
     socialUrls,
+    settings,
+    reviews,
 
     loadSocialUrls,
     isTelegramUserId,
@@ -654,5 +691,10 @@ export const useStore = defineStore('main', () => {
     uploadZip,
     fetchDetail,
     fetchUserProfile,
+    fetchSettings,
+    saveSetting,
+    fetchReviews,
+    createReview,
+    deleteReview,
   }
 })

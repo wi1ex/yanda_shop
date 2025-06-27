@@ -28,7 +28,18 @@ class AdminSetting(db.Model):
     key            = db.Column(db.String(100), primary_key=True)
     value          = db.Column(db.Text)
     updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
-                           onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+                               onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class Review(db.Model):
+    __tablename__  = 'reviews'
+    id             = db.Column(db.Integer, primary_key=True)
+    client_id      = db.Column(db.BigInteger, db.ForeignKey('users.user_id'))
+    client_text1   = db.Column(db.Text)
+    shop_response  = db.Column(db.Text)
+    client_text2   = db.Column(db.Text)
+    link_url       = db.Column(db.String(100))
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class BaseProduct(db.Model):

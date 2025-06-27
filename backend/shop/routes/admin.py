@@ -2,17 +2,20 @@ import csv
 import io
 import os
 import requests
-from typing import Tuple
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from typing import Tuple, List, Dict, Any
+from werkzeug.utils import secure_filename
 from flask import Blueprint, jsonify, request, Response
-from ..cors.config import ADMIN_IDS
+from ..cors.config import ADMIN_IDS, BACKEND_URL
 from ..db_utils import session_scope
-from ..extensions import redis_client
+from ..extensions import redis_client, minio_client, BUCKET
 from ..cors.logging import logger
 from ..models import (
     ChangeLog,
     AdminSetting,
+    Users,
+    Review,
 )
 from ..utils import (
     cleanup_old_images,
@@ -227,3 +230,141 @@ def upload_images() -> Tuple[Response, int]:
     except Exception as e:
         logger.exception("Error saving upload_images log: %s", e)
         return jsonify({"error": "upload error"}), 500
+
+
+@admin_api.route('/get_settings', methods=['GET'])
+def get_settings() -> Tuple[Response, int]:
+    logger.info("GET /api/admin/settings called")
+    try:
+        with session_scope() as session:
+            settings = session.query(AdminSetting).order_by(AdminSetting.key).all()
+            data: List[Dict[str, Any]] = [{"key": s.key, "value": s.value} for s in settings]
+        return jsonify({"settings": data}), 200
+    except Exception as e:
+        logger.exception("Failed to fetch settings: %s", e)
+        return jsonify({"error": "internal error"}), 500
+
+
+@admin_api.route('/update_setting', methods=['POST'])
+def update_setting() -> Tuple[Response, int]:
+    logger.info("POST /api/admin/settings called with %s", request.get_json())
+    try:
+        data = request.get_json(force=True)
+        key = data.get("key")
+        value = data.get("value")
+        if not key:
+            logger.info("update_setting: key missing")
+            return jsonify({"error": "key required"}), 400
+
+        with session_scope() as session:
+            setting = session.get(AdminSetting, key)
+            if setting:
+                setting.value = value
+            else:
+                session.add(AdminSetting(key=key, value=value))
+            session.flush()
+        logger.info("Setting %s updated to %s", key, value)
+        return jsonify({"status": "ok"}), 200
+
+    except Exception as e:
+        logger.exception("Error in update_setting: %s", e)
+        return jsonify({"error": "internal error"}), 500
+
+
+@admin_api.route('/list_reviews', methods=['GET'])
+def list_reviews() -> Tuple[Response, int]:
+    logger.info("GET /api/admin/list_reviews")
+    try:
+        with session_scope() as session:
+            revs = session.query(Review).order_by(Review.created_at.desc()).all()
+            data: List[Dict[str, Any]] = []
+            for r in revs:
+                # получаем имя клиента
+                user = session.get(Users, r.client_id)
+                client_name = f"{user.first_name} {user.last_name}" if user else "—"
+                # avatar = user.photo_url or f"{BACKEND_URL}/images/default-avatar.png"
+                # находим в MinIO все объекты reviews/{r.id}_*
+                objs = minio_client.list_objects(BUCKET, prefix=f'reviews/{r.id}_', recursive=True)
+                urls = [f"{BACKEND_URL}/images/{obj.object_name}" for obj in objs]
+                data.append({
+                    "id":            r.id,
+                    "client_id":     r.client_id,
+                    # "avatar_url":    avatar,
+                    "client_name":   client_name,
+                    "client_text1":  r.client_text1,
+                    "shop_response": r.shop_response,
+                    "client_text2":  r.client_text2,
+                    "photo_urls":    urls,
+                    "link_url":      r.link_url,
+                    "created_at":    r.created_at.astimezone(ZoneInfo("Europe/Moscow")).isoformat()
+                })
+        return jsonify({"reviews": data}), 200
+
+    except Exception as e:
+        logger.exception("Failed to list_reviews: %s", e)
+        return jsonify({"error": "internal error"}), 500
+
+
+@admin_api.route('/create_review', methods=['POST'])
+def create_review() -> Tuple[Response, int]:
+    logger.info("POST /api/admin/create_review")
+    try:
+        form = request.form
+        client_id = int(form.get('client_id', 0))
+        # проверка клиента
+        with session_scope() as session:
+            if not session.get(Users, client_id):
+                logger.info("create_review: client_id %d not found", client_id)
+                return jsonify({'error': 'client_id not found'}), 404
+
+            # создаём отзыв без фото
+            review = Review(
+                client_id=client_id,
+                client_text1=form['client_text1'].strip(),
+                shop_response=form['shop_response'].strip(),
+                client_text2=form['client_text2'].strip(),
+                link_url=form['link_url'].strip()
+            )
+            session.add(review)
+            session.flush()  # получаем review.id
+
+            # сохраняем файлы
+            for i in range(1, 4):
+                f = request.files.get(f'photo{i}')
+                if not f:
+                    continue
+                ext = secure_filename(f.filename).rsplit('.', 1)[-1]
+                key = f'reviews/{review.id}_{i}.{ext}'
+                minio_client.put_object(BUCKET, key, f.stream, length=-1, part_size=10*1024*1024)
+
+
+        logger.info("Review %d created, photos=%d", review.id)
+        return jsonify({'status': 'ok', 'review_id': review.id}), 201
+
+    except Exception as e:
+        logger.exception("Error in create_review: %s", e)
+        return jsonify({'error': 'internal error'}), 500
+
+
+@admin_api.route('/delete_review/<int:review_id>', methods=['DELETE'])
+def delete_review(review_id: int) -> Tuple[Response, int]:
+    logger.info("DELETE /api/admin/delete_review/%d", review_id)
+    try:
+        with session_scope() as session:
+            rev = session.get(Review, review_id)
+            if not rev:
+                logger.info("delete_review: %d not found", review_id)
+                return jsonify({'error': 'not found'}), 404
+
+            # удаляем все файлы reviews/{review_id}_*
+            prefix = f'reviews/{review_id}_'
+            for obj in minio_client.list_objects(BUCKET, prefix=prefix, recursive=True):
+                minio_client.remove_object(BUCKET, obj.object_name)
+
+            session.delete(rev)
+        logger.info("Review %d deleted", review_id)
+        return jsonify({'status': 'deleted'}), 200
+
+    except Exception as e:
+        logger.exception("Error deleting review %d: %s", review_id, e)
+        return jsonify({'error': 'internal error'}), 500

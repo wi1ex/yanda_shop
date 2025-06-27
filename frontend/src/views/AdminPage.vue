@@ -2,8 +2,15 @@
   <div class="admin-page">
     <h1>Админ-панель</h1>
 
+    <nav class="tabs">
+      <button v-for="t in tabs" :key="t.key" :class="{ active: selected === t.key }" @click="selected = t.key">
+        {{ t.label }}
+      </button>
+    </nav>
+
+
     <!-- === Google Sheets === -->
-    <section class="sheets-section">
+    <section class="sheets-section" v-if="selected === 'sheets'">
       <h2>Импорт из Google Sheets</h2>
       <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="sheet-block">
         <h3>{{ cat.charAt(0).toUpperCase() + cat.slice(1) }}</h3>
@@ -37,7 +44,7 @@
     </section>
 
     <!-- === Загрузка ZIP === -->
-    <section class="upload-section">
+    <section class="upload-section" v-if="selected === 'upload'">
       <h2>Загрузить ZIP с изображениями</h2>
       <form @submit.prevent="submitZip">
         <input type="file" accept=".zip" @change="onZipSelected" ref="zipInput" />
@@ -49,7 +56,7 @@
     </section>
 
     <!-- === Логи изменений товаров/изображений === -->
-    <section class="logs-section">
+    <section class="logs-section" v-if="selected === 'logs'">
       <h2>Последние 10 изменений</h2>
       <div v-if="store.logsLoading" class="loading-logs">Загрузка журналов...</div>
       <div v-else>
@@ -82,7 +89,7 @@
     </section>
 
     <!-- === Статистика посещений (бар-чарт) === -->
-    <section class="visits-section">
+    <section class="visits-section" v-if="selected === 'visits'">
       <h2>Статистика посещений</h2>
 
       <div class="date-picker">
@@ -105,6 +112,63 @@
         </div>
       </div>
     </section>
+
+    <!-- 5. Настройки AdminSetting -->
+    <section class="settings-section" v-if="selected === 'settings'">
+      <h2>Настройки</h2>
+      <table>
+        <tr><th>Ключ</th><th>Значение</th><th></th></tr>
+        <tr v-for="s in store.settings" :key="s.key">
+          <td>{{s.key}}</td>
+          <td><input v-model="s.value"/></td>
+          <td><button @click="saveSetting(s)" :disabled="saving===s.key">Сохранить</button></td>
+        </tr>
+      </table>
+    </section>
+
+    <!-- 6. Все отзывы -->
+    <section class="all-reviews-section" v-if="selected === 'all_reviews'">
+      <h2>Все отзывы</h2>
+      <ul v-if="store.reviews.length">
+        <li v-for="r in store.reviews" :key="r.id" class="admin-review">
+          <div class="review-header">
+            <strong>#{{ r.id }}</strong>
+            <span>{{ r.client_name }} (ID:{{ r.client_id }})</span>
+            <span class="review-date">{{ new Date(r.created_at).toLocaleString() }}</span>
+          </div>
+          <p class="user-text"><strong>Текст клиента 1:</strong> {{ r.client_text1 }}</p>
+          <p class="shop-text"><strong>Ответ магазина:</strong> {{ r.shop_response }}</p>
+          <p class="user-text"><strong>Текст клиента 2:</strong> {{ r.client_text2 }}</p>
+          <div class="photos">
+            <img v-for="url in r.photo_urls" :key="url" :src="url" alt="photo" class="admin-photo"/>
+          </div>
+          <div class="review-link">
+            <a :href="r.link_url" target="_blank">Ссылка на оригинал →</a>
+          </div>
+          <button class="delete-btn" @click="deleteReview(r.id)">Удалить</button>
+        </li>
+      </ul>
+      <p v-else>Отзывов пока нет.</p>
+    </section>
+
+    <!-- 7. Добавить отзыв -->
+    <section class="add-review-section" v-if="selected === 'add_review'">
+      <h2>Добавить отзыв</h2>
+      <form @submit.prevent="onSubmitReview">
+        <input v-model="form.client_id" placeholder="Client ID" required/>
+        <textarea v-model="form.client_text1" placeholder="Текст клиента 1" required/>
+        <textarea v-model="form.shop_response" placeholder="Ответ магазина" required/>
+        <textarea v-model="form.client_text2" placeholder="Текст клиента 2" required/>
+        <input v-model="form.link_url" placeholder="Ссылка" required/>
+        <div class="photos-inputs">
+          <input type="file" @change="onFile($event,1)"/>
+          <input type="file" @change="onFile($event,2)"/>
+          <input type="file" @change="onFile($event,3)"/>
+        </div>
+        <button type="submit">Добавить</button>
+      </form>
+    </section>
+
   </div>
 </template>
 
@@ -121,11 +185,50 @@ const zipInput = ref(null)
 const editingUrl = reactive({ shoes:false, clothing:false, accessories:false })
 const selectedDate = ref(new Date().toISOString().slice(0,10))
 
+const files = reactive({})
+const saving = ref(null)
+const selected = ref('sheets')
+const tabs = [
+  { key:'sheets',      label:'Sheets'         },
+  { key:'upload',      label:'ZIP Upload'     },
+  { key:'logs',        label:'Логи'           },
+  { key:'visits',      label:'Посещения'      },
+  { key:'settings',    label:'Настройки'      },
+  { key:'all_reviews', label:'Все отзывы'     },
+  { key:'add_review',  label:'Добавить отзыв' },
+]
+// Для отзывов
+const form  = reactive({
+  client_id:'', client_text1:'', shop_response:'', client_text2:'', link_url:''
+})
+
 const maxTotal = computed(() => {
   const hours = store.visitsData.hours || []
   if (!hours.length) return 1
   return Math.max(...hours.map(h => h.total), 1)
 })
+
+function onFile(e,i) {
+  files[i] = e.target.files[0]
+}
+
+async function onSubmitReview(){
+  const fd = new FormData()
+  Object.entries(form).forEach(([k,v])=> fd.append(k,v))
+  for(let i=1;i<=3;i++) if(files[i]) fd.append(`photo${i}`, files[i])
+  await store.createReview(fd)
+  Object.keys(form).forEach(k=> form[k]='')
+  Object.keys(files).forEach(i=> delete files[i])
+}
+
+function deleteReview(id) {
+  if (confirm(`Удалить отзыв #${id}?`)) store.deleteReview(id)
+}
+
+function saveSetting(s) {
+  saving.value = s.key
+  store.saveSetting(s.key, s.value).finally(()=> saving.value = null)
+}
 
 function startEdit(cat) {
   editingUrl[cat] = true
@@ -163,6 +266,8 @@ onMounted(() => {
   store.loadSheetUrls()
   store.loadLogs()
   store.loadVisits(selectedDate.value)
+  store.fetchSettings()
+  store.fetchReviews()
 })
 </script>
 
@@ -304,6 +409,126 @@ onMounted(() => {
   bottom: -20px;
   font-size: 12px;
   color: #ccc;
+}
+
+/* Навигационные табы */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.tabs button {
+  padding: 8px 12px;
+  background: #eee;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.tabs button.active {
+  background: #333;
+  color: #fff;
+}
+
+/* Секция «Настройки» */
+.settings-section {
+  margin-top: 24px;
+}
+.settings-section table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.settings-section th,
+.settings-section td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+.settings-section button {
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+/* Секция «Все отзывы» */
+.all-reviews-section {
+  margin-top: 24px;
+}
+.all-reviews-section ul {
+  list-style: none;
+  padding: 0;
+}
+.all-reviews-section li {
+  padding: 8px 0;
+  border-bottom: 1px solid #ddd;
+}
+.all-reviews-section button {
+  margin-left: 12px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+/* Секция «Добавить отзыв» */
+.add-review-section {
+  margin-top: 24px;
+}
+.add-review-section form {
+  display: grid;
+  gap: 12px;
+  max-width: 400px;
+}
+.add-review-section input,
+.add-review-section textarea {
+  width: 100%;
+  padding: 6px;
+  box-sizing: border-box;
+}
+.add-review-section button {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* Поля загрузки фотографий */
+.photos-inputs input {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.admin-review {
+  border: 1px solid #ccc;
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+}
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.review-date { color: #888; font-size: 0.9em; }
+.user-text, .shop-text {
+  margin: 4px 0;
+}
+.photos {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+.admin-photo {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.delete-btn {
+  background: #e94f37;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.review-link a {
+  color: #007bff;
+  text-decoration: none;
 }
 
 @media (max-width: 600px) {
