@@ -1,6 +1,33 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch, reactive } from 'vue'
 
+export const API = {
+  baseUrl: ref('https://shop.yanda.twc1.net'),
+  general: {
+    healthCheck:        '/api/general',                      // GET  - health check
+    saveUser:           '/api/general/save_user',            // POST - сохранить/обновить Telegram-пользователя
+    getUserProfile:     '/api/general/get_user_profile',     // GET  - получить профиль
+    getSocialUrls:      '/api/general/get_social_urls',      // GET  - получить соц. ссылки
+  },
+  product: {
+    listProducts:       '/api/product/list_products',        // GET  - список товаров (фильтр по категории)
+    getProduct:         '/api/product/get_product',          // GET  - детали одного товара
+    getCart:            '/api/product/get_cart',             // GET  - получить корзину пользователя
+    saveCart:           '/api/product/save_cart',            // POST - сохранить корзину
+    getFavorites:       '/api/product/get_favorites',        // GET  - получить избранное
+    saveFavorites:      '/api/product/save_favorites',       // POST - сохранить избранное
+  },
+  admin: {
+    getAdminIds:        '/api/admin/get_admin_ids',          // GET  - список admin_id
+    getDailyVisits:     '/api/admin/get_daily_visits',       // GET  - статистика визитов по часам
+    getLogs:            '/api/admin/get_logs',               // GET  - журнал
+    getSheetUrls:       '/api/admin/get_sheet_urls',         // GET  - URL Google Sheets
+    updateSheetUrl:     '/api/admin/update_sheet_url',       // POST - сохранить URL таблицы
+    importSheet:        '/api/admin/import_sheet',           // POST - импорт CSV из Sheets
+    uploadImages:       '/api/admin/upload_images',          // POST - загрузка ZIP с изображениями
+  }
+}
+
 export const useStore = defineStore('main', () => {
   const url = ref('https://shop.yanda.twc1.net')
   const admin_ids = ref([])
@@ -68,7 +95,7 @@ export const useStore = defineStore('main', () => {
   const socialUrls         = reactive({ url_telegram: '', url_instagram: '', url_email: '' })
 
   async function loadSocialUrls() {
-    const r = await fetch(`${url.value}/api/general/get_social_urls`)
+    const r = await fetch(`${API.base_url}${API.general.getSocialUrls}`)
     Object.assign(socialUrls, await r.json())
   }
 
@@ -89,7 +116,7 @@ export const useStore = defineStore('main', () => {
 
   async function fetchAdminIds() {
     try {
-      const res = await fetch(`${url.value}/api/admin/get_admin_ids`)
+      const res = await fetch(`${API.baseUrl}${API.admin.getAdminIds}`)
       if (res.ok) {
         const data = await res.json()
         admin_ids.value = data.admin_ids || []
@@ -106,7 +133,7 @@ export const useStore = defineStore('main', () => {
       return;
     }
     try {
-      const resp = await fetch(`${url.value}/api/product/get_cart?user_id=${user.value.id}`);
+      const resp = await fetch(`${API.baseUrl}${API.product.getCart}?user_id=${user.value.id}`);
       if (!resp.ok) {
         console.error('Cannot load cart:', resp.statusText);
         return;
@@ -137,7 +164,7 @@ export const useStore = defineStore('main', () => {
       }))
     }
     try {
-      await fetch(`${url.value}/api/product/save_cart`, {
+      await fetch(`${API.baseUrl}${API.product.saveCart}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -154,7 +181,7 @@ export const useStore = defineStore('main', () => {
       return;
     }
     try {
-      const resp = await fetch(`${url.value}/api/product/get_favorites?user_id=${user.value.id}`);
+      const resp = await fetch(`${API.baseUrl}${API.product.getFavorites}?user_id=${user.value.id}`);
       if (!resp.ok) throw new Error(resp.statusText);
       const data = await resp.json();
       favorites.value.items = data.items || [];
@@ -174,7 +201,7 @@ export const useStore = defineStore('main', () => {
       items: favorites.value.items
     };
     try {
-      const resp = await fetch(`${url.value}/api/product/save_favorites`, {
+      const resp = await fetch(`${API.baseUrl}${API.product.saveFavorites}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -204,7 +231,7 @@ export const useStore = defineStore('main', () => {
   async function saveUserToServer() {
     if (!user.value?.id) return
     try {
-      await fetch(`${url.value}/api/general/save_user`, {
+      await fetch(`${API.baseUrl}${API.general.saveUser}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -387,7 +414,7 @@ export const useStore = defineStore('main', () => {
   async function fetchProducts(cat) {
     if (cat) selectedCategory.value = cat
     try {
-      const res = await fetch(`${url.value}/api/product/list_products?category=${encodeURIComponent(selectedCategory.value)}`)
+      const res = await fetch(`${API.baseUrl}${API.product.listProducts}?category=${encodeURIComponent(selectedCategory.value)}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       products.value = await res.json()
     } catch (e) {
@@ -398,7 +425,7 @@ export const useStore = defineStore('main', () => {
   // Загрузка **всех** товаров (для страницы «Избранное»)
   async function fetchAllProducts() {
     try {
-      const res = await fetch(`${url.value}/api/product/list_products`)
+      const res = await fetch(`${API.baseUrl}${API.product.listProducts}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       products.value = await res.json()
     } catch (e) {
@@ -409,7 +436,7 @@ export const useStore = defineStore('main', () => {
   // --- Экшен: загрузить URL таблиц ---
   async function loadSheetUrls() {
     try {
-      const res = await fetch(`${url.value}/api/admin/get_sheet_urls`)
+      const res = await fetch(`${API.baseUrl}${API.admin.getSheetUrls}`)
       const data = await res.json()
       Object.assign(sheetUrls.value, data)
     } catch (e) { console.error(e) }
@@ -420,7 +447,7 @@ export const useStore = defineStore('main', () => {
     sheetSaveLoading[cat] = true
     sheetResult[cat] = ''
     try {
-      const res = await fetch(`${url.value}/api/admin/update_sheet_url`, {
+      const res = await fetch(`${API.baseUrl}${API.admin.updateSheetUrl}`, {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ category: cat, url: sheetUrls.value[cat] })
       })
@@ -445,7 +472,7 @@ export const useStore = defineStore('main', () => {
     sheetImportLoading[cat] = true
     sheetResult[cat] = ''
     try {
-      const res = await fetch(`${url.value}/api/admin/import_sheet`, {
+      const res = await fetch(`${API.baseUrl}${API.admin.importSheet}`, {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ category: cat, author_id: authorId, author_name: authorName })
       })
@@ -467,7 +494,7 @@ export const useStore = defineStore('main', () => {
   async function loadLogs(limit = 10) {
     logsLoading.value = true
     try {
-      const res = await fetch(`${url.value}/api/admin/get_logs?limit=${limit}`)
+      const res = await fetch(`${API.baseUrl}${API.admin.getLogs}?limit=${limit}`)
       logs.value = res.ok ? (await res.json()).logs : []
     } catch (e) {
       console.error(e)
@@ -481,7 +508,7 @@ export const useStore = defineStore('main', () => {
   async function loadVisits(date) {
     visitsLoading.value = true
     try {
-      const res = await fetch(`${url.value}/api/admin/get_daily_visits?date=${date}`)
+      const res = await fetch(`${API.baseUrl}${API.admin.getDailyVisits}?date=${date}`)
       const j   = await res.json()
       visitsData.value = { date: j.date, hours: j.hours }
     } catch (e) {
@@ -500,7 +527,7 @@ export const useStore = defineStore('main', () => {
     form.append('author_id', authorId)
     form.append('author_name', authorName)
     try {
-      const res = await fetch(`${url.value}/api/admin/upload_images`, { method:'POST', body: form })
+      const res = await fetch(`${API.baseUrl}${API.admin.uploadImages}`, { method:'POST', body: form })
       const j   = await res.json()
       if (res.status===201) {
         zipResult.value = `Добавлено: ${j.added}. Обновлено: ${j.replaced}. Удалено: ${j.deleted}. Ошибки: ${j.warns}.`
@@ -519,7 +546,7 @@ export const useStore = defineStore('main', () => {
   async function fetchDetail(variantSku, category) {
     detailLoading.value = true
     try {
-      const pRes = await fetch(`${url.value}/api/product/get_product?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(variantSku)}`)
+      const pRes = await fetch(`${API.baseUrl}${API.product.getProduct}?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(variantSku)}`)
       detailData.value = await pRes.json()
       // подгружаем весь список и фильтруем по sku
       await fetchProducts(category)
@@ -535,7 +562,7 @@ export const useStore = defineStore('main', () => {
   async function fetchUserProfile(userId) {
     profileLoading.value = true; profileError.value = ''
     try {
-      const res = await fetch(`${url.value}/api/general/get_user_profile?user_id=${userId}`)
+      const res = await fetch(`${API.baseUrl}${API.general.getUserProfile}?user_id=${userId}`)
       if (!res.ok) {
         profileError.value = res.status===404 ? 'Пользователь не найден' : `Ошибка ${res.status}`
         return
