@@ -1,6 +1,6 @@
 import json
 from typing import Tuple
-from flask import Blueprint, Flask, jsonify, request, Response
+from flask import Blueprint, jsonify, request, Response
 from ..cors.logging import logger
 from ..db_utils import session_scope
 from ..extensions import redis_client

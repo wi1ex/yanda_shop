@@ -5,7 +5,7 @@ import requests
 from typing import Tuple
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from flask import Blueprint, Flask, jsonify, request, Response
+from flask import Blueprint, jsonify, request, Response
 from ..cors.config import ADMIN_IDS
 from ..db_utils import session_scope
 from ..extensions import redis_client
