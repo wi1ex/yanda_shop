@@ -1,14 +1,16 @@
 from datetime import datetime
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, List
 from zoneinfo import ZoneInfo
 from flask import Blueprint, jsonify, request, Response
+from ..cors.config import BACKEND_URL
 from ..cors.logging import logger
 from ..db_utils import session_scope
-from ..extensions import redis_client
+from ..extensions import redis_client, minio_client, BUCKET
 from ..models import (
     Users,
     ChangeLog,
     AdminSetting,
+    Review,
 )
 
 general_api: Blueprint = Blueprint("general_api", __name__, url_prefix="/api/general")
@@ -150,3 +152,37 @@ def get_social_urls() -> Tuple[Response, int]:
     except Exception as e:
         logger.exception("Error in get_social_urls: %s", e)
         return jsonify({k: "" for k in keys}), 200
+
+
+@general_api.route('/list_reviews', methods=['GET'])
+def list_reviews() -> Tuple[Response, int]:
+    logger.info("GET /api/general/list_reviews")
+    try:
+        with session_scope() as session:
+            revs = session.query(Review).order_by(Review.created_at.desc()).all()
+            data: List[Dict[str, Any]] = []
+            for r in revs:
+                # получаем имя клиента
+                user = session.get(Users, r.client_id)
+                client_name = f"{user.first_name} {user.last_name}" if user else "—"
+                # avatar = user.photo_url or f"{BACKEND_URL}/images/default-avatar.png"
+                # находим в MinIO все объекты reviews/{r.id}_*
+                objs = minio_client.list_objects(BUCKET, prefix=f'reviews/{r.id}_', recursive=True)
+                urls = [f"{BACKEND_URL}/images/{obj.object_name}" for obj in objs]
+                data.append({
+                    "id":            r.id,
+                    "client_id":     r.client_id,
+                    # "avatar_url":    avatar,
+                    "client_name":   client_name,
+                    "client_text1":  r.client_text1,
+                    "shop_response": r.shop_response,
+                    "client_text2":  r.client_text2,
+                    "photo_urls":    urls,
+                    "link_url":      r.link_url,
+                    "created_at":    r.created_at.astimezone(ZoneInfo("Europe/Moscow")).isoformat()
+                })
+        return jsonify({"reviews": data}), 200
+
+    except Exception as e:
+        logger.exception("Failed to list_reviews: %s", e)
+        return jsonify({"error": "internal error"}), 500

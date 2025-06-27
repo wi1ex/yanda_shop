@@ -154,6 +154,8 @@
     <!-- 7. Добавить отзыв -->
     <section class="add-review-section" v-if="selected === 'add_review'">
       <h2>Добавить отзыв</h2>
+      <div v-if="formError" class="error">{{ formError }}</div>
+      <div v-if="formSuccess" class="success">{{ formSuccess }}</div>
       <form @submit.prevent="onSubmitReview">
         <input v-model="form.client_id" placeholder="Client ID" required/>
         <textarea v-model="form.client_text1" placeholder="Текст клиента 1" required/>
@@ -173,8 +175,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useStore } from '@/store/index.js'
+import {computed, onMounted, reactive, ref} from 'vue'
+import {useStore} from '@/store/index.js'
 
 const store = useStore()
 const adminId = store.user.id
@@ -185,6 +187,8 @@ const zipInput = ref(null)
 const editingUrl = reactive({ shoes:false, clothing:false, accessories:false })
 const selectedDate = ref(new Date().toISOString().slice(0,10))
 
+const formError = ref('');
+const formSuccess = ref('');
 const files = reactive({})
 const saving = ref(null)
 const selected = ref('sheets')
@@ -213,12 +217,21 @@ function onFile(e,i) {
 }
 
 async function onSubmitReview(){
-  const fd = new FormData()
-  Object.entries(form).forEach(([k,v])=> fd.append(k,v))
-  for(let i=1;i<=3;i++) if(files[i]) fd.append(`photo${i}`, files[i])
-  await store.createReview(fd)
-  Object.keys(form).forEach(k=> form[k]='')
-  Object.keys(files).forEach(i=> delete files[i])
+  formError.value = formSuccess.value = '';
+  const fd = new FormData();
+  Object.entries(form).forEach(([k,v])=> fd.append(k,v));
+  Object.values(files).forEach((file,i)=> fd.append(`photo${i}`, file));
+  try {
+    formSuccess.value = await store.createReview(fd);
+    // очистить форму
+    Object.keys(form).forEach(k=> form[k]='');
+    Object.keys(files).forEach(i=> delete files[i]);
+    // сразу обновить список
+    selected.value = 'all_reviews';
+    await store.fetchReviews();
+  } catch (err) {
+    formError.value = err.message;
+  }
 }
 
 function deleteReview(id) {
@@ -485,6 +498,14 @@ onMounted(() => {
   padding: 8px 12px;
   cursor: pointer;
 }
+.error {
+  color: #e94f37;
+  margin-bottom: 8px;
+}
+.success {
+  color: #4caf50;
+  margin-bottom: 8px;
+}
 
 /* Поля загрузки фотографий */
 .photos-inputs input {
@@ -599,6 +620,51 @@ onMounted(() => {
   }
   .bar-value {
     font-size: 10px;
+  }
+    /* Листы отзывов */
+  .admin-review {
+    padding: 8px;
+    font-size: 14px;
+  }
+  .review-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .photos {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .admin-photo {
+    width: 60px;
+    height: 60px;
+  }
+
+  /* Формы и табы */
+  .tabs {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .tabs button {
+    flex: 1 1 45%;
+    margin-bottom: 4px;
+  }
+
+  /* Логи */
+  .logs-table {
+    font-size: 12px;
+  }
+  .logs-table th, .logs-table td {
+    padding: 4px;
+  }
+
+  /* Google Sheets / ZIP */
+  .sheet-input {
+    width: 100% !important;
+    margin-bottom: 8px;
+  }
+  .sheet-save, .sheet-import, .upload-section button {
+    width: 100%;
   }
 }
 
