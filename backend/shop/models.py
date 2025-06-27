@@ -17,8 +17,8 @@ class ChangeLog(db.Model):
     __tablename__  = 'change_logs'
     id             = db.Column(db.Integer, primary_key=True)
     author_id      = db.Column(db.BigInteger, nullable=False)
-    author_name    = db.Column(db.String(50), nullable=False)
-    action_type    = db.Column(db.String(300), nullable=False)
+    author_name    = db.Column(db.String(100), nullable=False)
+    action_type    = db.Column(db.String(100), nullable=False)
     description    = db.Column(db.Text, nullable=False)
     timestamp      = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
@@ -38,13 +38,13 @@ class BaseProduct(db.Model):
     color_sku      = db.Column(db.String(100), index=True)
     world_sku      = db.Column(db.String(100), index=True)
     sku            = db.Column(db.String(100), index=True)
-    name           = db.Column(db.String(200))
-    gender         = db.Column(db.String(20))
+    name           = db.Column(db.String(100))
+    gender         = db.Column(db.String(100))
     category       = db.Column(db.String(100))
     subcategory    = db.Column(db.String(100), index=True)
     brand          = db.Column(db.String(100), index=True)
     description    = db.Column(db.Text)
-    material       = db.Column(db.String(200))
+    material       = db.Column(db.String(100))
     color          = db.Column(db.String(100), index=True)
     size_category  = db.Column(db.Integer)
     price          = db.Column(db.Integer, index=True)
@@ -64,14 +64,14 @@ class Shoe(BaseProduct):
 
 class Clothing(BaseProduct):
     __tablename__  = "clothing"
-    size_label     = db.Column(db.String(20))
+    size_label     = db.Column(db.String(100))
     chest_cm       = db.Column(db.Float)
     height_cm      = db.Column(db.Float)
 
 
 class Accessory(BaseProduct):
     __tablename__  = "accessories"
-    size_label     = db.Column(db.String(20))
+    size_label     = db.Column(db.String(100))
     width_cm       = db.Column(db.Float)
     height_cm      = db.Column(db.Float)
     depth_cm       = db.Column(db.Float)
