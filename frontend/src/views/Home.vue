@@ -97,7 +97,7 @@
     <!-- TESTIMONIALS -->
     <section class="testimonials">
       <h2>Твой стиль, твои отзывы</h2>
-      <div v-if="reviews.length === 0" class="no-reviews">
+      <div v-if="store.reviews.length === 0" class="no-reviews">
         Отзывов пока нет.
       </div>
       <div v-else class="carousel">
@@ -155,19 +155,18 @@ import icon_default_avatar_white from '@/assets/images/default_avatar_white.svg'
 const store   = useStore()
 
 // Reviews carousel
-const reviews = store.reviews
 const heroIndex = ref(0)
 const idx = ref(0)
-const current = computed(() => reviews[idx.value] || {})
+const current = computed(() => store.reviews[idx.value] || {})
 
 function prev() {
-  if (!reviews.length) return
-  idx.value = (idx.value + reviews.length - 1) % reviews.length
+  if (!store.reviews.length) return
+  idx.value = (idx.value + store.reviews.length - 1) % store.reviews.length
 }
 
 function next() {
-  if (!reviews.length) return
-  idx.value = (idx.value + 1) % reviews.length
+  if (!store.reviews.length) return
+  idx.value = (idx.value + 1) % store.reviews.length
 }
 
 // Hero

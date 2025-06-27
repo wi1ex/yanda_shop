@@ -16,6 +16,7 @@ export const API = {
     saveCart:           '/api/product/save_cart',            // POST   - сохранить корзину
     getFavorites:       '/api/product/get_favorites',        // GET    - получить избранное
     saveFavorites:      '/api/product/save_favorites',       // POST   - сохранить избранное
+    listReviews:        '/api/product/list_reviews',           // GET    - получить список отзывов
   },
   admin: {
     getAdminIds:        '/api/admin/get_admin_ids',          // GET    - список admin_id
@@ -27,7 +28,6 @@ export const API = {
     uploadImages:       '/api/admin/upload_images',          // POST   - загрузка ZIP с изображениями
     getSettings:        '/api/admin/get_settings',           // GET    - получить список настроек
     updateSetting:      '/api/admin/update_setting',         // POST   - изменить список настроек
-    listReviews:        '/api/admin/list_reviews',           // GET    - получить список отзывов
     createReview:       '/api/admin/create_review',          // POST   - загрузить новый отзыв
     deleteReview:       '/api/admin/delete_review'           // DELETE - удалить отзыв
   }
@@ -118,7 +118,7 @@ export const useStore = defineStore('main', () => {
   }
 
   async function fetchReviews() {
-    const res = await fetch(`${API.baseUrl}${API.admin.listReviews}`)
+    const res = await fetch(`${API.baseUrl}${API.product.listReviews}`)
     if (res.ok) {
       const j = await res.json()
       reviews.value = j.reviews.map(r => ({ ...r, }))
@@ -128,9 +128,13 @@ export const useStore = defineStore('main', () => {
   async function createReview(formData) {
     const res = await fetch(`${API.baseUrl}${API.admin.createReview}`, {
       method:'POST', body: formData
-    })
-    if (!res.ok) throw new Error((await res.json()).error || res.status)
-    await fetchReviews()
+    });
+    const j = await res.json();
+    if (!res.ok) {
+      // возвращаем сообщение об ошибке
+      throw new Error(j.error || 'Неизвестная ошибка');
+    }
+    return j.message;  // "Отзыв успешно добавлен"
   }
 
   async function deleteReview(id) {

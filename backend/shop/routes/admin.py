@@ -271,53 +271,24 @@ def update_setting() -> Tuple[Response, int]:
         return jsonify({"error": "internal error"}), 500
 
 
-@admin_api.route('/list_reviews', methods=['GET'])
-def list_reviews() -> Tuple[Response, int]:
-    logger.info("GET /api/admin/list_reviews")
-    try:
-        with session_scope() as session:
-            revs = session.query(Review).order_by(Review.created_at.desc()).all()
-            data: List[Dict[str, Any]] = []
-            for r in revs:
-                # получаем имя клиента
-                user = session.get(Users, r.client_id)
-                client_name = f"{user.first_name} {user.last_name}" if user else "—"
-                # avatar = user.photo_url or f"{BACKEND_URL}/images/default-avatar.png"
-                # находим в MinIO все объекты reviews/{r.id}_*
-                objs = minio_client.list_objects(BUCKET, prefix=f'reviews/{r.id}_', recursive=True)
-                urls = [f"{BACKEND_URL}/images/{obj.object_name}" for obj in objs]
-                data.append({
-                    "id":            r.id,
-                    "client_id":     r.client_id,
-                    # "avatar_url":    avatar,
-                    "client_name":   client_name,
-                    "client_text1":  r.client_text1,
-                    "shop_response": r.shop_response,
-                    "client_text2":  r.client_text2,
-                    "photo_urls":    urls,
-                    "link_url":      r.link_url,
-                    "created_at":    r.created_at.astimezone(ZoneInfo("Europe/Moscow")).isoformat()
-                })
-        return jsonify({"reviews": data}), 200
-
-    except Exception as e:
-        logger.exception("Failed to list_reviews: %s", e)
-        return jsonify({"error": "internal error"}), 500
-
-
 @admin_api.route('/create_review', methods=['POST'])
 def create_review() -> Tuple[Response, int]:
-    logger.info("POST /api/admin/create_review")
+    form = request.form
+    # проверка client_id
     try:
-        form = request.form
-        client_id = int(form.get('client_id', 0))
-        # проверка клиента
+        client_id = int(form.get('client_id', ''))
+    except ValueError:
+        return jsonify({'error': 'client_id должен быть числом'}), 400
+
+    try:
+        texts = ['client_text1', 'shop_response', 'client_text2', 'link_url']
+        for fld in texts:
+            if not form.get(fld, '').strip():
+                return jsonify({'error': f'Поле {fld} не заполнено'}), 400
+
         with session_scope() as session:
             if not session.get(Users, client_id):
-                logger.info("create_review: client_id %d not found", client_id)
-                return jsonify({'error': 'client_id not found'}), 404
-
-            # создаём отзыв без фото
+                return jsonify({'error': 'client_id не найден'}), 404
             review = Review(
                 client_id=client_id,
                 client_text1=form['client_text1'].strip(),
@@ -326,20 +297,20 @@ def create_review() -> Tuple[Response, int]:
                 link_url=form['link_url'].strip()
             )
             session.add(review)
-            session.flush()  # получаем review.id
+            session.flush()
 
-            # сохраняем файлы
+            # сохраняем фото
+            saved = 0
             for i in range(1, 4):
                 f = request.files.get(f'photo{i}')
-                if not f:
-                    continue
-                ext = secure_filename(f.filename).rsplit('.', 1)[-1]
-                key = f'reviews/{review.id}_{i}.{ext}'
-                minio_client.put_object(BUCKET, key, f.stream, length=-1, part_size=10*1024*1024)
-
+                if f:
+                    ext = secure_filename(f.filename).rsplit('.', 1)[-1]
+                    key = f'reviews/{review.id}_{i}.{ext}'
+                    minio_client.put_object(BUCKET, key, f.stream, length=-1, part_size=10*1024*1024)
+                    saved += 1
 
         logger.info("Review %d created, photos=%d", review.id)
-        return jsonify({'status': 'ok', 'review_id': review.id}), 201
+        return jsonify({'status': 'ok', 'message': 'Отзыв успешно добавлен', 'review_id': review.id}), 201
 
     except Exception as e:
         logger.exception("Error in create_review: %s", e)
