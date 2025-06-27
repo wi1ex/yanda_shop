@@ -8,6 +8,7 @@ export const API = {
     saveUser:           '/api/general/save_user',            // POST   - сохранить/обновить Telegram-пользователя
     getUserProfile:     '/api/general/get_user_profile',     // GET    - получить профиль
     getSocialUrls:      '/api/general/get_social_urls',      // GET    - получить соц. ссылки
+    listReviews:        '/api/general/list_reviews',         // GET    - получить список отзывов
   },
   product: {
     listProducts:       '/api/product/list_products',        // GET    - список товаров (фильтр по категории)
@@ -16,7 +17,6 @@ export const API = {
     saveCart:           '/api/product/save_cart',            // POST   - сохранить корзину
     getFavorites:       '/api/product/get_favorites',        // GET    - получить избранное
     saveFavorites:      '/api/product/save_favorites',       // POST   - сохранить избранное
-    listReviews:        '/api/product/list_reviews',           // GET    - получить список отзывов
   },
   admin: {
     getAdminIds:        '/api/admin/get_admin_ids',          // GET    - список admin_id
@@ -118,7 +118,7 @@ export const useStore = defineStore('main', () => {
   }
 
   async function fetchReviews() {
-    const res = await fetch(`${API.baseUrl}${API.product.listReviews}`)
+    const res = await fetch(`${API.baseUrl}${API.general.listReviews}`)
     if (res.ok) {
       const j = await res.json()
       reviews.value = j.reviews.map(r => ({ ...r, }))
