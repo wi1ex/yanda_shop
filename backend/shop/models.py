@@ -10,7 +10,24 @@ class Users(db.Model):
     username       = db.Column(db.String(100), nullable=False)
     first_name     = db.Column(db.String(100), nullable=False)
     last_name      = db.Column(db.String(100), nullable=False)
+
+    password_hash  = db.Column(db.String, nullable=True)
+    email          = db.Column(db.String(100), nullable=True)
+    email_verified = db.Column(db.Boolean, nullable=True)
+    phone          = db.Column(db.String(100), nullable=True)
+    phone_verified = db.Column(db.Boolean, nullable=True)
+    date_of_birth  = db.Column(db.Date, nullable=True)
+    gender         = db.Column(db.Enum, nullable=True)
+    role           = db.Column(db.String(100), default='customer', nullable=True)
+    mailing        = db.Column(db.Boolean, nullable=True)
+    loyalty_points = db.Column(db.Integer, nullable=True)
+    total_spent    = db.Column(db.Integer, nullable=True)
+    order_count    = db.Column(db.Integer, nullable=True)
+
+    last_visit     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
+                               onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class ChangeLog(db.Model):
@@ -26,7 +43,7 @@ class ChangeLog(db.Model):
 class AdminSetting(db.Model):
     __tablename__  = 'admin_settings'
     key            = db.Column(db.String(100), primary_key=True)
-    value          = db.Column(db.Text)
+    value          = db.Column(db.Text, nullable=True)
     updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
                                onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
@@ -34,11 +51,11 @@ class AdminSetting(db.Model):
 class Review(db.Model):
     __tablename__  = 'reviews'
     id             = db.Column(db.Integer, primary_key=True)
-    client_id      = db.Column(db.BigInteger, db.ForeignKey('users.user_id'))
-    client_text1   = db.Column(db.Text)
-    shop_response  = db.Column(db.Text)
-    client_text2   = db.Column(db.Text)
-    link_url       = db.Column(db.String(100))
+    client_id      = db.Column(db.BigInteger, db.ForeignKey('users.user_id'), nullable=False)
+    client_text1   = db.Column(db.Text, nullable=False)
+    shop_response  = db.Column(db.Text, nullable=False)
+    client_text2   = db.Column(db.Text, nullable=True)
+    link_url       = db.Column(db.String(100), nullable=False)
     created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
 

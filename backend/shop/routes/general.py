@@ -44,11 +44,12 @@ def save_user() -> Tuple[Response, int]:
     last_name = data.get("last_name")
     username = data.get("username")
     # photo_url = data.get("photo_url")
+    now = datetime.now(ZoneInfo("Europe/Moscow"))
 
     # --- Postgres только для целых id ---
     if is_tg:
-        user_id = int(raw_id)
         try:
+            user_id = int(raw_id)
             with session_scope() as session:
                 # получаем пользователя из сессии
                 tg_user = session.get(Users, user_id)
@@ -57,7 +58,8 @@ def save_user() -> Tuple[Response, int]:
                         user_id=user_id,
                         first_name=first_name,
                         last_name=last_name,
-                        username=username
+                        username=username,
+                        last_visit=now
                     )
                     session.add(tg_user)
                     session.add(ChangeLog(
@@ -65,17 +67,18 @@ def save_user() -> Tuple[Response, int]:
                         author_name=username,
                         action_type="Регистрация",
                         description=f"Новый пользователь Telegram: {first_name} {last_name}",
-                        timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
+                        timestamp=now
                     ))
                 else:
-                    # обновляем только если изменилось
-                    changed = False
+                    # обновляем только изменившиеся поля и last_visit
+                    updated = False
                     for fld in ("first_name", "last_name", "username"):
-                        new = data.get(fld)
-                        if new and getattr(tg_user, fld) != new:
-                            setattr(tg_user, fld, new)
-                            changed = True
-                    if changed:
+                        val = data.get(fld)
+                        if val and getattr(tg_user, fld) != val:
+                            setattr(tg_user, fld, val)
+                            updated = True
+                    tg_user.last_visit = now
+                    if updated:
                         session.merge(tg_user)
         except Exception as e:
             logger.exception("Postgres error in save_user: %s", e)
