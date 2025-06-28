@@ -27,7 +27,7 @@
       <nav class="header-cats">
         <button v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)"
                 :class="['cat-btn', { active: cat === store.selectedCategory }]">
-          <img :src="`/icons/${cat}.svg`" :alt="cat" />
+          <img :src="categoryImages[cat]" :alt="cat" />
           <span>{{ cat }}</span>
         </button>
       </nav>
@@ -101,12 +101,22 @@
 import { ref, onMounted, watch, computed, nextTick } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
+import category_shoes from '@/assets/images/category_shoes.png'
+import category_clothing from '@/assets/images/category_clothing.png'
+import category_accessories from '@/assets/images/category_accessories.png'
 
 const store = useStore()
 const router = useRouter()
 
 const mobileFiltersOpen = ref(false)
 const productsLoading = ref(false)
+
+// Маппим заголовок категории на нужную картинку
+const categoryImages = {
+  'Одежда': category_shoes,
+  'Обувь': category_clothing,
+  'Аксессуары': category_accessories
+}
 
 const sortOption = computed({
   get() { return `${store.sortBy}_${store.sortOrder}` },
@@ -220,7 +230,7 @@ onMounted(() => {
 
   .header-text {
     grid-column: 1;
-    grid-row: 1 / span 2;
+    grid-row: 2;
     font-size: 16px;
     line-height: 1.4;
     color: #333;
@@ -480,6 +490,7 @@ onMounted(() => {
     grid-template-rows: auto auto auto auto;
     text-align: center;
     .header-text   {
+      grid-column: 2;
       grid-row: 2;
     }
     .header-logo   {
