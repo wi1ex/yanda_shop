@@ -254,7 +254,7 @@ function onRegister() {
   border-radius: 4px;
 }
 .qty-btn {
-  @include flex-cc;
+  @include flex-c-c;
   width: 24px;
   height: 24px;
   border: none;

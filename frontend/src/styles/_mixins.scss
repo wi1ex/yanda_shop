@@ -1,10 +1,10 @@
-@mixin flex-header {
+@mixin flex-c-sb {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-@mixin flex-cc {
+@mixin flex-c-c {
   display: flex;
   align-items: center;
   justify-content: center;

@@ -1,12 +1,14 @@
 <template>
   <header class="header">
     <!-- Кнопка меню -->
-    <button class="menu-btn" ref="menuBtn" @click="toggleMenu">
-      <img :src="icon_menu" alt="Меню" />
-    </button>
+    <div class="actions">
+      <button class="icon-btn" ref="menuBtn" @click="toggleMenu">
+        <img :src="icon_menu" alt="Меню" />
+      </button>
+    </div>
 
     <!-- Логотип (ссылка на главную) -->
-    <router-link to="/" class="logo-btn">
+    <router-link to="/">
       <img :src="icon_logo" alt="Главная" class="logo-icon" />
     </router-link>
 
@@ -15,13 +17,11 @@
       <router-link to="/profile" class="icon-btn" title="Профиль">
         <img :src="store.user.photo_url || icon_default_avatar" alt="Профиль" class="avatar" />
       </router-link>
-
       <router-link to="/favorites" class="icon-btn" title="Избранное">
         <img :src="icon_favorites" alt="Избранное" />
         <span v-if="store.favorites.count" class="badge">{{ store.favorites.count }}</span>
       </router-link>
-
-      <button class="icon-btn" title="Корзина" @click="store.openCartDrawer()">
+      <button @click="store.openCartDrawer()" class="icon-btn" title="Корзина">
         <img :src="icon_cart" alt="Корзина" />
         <span v-if="store.cart.count" class="badge">{{ store.cart.count }}</span>
       </button>
@@ -30,9 +30,9 @@
     <!-- Выпадающее меню -->
     <transition name="fade">
       <nav v-if="menuOpen" class="dropdown-menu" ref="menu">
-        <router-link to="/catalog" class="dropdown-link" @click="closeMenu">Каталог</router-link>
-        <router-link to="/about" class="dropdown-link" @click="closeMenu">О нас</router-link>
-        <router-link v-if="isAdmin" to="/admin" class="dropdown-link" @click="closeMenu">Админ-панель</router-link>
+        <router-link to="/catalog" class="dropdown-link" @click="toggleMenu">Каталог</router-link>
+        <router-link to="/about" class="dropdown-link" @click="toggleMenu">О нас</router-link>
+        <router-link v-if="isAdmin" to="/admin" class="dropdown-link" @click="toggleMenu">Админ-панель</router-link>
       </nav>
     </transition>
   </header>
@@ -55,10 +55,9 @@ import icon_logo_white from '@/assets/images/logo_white.svg'
 
 const store = useStore()
 const route = useRoute()
-const menuOpen = ref(false)
-const menuBtn = ref(null)
 const menu = ref(null)
-
+const menuBtn = ref(null)
+const menuOpen = ref(false)
 const isAbout = computed(() => route.name === 'About')
 const icon_default_avatar = computed(() => isAbout.value ? icon_default_avatar_white : icon_default_avatar_grey)
 const icon_favorites = computed(() => isAbout.value ? icon_favorites_white : icon_favorites_grey)
@@ -69,9 +68,6 @@ const isAdmin = computed(() => store.user && store.admin_ids.includes(Number(sto
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
-}
-function closeMenu() {
-  menuOpen.value = false
 }
 
 // Закрыть меню кликом вне
@@ -87,104 +83,86 @@ function onClickOutside(e) {
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
 })
+
 onBeforeUnmount(() => {
   document.removeEventListener('click', onClickOutside)
 })
+
 </script>
 
 <style scoped lang="scss">
 .header {
-  @include flex-header;
+  @include flex-c-sb;
   position: fixed;
-  width: 100%;
-  height: 50px;
-  z-index: 1000;
-}
-
-.menu-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px;
-}
-
-.actions {
-  display: flex;
-}
-
-.actions img {
-  width: 30px;
+  width: calc(100% - 20px);
   height: 30px;
-}
-
-.logo-btn {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  margin: 0;
-  padding: 0;
-}
-.logo-icon {
-  height: 32px;
-}
-
-.icon-btn {
-  position: relative;
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-left: 12px;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-}
-
-.avatar {
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.badge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  background: #dc3545;
-  color: #fff;
-  font-size: 10px;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 10px;
+  z-index: 1000;
+  .actions {
+    display: flex;
+    align-items: center;
+    width: 114px;
+    gap: 12px;
+    .icon-btn {
+      @include flex-c-c;
+      margin: 0;
+      padding: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      .avatar {
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      .badge {
+        @include flex-c-c;
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 14px;
+        height: 12px;
+        border-radius: 1px;
+        background-color: $grey-20;
+        color: $white-100;
+        font-size: 10px;
+        line-height: 100%;
+        letter-spacing: -0.2px;
+      }
+    }
+    img {
+      width: 30px;
+      height: 30px;
+    }
+  }
+  .logo-icon {
+    width: 35px;
+    height: 30px;
+  }
 }
 
 /* маленькое выпадающее меню */
 .dropdown-menu {
-  position: absolute;
-  top: calc(1vh + 40px); /* чуть ниже кнопки меню */
-  left: 2vw;
-  background: $grey-87;
-  padding: 8px 0;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   display: flex;
   flex-direction: column;
-  min-width: 140px;
+  position: absolute;
+  top: calc(1vh + 40px);
+  left: 2vw;
+  padding: 8px 0;
+  width: 140px;
+  background-color: $grey-20;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px $black-25;
   z-index: 1100;
+  .dropdown-link {
+    padding: 8px 16px;
+    color: $white-100;
+    font-size: 14px;
+    text-decoration: none;
+  }
+  .dropdown-link:hover {
+    background-color: $white-10;
+  }
 }
-
-.dropdown-link {
-  color: #fff;
-  text-decoration: none;
-  padding: 8px 16px;
-  font-size: 14px;
-}
-.dropdown-link:hover {
-  background: rgba(255,255,255,0.1);
-}
-
-/* плавное появление */
 .fade-enter-active, .fade-leave-active {
   transition: opacity .2s ease;
 }
@@ -192,10 +170,8 @@ onBeforeUnmount(() => {
   opacity: 0;
 }
 
-@media (max-width: 600px) {
-  .dropdown-menu {
-    left: 1vw;
-    min-width: 60%;
-  }
-}
+//@media (max-width: 600px) {
+//
+//}
+
 </style>
