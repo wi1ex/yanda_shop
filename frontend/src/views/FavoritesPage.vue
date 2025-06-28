@@ -73,7 +73,7 @@ const favoriteProducts = computed(() =>
 
 /* Карточка товара */
 .product-card {
-  background: $background-color;
+  background: $grey-87;
   border-radius: 15px;
   padding: 16px;
   text-align: center;

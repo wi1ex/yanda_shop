@@ -164,7 +164,7 @@ onBeforeUnmount(() => {
   position: absolute;
   top: calc(1vh + 40px); /* чуть ниже кнопки меню */
   left: 2vw;
-  background: $background-color;
+  background: $grey-87;
   padding: 8px 0;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
