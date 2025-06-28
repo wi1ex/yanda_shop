@@ -1,70 +1,70 @@
 <template>
   <div class="catalog">
-    <!-- Верхнее меню с категориями -->
-    <div class="sticky-nav">
-      <div class="categories">
-        <button v-for="cat in store.categoryList" :key="cat" :class="{ active: cat === store.selectedCategory }" @click="onCategoryClick(cat)">
-          {{ cat }}
+    <!-- === Header === -->
+    <div class="catalog__header">
+      <div class="header__text">
+        <h1 class="title">КАТАЛОГ<small>XYZ</small></h1>
+        <p>Здесь оригинальные вещи на любой вкус: от классики до уличного кэжуала.</p>
+        <p>Только проверенные бренды и актуальные коллекции. Одежда, в которой ты будешь выглядеть современно, уверенно и круто.</p>
+      </div>
+
+      <div class="header__categories">
+        <button v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)"
+                :class="['category-btn', { active: cat === store.selectedCategory }]">
+          <img :src="`/icons/${cat}.svg`" :alt="cat" />
+          <span>{{ cat }}</span>
         </button>
+      </div>
+
+      <div class="header__sorting desktop-only">
+        <span>Сортировка:</span>
+        <select v-model="sortOption">
+          <option value="date_desc">Новинки</option>
+          <option value="price_asc">Цена ↑</option>
+          <option value="price_desc">Цена ↓</option>
+        </select>
       </div>
     </div>
 
-    <!-- Заголовок текущей категории -->
-    <h2>{{ store.selectedCategory }}</h2>
+    <div class="catalog__body">
+      <!-- Sidebar фильтров (desktop) -->
+      <aside class="sidebar desktop-only">
+        <button class="filters-toggle">Фильтры <i class="icon-filter"/></button>
+        <div class="filter-controls">
+          <input type="number" v-model.number="store.filterPriceMin" placeholder="Мин. цена" />
+          <input type="number" v-model.number="store.filterPriceMax" placeholder="Макс. цена" />
+          <select v-model="store.filterColor">
+            <option value="">Все цвета</option>
+            <option v-for="color in distinctColors" :key="color" :value="color">{{ color }}</option>
+          </select>
+          <button @click="handleClearFilters" class="clear-btn">Сбросить</button>
+        </div>
+      </aside>
 
-    <!-- Блок управления сортировкой -->
-    <div class="sorting-controls">
-      <span>Сортировать:</span>
-      <select v-model="sortOption">
-        <option value="date_desc">Дата добавления: по убыванию</option>
-        <option value="date_asc">Дата добавления: по возрастанию</option>
-        <option value="price_asc">Цена: по возрастанию</option>
-        <option value="price_desc">Цена: по убыванию</option>
-      </select>
-    </div>
-
-    <!-- Блок фильтров -->
-    <div class="filter-controls">
-      <span>Фильтры:</span>
-
-      <!-- Цена: Мин. -->
-      <input type="number" v-model.number="store.filterPriceMin" placeholder="Мин. цена" class="filter-input"/>
-      <!-- Цена: Макс. -->
-      <input type="number" v-model.number="store.filterPriceMax" placeholder="Макс. цена" class="filter-input"/>
-
-      <!-- Цвет -->
-      <select v-model="store.filterColor" class="filter-select">
-        <option value="">Все цвета</option>
-        <option v-for="color in distinctColors" :key="color" :value="color">
-          {{ color }}
-        </option>
-      </select>
-
-      <!-- Кнопка сброса фильтров -->
-      <button @click="handleClearFilters" class="clear-filters-button">
-        Сбросить фильтры
-      </button>
-    </div>
-
-    <!-- Сетка товаров -->
-    <div class="products-grid" :class="{ blurred: productsLoading }">
-      <div v-for="group in store.displayedProducts" :key="group.color_sku" class="product-card">
-        <div @click="goToProductDetail(group)" class="clickable-area">
-          <img :src="group.minPriceVariant.image" alt="product" class="product-image"/>
-          <div class="product-info">
-            <p class="product-brand">{{ group.minPriceVariant.brand }}</p>
-            <p class="product-name">{{ group.minPriceVariant.name }}</p>
-            <p class="product-price">от {{ group.minPrice }} ₽</p>
-          </div>
+      <!-- Основное содержимое -->
+      <section class="main">
+        <!-- Мобильная сортировка + фильтры -->
+        <div class="mobile-controls mobile-only">
+          <button class="filters-toggle">Фильтры <i class="icon-filter"/></button>
+          <button class="sort-toggle">Сортировка: {{ sortLabel }}</button>
         </div>
 
-        <button class="favorite-button" v-if="!store.isFavorite(group.color_sku)" @click.stop="store.addToFavorites(group.color_sku)">
-          В избранное
-        </button>
-        <button class="favorite-button remove" v-else @click.stop="store.removeFromFavorites(group.color_sku)">
-          Убрать из избранного
-        </button>
-      </div>
+        <!-- Сетка товаров -->
+        <div class="products-grid" :class="{ blurred: productsLoading }">
+          <article v-for="group in store.displayedProducts" :key="group.color_sku" class="product-card">
+            <div class="clickable-area" @click="goToProductDetail(group)">
+              <img :src="group.minPriceVariant.image" alt="" />
+              <div class="info">
+                <p class="brand">{{ group.minPriceVariant.brand }}</p>
+                <p class="name">{{ group.minPriceVariant.name }}</p>
+                <p class="price">от {{ group.minPrice }} ₽</p>
+              </div>
+            </div>
+            <button class="fav-btn" v-if="!store.isFavorite(group.color_sku)" @click.stop="store.addToFavorites(group.color_sku)">♡</button>
+            <button class="fav-btn active" v-else @click.stop="store.removeFromFavorites(group.color_sku)">♥</button>
+          </article>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -166,213 +166,214 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-
 .catalog {
-  margin-top: 5vh;
-  padding: 2vw;
-}
+  padding: 2vw 4vw;
+  background: #DEDEDE;
 
-.sticky-nav {
-  position: relative;
-  padding: 2vh 2vw;
-  width: calc(100% - 4vw);
-}
+  // === Header ===
+  &__header {
+    display: grid;
+    grid-template-columns: 2fr 3fr 1fr;
+    align-items: end;
+    gap: 20px;
+    margin-bottom: 40px;
 
-.categories {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-}
+    .header__text {
+      p {
+        margin: 8px 0;
+        font-size: 16px;
+        line-height: 1.4;
+        color: #333;
+      }
+      .title {
+        font-size: 48px;
+        font-weight: 700;
+        margin: 0;
+        small {
+          font-size: 18px;
+          color: #FF3B30;
+          margin-left: 8px;
+        }
+      }
+    }
 
-.categories button {
-  padding: 10px;
-  border-radius: 8px;
-  background: #252a3b;
-  color: white;
-  transition: 0.3s ease;
-}
+    .header__categories {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
 
-.categories button.active {
-  background: #007bff;
-  color: #ffffff;
-}
+      .category-btn {
+        background: #FFF;
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: box-shadow .2s;
 
-h2 {
-  text-align: center;
-}
+        &.active {
+          box-shadow: 0 0 0 2px #FF3B30;
+        }
 
-/* Блок сортировки */
-.sorting-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
+        img {
+          width: 64px;
+          height: 64px;
+          object-fit: contain;
+          margin-bottom: 8px;
+        }
+        span {
+          font-size: 16px;
+          font-weight: 500;
+          color: #000;
+        }
+      }
+    }
 
-.sorting-controls select {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background-color: #ffffff;
-  cursor: pointer;
-}
+    .header__sorting {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
 
-/* Блок фильтров */
-.filter-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.filter-input {
-  width: 100px;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-.filter-select {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background-color: #ffffff;
-  cursor: pointer;
-}
-
-.clear-filters-button {
-  padding: 6px 12px;
-  background: #dc3545;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.3s ease;
-}
-
-/* Сетка товаров */
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
-  gap: 16px;
-  transition: filter 0.2s ease-in-out;
-  will-change: filter;
-}
-.blurred {
-  filter: blur(4px);
-}
-
-
-.product-card {
-  background: $grey-87;
-  border-radius: 15px;
-  padding: 16px;
-  text-align: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease;
-  cursor: pointer;
-  position: relative;
-}
-
-.clickable-area {
-  cursor: pointer;
-}
-
-.product-image {
-  width: 100%;
-  border-radius: 10px;
-}
-
-.product-info {
-  margin-top: 8px;
-}
-
-.product-price {
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-}
-
-.product-name {
-  font-size: 14px;
-  color: #555;
-  margin-top: 4px;
-}
-
-.product-brand {
-  font-size: 12px;
-  color: #777;
-  margin-top: 2px;
-}
-
-.favorite-button {
-  margin-top: 8px;
-  width: 100%;
-  padding: 8px;
-  border: none;
-  border-radius: 6px;
-  background: #ffc107;
-  color: #000;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.favorite-button.remove {
-  background: #dc3545;
-  color: #fff;
-}
-
-@media (max-width: 600px) {
-  /* 1. Две колонки товаров */
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+      select {
+        padding: 6px 10px;
+        border: 1px solid #CCC;
+        border-radius: 6px;
+        background: #FFF;
+      }
+    }
   }
 
-  /* 2. Sticky-nav & категории */
-  .sticky-nav {
-    top: 2vh;
-    padding: 1vh 2vw;
-  }
-  .categories {
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: flex-start;
-  }
-  .categories button {
-    flex: 1 1 calc(50% - 8px);
-    padding: 8px;
-    text-align: center;
+  // === Body ===
+  &__body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 24px;
+
+    .desktop-only { display: block; }
+    .mobile-only  { display: none; }
   }
 
-  /* 3. Сортировка по колонке */
-  .sorting-controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-  .sorting-controls span {
-    order: -1;
-  }
-  .sorting-controls select {
-    width: 100%;
+  // Sidebar фильтров
+  .sidebar {
+    position: sticky;
+    top: 100px;
+    background: #FFF;
+    border-radius: 12px;
+    padding: 16px;
+
+    .filters-toggle {
+      width: 100%;
+      background: none;
+      border: 1px solid #CCC;
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 16px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .filter-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      input, select {
+        padding: 8px;
+        border: 1px solid #CCC;
+        border-radius: 6px;
+      }
+
+      .clear-btn {
+        background: #DC3545;
+        color: #FFF;
+        border: none;
+        border-radius: 6px;
+        padding: 8px;
+        cursor: pointer;
+      }
+    }
   }
 
-  /* 4. Фильтры */
-  .filter-controls {
-    gap: 8px;
+  // Основная секция
+  .main {
+    .mobile-controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+
+      button {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #CCC;
+        border-radius: 6px;
+        background: #FFF;
+      }
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      &.blurred { filter: blur(4px); }
+
+      .product-card {
+        background: #FFF;
+        border-radius: 12px;
+        padding: 16px;
+        position: relative;
+        text-align: center;
+
+        img {
+          width: 100%;
+          border-radius: 8px;
+        }
+        .info {
+          margin-top: 12px;
+          .brand { font-size: 12px; color: #777; }
+          .name  { font-size: 14px; color: #333; margin: 4px 0; }
+          .price { font-size: 16px; font-weight: 700; color: #000; }
+        }
+
+        .fav-btn {
+          position: absolute;
+          top: 12px; right: 12px;
+          background: none;
+          border: none;
+          font-size: 18px;
+          cursor: pointer;
+          &.active { color: #FF3B30; }
+        }
+      }
+    }
   }
-  .filter-input,
-  .filter-select {
-    flex: 1 1 calc(50% - 4px);
-    min-width: 80px;
-  }
-  .clear-filters-button {
-    flex: 1 1 100%;
+
+  // === Responsive ===
+  @media (max-width: 768px) {
+    &__body {
+      grid-template-columns: 1fr;
+      .desktop-only { display: none; }
+      .mobile-only  { display: flex; }
+    }
+
+    .header__header {
+      display: block;
+      text-align: center;
+
+      .header__categories {
+        justify-content: center;
+        margin: 16px 0;
+      }
+      .header__sorting {
+        justify-content: center;
+        margin-top: 16px;
+      }
+    }
+
+    .main .products-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
   }
 }
-
 </style>
