@@ -9,7 +9,7 @@
     </nav>
 
 
-    <!-- === Google Sheets === -->
+    <!-- Google Sheets -->
     <section class="sheets-section" v-if="selected === 'sheets'">
       <h2>Импорт из Google Sheets</h2>
       <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="sheet-block">
@@ -43,7 +43,7 @@
       </div>
     </section>
 
-    <!-- === Загрузка ZIP === -->
+    <!-- Загрузка ZIP -->
     <section class="upload-section" v-if="selected === 'upload'">
       <h2>Загрузить ZIP с изображениями</h2>
       <form @submit.prevent="submitZip">
@@ -55,7 +55,7 @@
       <p v-if="store.zipResult" class="upload-result">{{ store.zipResult }}</p>
     </section>
 
-    <!-- === Логи изменений товаров/изображений === -->
+    <!-- Логи изменений товаров/изображений -->
     <section class="logs-section" v-if="selected === 'logs'">
       <h2>Последние 10 изменений</h2>
       <div v-if="store.logsLoading" class="loading-logs">Загрузка журналов...</div>
@@ -88,7 +88,7 @@
       </div>
     </section>
 
-    <!-- === Статистика посещений (бар-чарт) === -->
+    <!-- Статистика посещений (бар-чарт) -->
     <section class="visits-section" v-if="selected === 'visits'">
       <h2>Статистика посещений</h2>
 
@@ -113,20 +113,59 @@
       </div>
     </section>
 
-    <!-- 5. Настройки AdminSetting -->
-    <section class="settings-section" v-if="selected === 'settings'">
-      <h2>Настройки</h2>
+    <!-- === Пользователи === -->
+    <section class="users-section" v-if="selected === 'users'">
+      <h2>Пользователи</h2>
       <table>
-        <tr><th>Ключ</th><th>Значение</th><th></th></tr>
-        <tr v-for="s in store.settings" :key="s.key">
-          <td>{{s.key}}</td>
-          <td><input v-model="s.value"/></td>
-          <td><button @click="saveSetting(s)" :disabled="saving===s.key">Сохранить</button></td>
-        </tr>
+        <thead>
+          <tr>
+            <th v-for="col in userColumns" :key="col">{{ col }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="u in store.users" :key="u.user_id">
+            <td v-for="col in userColumns" :key="col">
+              <span v-if="isDateField(col)">{{ formatDate(u[col]) }}</span>
+              <span v-else>{{ u[col] }}</span>
+            </td>
+          </tr>
+          <tr v-if="!store.users.length">
+            <td :colspan="userColumns.length" class="no-data">Нет пользователей</td>
+          </tr>
+        </tbody>
       </table>
     </section>
 
-    <!-- 6. Все отзывы -->
+    <!-- Настройки AdminSetting -->
+    <section class="settings-section" v-if="selected === 'settings'">
+      <h2>Настройки</h2>
+
+      <!-- Существующие -->
+      <table>
+        <tr><th>Ключ</th><th>Значение</th><th></th></tr>
+        <tr v-for="s in filteredSettings" :key="s.key">
+          <td>{{ s.key }}</td>
+          <td><input v-model="s.value" /></td>
+          <td>
+            <button @click="saveSetting(s)" :disabled="saving === s.key">
+              {{ saving===s.key ? 'Сохраняем…' : 'Сохранить' }}
+            </button>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Форма «Добавить новый параметр» -->
+      <div class="add-setting">
+        <h3>Добавить новый параметр</h3>
+        <input v-model="newSetting.key" placeholder="Ключ (уникальный)"/>
+        <input v-model="newSetting.value" placeholder="Значение"/>
+        <button @click="onAddSetting" :disabled="!newSetting.key.trim() || newSetting.value === '' || saving==='add'">
+          {{ saving==='add' ? 'Добавляем…' : 'Добавить' }}
+        </button>
+      </div>
+    </section>
+
+    <!-- Все отзывы -->
     <section class="all-reviews-section" v-if="selected === 'all_reviews'">
       <h2>Все отзывы</h2>
       <ul v-if="store.reviews.length">
@@ -151,7 +190,7 @@
       <p v-else>Отзывов пока нет.</p>
     </section>
 
-    <!-- 7. Добавить отзыв -->
+    <!-- Добавить отзыв -->
     <section class="add-review-section" v-if="selected === 'add_review'">
       <h2>Добавить отзыв</h2>
       <div v-if="formError" class="error">{{ formError }}</div>
@@ -177,55 +216,83 @@
 </template>
 
 <script setup>
-import {computed, onMounted, reactive, ref} from 'vue'
-import {useStore} from '@/store/index.js'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useStore } from '@/store/index.js'
 
-const store = useStore()
-const adminId = store.user.id
+const store     = useStore()
+const adminId   = store.user.id
 const adminName = store.user.username
 
-const zipFile = ref(null)
-const zipInput = ref(null)
-const editingUrl = reactive({ shoes:false, clothing:false, accessories:false })
-const selectedDate = ref(new Date().toISOString().slice(0,10))
+const zipFile      = ref(null)
+const zipInput     = ref(null)
+const editingUrl   = reactive({ shoes:false, clothing:false, accessories:false })
+const selectedDate = ref(new Date().toISOString().slice(0, 10))
 
-const formError = ref('');
-const formSuccess = ref('');
-const files = reactive({})
-const saving = ref(null)
-const selected = ref('sheets')
-const tabs = [
+const formError   = ref('')
+const formSuccess = ref('')
+const files       = reactive({})
+const saving      = ref(null)
+const selected    = ref('sheets')
+const newSetting  = reactive({ key: '', value: '' })
+const tabs        = [
   { key:'sheets',      label:'Sheets'         },
   { key:'upload',      label:'ZIP Upload'     },
   { key:'logs',        label:'Логи'           },
   { key:'visits',      label:'Посещения'      },
+  { key:'users',       label:'Пользователи'   },
   { key:'settings',    label:'Настройки'      },
   { key:'all_reviews', label:'Все отзывы'     },
   { key:'add_review',  label:'Добавить отзыв' },
 ]
-// Для отзывов
-const form  = reactive({
+
+// Вычисляем список колонок по ключам первого пользователя
+const userColumns = computed(() => {
+  if (!store.users.length) return []
+  return Object.keys(store.users[0])
+})
+
+// Фильтруем настройки: убираем все, ключи которых начинаются на `sheet_url_`
+const filteredSettings = computed(() =>
+  store.settings.filter(s => !s.key.startsWith('sheet_url_'))
+)
+
+// Форма добавления отзыва
+const form = reactive({
   client_id:'', client_text1:'', shop_response:'', client_text2:'', link_url:''
 })
 
 const maxTotal = computed(() => {
   const hours = store.visitsData.hours || []
-  if (!hours.length) return 1
-  return Math.max(...hours.map(h => h.total), 1)
+  return hours.length ? Math.max(...hours.map(h => h.total)) : 1
 })
 
+// Утилиты
 function onFile(e,i) {
   files[i] = e.target.files[0]
 }
+function onZipSelected(e) {
+  zipFile.value = e.target.files[0]
+}
 
+// Функции для форматирования
+function isDateField(col) {
+  return ['created_at', 'last_visit', 'updated_at', /* и любые другие */].includes(col)
+}
+
+function formatDate(val) {
+  return val
+    ? new Date(val).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' })
+    : '—'
+}
+
+// Отправка нового отзыва
 async function onSubmitReview() {
   // Сброс сообщений
   formError.value = ''
   formSuccess.value = ''
 
-  // Проверка обязательных полей
-  const { client_id, client_text1, shop_response, link_url } = form
-  if (!client_id.trim() || !client_text1.trim() || !shop_response.trim() || !link_url.trim()) {
+  // Проверки на фронте
+  if (!form.client_id.trim() || !form.client_text1.trim() || !form.shop_response.trim() || !form.link_url.trim()) {
     formError.value = 'Пожалуйста, заполните все обязательные поля'
     return
   }
@@ -241,31 +308,29 @@ async function onSubmitReview() {
   fd.append('client_id', client_id)
   fd.append('client_text1', client_text1)
   fd.append('shop_response', shop_response)
-  // client_text2 может быть пустым
-  fd.append('client_text2', form.client_text2 || '')
+  fd.append('client_text2', form.client_text2 || '') // client_text2 может быть пустым
   fd.append('link_url', link_url)
 
   // Добавляем фото
   for (let i = 1; i <= 3; i++) {
-    if (files[i]) {
-      fd.append(`photo${i}`, files[i])
-    }
+    if (files[i]) fd.append(`photo${i}`, files[i])
   }
 
   try {
     // Отправка и получение сообщения об успехе
     formSuccess.value = await store.createReview(fd)
-
-    // Очищаем форму и файлы
-    Object.keys(form).forEach(key => form[key] = '')
-    Object.keys(files).forEach(key => delete files[key])
-
-    // Переключаемся на список отзывов и обновляем его
-    selected.value = 'all_reviews'
-    await store.fetchReviews()
+    // очистка
+    Object.keys(form).forEach(k => form[k]='')
+    Object.keys(files).forEach(k => delete files[k])
   } catch (err) {
     formError.value = err.message
   }
+}
+
+// Другие действия
+function submitZip() {
+  if (!zipFile.value) return
+  store.uploadZip(zipFile.value, adminId, adminName).then(() => { zipFile.value = null; zipInput.value.value = '' })
 }
 
 function deleteReview(id) {
@@ -274,27 +339,22 @@ function deleteReview(id) {
 
 function saveSetting(s) {
   saving.value = s.key
-  store.saveSetting(s.key, s.value).finally(()=> saving.value = null)
+  store.saveSetting(s.key, s.value)
+    .then(() => store.fetchSettings())
+    .finally(() => saving.value = null)
+}
+
+async function onAddSetting() {
+  saving.value = 'add'
+  await store.saveSetting(newSetting.key.trim(), newSetting.value)
+  await store.fetchSettings()
+  newSetting.key = ''
+  newSetting.value = ''
+  saving.value = null
 }
 
 function startEdit(cat) {
   editingUrl[cat] = true
-}
-
-function onZipSelected(e) {
-  zipFile.value = e.target.files[0]
-}
-
-// Ждём, пока ZIP будет загружен, затем очищаем и reset input
-async function submitZip() {
-  if (!zipFile.value) return
-  await store.uploadZip(zipFile.value, adminId, adminName)
-  // сбрасываем выбранный файл
-  zipFile.value = null
-  // и сам HTML-элемент
-  if (zipInput.value) {
-    zipInput.value.value = ''
-  }
 }
 
 function fetchVisits() {
@@ -302,20 +362,49 @@ function fetchVisits() {
 }
 
 async function onSaveUrl(cat) {
-  const ok = await store.saveSheetUrl(cat)
-  // Сбрасываем режим редактирования только при успехе
-  if (ok) {
-    editingUrl[cat] = false
-  }
+  if (await store.saveSheetUrl(cat)) editingUrl[cat] = false
 }
 
+// При монтировании — подгрузим все по умолчанию
 onMounted(() => {
   store.loadSheetUrls()
   store.loadLogs()
   store.loadVisits(selectedDate.value)
   store.fetchSettings()
   store.fetchReviews()
+  store.fetchUsers()
 })
+
+// **Новый watch**: при каждом переключении вкладки обновляем её данные
+watch(selected, (tab) => {
+  switch(tab) {
+    case 'sheets':
+      store.loadSheetUrls()
+      break
+    case 'upload':
+      // ничего не нужно грузить
+      break
+    case 'logs':
+      store.loadLogs()
+      break
+    case 'visits':
+      store.loadVisits(selectedDate.value)
+      break
+    case 'users':
+      store.fetchUsers()
+      break
+    case 'settings':
+      store.fetchSettings()
+      break
+    case 'all_reviews':
+      store.fetchReviews()
+      break
+    case 'add_review':
+      // ничего не грузим
+      break
+  }
+})
+
 </script>
 
 <style scoped lang="scss">
@@ -414,6 +503,8 @@ onMounted(() => {
   color: #bbb;
   font-style: italic;
   margin-top: 20px;
+  text-align: center;
+  padding: 12px;
 }
 
 /* Контейнер для «самописного» бар-чарта */
@@ -494,6 +585,20 @@ onMounted(() => {
   padding: 4px 8px;
   cursor: pointer;
 }
+.add-setting {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.add-setting input {
+  padding: 6px;
+  flex: 1 1 200px;
+}
+.add-setting button {
+  padding: 6px 12px;
+}
 
 /* Секция «Все отзывы» */
 .all-reviews-section {
@@ -542,6 +647,9 @@ onMounted(() => {
 }
 
 /* Поля загрузки фотографий */
+.photos-inputs {
+  margin-bottom: 4px;
+}
 .photos-inputs input {
   display: block;
   margin-bottom: 8px;
@@ -584,6 +692,19 @@ onMounted(() => {
 .review-link a {
   color: #007bff;
   text-decoration: none;
+}
+
+.users-section {
+  margin-top: 24px;
+}
+.users-section table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.users-section th, .users-section td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
 }
 
 @media (max-width: 600px) {
@@ -700,6 +821,83 @@ onMounted(() => {
   .sheet-save, .sheet-import, .upload-section button {
     width: 100%;
   }
+
+  .tabs {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .tabs button {
+    flex: 1 1 45%;
+  }
+
+  .sheet-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sheet-input {
+    width: 100%;
+  }
+  .sheet-save,
+  .sheet-import {
+    width: 100%;
+  }
+
+  .upload-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .upload-section input,
+  .upload-section button {
+    width: 100%;
+  }
+
+  .logs-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+  .logs-table thead,
+  .logs-table tbody,
+  .logs-table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .chart-wrapper {
+    max-width: 100%;
+  }
+  .bar-chart {
+    height: 200px;
+  }
+  .bar {
+    margin: 0 1px;
+  }
+  .bar-label, .bar-value {
+    font-size: 10px;
+  }
+
+  .users-section table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .admin-review {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .photos {
+    flex-wrap: wrap;
+  }
+  .admin-photo {
+    width: 60px;
+    height: 60px;
+  }
+
 }
 
 </style>

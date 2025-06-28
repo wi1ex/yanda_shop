@@ -140,8 +140,7 @@ function onRegister() {
 .cart-header h2 {
   margin: 0;
   font-size: 32px;
-  font-family: TT-Regular;
-  font-weight: 400;
+  font-family: Bounded-400;
   line-height: 80%;
   letter-spacing: -0.05em;
 }
@@ -332,7 +331,7 @@ function onRegister() {
 }
 .summary-total {
   font-size: 24px;
-  font-family: TT-Regular;
+  font-family: Bounded-400;
   color: #0a0a0a;
   margin: 18px 0 4px;
   font-weight: 400;

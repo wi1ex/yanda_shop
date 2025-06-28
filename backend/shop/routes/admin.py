@@ -360,3 +360,40 @@ def delete_review(review_id: int) -> Tuple[Response, int]:
     except Exception as e:
         logger.exception("Error deleting review %d: %s", review_id, e)
         return jsonify({'error': 'internal error'}), 500
+
+
+@admin_api.route("/list_users", methods=["GET"])
+def list_users() -> Tuple[Response, int]:
+    logger.info("GET /api/admin/list_users")
+    try:
+        # поля, которые не хотим отдавать в API
+        hidden_fields = {
+            "password_hash",
+            "email_verified",
+            "phone_verified",
+        }
+
+        with session_scope() as session:
+            users = session.query(Users).order_by(Users.user_id).all()
+            result: List[Dict[str, Any]] = []
+
+            for u in users:
+                row: Dict[str, Any] = {}
+                for col in Users.__table__.columns:
+                    name = col.name
+                    if name in hidden_fields:
+                        continue
+
+                    val = getattr(u, name)
+                    # формируем строковое представление для дат
+                    if isinstance(val, datetime):
+                        val = val.astimezone(ZoneInfo("Europe/Moscow")).isoformat()
+                    row[name] = val
+
+                result.append(row)
+
+        return jsonify({"users": result}), 200
+
+    except Exception as e:
+        logger.exception("Failed to list_users: %s", e)
+        return jsonify({"error": "internal error"}), 500

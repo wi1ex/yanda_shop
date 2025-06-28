@@ -29,7 +29,8 @@ export const API = {
     getSettings:        '/api/admin/get_settings',           // GET    - получить список настроек
     updateSetting:      '/api/admin/update_setting',         // POST   - изменить список настроек
     createReview:       '/api/admin/create_review',          // POST   - загрузить новый отзыв
-    deleteReview:       '/api/admin/delete_review'           // DELETE - удалить отзыв
+    deleteReview:       '/api/admin/delete_review',          // DELETE - удалить отзыв
+    listUsers:          '/api/admin/list_users',             // GET    - получить список пользователей
   }
 }
 
@@ -101,8 +102,16 @@ export const useStore = defineStore('main', () => {
 
   const settings           = ref([])
   const reviews            = ref([])
+  const users              = ref([])
 
 
+  async function fetchUsers() {
+    const res = await fetch(`${API.baseUrl}${API.admin.listUsers}`)
+    if (res.ok) {
+      const j = await res.json()
+      users.value = j.users
+    }
+  }
 
   async function fetchSettings() {
     const res = await fetch(`${API.baseUrl}${API.admin.getSettings}`)
@@ -669,6 +678,7 @@ export const useStore = defineStore('main', () => {
     socialUrls,
     settings,
     reviews,
+    users,
 
     loadSocialUrls,
     isTelegramUserId,
@@ -700,5 +710,6 @@ export const useStore = defineStore('main', () => {
     fetchReviews,
     createReview,
     deleteReview,
+    fetchUsers,
   }
 })

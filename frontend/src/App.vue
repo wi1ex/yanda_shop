@@ -1,20 +1,24 @@
 <template>
   <div class="app-container" v-if="store.user">
-    <Header />
-    <CartPage />
-    <router-view />
-    <Footer />
+    <Header/>
+    <CartPage/>
+    <router-view/>
+    <!-- Footer hidden on admin panel routes -->
+    <Footer v-if="!isAdminRoute"/>
   </div>
 </template>
 
 <script setup>
-import { onMounted, watch, onBeforeUnmount } from 'vue'
+import { onMounted, watch, onBeforeUnmount, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useStore } from '@/store/index.js'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 import CartPage from '@/views/CartPage.vue'
 
 const store = useStore()
+const route = useRoute()
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 let prevOverflow
 
 // Генерация случайного ID для веб-посетителя, если нет Telegram WebApp
