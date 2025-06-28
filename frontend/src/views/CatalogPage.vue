@@ -51,11 +51,17 @@
       <main class="main-content">
         <!-- Мобильные контролы -->
         <div class="mobile-controls mobile-only">
+          <div class="mobile-sort">
+            <span>Сортировка:</span>
+            <select v-model="sortOption">
+              <option value="date_desc">Новинки</option>
+              <option value="price_asc">Цена ↑</option>
+              <option value="price_desc">Цена ↓</option>
+            </select>
+          </div>
+
           <button @click="mobileFiltersOpen = !mobileFiltersOpen">
             Фильтры <i :class="['arrow', mobileFiltersOpen ? 'up' : 'down']"/>
-          </button>
-          <button @click="mobileSortOpen = !mobileSortOpen">
-            Сортировка: {{ sortLabel }} <i :class="['arrow', mobileSortOpen ? 'up' : 'down']"/>
           </button>
 
           <transition name="slide">
@@ -67,16 +73,6 @@
                 <option v-for="color in distinctColors" :key="color" :value="color">{{ color }}</option>
               </select>
               <button @click="handleClearFilters" class="btn-clear">Сбросить</button>
-            </div>
-          </transition>
-
-          <transition name="slide">
-            <div v-if="mobileSortOpen" class="mobile-sort">
-              <select v-model="sortOption">
-                <option value="date_desc">Новинки</option>
-                <option value="price_asc">Цена ↑</option>
-                <option value="price_desc">Цена ↓</option>
-              </select>
             </div>
           </transition>
         </div>
@@ -110,16 +106,7 @@ const store = useStore()
 const router = useRouter()
 
 const mobileFiltersOpen = ref(false)
-const mobileSortOpen    = ref(false)
 const productsLoading = ref(false)
-
-// Красивый лэйбл для показа на кнопке
-const sortLabel = computed(() => {
-  if (sortOption.value === 'date_desc') return 'Новинки'
-  if (sortOption.value === 'price_asc') return 'Цена ↑'
-  if (sortOption.value === 'price_desc') return 'Цена ↓'
-  return ''
-})
 
 const sortOption = computed({
   get() { return `${store.sortBy}_${store.sortOrder}` },
@@ -369,8 +356,25 @@ onMounted(() => {
       }
     }
 
-    .mobile-filters,
+    /* Новый блок «мобильной сортировки» (отдельный от кнопок) */
     .mobile-sort {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      span {
+        font-size: 14px;
+      }
+      select {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #CCC;
+        border-radius: 6px;
+        background: #FFF;
+      }
+    }
+
+    .mobile-filters {
       background: #FFF;
       border: 1px solid #CCC;
       border-radius: 6px;
