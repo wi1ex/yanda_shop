@@ -39,7 +39,7 @@ def upgrade():
         batch_op.add_column(sa.Column('phone', sa.String(length=100), nullable=True))
         batch_op.add_column(sa.Column('phone_verified', sa.Boolean(), nullable=True))
         batch_op.add_column(sa.Column('date_of_birth', sa.Date(), nullable=True))
-        batch_op.add_column(sa.Column('gender', sa.Enum(), nullable=True))
+        batch_op.add_column(sa.Column('gender', sa.String(length=100), nullable=True))
         batch_op.add_column(sa.Column('role', sa.String(length=100), nullable=True))
         batch_op.add_column(sa.Column('mailing', sa.Boolean(), nullable=True))
         batch_op.add_column(sa.Column('loyalty_points', sa.Integer(), nullable=True))
