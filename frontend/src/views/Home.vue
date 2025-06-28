@@ -662,12 +662,13 @@ onMounted(() => {
   }
   .hero-controls {
     position: absolute;
-    bottom: 8px;             /* подвинуть кнопки */
+    bottom: 8px;
     left: 5%;
   }
   .btn-catalog {
     padding: 6px 12px;
     font-size: 14px;
+    margin-left: 100px;
   }
   .how-it-works .steps {
     gap: 12px;
