@@ -17,7 +17,7 @@ class Users(db.Model):
     phone          = db.Column(db.String(100), nullable=True)
     phone_verified = db.Column(db.Boolean, nullable=True)
     date_of_birth  = db.Column(db.Date, nullable=True)
-    gender         = db.Column(db.Enum, nullable=True)
+    gender         = db.Column(db.String(100), nullable=True)
     role           = db.Column(db.String(100), default='customer', nullable=True)
     mailing        = db.Column(db.Boolean, nullable=True)
     loyalty_points = db.Column(db.Integer, nullable=True)
