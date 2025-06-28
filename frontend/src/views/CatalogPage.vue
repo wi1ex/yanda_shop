@@ -113,8 +113,8 @@ const productsLoading = ref(false)
 
 // Маппим заголовок категории на нужную картинку
 const categoryImages = {
-  'Одежда': category_shoes,
-  'Обувь': category_clothing,
+  'Одежда': category_clothing,
+  'Обувь': category_shoes,
   'Аксессуары': category_accessories
 }
 
@@ -227,6 +227,7 @@ onMounted(() => {
   gap: 16px;
   align-items: center;
   margin-bottom: 32px;
+  margin-top: 50px;
 
   .header-text {
     grid-column: 1;
