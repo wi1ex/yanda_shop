@@ -261,7 +261,7 @@ function toggleFaq(i) {
 }
 
 onMounted(() => {
-  store.fetchProducts()
+  store.fetchAllProducts()
   store.fetchReviews()
 })
 
