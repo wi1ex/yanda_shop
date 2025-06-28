@@ -208,6 +208,15 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+
+/* === Visibility Helpers === */
+.desktop-only {
+  display: block !important;
+}
+.mobile-only  {
+  display: none  !important;
+}
+
 .catalog {
   padding: 2vw 4vw;
   background: #DEDEDE;
@@ -298,13 +307,6 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 220px 1fr;
   gap: 24px;
-
-  .desktop-only {
-    display: block;
-  }
-  .mobile-only  {
-    display: none;
-  }
 }
 
 /* Sidebar фильтров */
@@ -457,14 +459,15 @@ onMounted(() => {
 
 /* === MEDIA (<600px) === */
 @media (max-width: 600px) {
+  .desktop-only {
+    display: none  !important;
+  }
+  .mobile-only  {
+    display: flex  !important;
+  }
+
   .catalog-body {
     grid-template-columns: 1fr;
-    .desktop-only {
-      display: none;
-    }
-    .mobile-only  {
-      display: flex;
-    }
   }
 
   .catalog-header {
