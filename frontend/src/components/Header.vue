@@ -76,7 +76,7 @@ function onClickOutside(e) {
   const clickedInsideBtn = menuBtn.value?.contains(e.target)
   const clickedInsideMenu = menu.value?.contains(e.target)
   if (!clickedInsideBtn && !clickedInsideMenu) {
-    closeMenu()
+    menuOpen.value = false
   }
 }
 
@@ -99,8 +99,7 @@ onBeforeUnmount(() => {
   padding: 10px;
   z-index: 1000;
   .actions {
-    display: flex;
-    align-items: center;
+    @include flex-c-l;
     width: 114px;
     gap: 12px;
     .icon-btn {
