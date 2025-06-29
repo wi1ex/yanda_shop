@@ -19,11 +19,15 @@
       </router-link>
       <router-link to="/favorites" class="icon-btn" title="Избранное">
         <img :src="icon_favorites" alt="Избранное" />
-        <span v-if="store.favorites.count" class="badge">{{ store.favorites.count }}</span>
+        <span v-if="store.favorites.count" class="badge">
+          {{ store.favorites.count < 10 ? store.favorites.count : "9+" }}
+        </span>
       </router-link>
       <button @click="store.openCartDrawer()" class="icon-btn" title="Корзина">
         <img :src="icon_cart" alt="Корзина" />
-        <span v-if="store.cart.count" class="badge">{{ store.cart.count }}</span>
+        <span v-if="store.cart.count" class="badge">
+          {{ store.cart.count < 10 ? store.cart.count : "9+"}}
+        </span>
       </button>
     </div>
 
@@ -58,13 +62,13 @@ const route = useRoute()
 const menu = ref(null)
 const menuBtn = ref(null)
 const menuOpen = ref(false)
-const isAbout = computed(() => route.name === 'About')
-const icon_default_avatar = computed(() => isAbout.value ? icon_default_avatar_white : icon_default_avatar_grey)
-const icon_favorites = computed(() => isAbout.value ? icon_favorites_white : icon_favorites_grey)
-const icon_cart = computed(() => isAbout.value ? icon_cart_white : icon_cart_grey)
-const icon_menu = computed(() => isAbout.value ? icon_menu_white : icon_menu_grey)
-const icon_logo = computed(() => isAbout.value ? icon_logo_white : icon_logo_orange)
 const isAdmin = computed(() => store.user && store.admin_ids.includes(Number(store.user.id)))
+const isIconWhite = computed(() => route.name === 'About' || route.name === 'Home')
+const icon_default_avatar = computed(() => isIconWhite.value ? icon_default_avatar_white : icon_default_avatar_grey)
+const icon_favorites = computed(() => isIconWhite.value ? icon_favorites_white : icon_favorites_grey)
+const icon_cart = computed(() => isIconWhite.value ? icon_cart_white : icon_cart_grey)
+const icon_menu = computed(() => isIconWhite.value ? icon_menu_white : icon_menu_grey)
+const icon_logo = computed(() => isIconWhite.value ? icon_logo_white : icon_logo_orange)
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
@@ -123,6 +127,7 @@ onBeforeUnmount(() => {
         border-radius: 1px;
         background-color: $grey-20;
         color: $white-100;
+        font-family: NeueHaas-500;
         font-size: 10px;
         line-height: 100%;
         letter-spacing: -0.2px;

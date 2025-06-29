@@ -295,7 +295,6 @@ onMounted(() => {
   position: absolute;
   top: 20%;
   left: 10%;
-  color: #fff;
 }
 
 .hero-text h1 {
