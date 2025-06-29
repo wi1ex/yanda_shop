@@ -4,7 +4,7 @@
     <CartPage/>
     <router-view/>
     <!-- Footer hidden on admin panel routes -->
-    <Footer v-if="!isAdminRoute"/>
+    <Footer v-if="!isNoFooterRoute"/>
   </div>
 </template>
 
@@ -18,7 +18,7 @@ import CartPage from '@/views/CartPage.vue'
 
 const store = useStore()
 const route = useRoute()
-const isAdminRoute = computed(() => route.path.startsWith('/admin'))
+const isNoFooterRoute = computed(() => route.name === 'Admin' || route.name === 'Profile')
 let prevOverflow
 
 // Генерация случайного ID для веб-посетителя, если нет Telegram WebApp

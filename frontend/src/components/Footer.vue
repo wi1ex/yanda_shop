@@ -237,7 +237,6 @@ onMounted(() => {
   .bottom-link {
     text-decoration: none;
     color: inherit;
-    text-align: center;
     font-size: 20px;
     line-height: 100%;
     letter-spacing: -0.8px;
@@ -277,7 +276,7 @@ onMounted(() => {
     letter-spacing: -0.64px;
   }
   .footer-logo {
-    margin-left: -5px;
+    margin-left: -6px;
   }
   .footer-nav {
     gap: 8px;
