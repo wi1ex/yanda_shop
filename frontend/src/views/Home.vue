@@ -629,7 +629,7 @@ onMounted(async () => {
   &-header {
     display: flex;
     align-items: center;
-    padding: 16px 24px;
+    padding: 18px 10px;
     cursor: pointer;
     user-select: none;
   }
@@ -770,7 +770,7 @@ onMounted(async () => {
       letter-spacing: -0.6px;
     }
     &-header {
-      padding: 12px 16px;
+      padding: 16px 10px;
     }
     &-number {
       width: 24px;
