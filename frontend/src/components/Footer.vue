@@ -4,11 +4,11 @@
     <div class="footer-top-web">
       <!-- Logo слева -->
       <div class="footer-logo">
-        <a href="#" class="footer-logo-link" @click.prevent="goToPage('Home')">YANDA.SHOP</a>
+        <img :src="icon_logo_text" alt="Главная" class="footer-logo-icon" @click.prevent="goToPage('Home')" />
       </div>
 
       <!-- Колонка “Категории” -->
-      <nav class="footer-nav">
+      <nav class="footer-nav" style="left: 345px">
         <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Мужчинам</a>
         <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Женщинам</a>
         <a href="#" class="footer-link" @click.prevent="goToCategory('Аксессуары')">Аксессуары</a>
@@ -17,14 +17,14 @@
       </nav>
 
       <!-- Колонка “Информация” -->
-      <nav class="footer-nav">
+      <nav class="footer-nav" style="left: 955px">
         <a href="#" class="footer-link" @click.prevent="goToPage('About')">О нас</a>
         <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Доставка и оплата</a>
         <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Возврат</a>
       </nav>
 
       <!-- Колонка “Соцсети” -->
-      <nav class="footer-nav">
+      <nav class="footer-nav" style="left: 1565px">
         <a v-if="store.socialUrls.url_telegram" :href="store.socialUrls.url_telegram"
            target="_blank" rel="noopener" class="footer-link">Telegram</a>
         <a v-if="store.socialUrls.url_instagram" :href="store.socialUrls.url_instagram"
@@ -68,7 +68,7 @@
       </div>
     </div>
 
-    <router-link to="/">
+    <router-link to="/" class="logo-router">
       <img :src="icon_logo_orange" alt="Главная" class="logo-icon" />
     </router-link>
 
@@ -120,6 +120,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useStore } from '@/store/index.js'
 
 import icon_logo_orange from '@/assets/images/logo_orange.svg'
+import icon_logo_text from '@/assets/images/logo_text.svg'
 
 const store = useStore()
 const router = useRouter()
@@ -171,17 +172,20 @@ onMounted(() => {
   display: flex;
 }
 
-.footer-logo-link {
-  font-size: 18px;
-  font-weight: bold;
-  text-decoration: none;
-  color: inherit;
+.footer-logo {
+  display: flex;
+  width: 335px;
+  .footer-logo-icon {
+    width: 167px;
+    height: 17px;
+  }
 }
 
 .footer-nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  position: relative;
+  gap: 4px;
 }
 
 .footer-link {
@@ -192,17 +196,21 @@ onMounted(() => {
   &:hover { opacity: 0.6; }
 }
 
-.logo-icon {
-  width: 58px;
-  height: 50px;
+.logo-router {
+  display: flex;
+  align-self: center;
+  margin: 80px 0;
+  .logo-icon {
+    width: 58px;
+    height: 50px;
+  }
 }
 
 /* === Нижний грид WEB === */
 .footer-bottom-web {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   width: 100%;
-  max-width: 1200px;
 }
 /* === Нижний блок MOBILE === */
 .footer-bottom-mobile {
@@ -216,6 +224,7 @@ onMounted(() => {
 
 .footer-bottom-column {
   display: flex;
+  justify-content: space-around;
 }
 
 .bottom-cell {
