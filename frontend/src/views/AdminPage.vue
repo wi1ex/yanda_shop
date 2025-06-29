@@ -305,11 +305,11 @@ async function onSubmitReview() {
 
   // Формируем FormData
   const fd = new FormData()
-  fd.append('client_id', client_id)
-  fd.append('client_text1', client_text1)
-  fd.append('shop_response', shop_response)
+  fd.append('client_id', form.client_id)
+  fd.append('client_text1', form.client_text1)
+  fd.append('shop_response', form.shop_response)
   fd.append('client_text2', form.client_text2 || '') // client_text2 может быть пустым
-  fd.append('link_url', link_url)
+  fd.append('link_url', form.link_url)
 
   // Добавляем фото
   for (let i = 1; i <= 3; i++) {
