@@ -26,12 +26,12 @@ const router = createRouter({
 
 // глобальный guard вместо beforeEnter на одном маршруте
 router.beforeEach((to, from, next) => {
-  if (to.name === 'Admin') {
-    const store = useStore()
-    if (!store.user || !store.admin_ids.includes(Number(store.user.id))) {
-      return next({ name: 'Home' })
-    }
-  }
+  // if (to.name === 'Admin') {
+  //   const store = useStore()
+  //   if (!store.user || !store.admin_ids.includes(Number(store.user.id))) {
+  //     return next({ name: 'Home' })
+  //   }
+  // }
   next()
 })
 
