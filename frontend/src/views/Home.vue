@@ -135,9 +135,9 @@
 
       <div class="faq-list">
         <div v-for="item in faqs" :key="item.id" class="faq-item">
+          <!-- чёрный квадрат с номером -->
+          <div class="faq-number">{{ String(item.id + 1).padStart(2, '0') }}</div>
           <div class="faq-header" @click="toggleFaq(item.id)">
-            <!-- чёрный квадрат с номером -->
-            <div class="faq-number">{{ String(item.id + 1).padStart(2, '0') }}</div>
             <!-- текст вопроса -->
             <div class="faq-question">{{ item.question }}</div>
             <!-- иконка: место под svg -->
@@ -274,8 +274,8 @@ const QUESTIONS = [
 // Подтягиваем ответы из store.settings и собираем финальный массив
 function buildFaqs() {
   faqs.value = QUESTIONS.map((q, idx) => {
-    // ищем в settings запись с key = `faq${i+1}`
-    const setting = store.settings.find(s => s.key === `faq${idx+1}`)
+    // ищем в settings запись с key = `faq_answer_${i+1}`
+    const setting = store.settings.find(s => s.key === `faq_answer_${idx+1}`)
     return {
       id: idx,
       question: q,
@@ -600,22 +600,26 @@ onMounted(async () => {
   text-align: center;
 
   &-title {
-    font-size: 36px;
-    font-weight: bold;
-    margin-bottom: 16px;
+    margin-bottom: 40px;
+    font-family: Bounded-500;
+    font-size: 24px;
+    line-height: 90%;
+    letter-spacing: -0.72px;
   }
   &-subtitle {
-    font-size: 18px;
     max-width: 600px;
     margin: 0 auto 32px;
-    line-height: 1.4;
+    font-size: 15px;
+    line-height: 110%;
+    letter-spacing: -0.6px;
   }
   &-list {
-    max-width: 800px;
-    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    margin: 0 auto;
+    max-width: 800px;
+    gap: 4px;
+    border-radius: 4px;
   }
   &-item {
     background: #fff;
@@ -630,34 +634,36 @@ onMounted(async () => {
     user-select: none;
   }
   &-number {
-    background: #000;
-    color: #fff;
-    font-size: 16px;
-    width: 40px;
-    height: 40px;
-    line-height: 40px;
+    background: $black-100;
+    color: $white-100;
+    width: 24px;
+    height: 24px;
     text-align: center;
     border-radius: 4px;
     flex-shrink: 0;
     margin-right: 16px;
+    font-size: 16px;
+    line-height: 100%;
+    letter-spacing: -0.64px;
   }
   &-question {
-    font-size: 18px;
     text-align: left;
     flex-grow: 1;
+    font-family: Bounded-250;
+    font-size: 16px;
+    line-height: 80%;
+    letter-spacing: -0.8px;
   }
   &-toggle-icon {
     width: 24px;
     height: 24px;
     flex-shrink: 0;
     margin-left: 16px;
-    transition: color 0.3s ease;
+    transition: color 0.5s ease-in-out;
     color: #000;
-
     &.open {
       color: #E94F37;
     }
-
     .faq-icon {
       width: 100%;
       height: 100%;
@@ -666,17 +672,18 @@ onMounted(async () => {
     }
   }
   &-answer {
-    padding: 0 24px 16px;
-    font-size: 16px;
-    line-height: 1.5;
+    padding: 16px 24px;
     text-align: left;
-    background: #f9f9f9;
+    font-family: Bounded-250;
+    font-size: 16px;
+    line-height: 80%;
+    letter-spacing: -0.8px;
   }
 
   /* плавное «slide down» */
   .faq-slide-enter-active,
   .faq-slide-leave-active {
-    transition: all 0.3s ease;
+    transition: all 0.5s ease-in-out;
   }
   .faq-slide-enter-from,
   .faq-slide-leave-to {
@@ -753,7 +760,7 @@ onMounted(async () => {
   }
 
   .faq {
-    padding: 32px 8px;
+    padding: 32px 10px;
     &-title {
       font-size: 28px;
     }
