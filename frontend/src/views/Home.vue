@@ -134,10 +134,10 @@
       </p>
 
       <div class="faq-list">
-        <div v-for="item in faqs" :key="item.id" class="faq-item">
+        <div v-for="item in faqs" :key="item.id" class="faq-item" @click="toggleFaq(item.id)">
           <!-- чёрный квадрат с номером -->
           <div class="faq-number">{{ String(item.id + 1).padStart(2, '0') }}</div>
-          <div class="faq-header" @click="toggleFaq(item.id)">
+          <div class="faq-header">
             <!-- текст вопроса -->
             <div class="faq-question">{{ item.question }}</div>
             <!-- иконка: место под svg -->
@@ -647,7 +647,7 @@ onMounted(async () => {
     letter-spacing: -0.64px;
   }
   &-question {
-    text-align: left;
+    text-align: center;
     flex-grow: 1;
     font-family: Bounded-250;
     font-size: 20px;
@@ -770,9 +770,11 @@ onMounted(async () => {
     }
     &-question {
       font-size: 16px;
+      text-align: left;
     }
     &-answer {
       font-size: 14px;
+      text-align: left;
     }
   }
 }
