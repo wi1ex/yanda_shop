@@ -206,6 +206,7 @@ onMounted(() => {
   .logo-icon {
     width: 58px;
     height: 50px;
+    cursor: default;
   }
 }
 
@@ -234,13 +235,13 @@ onMounted(() => {
 .bottom-cell {
   display: flex;
   position: relative;
-  .bottom-link {
-    text-decoration: none;
-    color: inherit;
-    font-size: 20px;
-    line-height: 100%;
-    letter-spacing: -0.8px;
-  }
+}
+.bottom-link {
+  text-decoration: none;
+  color: inherit;
+  font-size: 20px;
+  line-height: 100%;
+  letter-spacing: -0.8px;
 }
 
 .big-digit {
