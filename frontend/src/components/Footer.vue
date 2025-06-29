@@ -233,18 +233,18 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 8px;
+  position: relative;
   .bottom-link {
-    margin-top: -24px;
-    font-size: 14px;
     text-decoration: none;
     color: inherit;
     text-align: center;
+    font-size: 20px;
+    line-height: 100%;
+    letter-spacing: -0.8px;
   }
 }
 
 .big-digit {
-  margin-bottom: 30px;
   font-family: Bounded-250;
   font-size: 26vw;
   line-height: 80%;
@@ -266,7 +266,10 @@ onMounted(() => {
     display: flex;
   }
 
-
+  .bottom-link {
+    font-size: 16px;
+    letter-spacing: -0.64px;
+  }
   .footer-logo {
     display: flex;
     width: 173px;
