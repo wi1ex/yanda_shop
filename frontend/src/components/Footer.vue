@@ -1,16 +1,16 @@
 <template>
   <footer class="footer-content">
-    <!-- === Верхняя часть футера: логотип + навигация + соцсети === -->
-    <div class="footer-top">
+    <!-- === Верхняя часть футера WEB === -->
+    <div class="footer-top-web">
       <!-- Logo слева -->
       <div class="footer-logo">
-        <a href="#" class="footer-logo-link" @click.prevent="goHomeOrScroll">YANDA.SHOP</a>
+        <a href="#" class="footer-logo-link" @click.prevent="goToPage('Home')">YANDA.SHOP</a>
       </div>
 
       <!-- Колонка “Категории” -->
       <nav class="footer-nav">
-        <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Мужчинам</a>
-        <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Женщинам</a>
+        <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Мужчинам</a>
+        <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Женщинам</a>
         <a href="#" class="footer-link" @click.prevent="goToCategory('Аксессуары')">Аксессуары</a>
         <a href="#" class="footer-link" @click.prevent="goToCategory('Одежда')">Одежда</a>
         <a href="#" class="footer-link" @click.prevent="goToCategory('Обувь')">Обувь</a>
@@ -18,9 +18,9 @@
 
       <!-- Колонка “Информация” -->
       <nav class="footer-nav">
-        <router-link to="/about" class="footer-link">О нас</router-link>
-        <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Доставка и оплата</a>
-        <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Возврат</a>
+        <a href="#" class="footer-link" @click.prevent="goToPage('About')">О нас</a>
+        <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Доставка и оплата</a>
+        <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Возврат</a>
       </nav>
 
       <!-- Колонка “Соцсети” -->
@@ -32,38 +32,83 @@
       </nav>
     </div>
 
+    <!-- === Верхняя часть футера MOBILE === -->
+    <div class="footer-top-mobile">
+      <div class="footer-top-column">
+        <!-- Logo слева -->
+        <div class="footer-logo">
+          <a href="#" class="footer-logo-link" @click.prevent="goToPage('Home')">YANDA.SHOP</a>
+        </div>
+
+        <!-- Колонка “Категории” -->
+        <nav class="footer-nav">
+          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Мужчинам</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Женщинам</a>
+          <a href="#" class="footer-link" @click.prevent="goToCategory('Аксессуары')">Аксессуары</a>
+          <a href="#" class="footer-link" @click.prevent="goToCategory('Одежда')">Одежда</a>
+          <a href="#" class="footer-link" @click.prevent="goToCategory('Обувь')">Обувь</a>
+        </nav>
+      </div>
+
+      <div class="footer-top-column">
+        <!-- Колонка “Информация” -->
+        <nav class="footer-nav">
+          <a href="#" class="footer-link" @click.prevent="goToPage('About')">О нас</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Доставка и оплата</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Возврат</a>
+        </nav>
+
+        <!-- Колонка “Соцсети” -->
+        <nav class="footer-nav">
+          <a v-if="store.socialUrls.url_telegram" :href="store.socialUrls.url_telegram"
+             target="_blank" rel="noopener" class="footer-link">Telegram</a>
+          <a v-if="store.socialUrls.url_instagram" :href="store.socialUrls.url_instagram"
+             target="_blank" rel="noopener" class="footer-link">Instagram</a>
+        </nav>
+      </div>
+    </div>
+
+    <router-link to="/">
+      <img :src="icon_logo_orange" alt="Главная" class="logo-icon" />
+    </router-link>
+
     <!-- === Нижняя часть футера для desktop: крупные цифры + подписи === -->
-    <div class="footer-bottom-grid">
-      <div class="bottom-cell">
-        <span class="big-digit">©</span>
-        <a href="#" class="bottom-link" @click.prevent="goHomeOrScroll">Договор публичной оферты</a>
-      </div>
-      <div class="bottom-cell">
-        <span class="big-digit">2</span>
-        <a href="#" class="bottom-link" @click.prevent="goHomeOrScroll">Политика конфиденциальности</a>
-      </div>
-      <div class="bottom-cell">
-        <span class="big-digit">0</span>
-        <a href="#" class="bottom-link" @click.prevent="goHomeOrScroll">Политика возврата и обмена</a>
-      </div>
-      <div class="bottom-cell">
-        <span class="big-digit">2</span>
-        <a href="#" class="bottom-link" @click.prevent="goHomeOrScroll">Условия оплаты и доставки</a>
-      </div>
-      <div class="bottom-cell">
-        <span class="big-digit">5</span>
+    <div class="footer-bottom-web">
+      <span class="big-digit">©2025</span>
+      <div class="footer-bottom-column">
+        <div class="bottom-cell">
+          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Договор публичной оферты</a>
+        </div>
+        <div class="bottom-cell">
+          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика конфиденциальности</a>
+        </div>
+        <div class="bottom-cell">
+          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика возврата и обмена</a>
+        </div>
+        <div class="bottom-cell">
+          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Условия оплаты и доставки</a>
+        </div>
       </div>
     </div>
 
     <!-- === Нижняя часть футера для мобильных (<600px): две колонки ссылок === -->
     <div class="footer-bottom-mobile">
-      <div class="mobile-group">
-        <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Договор публичной оферты</a>
-        <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Политика конфиденциальности</a>
+      <span class="big-digit">©2025</span>
+      <div class="footer-bottom-column">
+        <div class="bottom-cell">
+          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Договор публичной оферты</a>
+        </div>
+        <div class="bottom-cell">
+          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика конфиденциальности</a>
+        </div>
       </div>
-      <div class="mobile-group">
-        <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Политика возврата и обмена</a>
-        <a href="#" class="footer-link" @click.prevent="goHomeOrScroll">Условия оплаты и доставки</a>
+      <div class="footer-bottom-column">
+        <div class="bottom-cell">
+          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика возврата и обмена</a>
+        </div>
+        <div class="bottom-cell">
+          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Условия оплаты и доставки</a>
+        </div>
       </div>
     </div>
   </footer>
@@ -74,25 +119,22 @@ import { onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useStore } from '@/store/index.js'
 
+import icon_logo_orange from '@/assets/images/logo_orange.svg'
+
 const store = useStore()
 const router = useRouter()
 const route = useRoute()
 
-function goToCategory(cat) {
-  store.changeCategory(cat)
-  if (route.name === 'Catalog') {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  } else {
-    router.push({ name: 'Catalog' })
+function goToPage(page) {
+  if (route.name !== page) {
+    router.push({ name: page })
   }
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function goHomeOrScroll() {
-  if (route.name === 'Home') {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  } else {
-    router.push({ name: 'Home' })
-  }
+function goToCategory(cat) {
+  store.changeCategory(cat)
+  goToPage('Catalog')
 }
 
 onMounted(() => {
@@ -110,15 +152,25 @@ onMounted(() => {
   align-items: center;
 }
 
-/* === Верхний грид === */
-.footer-top {
-  display: grid;
-  grid-template-columns: auto 1fr 1fr 1fr auto;
+/* === Верхний грид WEB === */
+.footer-top-web {
+  display: flex;
   align-items: start;
-  column-gap: 32px;
   width: 100%;
   max-width: 1200px;
   margin-bottom: 40px;
+}
+/* === Верхний грид MOBILE === */
+.footer-top-mobile {
+  display: none;
+  align-items: start;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 40px;
+}
+
+.footer-top-column {
+  display: flex;
 }
 
 .footer-logo-link {
@@ -142,13 +194,31 @@ onMounted(() => {
   &:hover { opacity: 0.6; }
 }
 
-/* === Нижний грид для desktop === */
-.footer-bottom-grid {
+.logo-icon {
+  width: 58px;
+  height: 50px;
+}
+
+/* === Нижний грид WEB === */
+.footer-bottom-web {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   align-items: center;
   width: 100%;
   max-width: 1200px;
+}
+/* === Нижний блок MOBILE === */
+.footer-bottom-mobile {
+  display: none;
+  width: 100%;
+  max-width: 480px;
+  margin-top: 24px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.footer-bottom-column {
+  display: flex;
 }
 
 .bottom-cell {
@@ -172,35 +242,19 @@ onMounted(() => {
   }
 }
 
-/* === Нижний блок для mobile (<600px) === */
-.footer-bottom-mobile {
-  display: none;
-  width: 100%;
-  max-width: 480px;
-  margin-top: 24px;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-.mobile-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 /* === Адаптив === */
 @media (max-width: 600px) {
-  .footer-top {
-    grid-template-columns: 1fr;
-    row-gap: 24px;
-    justify-items: center;
-    text-align: center;
+  .footer-top-web {
+    display: none;
   }
-  .footer-bottom-grid {
+  .footer-top-mobile {
+    display: flex;
+  }
+  .footer-bottom-web {
     display: none;
   }
   .footer-bottom-mobile {
-    display: grid;
+    display: flex;
   }
 }
 </style>
