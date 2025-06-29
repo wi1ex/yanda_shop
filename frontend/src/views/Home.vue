@@ -669,7 +669,7 @@ onMounted(async () => {
     }
   }
   &-answer {
-    padding: 16px 24px;
+    padding: 24px 48px;
     text-align: center;
     font-size: 16px;
     line-height: 110%;
@@ -781,6 +781,7 @@ onMounted(async () => {
       text-align: left;
     }
     &-answer {
+      padding: 16px 10px;
       font-size: 15px;
       text-align: left;
     }
