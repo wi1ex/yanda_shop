@@ -2,34 +2,36 @@
   <footer class="footer-content">
     <!-- === Верхняя часть футера WEB === -->
     <div class="footer-top-web">
-      <!-- Logo слева -->
-      <div class="footer-logo">
-        <img :src="icon_logo_text" alt="Главная" class="footer-logo-icon" @click.prevent="goToPage('Home')" />
+      <div class="footer-top-column">
+        <!-- Logo слева -->
+        <div class="footer-logo">
+          <img :src="icon_logo_text" alt="Главная" class="footer-logo-icon" @click.prevent="goToPage('Home')" />
+        </div>
+
+        <!-- Колонка “Категории” -->
+        <nav class="footer-nav" style="left: 345px">
+          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Мужчинам</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Женщинам</a>
+          <a href="#" class="footer-link" @click.prevent="goToCategory('Аксессуары')">Аксессуары</a>
+          <a href="#" class="footer-link" @click.prevent="goToCategory('Одежда')">Одежда</a>
+          <a href="#" class="footer-link" @click.prevent="goToCategory('Обувь')">Обувь</a>
+        </nav>
+
+        <!-- Колонка “Информация” -->
+        <nav class="footer-nav" style="left: 955px">
+          <a href="#" class="footer-link" @click.prevent="goToPage('About')">О нас</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Доставка и оплата</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Возврат</a>
+        </nav>
+
+        <!-- Колонка “Соцсети” -->
+        <nav class="footer-nav" style="left: 1565px">
+          <a v-if="store.socialUrls.url_telegram" :href="store.socialUrls.url_telegram"
+             target="_blank" rel="noopener" class="footer-link">Telegram</a>
+          <a v-if="store.socialUrls.url_instagram" :href="store.socialUrls.url_instagram"
+             target="_blank" rel="noopener" class="footer-link">Instagram</a>
+        </nav>
       </div>
-
-      <!-- Колонка “Категории” -->
-      <nav class="footer-nav" style="left: 345px">
-        <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Мужчинам</a>
-        <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Женщинам</a>
-        <a href="#" class="footer-link" @click.prevent="goToCategory('Аксессуары')">Аксессуары</a>
-        <a href="#" class="footer-link" @click.prevent="goToCategory('Одежда')">Одежда</a>
-        <a href="#" class="footer-link" @click.prevent="goToCategory('Обувь')">Обувь</a>
-      </nav>
-
-      <!-- Колонка “Информация” -->
-      <nav class="footer-nav" style="left: 955px">
-        <a href="#" class="footer-link" @click.prevent="goToPage('About')">О нас</a>
-        <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Доставка и оплата</a>
-        <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Возврат</a>
-      </nav>
-
-      <!-- Колонка “Соцсети” -->
-      <nav class="footer-nav" style="left: 1565px">
-        <a v-if="store.socialUrls.url_telegram" :href="store.socialUrls.url_telegram"
-           target="_blank" rel="noopener" class="footer-link">Telegram</a>
-        <a v-if="store.socialUrls.url_instagram" :href="store.socialUrls.url_instagram"
-           target="_blank" rel="noopener" class="footer-link">Instagram</a>
-      </nav>
     </div>
 
     <!-- === Верхняя часть футера MOBILE === -->
@@ -37,7 +39,7 @@
       <div class="footer-top-column">
         <!-- Logo слева -->
         <div class="footer-logo">
-          <a href="#" class="footer-logo-link" @click.prevent="goToPage('Home')">YANDA.SHOP</a>
+          <img :src="icon_logo_text" alt="Главная" class="footer-logo-icon" @click.prevent="goToPage('Home')" />
         </div>
 
         <!-- Колонка “Категории” -->
@@ -79,13 +81,13 @@
         <div class="bottom-cell">
           <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Договор публичной оферты</a>
         </div>
-        <div class="bottom-cell">
+        <div class="bottom-cell" style="left: 345px">
           <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика конфиденциальности</a>
         </div>
-        <div class="bottom-cell">
+        <div class="bottom-cell" style="left: 955px">
           <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика возврата и обмена</a>
         </div>
-        <div class="bottom-cell">
+        <div class="bottom-cell" style="left: 1565px">
           <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Условия оплаты и доставки</a>
         </div>
       </div>
@@ -149,23 +151,18 @@ onMounted(() => {
   flex-direction: column;
   padding: 24px 10px;
   width: calc(100% - 20px);
+  color: $black-100;
 }
 
 /* === Верхний грид WEB === */
 .footer-top-web {
   display: flex;
-  align-items: start;
   width: 100%;
-  max-width: 1200px;
-  margin-bottom: 40px;
 }
 /* === Верхний грид MOBILE === */
 .footer-top-mobile {
   display: none;
-  align-items: start;
   width: 100%;
-  max-width: 1200px;
-  margin-bottom: 40px;
 }
 
 .footer-top-column {
@@ -178,6 +175,7 @@ onMounted(() => {
   .footer-logo-icon {
     width: 167px;
     height: 17px;
+    cursor: pointer;
   }
 }
 
@@ -189,11 +187,15 @@ onMounted(() => {
 }
 
 .footer-link {
-  font-size: 14px;
   text-decoration: none;
   color: inherit;
-  transition: opacity 0.2s;
-  &:hover { opacity: 0.6; }
+  font-size: 20px;
+  line-height: 100%;
+  letter-spacing: -0.8px;
+  //transition: opacity 0.2s;
+  //&:hover {
+  //  opacity: 0.6;
+  //}
 }
 
 .logo-router {
@@ -224,7 +226,7 @@ onMounted(() => {
 
 .footer-bottom-column {
   display: flex;
-  justify-content: space-around;
+  position: relative;
 }
 
 .bottom-cell {
@@ -238,13 +240,13 @@ onMounted(() => {
     text-decoration: none;
     color: inherit;
     text-align: center;
-    &:hover { opacity: 0.6; }
   }
 }
 
 .big-digit {
+  margin-bottom: 30px;
   font-family: Bounded-250;
-  font-size: 524px;
+  font-size: 26vw;
   line-height: 80%;
   letter-spacing: -26.2px;
 }
@@ -262,6 +264,35 @@ onMounted(() => {
   }
   .footer-bottom-mobile {
     display: flex;
+  }
+
+
+  .footer-logo {
+    display: flex;
+    width: 173px;
+  }
+  .footer-nav {
+    gap: 8px;
+  }
+  .footer-link {
+    font-size: 16px;
+    letter-spacing: -0.64px;
+  }
+  .footer-top-column {
+    flex-direction: column;
+    gap: 40px;
+  }
+  .logo-router {
+    margin: 60px 0;
+  }
+  .footer-logo-icon {
+    width: 130px;
+    height: 13px;
+  }
+  .big-digit {
+    margin-bottom: 16px;
+    font-size: 98px;
+    letter-spacing: -4.9px;
   }
 }
 </style>
