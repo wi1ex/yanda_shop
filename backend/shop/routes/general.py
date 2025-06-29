@@ -167,7 +167,7 @@ def list_reviews() -> Tuple[Response, int]:
             for r in revs:
                 # получаем имя клиента
                 user = session.get(Users, r.client_id)
-                client_name = f"{user.first_name} {user.last_name}" if user else "—"
+                client_name = f"{user.first_name}" if user else "—"
                 # avatar = user.photo_url or f"{BACKEND_URL}/images/default-avatar.png"
                 # находим в MinIO все объекты reviews/{r.id}_*
                 objs = minio_client.list_objects(BUCKET, prefix=f'reviews/{r.id}_', recursive=True)
