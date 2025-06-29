@@ -173,11 +173,11 @@ onMounted(() => {
 
 .footer-logo {
   display: flex;
-  .footer-logo-icon {
-    width: 167px;
-    height: 17px;
-    cursor: pointer;
-  }
+}
+.footer-logo-icon {
+  width: 167px;
+  height: 17px;
+  cursor: pointer;
 }
 
 .footer-nav {
@@ -203,11 +203,11 @@ onMounted(() => {
   display: flex;
   align-self: center;
   margin: 80px 0;
-  .logo-icon {
-    width: 58px;
-    height: 50px;
-    cursor: default;
-  }
+}
+.logo-icon {
+  width: 58px;
+  height: 50px;
+  cursor: default;
 }
 
 /* === Нижний грид WEB === */
@@ -270,6 +270,7 @@ onMounted(() => {
   .footer-bottom-column {
     display: flex;
     flex-direction: column;
+    width: 50%;
     gap: 8px;
   }
   .bottom-link {
@@ -278,6 +279,10 @@ onMounted(() => {
   }
   .footer-logo {
     margin-left: -6px;
+  }
+  .footer-logo-icon {
+    width: 130px;
+    height: 13px;
   }
   .footer-nav {
     gap: 8px;
@@ -293,10 +298,6 @@ onMounted(() => {
   }
   .logo-router {
     margin: 60px 0;
-  }
-  .footer-logo-icon {
-    width: 130px;
-    height: 13px;
   }
   .big-digit {
     margin-bottom: 16px;

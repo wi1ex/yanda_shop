@@ -127,17 +127,30 @@
 
     <!-- FAQ -->
     <section class="faq">
-      <h2>FAQ</h2>
-      <p>Здесь ты найдёшь ответы на самые популярные вопросы о заказах, доставке и возврате.</p>
-      <div class="questions">
-        <div v-for="(q, idx) in faqs" :key="idx" class="question">
-          <div class="q-header" @click="toggleFaq(idx)">
-            <span class="q-num">{{ String(idx+1).padStart(2,'0') }}.</span>
-            {{ q.question }}
-            <span class="toggle">{{ q.open ? '−' : '+' }}</span>
+      <h2 class="faq-title">FAQ</h2>
+      <p class="faq-subtitle">
+        Здесь ты найдёшь ответы на самые популярные вопросы о заказах, доставке, оплате и возврате. Мы собрали всю важную информацию, чтобы сделать
+        твои покупки максимально простыми и прозрачными.
+      </p>
+
+      <div class="faq-list">
+        <div v-for="item in faqs" :key="item.id" class="faq-item">
+          <div class="faq-header" @click="toggleFaq(item.id)">
+            <!-- чёрный квадрат с номером -->
+            <div class="faq-number">{{ String(item.id + 1).padStart(2, '0') }}</div>
+            <!-- текст вопроса -->
+            <div class="faq-question">{{ item.question }}</div>
+            <!-- иконка: место под svg -->
+            <div class="faq-toggle-icon" :class="{ open: item.open }">
+              <!-- placeholder для вашей иконки -->
+              <img :src="item.open ? icon_faq_minus : icon_faq_plus" alt="toggle" class="faq-icon"/>
+            </div>
           </div>
-          <transition name="fade">
-            <p v-if="q.open" class="q-answer">{{ q.answer }}</p>
+          <!-- ответ с плавным выезжанием -->
+          <transition name="faq-slide">
+            <div v-if="item.open" class="faq-answer">
+              {{ item.answer }}
+            </div>
           </transition>
         </div>
       </div>
@@ -148,15 +161,17 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useStore, API } from '@/store/index.js'
+import { useStore } from '@/store/index.js'
 
 import icon_default_avatar_white from '@/assets/images/default_avatar_white.svg'
+import icon_faq_plus from '@/assets/images/faq_plus.svg'
+import icon_faq_minus from '@/assets/images/faq_minus.svg'
 
 const store   = useStore()
 
-// Reviews carousel
-const heroIndex = ref(0)
 const idx = ref(0)
+const faqs = ref([])
+const heroIndex = ref(0)
 const current = computed(() => store.reviews[idx.value] || {})
 
 function prev() {
@@ -245,30 +260,46 @@ function onSubmitRequest() {
 }
 
 // FAQ
-const faqs = [
-  { question:'Как я могу быть уверен, что товар оригинальный?',  answer:'Все товары мы закупаем только в официальных магазинах.', open:false },
-  { question:'Как заказать товар, которого нет на сайте?',       answer:'Отправьте фото или артикул в запросе выше.',             open:false },
-  { question:'Какие способы оплаты доступны?',                   answer:'Мы принимаем карты, Apple Pay, Google Pay.',             open:false },
-  { question:'Сколько времени занимает доставка?',               answer:'Обычно 2–10 дней в зависимости от региона.',             open:false },
-  { question:'Могу ли я вернуть товар, если он не подходит?',    answer:'Да, в течение 14 дней после получения.',                 open:false },
-  { question:'Какие бренды представлены на сайте?',              answer:'Nike, Adidas, New Balance, Jacquemus и др.',             open:false },
-  { question:'Какие гарантии я получаю при заказе?',             answer:'Гарантия оригинальности и возврат в течение 14 дней.',   open:false },
-  { question:'Как я могу посмотреть статус моего заказа?',       answer:'В личном кабинете или через Telegram-бота.',             open:false },
+const QUESTIONS = [
+  'Как оформить заказ?',
+  'Сколько по времени длится доставка?',
+  'Как происходит оплата?',
+  'Как я могу быть уверен(а) в качестве товара?',
+  'Можно ли вернуть или обменять товар?',
+  'Как выбрать правильный размер?',
+  'Хочу купить одну вещь, но не нашёл её у вас на сайте. Что делать?',
+  'Как отследить мой заказ?'
 ]
 
-function toggleFaq(i) {
-  faqs[i].open = !faqs[i].open
+// Подтягиваем ответы из store.settings и собираем финальный массив
+function buildFaqs() {
+  faqs.value = QUESTIONS.map((q, idx) => {
+    // ищем в settings запись с key = `faq${i+1}`
+    const setting = store.settings.find(s => s.key === `faq${idx+1}`)
+    return {
+      id: idx,
+      question: q,
+      answer: setting ? setting.value : 'Нет ответа',
+      open: false
+    }
+  })
 }
 
-onMounted(() => {
-  store.fetchAllProducts()
-  store.fetchReviews()
+// закрывает все пункты кроме переданного
+function toggleFaq(i) {
+  faqs.value = faqs.value.map((item, idx) => ({ ...item, open: idx === i ? !item.open : false}))
+}
+
+onMounted(async () => {
+  await store.fetchAllProducts()
+  await store.fetchSettings()
+  await store.fetchReviews()
+  buildFaqs()
 })
 
 </script>
 
 <style scoped lang="scss">
-
 .home {
   color: #000;
 }
@@ -277,12 +308,11 @@ onMounted(() => {
 .hero {
   position: relative;
   overflow: hidden;
+  padding: 0;
 }
-
 .hero-slide {
   position: relative;
 }
-
 .image-placeholder {
   background: #ffc;
   height: 300px;
@@ -290,18 +320,15 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
 }
-
 .hero-text {
   position: absolute;
   top: 20%;
   left: 10%;
 }
-
 .hero-text h1 {
   font-size: 24px;
   margin-bottom: 16px;
 }
-
 .hero-controls button {
   margin-right: 8px;
   background: rgba(0, 0, 0, 0.5);
@@ -309,7 +336,6 @@ onMounted(() => {
   color: #fff;
   padding: 8px;
 }
-
 .btn-catalog {
   display: inline-block;
   margin-top: 12px;
@@ -319,49 +345,38 @@ onMounted(() => {
   border-radius: 4px;
   text-decoration: none;
 }
-
 .marquee {
   overflow: hidden;
   white-space: nowrap;
   background: #000;
   color: #fff;
 }
-
 .marquee-content {
   display: inline-block;
   padding-left: 100%;
   animation: marquee 10s linear infinite;
 }
-
 @keyframes marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-100%);
-  }
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
 }
 
 /* HOW IT WORKS */
 .how-it-works {
   padding: 24px 16px;
 }
-
 .how-it-works h2 {
   text-align: center;
   margin-bottom: 16px;
 }
-
 .steps {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 16px;
 }
-
 .step {
   text-align: center;
 }
-
 .icon-placeholder {
   background: #ffc;
   width: 60px;
@@ -374,28 +389,23 @@ onMounted(() => {
   padding: 24px 16px;
   background: #f8f8f8;
 }
-
 .categories h2 {
   text-align: center;
   margin-bottom: 16px;
 }
-
 .cat-slider {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
 }
-
 .cat-slide {
   text-align: center;
 }
-
 .cat-slide .image-placeholder {
   height: 120px;
   margin-bottom: 8px;
 }
-
 .cat-slide h3 {
   margin-bottom: 8px;
 }
@@ -404,23 +414,26 @@ onMounted(() => {
 .principles {
   padding: 24px 16px;
 }
-
 .principle {
   margin-bottom: 12px;
 }
-
 .principle-header {
   display: flex;
   justify-content: space-between;
   cursor: pointer;
   font-weight: bold;
 }
+.principle-text {
+  margin: 8px 0 16px;
+  font-size: 16px;
+  line-height: 1.5;
+}
 
+/* fade-transition */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s;
 }
-
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
@@ -432,23 +445,19 @@ onMounted(() => {
   background: #f8f8f8;
   text-align: center;
 }
-
 .bestsellers h2 {
   margin-bottom: 16px;
 }
-
 .best-slider {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
 }
-
 .best-item {
   position: relative;
   width: 150px;
 }
-
 .fav-btn {
   position: absolute;
   top: 8px;
@@ -457,24 +466,34 @@ onMounted(() => {
   border: none;
   font-size: 18px;
 }
-
 .product-image {
   width: 100%;
   height: 100px;
   object-fit: cover;
   margin-bottom: 8px;
 }
+.brand, .name, .price {
+  margin: 4px 0;
+}
+.brand {
+  font-weight: 600;
+}
+.name  {
+  font-size: 14px;
+}
+.price {
+  font-size: 14px;
+  color: #333;
+}
 
 /* REQUEST FORM */
 .request-form {
   padding: 24px 16px;
 }
-
 .request-form h2 {
   text-align: center;
   margin-bottom: 8px;
 }
-
 .request-form form {
   display: flex;
   flex-direction: column;
@@ -482,7 +501,11 @@ onMounted(() => {
   max-width: 320px;
   margin: 0 auto;
 }
-
+.or-sep {
+  text-align: center;
+  margin: 12px 0;
+  font-weight: bold;
+}
 .btn-submit {
   padding: 8px;
   background: #000;
@@ -514,6 +537,24 @@ onMounted(() => {
   padding: 16px;
   border-radius: 8px;
 }
+.user-text {
+  background: #000;
+  color: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  display: inline-block;
+  max-width: 100%;
+  margin: 8px 0;
+}
+.shop-text {
+  background: #fff;
+  color: #000;
+  padding: 12px;
+  border-radius: 8px;
+  display: inline-block;
+  max-width: 100%;
+  margin: 8px 0;
+}
 .photos {
   margin: 8px 0;
 }
@@ -528,11 +569,6 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   margin-top: 12px;
-}
-.meta a {
-  font-size: 20px;
-  text-decoration: none;
-  color: inherit;
 }
 .review-header {
   display: flex;
@@ -557,93 +593,105 @@ onMounted(() => {
   font-size: 14px;
 }
 
-.user-text {
-  background: #000;
-  color: #fff;
-  padding: 12px;
-  border-radius: 8px;
-  display: inline-block;
-  max-width: 100%;
-  margin: 8px 0;
-}
-.shop-text {
-  background: #fff;
-  color: #000;
-  padding: 12px;
-  border-radius: 8px;
-  display: inline-block;
-  max-width: 100%;
-  margin: 8px 0;
-}
-
-.brand, .name, .price {
-  margin: 4px 0;
-}
-
-.brand {
-  font-weight: 600;
-}
-
-.name {
-  font-size: 14px;
-}
-
-.price {
-  font-size: 14px;
-  color: #333;
-}
-
-.q-num {
-  font-weight: bold;
-  margin-right: 8px;
-}
-
-.toggle {
-  margin-left: 8px;
-}
-
-.principle-text {
-  margin: 8px 0 16px;
-  font-size: 16px;
-  line-height: 1.5;
-}
-
-.or-sep {
-  text-align: center;
-  margin: 12px 0;
-  font-weight: bold;
-}
-
 /* FAQ */
 .faq {
-  padding: 24px 16px;
-}
-
-.faq h2 {
+  padding: 48px 16px;
+  background: #f0f0f0;
   text-align: center;
-  margin-bottom: 8px;
+
+  &-title {
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 16px;
+  }
+  &-subtitle {
+    font-size: 18px;
+    max-width: 600px;
+    margin: 0 auto 32px;
+    line-height: 1.4;
+  }
+  &-list {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  &-item {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  &-header {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    cursor: pointer;
+    user-select: none;
+  }
+  &-number {
+    background: #000;
+    color: #fff;
+    font-size: 16px;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-right: 16px;
+  }
+  &-question {
+    font-size: 18px;
+    text-align: left;
+    flex-grow: 1;
+  }
+  &-toggle-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    margin-left: 16px;
+    transition: color 0.3s ease;
+    color: #000;
+
+    &.open {
+      color: #E94F37;
+    }
+
+    .faq-icon {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+  }
+  &-answer {
+    padding: 0 24px 16px;
+    font-size: 16px;
+    line-height: 1.5;
+    text-align: left;
+    background: #f9f9f9;
+  }
+
+  /* плавное «slide down» */
+  .faq-slide-enter-active,
+  .faq-slide-leave-active {
+    transition: all 0.3s ease;
+  }
+  .faq-slide-enter-from,
+  .faq-slide-leave-to {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+  }
+  .faq-slide-enter-to,
+  .faq-slide-leave-from {
+    max-height: 200px;
+    opacity: 1;
+  }
 }
 
-.questions {
-  max-width: 480px;
-  margin: 0 auto;
-}
-
-.question {
-  margin-bottom: 8px;
-}
-
-.q-header {
-  display: flex;
-  justify-content: space-between;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.q-answer {
-  padding: 8px 0;
-}
-
+/* RESPONSIVE */
 @media (max-width: 600px) {
   .hero .image-placeholder {
     height: 200px;
@@ -703,15 +751,25 @@ onMounted(() => {
   .or-sep {
     text-align: center;
   }
+
   .faq {
-    padding: 16px 8px;
-  }
-  .q-header {
-    font-size: 14px;
-  }
-  .q-answer {
-    font-size: 13px;
+    padding: 32px 8px;
+    &-title {
+      font-size: 28px;
+    }
+    &-subtitle {
+      font-size: 16px;
+      margin-bottom: 24px;
+    }
+    &-header {
+      padding: 12px 16px;
+    }
+    &-question {
+      font-size: 16px;
+    }
+    &-answer {
+      font-size: 14px;
+    }
   }
 }
-
 </style>
