@@ -773,8 +773,8 @@ onMounted(async () => {
       padding: 12px 16px;
     }
     &-number {
-      width: 32px;
-      height: 32px;
+      width: 24px;
+      height: 24px;
     }
     &-question {
       font-size: 16px;
