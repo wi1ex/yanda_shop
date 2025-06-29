@@ -314,7 +314,7 @@ onMounted(async () => {
   position: relative;
 }
 .image-placeholder {
-  background: #ffc;
+  background-color: #ffc;
   height: 300px;
   display: flex;
   align-items: center;
@@ -331,7 +331,7 @@ onMounted(async () => {
 }
 .hero-controls button {
   margin-right: 8px;
-  background: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   border: none;
   color: #fff;
   padding: 8px;
@@ -340,7 +340,7 @@ onMounted(async () => {
   display: inline-block;
   margin-top: 12px;
   padding: 8px 16px;
-  background: #000;
+  background-color: #000;
   color: #fff;
   border-radius: 4px;
   text-decoration: none;
@@ -348,7 +348,7 @@ onMounted(async () => {
 .marquee {
   overflow: hidden;
   white-space: nowrap;
-  background: #000;
+  background-color: #000;
   color: #fff;
 }
 .marquee-content {
@@ -378,7 +378,7 @@ onMounted(async () => {
   text-align: center;
 }
 .icon-placeholder {
-  background: #ffc;
+  background-color: #ffc;
   width: 60px;
   height: 60px;
   margin: 0 auto 8px;
@@ -387,7 +387,7 @@ onMounted(async () => {
 /* CATEGORIES */
 .categories {
   padding: 24px 16px;
-  background: #f8f8f8;
+  background-color: #f8f8f8;
 }
 .categories h2 {
   text-align: center;
@@ -442,7 +442,7 @@ onMounted(async () => {
 /* BESTSELLERS */
 .bestsellers {
   padding: 24px 16px;
-  background: #f8f8f8;
+  background-color: #f8f8f8;
   text-align: center;
 }
 .bestsellers h2 {
@@ -508,7 +508,7 @@ onMounted(async () => {
 }
 .btn-submit {
   padding: 8px;
-  background: #000;
+  background-color: #000;
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -516,7 +516,7 @@ onMounted(async () => {
 
 /* TESTIMONIALS */
 .testimonials {
-  background: #f7f7f7;
+  background-color: #f7f7f7;
   padding: 24px;
   border-radius: 12px;
 }
@@ -533,12 +533,12 @@ onMounted(async () => {
   width: 300px;
 }
 .review {
-  background: #f5f5f5;
+  background-color: #f5f5f5;
   padding: 16px;
   border-radius: 8px;
 }
 .user-text {
-  background: #000;
+  background-color: #000;
   color: #fff;
   padding: 12px;
   border-radius: 8px;
@@ -547,7 +547,7 @@ onMounted(async () => {
   margin: 8px 0;
 }
 .shop-text {
-  background: #fff;
+  background-color: #fff;
   color: #000;
   padding: 12px;
   border-radius: 8px;
@@ -596,22 +596,22 @@ onMounted(async () => {
 /* FAQ */
 .faq {
   padding: 48px 16px;
-  background: $grey-95;
+  background-color: $grey-95;
   text-align: center;
 
   &-title {
     margin-bottom: 40px;
     font-family: Bounded-500;
-    font-size: 24px;
-    line-height: 90%;
-    letter-spacing: -0.72px;
+    font-size: 32px;
+    line-height: 80%;
+    letter-spacing: -0.96px;
   }
   &-subtitle {
     max-width: 600px;
     margin: 0 auto 32px;
-    font-size: 15px;
+    font-size: 16px;
     line-height: 110%;
-    letter-spacing: -0.6px;
+    letter-spacing: -0.64px;
   }
   &-list {
     display: flex;
@@ -622,7 +622,7 @@ onMounted(async () => {
     border-radius: 4px;
   }
   &-item {
-    background: $white-100;
+    background-color: $white-100;
     border-radius: 4px;
     overflow: hidden;
   }
@@ -634,14 +634,14 @@ onMounted(async () => {
     user-select: none;
   }
   &-number {
-    background: $black-100;
-    color: $white-100;
-    width: 24px;
-    height: 24px;
-    text-align: center;
-    border-radius: 4px;
-    flex-shrink: 0;
+    @include flex-e-c;
     margin-right: 16px;
+    width: 32px;
+    height: 32px;
+    background-color: $black-100;
+    color: $white-100;
+    border-radius: 4px;
+    text-align: center;
     font-size: 16px;
     line-height: 100%;
     letter-spacing: -0.64px;
@@ -759,21 +759,29 @@ onMounted(async () => {
   .faq {
     padding: 32px 10px;
     &-title {
-      font-size: 28px;
+      font-size: 24px;
+      line-height: 90%;
+      letter-spacing: -0.72px;
     }
     &-subtitle {
-      font-size: 16px;
       margin-bottom: 24px;
+      font-size: 15px;
+      line-height: 110%;
+      letter-spacing: -0.6px;
     }
     &-header {
       padding: 12px 16px;
+    }
+    &-number {
+      width: 32px;
+      height: 32px;
     }
     &-question {
       font-size: 16px;
       text-align: left;
     }
     &-answer {
-      font-size: 14px;
+      font-size: 15px;
       text-align: left;
     }
   }
