@@ -96,20 +96,22 @@
     <!-- === Нижняя часть футера для мобильных (<600px): две колонки ссылок === -->
     <div class="footer-bottom-mobile">
       <span class="big-digit">©2025</span>
-      <div class="footer-bottom-column">
-        <div class="bottom-cell">
-          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Договор публичной оферты</a>
+      <div class="footer-bottom-row">
+        <div class="footer-bottom-column">
+          <div class="bottom-cell">
+            <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Договор публичной оферты</a>
+          </div>
+          <div class="bottom-cell">
+            <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика конфиденциальности</a>
+          </div>
         </div>
-        <div class="bottom-cell">
-          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика конфиденциальности</a>
-        </div>
-      </div>
-      <div class="footer-bottom-column">
-        <div class="bottom-cell">
-          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика возврата и обмена</a>
-        </div>
-        <div class="bottom-cell">
-          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Условия оплаты и доставки</a>
+        <div class="footer-bottom-column">
+          <div class="bottom-cell">
+            <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика возврата и обмена</a>
+          </div>
+          <div class="bottom-cell">
+            <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Условия оплаты и доставки</a>
+          </div>
         </div>
       </div>
     </div>
@@ -171,7 +173,6 @@ onMounted(() => {
 
 .footer-logo {
   display: flex;
-  width: 335px;
   .footer-logo-icon {
     width: 167px;
     height: 17px;
@@ -217,22 +218,21 @@ onMounted(() => {
 /* === Нижний блок MOBILE === */
 .footer-bottom-mobile {
   display: none;
+  flex-direction: column;
   width: 100%;
-  max-width: 480px;
-  margin-top: 24px;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+}
+
+.footer-bottom-row {
+  display: flex;
+  gap: 10px;
 }
 
 .footer-bottom-column {
   display: flex;
-  position: relative;
 }
 
 .bottom-cell {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   position: relative;
   .bottom-link {
     text-decoration: none;
@@ -266,13 +266,18 @@ onMounted(() => {
     display: flex;
   }
 
+
+  .footer-bottom-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
   .bottom-link {
     font-size: 16px;
     letter-spacing: -0.64px;
   }
   .footer-logo {
-    display: flex;
-    width: 173px;
+    margin-left: -5px;
   }
   .footer-nav {
     gap: 8px;
@@ -283,6 +288,7 @@ onMounted(() => {
   }
   .footer-top-column {
     flex-direction: column;
+    width: 50%;
     gap: 40px;
   }
   .logo-router {
@@ -294,7 +300,7 @@ onMounted(() => {
   }
   .big-digit {
     margin-bottom: 16px;
-    font-size: 98px;
+    font-size: 25vw;
     letter-spacing: -4.9px;
   }
 }
