@@ -596,7 +596,7 @@ onMounted(async () => {
 /* FAQ */
 .faq {
   padding: 48px 16px;
-  background: #f0f0f0;
+  background: $grey-95;
   text-align: center;
 
   &-title {
@@ -622,8 +622,8 @@ onMounted(async () => {
     border-radius: 4px;
   }
   &-item {
-    background: #fff;
-    border-radius: 8px;
+    background: $white-100;
+    border-radius: 4px;
     overflow: hidden;
   }
   &-header {
@@ -650,9 +650,10 @@ onMounted(async () => {
     text-align: left;
     flex-grow: 1;
     font-family: Bounded-250;
-    font-size: 16px;
+    font-size: 20px;
     line-height: 80%;
     letter-spacing: -0.8px;
+    color: $black-100;
   }
   &-toggle-icon {
     width: 24px;
@@ -660,10 +661,6 @@ onMounted(async () => {
     flex-shrink: 0;
     margin-left: 16px;
     transition: color 0.5s ease-in-out;
-    color: #000;
-    &.open {
-      color: #E94F37;
-    }
     .faq-icon {
       width: 100%;
       height: 100%;
@@ -673,11 +670,11 @@ onMounted(async () => {
   }
   &-answer {
     padding: 16px 24px;
-    text-align: left;
-    font-family: Bounded-250;
+    text-align: center;
     font-size: 16px;
-    line-height: 80%;
-    letter-spacing: -0.8px;
+    line-height: 110%;
+    letter-spacing: -0.64px;
+    color: $black-100;
   }
 
   /* плавное «slide down» */
