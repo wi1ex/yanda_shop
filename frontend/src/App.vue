@@ -78,7 +78,7 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 0;
   width: 100%;
-  background-color: #DEDEDE;
+  background-color: $grey-87;
   font-family: Manrope-Medium;
 }
 

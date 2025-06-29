@@ -144,12 +144,10 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .footer-content {
-  background: #f0f0f0;
-  color: #000;
-  padding: 24px 16px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  padding: 24px 10px;
+  width: calc(100% - 20px);
 }
 
 /* === Верхний грид WEB === */
@@ -201,8 +199,7 @@ onMounted(() => {
 
 /* === Нижний грид WEB === */
 .footer-bottom-web {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
   align-items: center;
   width: 100%;
   max-width: 1200px;
@@ -226,12 +223,6 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   padding: 0 8px;
-  .big-digit {
-    font-size: 200px;
-    line-height: 1;
-    margin: 0;
-    display: block;
-  }
   .bottom-link {
     margin-top: -24px;
     font-size: 14px;
@@ -240,6 +231,13 @@ onMounted(() => {
     text-align: center;
     &:hover { opacity: 0.6; }
   }
+}
+
+.big-digit {
+  font-family: Bounded-250;
+  font-size: 524px;
+  line-height: 80%;
+  letter-spacing: -26.2px;
 }
 
 /* === Адаптив === */
