@@ -275,14 +275,10 @@ def update_setting() -> Tuple[Response, int]:
 @admin_api.route('/create_review', methods=['POST'])
 def create_review() -> Tuple[Response, int]:
     form = request.form
-    # 1) Проверяем client_id
-    try:
-        client_id = int(form.get('client_id', '').strip())
-    except ValueError:
-        return jsonify({'error': 'client_id должен быть числом'}), 400
 
-    # 2) Проверяем обязательные текстовые поля (кроме client_text2)
+    # 1) Проверяем обязательные поля
     required_fields = {
+        'client_name': 'Имя клиента',
         'client_text1': 'Текст клиента 1',
         'shop_response': 'Ответ магазина',
         'link_url': 'Ссылка'
@@ -291,27 +287,21 @@ def create_review() -> Tuple[Response, int]:
         if not form.get(fld, '').strip():
             return jsonify({'error': f'Поле "{fld_name}" не заполнено'}), 400
 
-    # 3) Проверяем, что хотя бы одна фотография приложена
     photos = [request.files.get(f'photo{i}') for i in range(1, 4)]
     if not any(photos):
         return jsonify({'error': 'Необходимо прикрепить хотя бы одну фотографию'}), 400
 
     try:
         with session_scope() as session:
-            # 4) Проверяем, что клиент существует
-            if not session.get(Users, client_id):
-                return jsonify({'error': 'client_id не найден'}), 404
-
-            # 5) Создаём и сохраняем отзыв
             review = Review(
-                client_id=client_id,
+                client_name=form['client_name'].strip(),
                 client_text1=form['client_text1'].strip(),
                 shop_response=form['shop_response'].strip(),
                 client_text2=form.get('client_text2', '').strip() or None,
                 link_url=form['link_url'].strip()
             )
             session.add(review)
-            session.flush()  # получаем review.id
+            session.flush()
 
             # 6) Сохраняем фото в MinIO
             saved = 0

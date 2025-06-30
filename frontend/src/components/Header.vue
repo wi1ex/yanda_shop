@@ -19,13 +19,13 @@
       </router-link>
       <router-link to="/favorites" class="icon-btn" title="Избранное">
         <img :src="icon_favorites" alt="Избранное" />
-        <span v-if="store.favorites.count" class="badge">
+        <span v-if="store.favorites.count" class="badge" style="right: 52px">
           {{ store.favorites.count < 10 ? store.favorites.count : "9+" }}
         </span>
       </router-link>
       <button @click="store.openCartDrawer()" class="icon-btn" title="Корзина">
         <img :src="icon_cart" alt="Корзина" />
-        <span v-if="store.cart.count" class="badge">
+        <span v-if="store.cart.count" class="badge" style="right: 10px">
           {{ store.cart.count < 10 ? store.cart.count : "9+"}}
         </span>
       </button>
@@ -121,14 +121,13 @@ onBeforeUnmount(() => {
       .badge {
         @include flex-c-c;
         position: absolute;
-        top: 8px;
-        right: 8px;
+        top: 10px;
         width: 14px;
         height: 12px;
         border-radius: 1px;
         background-color: $grey-20;
         color: $white-100;
-        font-family: NeueHaas-500;
+        font-family: NeueHaas-400;
         font-size: 10px;
         line-height: 100%;
         letter-spacing: -0.2px;

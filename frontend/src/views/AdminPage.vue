@@ -32,7 +32,7 @@
             Обновить ссылку
           </button>
 
-          <button @click="store.importSheet(cat, adminId, adminName)" :disabled="!store.sheetUrls[cat] || store.sheetImportLoading[cat] || editingUrl[cat]" class="sheet-import">
+          <button @click="store.importSheet(cat, store.user.id, store.user.username)" :disabled="!store.sheetUrls[cat] || store.sheetImportLoading[cat] || editingUrl[cat]" class="sheet-import">
             {{ store.sheetImportLoading[cat] ? 'Обновление…' : 'Обновить данные' }}
           </button>
         </template>
@@ -196,15 +196,15 @@
       <div v-if="formError" class="error">{{ formError }}</div>
       <div v-if="formSuccess" class="success">{{ formSuccess }}</div>
       <form @submit.prevent="onSubmitReview">
-        <input v-model="form.client_id" placeholder="Client ID" required/>
+        <input v-model="form.client_name" placeholder="Имя клиента" required/>
         <textarea v-model="form.client_text1" placeholder="Текст клиента 1" required/>
         <textarea v-model="form.shop_response" placeholder="Ответ магазина" required/>
         <textarea v-model="form.client_text2" placeholder="Текст клиента 2"/>
         <input v-model="form.link_url" placeholder="Ссылка" required/>
         <div class="photos-inputs">
-          <input type="file" @change="onFile($event,1)"/>
-          <input type="file" @change="onFile($event,2)"/>
-          <input type="file" @change="onFile($event,3)"/>
+          <input type="file" @change="onFile($event,1)" ref="fileInput1"/>
+          <input type="file" @change="onFile($event,2)" ref="fileInput2"/>
+          <input type="file" @change="onFile($event,3)" ref="fileInput3"/>
         </div>
         <button type="submit" :disabled="!form.client_id || !form.client_text1 || !form.shop_response || !form.link_url || (!files[1] && !files[2] && !files[3])">
           Добавить
@@ -219,22 +219,22 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useStore } from '@/store/index.js'
 
-const store     = useStore()
-const adminId   = store.user.id
-const adminName = store.user.username
+const store        = useStore()
 
 const zipFile      = ref(null)
 const zipInput     = ref(null)
 const editingUrl   = reactive({ shoes:false, clothing:false, accessories:false })
 const selectedDate = ref(new Date().toISOString().slice(0, 10))
-
-const formError   = ref('')
-const formSuccess = ref('')
-const files       = reactive({})
-const saving      = ref(null)
-const selected    = ref('sheets')
-const newSetting  = reactive({ key: '', value: '' })
-const tabs        = [
+const fileInput1   = ref(null)
+const fileInput2   = ref(null)
+const fileInput3   = ref(null)
+const formError    = ref('')
+const formSuccess  = ref('')
+const files        = reactive({})
+const saving       = ref(null)
+const selected     = ref('sheets')
+const newSetting   = reactive({ key: '', value: '' })
+const tabs         = [
   { key:'sheets',      label:'Sheets'         },
   { key:'upload',      label:'ZIP Upload'     },
   { key:'logs',        label:'Логи'           },
@@ -244,6 +244,11 @@ const tabs        = [
   { key:'all_reviews', label:'Все отзывы'     },
   { key:'add_review',  label:'Добавить отзыв' },
 ]
+
+// Форма добавления отзыва
+const form = reactive({
+  client_name:'', client_text1:'', shop_response:'', client_text2:'', link_url:''
+})
 
 // Вычисляем список колонок по ключам первого пользователя
 const userColumns = computed(() => {
@@ -255,11 +260,6 @@ const userColumns = computed(() => {
 const filteredSettings = computed(() =>
   store.settings.filter(s => !s.key.startsWith('sheet_url_'))
 )
-
-// Форма добавления отзыва
-const form = reactive({
-  client_id:'', client_text1:'', shop_response:'', client_text2:'', link_url:''
-})
 
 const maxTotal = computed(() => {
   const hours = store.visitsData.hours || []
@@ -292,7 +292,7 @@ async function onSubmitReview() {
   formSuccess.value = ''
 
   // Проверки на фронте
-  if (!form.client_id.trim() || !form.client_text1.trim() || !form.shop_response.trim() || !form.link_url.trim()) {
+  if (!form.client_name.trim() || !form.client_text1.trim() || !form.shop_response.trim() || !form.link_url.trim()) {
     formError.value = 'Пожалуйста, заполните все обязательные поля'
     return
   }
@@ -305,7 +305,7 @@ async function onSubmitReview() {
 
   // Формируем FormData
   const fd = new FormData()
-  fd.append('client_id', form.client_id)
+  fd.append('client_name', form.client_name)
   fd.append('client_text1', form.client_text1)
   fd.append('shop_response', form.shop_response)
   fd.append('client_text2', form.client_text2 || '') // client_text2 может быть пустым
@@ -322,6 +322,10 @@ async function onSubmitReview() {
     // очистка
     Object.keys(form).forEach(k => form[k]='')
     Object.keys(files).forEach(k => delete files[k])
+    // сброс input[type=file]
+    fileInput1.value && (fileInput1.value.value = '')
+    fileInput2.value && (fileInput2.value.value = '')
+    fileInput3.value && (fileInput3.value.value = '')
   } catch (err) {
     formError.value = err.message
   }
@@ -330,7 +334,10 @@ async function onSubmitReview() {
 // Другие действия
 function submitZip() {
   if (!zipFile.value) return
-  store.uploadZip(zipFile.value, adminId, adminName).then(() => { zipFile.value = null; zipInput.value.value = '' })
+  store.uploadZip(zipFile.value, store.user.id, store.user.username).then(() => {
+    zipFile.value = null
+    zipInput.value.value = ''
+  })
 }
 
 function deleteReview(id) {

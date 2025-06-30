@@ -69,6 +69,14 @@
 /* ----------------- NEUE HAAS ----------------- */
 
 @font-face {
+  font-family: 'NeueHaas-400';
+  src: url('@/assets/fonts/NeueHaas-Roman.ttf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'NeueHaas-500';
   src: url('@/assets/fonts/NeueHaas-Medium.ttf') format('opentype');
   font-weight: 500;
