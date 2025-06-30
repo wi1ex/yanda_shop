@@ -165,23 +165,17 @@ def list_reviews() -> Tuple[Response, int]:
             revs = session.query(Review).order_by(Review.created_at.desc()).all()
             data: List[Dict[str, Any]] = []
             for r in revs:
-                # получаем имя клиента
-                user = session.get(Users, r.client_id)
-                client_name = f"{user.first_name}" if user else "—"
-                # avatar = user.photo_url or f"{BACKEND_URL}/images/default-avatar.png"
                 # находим в MinIO все объекты reviews/{r.id}_*
                 objs = minio_client.list_objects(BUCKET, prefix=f'reviews/{r.id}_', recursive=True)
                 urls = [f"{BACKEND_URL}/images/{obj.object_name}" for obj in objs]
                 data.append({
                     "id":            r.id,
-                    "client_id":     r.client_id,
-                    # "avatar_url":    avatar,
-                    "client_name":   client_name,
+                    "client_name":   r.client_name,
                     "client_text1":  r.client_text1,
                     "shop_response": r.shop_response,
                     "client_text2":  r.client_text2,
-                    "photo_urls":    urls,
                     "link_url":      r.link_url,
+                    "photo_urls":    urls,
                     "created_at":    r.created_at.astimezone(ZoneInfo("Europe/Moscow")).isoformat()
                 })
         return jsonify({"reviews": data}), 200

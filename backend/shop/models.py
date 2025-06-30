@@ -51,7 +51,7 @@ class AdminSetting(db.Model):
 class Review(db.Model):
     __tablename__  = 'reviews'
     id             = db.Column(db.Integer, primary_key=True)
-    client_id      = db.Column(db.BigInteger, db.ForeignKey('users.user_id'), nullable=False)
+    client_name    = db.Column(db.String(100), nullable=False)
     client_text1   = db.Column(db.Text, nullable=False)
     shop_response  = db.Column(db.Text, nullable=False)
     client_text2   = db.Column(db.Text, nullable=True)
