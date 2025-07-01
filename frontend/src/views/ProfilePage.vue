@@ -3,7 +3,7 @@
     <h1>Профиль пользователя</h1>
 
     <!-- Если мы решили редиректить или показывать сообщение гостю, можно добавить тут отдельный блок -->
-    <div v-if="store.isTelegramUserId(store.user?.id)" class="not-tg-message">
+    <div v-if="!store.isTelegramUserId(store.user?.id)" class="not-tg-message">
       <p>Профиль доступен только авторизованным через Telegram пользователям.</p>
       <router-link to="/">Вернуться на главную</router-link>
     </div>

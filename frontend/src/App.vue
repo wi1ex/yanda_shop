@@ -21,14 +21,6 @@ const route = useRoute()
 const isNoFooterRoute = computed(() => route.name === 'Admin' || route.name === 'Profile')
 let prevOverflow
 
-// Генерация случайного ID для веб-посетителя, если нет Telegram WebApp
-function generateVisitorId() {
-  if (window.crypto && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-  return Math.random().toString(36).substring(2, 11)
-}
-
 // следим за открытием/закрытием корзины
 watch(
   () => store.showCartDrawer,
@@ -49,6 +41,9 @@ onMounted(async () => {
   } else {
     await store.initializeVisitorUser()
   }
+  await store.fetchProducts()
+  await store.fetchParameters()
+  await store.fetchReviews()
 })
 
 onBeforeUnmount(() => {

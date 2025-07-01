@@ -127,19 +127,22 @@ def update_sheet_url() -> Tuple[Response, int]:
 @admin_api.route("/import_sheet", methods=["POST"])
 # @admin_required
 def import_sheet() -> Tuple[Response, int]:
-    data = request.get_json(force=True, silent=True) or {}
-    category = data.get("category", "").lower()
-    author_id_str = data.get("author_id", "").strip()
-    author_name = data.get("author_name", "").strip()
+    data = request.get_json(force=True, silent=True)
 
-    if not author_id_str or not author_name:
-        return jsonify({"error": "author_id or author_name required"}), 400
+    author_id_raw = data.get("author_id")
+    if author_id_raw is None:
+        return jsonify({"error": "author_id required"}), 400
 
     try:
-        author_id = int(author_id_str)
-    except ValueError:
+        author_id = int(author_id_raw) if not isinstance(author_id_raw, str) else int(author_id_raw.strip())
+    except (ValueError, TypeError):
         return jsonify({"error": "invalid author_id"}), 400
 
+    author_name = (data.get("author_name") or "").strip()
+    if not author_name:
+        return jsonify({"error": "author_name required"}), 400
+
+    category = data.get("category", "").lower()
     if category not in ("shoes", "clothing", "accessories"):
         return jsonify({"error": "unknown category"}), 400
 
@@ -187,18 +190,22 @@ def import_sheet() -> Tuple[Response, int]:
 @admin_api.route("/upload_images", methods=["POST"])
 # @admin_required
 def upload_images() -> Tuple[Response, int]:
-    # 1) Проверяем входные данные
-    z             = request.files.get("file")
-    author_id_str = request.form.get("author_id", "").strip()
-    author_name   = request.form.get("author_name", "").strip()
-
-    if not z or not author_id_str or not author_name:
-        return jsonify({"error": "file or author_id or author_name required"}), 400
+    author_id_raw = request.form.get("author_id")
+    if author_id_raw is None:
+        return jsonify({"error": "author_id required"}), 400
 
     try:
-        author_id = int(author_id_str)
-    except ValueError:
+        author_id = int(author_id_raw) if not isinstance(author_id_raw, str) else int(author_id_raw.strip())
+    except (ValueError, TypeError):
         return jsonify({"error": "invalid author_id"}), 400
+
+    author_name = (request.form.get("author_name") or "").strip()
+    if not author_name:
+        return jsonify({"error": "author_name required"}), 400
+
+    z = request.files.get("file")
+    if not z:
+        return jsonify({"error": "file required"}), 400
 
     if not z.filename.lower().endswith(".zip"):
         return jsonify({"error": "not a ZIP"}), 400
@@ -384,9 +391,11 @@ def list_users() -> Tuple[Response, int]:
     try:
         # поля, которые не хотим отдавать в API
         hidden_fields = {
+            "avatar_url",
             "password_hash",
             "email_verified",
             "phone_verified",
+            "updated_at",
         }
 
         with session_scope() as session:
@@ -419,19 +428,22 @@ def list_users() -> Tuple[Response, int]:
 # @admin_required
 def set_user_role() -> Tuple[Response, int]:
     data = request.get_json(force=True)
-    user_id = data.get("user_id")
-    new_role = data.get("role")
-    author_id_str = data.get("author_id", "").strip()
-    author_name = data.get("author_name", "").strip()
 
-    if not author_id_str or not author_name:
-        return jsonify({"error": "author_id or author_name required"}), 400
+    author_id_raw = data.get("author_id")
+    if author_id_raw is None:
+        return jsonify({"error": "author_id required"}), 400
 
     try:
-        author_id = int(author_id_str)
-    except ValueError:
+        author_id = int(author_id_raw) if not isinstance(author_id_raw, str) else int(author_id_raw.strip())
+    except (ValueError, TypeError):
         return jsonify({"error": "invalid author_id"}), 400
 
+    author_name = (data.get("author_name") or "").strip()
+    if not author_name:
+        return jsonify({"error": "author_name required"}), 400
+
+    user_id  = data.get("user_id")
+    new_role = data.get("role")
     if not isinstance(user_id, int) or new_role not in ("admin", "customer"):
         return jsonify({"error": "invalid input"}), 400
 
@@ -447,7 +459,7 @@ def set_user_role() -> Tuple[Response, int]:
             session.add(ChangeLog(
                 author_id=author_id,
                 author_name=author_name,
-                action_type=f"Назначение роли",
+                action_type="Назначение роли",
                 description=desc,
                 timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
             ))
