@@ -10,7 +10,8 @@
 
       <!-- Логотип по центру -->
       <div class="header-logo">
-        <span class="logo-title">КАТАЛОГ</span><sup class="logo-year">XYZ</sup>
+        <span class="logo-title">{{ headerTitle }}</span>
+        <sup class="logo-year">{{ totalItems }}</sup>
       </div>
 
       <!-- Селект сортировки (вёрстка web) -->
@@ -143,6 +144,16 @@ const page = ref(1)
 const perPage = 24
 const mobileFiltersOpen = ref(false)
 const productsLoading = ref(false)
+
+// 1) Количество отфильтрованных товаров
+const totalItems = computed(() => store.displayedProducts.length)
+
+// 2) Динамический заголовок
+const headerTitle = computed(() => {
+  if (store.filterGender === 'M') return 'ДЛЯ НЕГО'
+  if (store.filterGender === 'W') return 'ДЛЯ НЕЁ'
+  return 'КАТАЛОГ'
+})
 
 // товары для отображения: первые page*perPage элементов
 const paged = computed(() =>
