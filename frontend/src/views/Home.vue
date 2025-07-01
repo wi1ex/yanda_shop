@@ -297,7 +297,7 @@ const QUESTIONS = [
 // Подтягиваем ответы из store.settings и собираем финальный массив
 function buildFaqs() {
   faqs.value = QUESTIONS.map((q, idx) => {
-    // ищем в settings запись с key = `faq_answer_${i+1}`
+    // ищем в parameters запись с key = `faq_answer_${i+1}`
     const setting = store.parameters.find(s => s.key === `faq_answer_${idx+1}`)
     return {
       id: idx,

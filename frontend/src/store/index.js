@@ -100,8 +100,7 @@ export const useStore = defineStore('main', () => {
   const profileLoading     = ref(false)
   const profileError       = ref('')
 
-  const parameters         = reactive({})
-
+  const parameters         = ref({})
   const settings           = ref([])
   const reviews            = ref([])
   const users              = ref([])
@@ -205,7 +204,8 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
   async function fetchParameters() {
     const res = await fetch(`${API.baseUrl}${API.general.getParameters}`)
-    Object.assign(parameters, await res.json())
+    const data = await res.json()
+    parameters.value = Object.entries(data).map(([key, value]) => ({ key, value }))
   }
 
   // -------------------------------------------------
@@ -703,8 +703,8 @@ export const useStore = defineStore('main', () => {
     logs, logsLoading, totalLogs,
     visitsData, visitsLoading,
     detailData, detailLoading, variants,
-    profile, profileLoading, profileError, parameters,
-    settings, reviews, users,
+    profile, profileLoading, profileError,
+    parameters, settings, reviews, users,
 
     // helpers
     isTelegramUserId, setAdminToken,

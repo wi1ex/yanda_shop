@@ -31,7 +31,7 @@ admin_api: Blueprint = Blueprint("admin_api", __name__, url_prefix="/api/admin")
 
 
 @admin_api.route("/get_daily_visits")
-@admin_required
+# @admin_required
 def get_daily_visits() -> Tuple[Response, int]:
     date_str = request.args.get("date") or datetime.now(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d")
     pipe = redis_client.pipeline()
@@ -51,7 +51,7 @@ def get_daily_visits() -> Tuple[Response, int]:
 
 
 @admin_api.route("/get_logs")
-@admin_required
+# @admin_required
 def get_logs() -> Tuple[Response, int]:
     # 1) читаем параметры пагинации
     try:
@@ -89,14 +89,14 @@ def get_logs() -> Tuple[Response, int]:
 
 
 @admin_api.route("/get_sheet_urls")
-@admin_required
+# @admin_required
 def get_sheet_urls() -> Tuple[Response, int]:
     urls = {cat: get_sheet_url(cat) for cat in ("shoes", "clothing", "accessories")}
     return jsonify(urls), 200
 
 
 @admin_api.route("/update_sheet_url", methods=["POST"])
-@admin_required
+# @admin_required
 def update_sheet_url() -> Tuple[Response, int]:
     data = request.get_json(force=True, silent=True) or {}
     category = data.get("category", "").lower()
@@ -125,7 +125,7 @@ def update_sheet_url() -> Tuple[Response, int]:
 
 
 @admin_api.route("/import_sheet", methods=["POST"])
-@admin_required
+# @admin_required
 def import_sheet() -> Tuple[Response, int]:
     data = request.get_json(force=True, silent=True) or {}
     category = data.get("category", "").lower()
@@ -185,7 +185,7 @@ def import_sheet() -> Tuple[Response, int]:
 
 
 @admin_api.route("/upload_images", methods=["POST"])
-@admin_required
+# @admin_required
 def upload_images() -> Tuple[Response, int]:
     # 1) Проверяем входные данные
     z             = request.files.get("file")
@@ -255,7 +255,7 @@ def upload_images() -> Tuple[Response, int]:
 
 
 @admin_api.route('/get_settings', methods=['GET'])
-@admin_required
+# @admin_required
 def get_settings() -> Tuple[Response, int]:
     logger.info("GET /api/admin/settings called")
     try:
@@ -269,7 +269,7 @@ def get_settings() -> Tuple[Response, int]:
 
 
 @admin_api.route('/update_setting', methods=['POST'])
-@admin_required
+# @admin_required
 def update_setting() -> Tuple[Response, int]:
     logger.info("POST /api/admin/settings called with %s", request.get_json())
     try:
@@ -296,7 +296,7 @@ def update_setting() -> Tuple[Response, int]:
 
 
 @admin_api.route('/create_review', methods=['POST'])
-@admin_required
+# @admin_required
 def create_review() -> Tuple[Response, int]:
     form = request.form
 
@@ -354,7 +354,7 @@ def create_review() -> Tuple[Response, int]:
 
 
 @admin_api.route('/delete_review/<int:review_id>', methods=['DELETE'])
-@admin_required
+# @admin_required
 def delete_review(review_id: int) -> Tuple[Response, int]:
     logger.info("DELETE /api/admin/delete_review/%d", review_id)
     try:
@@ -378,7 +378,7 @@ def delete_review(review_id: int) -> Tuple[Response, int]:
 
 
 @admin_api.route("/list_users", methods=["GET"])
-@admin_required
+# @admin_required
 def list_users() -> Tuple[Response, int]:
     logger.info("GET /api/admin/list_users")
     try:
@@ -416,7 +416,7 @@ def list_users() -> Tuple[Response, int]:
 
 
 @admin_api.route("/set_user_role", methods=["POST"])
-@admin_required
+# @admin_required
 def set_user_role() -> Tuple[Response, int]:
     data = request.get_json(force=True)
     user_id = data.get("user_id")
