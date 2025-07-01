@@ -81,7 +81,7 @@
 | `/general/`                 | GET    | Health check                            |
 | `/general/save_user`        | POST   | Сохранение инфо о пользователе Telegram |
 | `/general/get_user_profile` | GET    | Профиль пользователя                    |
-| `/general/get_social_urls`  | GET    | URL Telegram, Instagram, Email          |
+| `/general/get_parameters`   | GET    | Общие параметры                         |
 | `/general/list_reviews`     | GET    | Список отзывов                          |
 
 ### /api/product

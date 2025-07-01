@@ -298,7 +298,7 @@ const QUESTIONS = [
 function buildFaqs() {
   faqs.value = QUESTIONS.map((q, idx) => {
     // ищем в settings запись с key = `faq_answer_${i+1}`
-    const setting = store.settings.find(s => s.key === `faq_answer_${idx+1}`)
+    const setting = store.parameters.find(s => s.key === `faq_answer_${idx+1}`)
     return {
       id: idx,
       question: q,
@@ -315,7 +315,7 @@ function toggleFaq(i) {
 
 onMounted(async () => {
   await store.fetchProducts()
-  await store.fetchSettings()
+  await store.fetchParameters()
   await store.fetchReviews()
   buildFaqs()
 })

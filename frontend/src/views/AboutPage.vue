@@ -102,13 +102,13 @@
     <section class="section community">
       <h2 class="section-title">Сообщество</h2>
       <p class="community-text">Пиши нам в Телеграм — это самый быстрый и легкий способ для связи.</p>
-      <a v-if="store.socialUrls.url_telegram" :href="store.socialUrls.url_telegram" target="_blank" rel="noopener" class="join-button">Telegram</a>
+      <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram" target="_blank" rel="noopener" class="join-button">Telegram</a>
       <div class="community-images">
         <div class="img-item"><img :src="about_image11" alt=""/></div>
         <div class="img-item">
-          <a v-if="store.socialUrls.url_telegram" :href="store.socialUrls.url_telegram" target="_blank" rel="noopener" class="link">Telegram</a>
-          <a v-if="store.socialUrls.url_instagram" :href="store.socialUrls.url_instagram" target="_blank" rel="noopener" class="link">Instagram</a>
-          <a v-if="store.socialUrls.url_email" :href="`mailto:${store.socialUrls.url_email}`" rel="noopener" class="link">E-mail</a>
+          <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram" target="_blank" rel="noopener" class="link">Telegram</a>
+          <a v-if="store.parameters.url_instagram" :href="store.parameters.url_instagram" target="_blank" rel="noopener" class="link">Instagram</a>
+          <a v-if="store.parameters.url_email" :href="`mailto:${store.parameters.url_email}`" rel="noopener" class="link">E-mail</a>
         </div>
         <div class="img-item"><img :src="about_image10" alt=""/></div>
         <div class="img-item"><img :src="about_image12" alt=""/></div>

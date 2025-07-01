@@ -7,7 +7,7 @@ export const API = {
     healthCheck:        '/api/general',                      // GET    - health check
     saveUser:           '/api/general/save_user',            // POST   - сохранить/обновить Telegram-пользователя
     getUserProfile:     '/api/general/get_user_profile',     // GET    - получить профиль
-    getSocialUrls:      '/api/general/get_social_urls',      // GET    - получить соц. ссылки
+    getParameters:      '/api/general/get_parameters',       // GET    - получить публичные настройки
     listReviews:        '/api/general/list_reviews',         // GET    - получить список отзывов
   },
   product: {
@@ -76,9 +76,9 @@ export const useStore = defineStore('main', () => {
 
   // === AdminPage ===
   const sheetUrls          = ref({ shoes: '', clothing: '', accessories: '' })
+  const sheetResult        = reactive({ shoes: '', clothing: '', accessories: '' })
   const sheetSaveLoading   = reactive({ shoes: false, clothing: false, accessories: false })
   const sheetImportLoading = reactive({ shoes: false, clothing: false, accessories: false })
-  const sheetResult        = reactive({ shoes: '', clothing: '', accessories: '' })
 
   const zipResult          = ref('')
   const zipLoading         = ref(false)
@@ -99,7 +99,8 @@ export const useStore = defineStore('main', () => {
   const profile            = ref(null)
   const profileLoading     = ref(false)
   const profileError       = ref('')
-  const socialUrls         = reactive({ url_telegram: '', url_instagram: '', url_email: '' })
+
+  const parameters         = reactive({})
 
   const settings           = ref([])
   const reviews            = ref([])
@@ -202,9 +203,9 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
   // General User Actions
   // -------------------------------------------------
-  async function loadSocialUrls() {
-    const res = await fetch(`${API.baseUrl}${API.general.getSocialUrls}`)
-    Object.assign(socialUrls, await res.json())
+  async function fetchParameters() {
+    const res = await fetch(`${API.baseUrl}${API.general.getParameters}`)
+    Object.assign(parameters, await res.json())
   }
 
   // -------------------------------------------------
@@ -395,7 +396,7 @@ export const useStore = defineStore('main', () => {
       const key = `${item.variant_sku}_${item.delivery_option?.label}`
       if (!map[key]) map[key] = { ...item, quantity: 0, totalPrice: 0 }
       map[key].quantity++
-      map[key].totalPrice += item.unit_price
+      map[key].totalPrice += item.price
     }
     return Object.values(map)
   })
@@ -507,6 +508,14 @@ export const useStore = defineStore('main', () => {
       },
       body: JSON.stringify({ key, value })
     })
+  }
+
+  async function fetchReviews() {
+    const res = await fetch(`${API.baseUrl}${API.general.listReviews}`)
+    if (res.ok) {
+      const j = await res.json()
+      reviews.value = j.reviews.map(r => ({ ...r, }))
+    }
   }
 
   async function createReview(formData) {
@@ -694,7 +703,7 @@ export const useStore = defineStore('main', () => {
     logs, logsLoading, totalLogs,
     visitsData, visitsLoading,
     detailData, detailLoading, variants,
-    profile, profileLoading, profileError, socialUrls,
+    profile, profileLoading, profileError, parameters,
     settings, reviews, users,
 
     // helpers
@@ -705,7 +714,7 @@ export const useStore = defineStore('main', () => {
     initializeTelegramUser, initializeVisitorUser,
 
     // general
-    loadSocialUrls,
+    fetchParameters,
 
     // product
     fetchProducts, fetchDetail,
@@ -732,7 +741,7 @@ export const useStore = defineStore('main', () => {
     fetchUsers, fetchSettings, saveSetting, updateUserRole,
 
     // admin reviews
-    createReview, deleteReview,
+    fetchReviews, createReview, deleteReview,
 
     // admin sheets & logs & visits & zip
     loadSheetUrls, saveSheetUrl, importSheet,

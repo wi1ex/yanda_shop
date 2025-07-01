@@ -167,9 +167,11 @@ def get_user_profile() -> Tuple[Response, int]:
         return jsonify({"error": "internal error"}), 500
 
 
-@general_api.route("/get_social_urls")
-def get_social_urls() -> Tuple[Response, int]:
-    keys = ["url_telegram", "url_instagram", "url_email"]
+@general_api.route("/get_parameters")
+def get_parameters() -> Tuple[Response, int]:
+    keys = ["url_telegram", "url_instagram", "url_email",
+            "faq_answer_1", "faq_answer_2", "faq_answer_3", "faq_answer_4",
+            "faq_answer_5", "faq_answer_6", "faq_answer_7", "faq_answer_8"]
     try:
         # сразу формируем результат внутри сессии
         with session_scope() as session:
@@ -180,7 +182,7 @@ def get_social_urls() -> Tuple[Response, int]:
         return jsonify(result), 200
 
     except Exception as e:
-        logger.exception("Error in get_social_urls: %s", e)
+        logger.exception("Error in get_parameters: %s", e)
         return jsonify({k: "" for k in keys}), 200
 
 
