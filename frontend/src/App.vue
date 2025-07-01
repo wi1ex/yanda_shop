@@ -42,28 +42,12 @@ watch(
   }
 )
 
-onMounted(() => {
-  if (window.Telegram?.WebApp) {
-    store.tg = window.Telegram.WebApp
-    const tgUser = store.tg.initDataUnsafe?.user
-    if (tgUser) {
-      store.user = {
-        id: tgUser.id,
-        first_name: tgUser.first_name,
-        last_name: tgUser.last_name,
-        username: tgUser.username,
-        photo_url: tgUser.photo_url || null
-      }
-    }
-  }
-  if (!store.user?.id) {
-    const stored = localStorage.getItem('visitorId')
-    if (stored) {
-      store.user.id = stored
-    } else {
-      store.user.id = generateVisitorId()
-      localStorage.setItem('visitorId', store.user.id)
-    }
+onMounted(async () => {
+  if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+    const tgUser = window.Telegram.WebApp.initDataUnsafe.user
+    await store.initializeTelegramUser(tgUser)
+  } else {
+    await store.initializeVisitorUser()
   }
 })
 

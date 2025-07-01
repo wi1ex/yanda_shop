@@ -36,8 +36,7 @@
       <nav v-if="menuOpen" class="dropdown-menu" ref="menu">
         <router-link to="/catalog" class="dropdown-link" @click="toggleMenu">Каталог</router-link>
         <router-link to="/about" class="dropdown-link" @click="toggleMenu">О нас</router-link>
-        <router-link to="/admin" class="dropdown-link" @click="toggleMenu">Админ-панель</router-link>
-<!--        <router-link v-if="isAdmin" to="/admin" class="dropdown-link" @click="toggleMenu">Админ-панель</router-link>-->
+        <router-link v-if="isAdmin" to="/admin" class="dropdown-link" @click="toggleMenu">Админ-панель</router-link>
       </nav>
     </transition>
   </header>
@@ -63,7 +62,7 @@ const route = useRoute()
 const menu = ref(null)
 const menuBtn = ref(null)
 const menuOpen = ref(false)
-const isAdmin = computed(() => store.user && store.admin_ids.includes(Number(store.user.id)))
+const isAdmin = computed(() => store.user?.role === 'admin')
 const isIconWhite = computed(() => route.name === 'About' || route.name === 'Home')
 const icon_default_avatar = computed(() => isIconWhite.value ? icon_default_avatar_white : icon_default_avatar_grey)
 const icon_favorites = computed(() => isIconWhite.value ? icon_favorites_white : icon_favorites_grey)

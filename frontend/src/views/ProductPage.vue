@@ -57,9 +57,14 @@
           <div class="option">
             <label>Цвет</label>
             <div class="options-list">
-              <button v-for="opt in colorOptions" :key="opt" class="option-btn color-btn"
-                      :class="{ active: opt === store.detailData.color }" @click="selectVariantByOpt('color', opt)">
-                {{ opt }}
+              <button v-for="opt in colorOptions" :key="opt" class="option-btn color-btn" :class="{ active: opt === store.detailData.color }"
+                      @click="selectVariantByOpt('color', opt)" @mouseover="hoverColor = opt" @mouseleave="hoverColor = null">
+                <div class="color-thumb-wrapper">
+                  <img :src="getImageForColor(opt)" alt="" class="color-thumb"/>
+                  <span v-if="hoverColor === opt" class="color-label">
+                    {{ opt }}
+                  </span>
+                </div>
               </button>
             </div>
           </div>
@@ -158,6 +163,7 @@ const thumbsRef = ref(null)
 const showDescription = ref(false)
 const showCharacteristics = ref(false)
 const variantLoading = ref(false)
+const hoverColor = ref(null)
 
 const colorOptions = computed(() =>
   Array.from(new Set(store.variants.map(v => v.color)))
@@ -215,6 +221,11 @@ async function handleAddToCart() {
   })
   // 2) сбрасываем карусель на первый слайд
   currentIndex.value = 0
+}
+
+function getImageForColor(color) {
+  const v = store.variants.find(v => v.color === color)
+  return v?.image || ''
 }
 
 // Переход на другой variant по опции
@@ -488,6 +499,34 @@ label {
 .color-btn {
   min-width: 40px;
   text-align: center;
+  padding: 4px;
+}
+
+.color-thumb-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.color-thumb {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.color-label {
+  position: absolute;
+  bottom: -1.4em;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .value {

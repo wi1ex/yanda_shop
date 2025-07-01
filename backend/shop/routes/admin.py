@@ -2,12 +2,13 @@ import csv
 import io
 import os
 import requests
+from sqlalchemy import func
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Tuple, List, Dict, Any
 from werkzeug.utils import secure_filename
 from flask import Blueprint, jsonify, request, Response
-from ..cors.config import ADMIN_IDS
+from ..routes.auth import admin_required
 from ..db_utils import session_scope
 from ..extensions import redis_client, minio_client, BUCKET
 from ..cors.logging import logger
@@ -29,13 +30,8 @@ from ..utils import (
 admin_api: Blueprint = Blueprint("admin_api", __name__, url_prefix="/api/admin")
 
 
-@admin_api.route("/get_admin_ids")
-def get_admin_ids() -> Tuple[Response, int]:
-    logger.debug("Health check: /api/admin_ids called")
-    return jsonify({"admin_ids": ADMIN_IDS}), 200
-
-
 @admin_api.route("/get_daily_visits")
+@admin_required
 def get_daily_visits() -> Tuple[Response, int]:
     date_str = request.args.get("date") or datetime.now(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d")
     pipe = redis_client.pipeline()
@@ -55,34 +51,52 @@ def get_daily_visits() -> Tuple[Response, int]:
 
 
 @admin_api.route("/get_logs")
+@admin_required
 def get_logs() -> Tuple[Response, int]:
+    # 1) читаем параметры пагинации
     try:
-        limit = int(request.args.get("limit", "10"))
+        limit = int(request.args.get("limit", "25"))
     except ValueError:
-        limit = 10
+        limit = 25
+    try:
+        offset = int(request.args.get("offset", "0"))
+    except ValueError:
+        offset = 0
 
-    with session_scope() as session:
-        logs_qs = (session.query(ChangeLog).order_by(ChangeLog.timestamp.desc()).limit(limit).all())
+    # ограничим разумный максимум
+    limit = min(limit, 100)
+    offset = max(offset, 0)
+    try:
+        with session_scope() as session:
+            # 2) общее количество для навигации
+            total = session.query(func.count(ChangeLog.id)).scalar()
+            # 3) выборка нужного «кусочка»
+            logs_qs = (session.query(ChangeLog).order_by(ChangeLog.timestamp.desc()).offset(offset).limit(limit).all())
+            result = [{
+                "id":          lg.id,
+                "author_id":   lg.author_id,
+                "author_name": lg.author_name,
+                "action_type": lg.action_type,
+                "description": lg.description,
+                "timestamp":   lg.timestamp.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d %H:%M:%S")
+            } for lg in logs_qs]
+        # 4) возвращаем и логи, и общее число
+        return jsonify({"logs": result, "total": total}), 200
 
-        result = [{
-            "id":          lg.id,
-            "author_id":   lg.author_id,
-            "author_name": lg.author_name,
-            "action_type": lg.action_type,
-            "description": lg.description,
-            "timestamp":   lg.timestamp.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d %H:%M:%S")
-        } for lg in logs_qs]
-
-    return jsonify({"logs": result}), 200
+    except Exception as e:
+        logger.exception("Error get_logs: %s", e)
+        return jsonify({"error": "internal error"}), 500
 
 
 @admin_api.route("/get_sheet_urls")
+@admin_required
 def get_sheet_urls() -> Tuple[Response, int]:
     urls = {cat: get_sheet_url(cat) for cat in ("shoes", "clothing", "accessories")}
     return jsonify(urls), 200
 
 
 @admin_api.route("/update_sheet_url", methods=["POST"])
+@admin_required
 def update_sheet_url() -> Tuple[Response, int]:
     data = request.get_json(force=True, silent=True) or {}
     category = data.get("category", "").lower()
@@ -111,25 +125,30 @@ def update_sheet_url() -> Tuple[Response, int]:
 
 
 @admin_api.route("/import_sheet", methods=["POST"])
+@admin_required
 def import_sheet() -> Tuple[Response, int]:
     data = request.get_json(force=True, silent=True) or {}
     category = data.get("category", "").lower()
-    author_id = data.get("author_id")
-    author_name = data.get("author_name", "").strip() or "unknown"
+    author_id_str = data.get("author_id", "").strip()
+    author_name = data.get("author_name", "").strip()
+
+    if not author_id_str or not author_name:
+        return jsonify({"error": "author_id or author_name required"}), 400
+
+    try:
+        author_id = int(author_id_str)
+    except ValueError:
+        return jsonify({"error": "invalid author_id"}), 400
 
     if category not in ("shoes", "clothing", "accessories"):
         return jsonify({"error": "unknown category"}), 400
-
-    try:
-        author_id = int(author_id)
-    except (TypeError, ValueError):
-        return jsonify({"error": "invalid author_id"}), 400
 
     url = get_sheet_url(category)
     if not url:
         return jsonify({"error": "sheet url not set"}), 400
 
     logger.debug("import_sheet called category=%s author_id=%d url=%s", category, author_id, url)
+
     try:
         r = requests.get(url, timeout=30)
         r.raise_for_status()
@@ -166,6 +185,7 @@ def import_sheet() -> Tuple[Response, int]:
 
 
 @admin_api.route("/upload_images", methods=["POST"])
+@admin_required
 def upload_images() -> Tuple[Response, int]:
     # 1) Проверяем входные данные
     z             = request.files.get("file")
@@ -173,7 +193,7 @@ def upload_images() -> Tuple[Response, int]:
     author_name   = request.form.get("author_name", "").strip()
 
     if not z or not author_id_str or not author_name:
-        return jsonify({"error": "file and author_id required"}), 400
+        return jsonify({"error": "file or author_id or author_name required"}), 400
 
     try:
         author_id = int(author_id_str)
@@ -184,6 +204,7 @@ def upload_images() -> Tuple[Response, int]:
         return jsonify({"error": "not a ZIP"}), 400
 
     logger.debug("upload_images START filename=%s author_id=%d author_name=%s", z.filename, author_id, author_name)
+
     # 2) Определяем папку и expected-набор имён
     folder   = os.path.splitext(z.filename)[0].lower()
     expected = set()
@@ -234,6 +255,7 @@ def upload_images() -> Tuple[Response, int]:
 
 
 @admin_api.route('/get_settings', methods=['GET'])
+@admin_required
 def get_settings() -> Tuple[Response, int]:
     logger.info("GET /api/admin/settings called")
     try:
@@ -247,6 +269,7 @@ def get_settings() -> Tuple[Response, int]:
 
 
 @admin_api.route('/update_setting', methods=['POST'])
+@admin_required
 def update_setting() -> Tuple[Response, int]:
     logger.info("POST /api/admin/settings called with %s", request.get_json())
     try:
@@ -273,6 +296,7 @@ def update_setting() -> Tuple[Response, int]:
 
 
 @admin_api.route('/create_review', methods=['POST'])
+@admin_required
 def create_review() -> Tuple[Response, int]:
     form = request.form
 
@@ -330,6 +354,7 @@ def create_review() -> Tuple[Response, int]:
 
 
 @admin_api.route('/delete_review/<int:review_id>', methods=['DELETE'])
+@admin_required
 def delete_review(review_id: int) -> Tuple[Response, int]:
     logger.info("DELETE /api/admin/delete_review/%d", review_id)
     try:
@@ -353,6 +378,7 @@ def delete_review(review_id: int) -> Tuple[Response, int]:
 
 
 @admin_api.route("/list_users", methods=["GET"])
+@admin_required
 def list_users() -> Tuple[Response, int]:
     logger.info("GET /api/admin/list_users")
     try:
@@ -386,4 +412,47 @@ def list_users() -> Tuple[Response, int]:
 
     except Exception as e:
         logger.exception("Failed to list_users: %s", e)
+        return jsonify({"error": "internal error"}), 500
+
+
+@admin_api.route("/set_user_role", methods=["POST"])
+@admin_required
+def set_user_role() -> Tuple[Response, int]:
+    data = request.get_json(force=True)
+    user_id = data.get("user_id")
+    new_role = data.get("role")
+    author_id_str = data.get("author_id", "").strip()
+    author_name = data.get("author_name", "").strip()
+
+    if not author_id_str or not author_name:
+        return jsonify({"error": "author_id or author_name required"}), 400
+
+    try:
+        author_id = int(author_id_str)
+    except ValueError:
+        return jsonify({"error": "invalid author_id"}), 400
+
+    if not isinstance(user_id, int) or new_role not in ("admin", "customer"):
+        return jsonify({"error": "invalid input"}), 400
+
+    logger.debug("set_user_role author_id=%d author_name=%s", author_id, author_name)
+
+    try:
+        with session_scope() as session:
+            user = session.get(Users, user_id)
+            if not user:
+                return jsonify({"error": "user not found"}), 404
+            user.role = new_role
+            desc = f'Пользователю {user.username} {user.first_name} {user.last_name} назначена роль {new_role}'
+            session.add(ChangeLog(
+                author_id=author_id,
+                author_name=author_name,
+                action_type=f"Назначение роли",
+                description=desc,
+                timestamp=datetime.now(ZoneInfo("Europe/Moscow"))
+            ))
+        return jsonify({"status": "ok"}), 200
+
+    except Exception as e:
+        logger.exception("Failed to set_user_role: %s", e)
         return jsonify({"error": "internal error"}), 500

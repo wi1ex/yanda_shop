@@ -65,11 +65,11 @@
       <h2>Бестселлеры</h2>
       <div class="best-slider">
         <button @click="prevBest" aria-label="Назад">←</button>
-        <div class="best-item" v-for="(p, i) in bests" :key="p.variant_sku" v-show="i === bestIndex">
-          <button class="fav-btn" @click="toggleFav(p)">
+        <div class="best-item" v-for="p in visibleBests" :key="p.variant_sku" @click="goToProduct(p)">
+          <button class="fav-btn" @click.stop="toggleFav(p)">
             {{ store.isFavorite(p.color_sku) ? '❤️' : '♡' }}
           </button>
-          <img :src="p.image" alt="" class="product-image"/>
+          <img :src="p.image" alt="" class="product-image" />
           <p class="brand">{{ p.brand }}</p>
           <p class="name">{{ p.name }}</p>
           <p class="price">от {{ p.price }} ₽</p>
@@ -112,7 +112,6 @@
             <p class="user-text">{{ current.client_text2 }}</p>
             <div class="meta">
               <div class="review-header">
-<!--                <img class="avatar" :src="current.avatar_url" alt="аватар"/>-->
                 <img class="avatar" :src="icon_default_avatar_white" alt="аватар"/>
                 <span class="client-name">{{ current.client_name }}</span>
                 <span class="review-date">{{ new Date(current.created_at).toLocaleDateString('ru-RU', { month:'2-digit', year:'numeric' }) }}</span>
@@ -162,12 +161,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from '@/store/index.js'
+import { useRouter } from 'vue-router'
 
 import icon_default_avatar_white from '@/assets/images/default_avatar_white.svg'
 import icon_faq_plus from '@/assets/images/faq_plus.svg'
 import icon_faq_minus from '@/assets/images/faq_minus.svg'
 
-const store   = useStore()
+const store = useStore()
+const router = useRouter()
 
 const idx = ref(0)
 const faqs = ref([])
@@ -232,20 +233,42 @@ function toggleOrig(block) {
 
 // Bestsellers
 const bestIndex = ref(0)
-const bests     = computed(() =>
-  store.displayedProducts.slice(0, 2).map(g => g.minPriceVariant)
+const perSlide  = 2
+
+// 1) Берём ВСЕ продукты, сортируем по продажам ↓, затем по цене ↓
+const bests = computed(() =>
+  store.products.slice().sort((a, b) => (b.count_sales - a.count_sales) || (b.price - a.price))
 )
 
-function prevBest() {
-  bestIndex.value = (bestIndex.value + bests.value.length - 1) % bests.value.length
-}
+// 2) Товары для текущей «страницы»
+const visibleBests = computed(() => {
+  const start = bestIndex.value * perSlide
+  return bests.value.slice(start, start + perSlide)
+})
 
 function nextBest() {
-  bestIndex.value = (bestIndex.value + 1) % bests.value.length
+  const maxPage = Math.ceil(bests.value.length / perSlide) - 1
+  if (bestIndex.value < maxPage) bestIndex.value++
 }
 
+function prevBest() {
+  if (bestIndex.value > 0) bestIndex.value--
+}
+
+// 3) Переход на страницу товара
+function goToProduct(p) {
+  router.push({
+    name: 'ProductDetail',
+    params: { variant_sku: p.variant_sku },
+    query: { category: p.category }
+  })
+}
+
+// Сохранение в избранное оставляем, но вешаем .stop на клик, чтобы не перегружать маршрут
 function toggleFav(p) {
-  store.isFavorite(p.color_sku) ? store.removeFromFavorites(p.color_sku) : store.addToFavorites(p.color_sku)
+  store.isFavorite(p.color_sku)
+    ? store.removeFromFavorites(p.color_sku)
+    : store.addToFavorites(p.color_sku)
 }
 
 // Request form
@@ -291,7 +314,7 @@ function toggleFaq(i) {
 }
 
 onMounted(async () => {
-  await store.fetchAllProducts()
+  await store.fetchProducts()
   await store.fetchSettings()
   await store.fetchReviews()
   buildFaqs()
@@ -457,6 +480,7 @@ onMounted(async () => {
 .best-item {
   position: relative;
   width: 150px;
+  cursor: pointer;
 }
 .fav-btn {
   position: absolute;

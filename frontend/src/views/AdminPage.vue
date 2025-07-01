@@ -32,7 +32,7 @@
             Обновить ссылку
           </button>
 
-          <button @click="store.importSheet(cat, store.user.id, store.user.username)" :disabled="!store.sheetUrls[cat] || store.sheetImportLoading[cat] || editingUrl[cat]" class="sheet-import">
+          <button @click="store.importSheet(cat)" :disabled="!store.sheetUrls[cat] || store.sheetImportLoading[cat] || editingUrl[cat]" class="sheet-import">
             {{ store.sheetImportLoading[cat] ? 'Обновление…' : 'Обновить данные' }}
           </button>
         </template>
@@ -85,6 +85,11 @@
             </tr>
           </tbody>
         </table>
+        <div class="pagination-controls">
+          <button @click="prevPage" :disabled="logPage===1">← Предыдущие</button>
+          <span>Стр. {{ logPage }} из {{ Math.ceil(store.totalLogs / pageSize) }}</span>
+          <button @click="nextPage" :disabled="logPage*pageSize>=store.totalLogs">Следующие →</button>
+        </div>
       </div>
     </section>
 
@@ -128,6 +133,8 @@
               <span v-if="isDateField(col)">{{ formatDate(u[col]) }}</span>
               <span v-else>{{ u[col] }}</span>
             </td>
+            <button v-if="store.user.id !== u.user_id && u.role !== 'admin'" @click="makeAdmin(u.user_id)">Сделать админом</button>
+            <button v-if="store.user.id !== u.user_id && u.role === 'admin'" @click="revokeAdmin(u.user_id)">Снять админа</button>
           </tr>
           <tr v-if="!store.users.length">
             <td :colspan="userColumns.length" class="no-data">Нет пользователей</td>
@@ -233,6 +240,8 @@ const formSuccess  = ref('')
 const files        = reactive({})
 const saving       = ref(null)
 const selected     = ref('sheets')
+const logPage      = ref(1)
+const pageSize     = 25
 const newSetting   = reactive({ key: '', value: '' })
 const tabs         = [
   { key:'sheets',      label:'Sheets'         },
@@ -251,9 +260,13 @@ const form = reactive({
 })
 
 // Вычисляем список колонок по ключам первого пользователя
+const preferredColumns = ['user_id', 'username', 'first_name', 'last_name', 'gender', 'phone', 'date_of_birth', 'order_count', 'total_spent']
 const userColumns = computed(() => {
   if (!store.users.length) return []
-  return Object.keys(store.users[0])
+  const cols = Object.keys(store.users[0])
+  const first = preferredColumns.filter(c => cols.includes(c))
+  const rest  = cols.filter(c => !preferredColumns.includes(c))
+  return [...first, ...rest]
 })
 
 // Фильтруем настройки: убираем все, ключи которых начинаются на `sheet_url_`
@@ -272,6 +285,19 @@ function onFile(e,i) {
 }
 function onZipSelected(e) {
   zipFile.value = e.target.files[0]
+}
+
+function prevPage() {
+  if (logPage.value > 1) {
+    logPage.value--
+    store.loadLogs(pageSize, (logPage.value - 1) * pageSize)
+  }
+}
+function nextPage() {
+  if (logPage.value * pageSize < store.totalLogs) {
+    logPage.value++
+    store.loadLogs(pageSize, (logPage.value - 1) * pageSize)
+  }
 }
 
 // Функции для форматирования
@@ -334,7 +360,7 @@ async function onSubmitReview() {
 // Другие действия
 function submitZip() {
   if (!zipFile.value) return
-  store.uploadZip(zipFile.value, store.user.id, store.user.username).then(() => {
+  store.uploadZip(zipFile.value).then(() => {
     zipFile.value = null
     zipInput.value.value = ''
   })
@@ -372,10 +398,25 @@ async function onSaveUrl(cat) {
   if (await store.saveSheetUrl(cat)) editingUrl[cat] = false
 }
 
+async function makeAdmin(userId) {
+  try {
+    await store.updateUserRole(userId, 'admin')
+  } catch (e) {
+    alert(e.message)
+  }
+}
+async function revokeAdmin(userId) {
+  try {
+    await store.updateUserRole(userId, 'customer')
+  } catch (e) {
+    alert(e.message)
+  }
+}
+
 // При монтировании — подгрузим все по умолчанию
 onMounted(() => {
   store.loadSheetUrls()
-  store.loadLogs()
+  store.loadLogs(pageSize, 0)
   store.loadVisits(selectedDate.value)
   store.fetchSettings()
   store.fetchReviews()
@@ -392,7 +433,8 @@ watch(selected, (tab) => {
       // ничего не нужно грузить
       break
     case 'logs':
-      store.loadLogs()
+      logPage.value = 1
+      store.loadLogs(pageSize, 0)
       break
     case 'visits':
       store.loadVisits(selectedDate.value)
@@ -474,6 +516,37 @@ watch(selected, (tab) => {
   text-align: center;
   padding: 10px;
   font-style: italic;
+}
+/* Пагинация логов */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+
+.pagination-controls button {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background 0.2s;
+}
+
+.pagination-controls button:disabled {
+  background: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.pagination-controls span {
+  font-size: 0.9em;
+  color: #eee;
 }
 
 /* --- Секция статистики посещений --- */
@@ -818,6 +891,19 @@ watch(selected, (tab) => {
   }
   .logs-table th, .logs-table td {
     padding: 4px;
+  }
+
+  .pagination-controls {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pagination-controls button {
+    width: 100%;
+    padding: 8px 0;
+    font-size: 1em;
+  }
+  .pagination-controls span {
+    margin: 0 8px;
   }
 
   /* Google Sheets / ZIP */

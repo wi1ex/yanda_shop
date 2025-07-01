@@ -63,7 +63,7 @@
         </div>
 
         <div class="cart-action" v-if="store.cart.items.length">
-          <button v-if="store.isTelegramUserId(store.user.id)" class="action-button" @click="store.checkout">
+          <button v-if="store.isTelegramUserId(store.user?.id)" class="action-button" @click="store.checkout">
             Оформить заказ
           </button>
           <button v-else class="action-button" @click="onRegister">
