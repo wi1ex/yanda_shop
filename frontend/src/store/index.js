@@ -60,6 +60,7 @@ export const useStore = defineStore('main', () => {
   const filterPriceMin     = ref(null)
   const filterPriceMax     = ref(null)
   const filterColor        = ref('')
+  const filterGender       = ref('')
 
   // Товары
   const products           = ref([])
@@ -373,8 +374,11 @@ export const useStore = defineStore('main', () => {
   const displayedProducts = computed(() => {
     let list = colorGroups.value.slice()
 
+    if (['M','W'].includes(filterGender.value)) {
+      list = list.filter(g => g.variants.some(v => v.gender === filterGender.value || v.gender === 'U'))
+    }
     if (filterColor.value) {
-      list = list.filter(g => g.variants[0].color === filterColor.value)
+      list = list.filter(g => g.variants.some(v => v.color === filterColor.value))
     }
     if (filterPriceMin.value != null) {
       list = list.filter(g => g.variants.some(v => v.price >= filterPriceMin.value))
@@ -382,6 +386,7 @@ export const useStore = defineStore('main', () => {
     if (filterPriceMax.value != null) {
       list = list.filter(g => g.variants.some(v => v.price <= filterPriceMax.value))
     }
+
     list.forEach(g => {
       g.totalSales = g.variants.reduce((sum, v) => sum + (v.count_sales||0), 0)
     })
@@ -701,7 +706,7 @@ export const useStore = defineStore('main', () => {
     adminToken, user,
     categoryList, selectedCategory,
     sortBy, sortOrder,
-    filterPriceMin, filterPriceMax, filterColor,
+    filterPriceMin, filterPriceMax, filterColor, filterGender,
     products,
     cartOrder, cart, cartLoaded, showCartDrawer,
     favorites, favoritesLoaded,

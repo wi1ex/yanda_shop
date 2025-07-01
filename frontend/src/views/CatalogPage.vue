@@ -44,6 +44,17 @@
             <option value="">Все цвета</option>
             <option v-for="color in distinctColors" :key="color" :value="color">{{ color }}</option>
           </select>
+          <div class="gender-filter">
+            <label :class="{ active: store.filterGender === 'M' }">
+              <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
+            </label>
+            <label :class="{ active: store.filterGender === 'W' }">
+              <input type="radio" v-model="store.filterGender" value="W" /> Женщинам
+            </label>
+            <label :class="{ active: store.filterGender === 'U' }">
+              <input type="radio" v-model="store.filterGender" value="U" /> Unisex
+            </label>
+          </div>
           <button @click="handleClearFilters" class="btn-clear">Сбросить</button>
         </div>
       </aside>
@@ -74,6 +85,17 @@
                 <option value="">Все цвета</option>
                 <option v-for="color in distinctColors" :key="color" :value="color">{{ color }}</option>
               </select>
+              <div class="gender-filter">
+                <label :class="{ active: store.filterGender === 'M' }">
+                  <input type="radio" v-model="store.filterGender" value="M" /> М
+                </label>
+                <label :class="{ active: store.filterGender === 'W' }">
+                  <input type="radio" v-model="store.filterGender" value="W" /> Ж
+                </label>
+                <label :class="{ active: store.filterGender === 'U' }">
+                  <input type="radio" v-model="store.filterGender" value="U" /> U
+                </label>
+              </div>
               <button @click="handleClearFilters" class="btn-clear">Сбросить</button>
             </div>
           </transition>
@@ -193,7 +215,7 @@ function goToProductDetail(group) {
   router.push({
     name: 'ProductDetail',
     params: { variant_sku: target.variant_sku },
-    query: { category: store.selectedCategory }
+    query: { category: target.category }
   })
 }
 
@@ -217,6 +239,7 @@ async function loadCategory(cat) {
 watch(() => store.selectedCategory, (cat) => { page.value = 1; loadCategory(cat)})
 watch(() => sortOption.value, () => { page.value = 1; animateGrid() })
 watch(() => store.filterColor, () => { page.value = 1; animateGrid() })
+watch(() => store.filterGender, () => { page.value = 1; animateGrid() })
 watch(() => [store.filterPriceMin, store.filterPriceMax], () => { page.value = 1; animateGrid() })
 
 // При монтировании грузим товары
@@ -371,6 +394,20 @@ onMounted(() => {
       padding: 8px;
       cursor: pointer;
     }
+    .gender-filter {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      label {
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        input {
+          margin-right: 6px;
+        }
+      }
+    }
   }
 }
 
@@ -446,6 +483,27 @@ onMounted(() => {
         border: none;
         border-radius: 6px;
         padding: 8px;
+      }
+      .gender-filter {
+        display: flex;
+        flex-direction: row;
+        gap: 12px;
+        label {
+          flex: 1;
+          justify-content: center;
+          padding: 8px 0;
+          background: #F5F5F5;
+          border-radius: 6px;
+          text-align: center;
+          font-size: 14px;
+          input {
+            display: none;
+          }
+          &.active {
+            background: #FF3B30;
+            color: #FFF;
+          }
+        }
       }
     }
   }
