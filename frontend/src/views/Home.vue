@@ -76,9 +76,9 @@
         </div>
         <button @click="nextBest" aria-label="Вперёд">→</button>
       </div>
-      <router-link :to="{ name:'Catalog', query:{ sort:'sales_desc' } }" class="btn-catalog">
+      <div @click="goToCatalogSales" class="btn-catalog">
         Смотреть все
-      </router-link>
+      </div>
     </section>
 
     <!-- REQUEST FORM -->
@@ -284,12 +284,21 @@ function goToProduct(p) {
     params: { variant_sku: p.variant_sku },
     query: { category: p.category }
   })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // 4) Переход на страницу каталога
 function goToCatalog(cat) {
   store.selectedCategory = cat
   router.push({ name: 'Catalog' })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// 4) Переход на страницу бестселлеров каталога
+function goToCatalogSales() {
+  store.selectedCategory = ''
+  router.push({ name: 'Catalog', query: { sort: 'sales_desc' } })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // Сохранение в избранное оставляем, но вешаем .stop на клик, чтобы не перегружать маршрут

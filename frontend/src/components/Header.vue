@@ -8,21 +8,21 @@
     </div>
 
     <!-- Логотип (ссылка на главную) -->
-    <router-link to="/">
+    <div @click="goToPage('Home')">
       <img :src="icon_logo" alt="Главная" class="logo-icon" />
-    </router-link>
+    </div>
 
     <!-- Иконки действий -->
     <div class="actions">
-      <router-link to="/profile" class="icon-btn" title="Профиль">
+      <div @click="goToPage('Profile')" class="icon-btn" title="Профиль">
         <img :src="store.user.photo_url || icon_default_avatar" alt="Профиль" class="avatar" />
-      </router-link>
-      <router-link to="/favorites" class="icon-btn" title="Избранное">
+      </div>
+      <div @click="goToPage('Favorites')" class="icon-btn" title="Избранное">
         <img :src="icon_favorites" alt="Избранное" />
         <span v-if="store.favorites.count" class="badge" style="right: 52px">
           {{ store.favorites.count < 10 ? store.favorites.count : "9+" }}
         </span>
-      </router-link>
+      </div>
       <button @click="store.openCartDrawer()" class="icon-btn" title="Корзина">
         <img :src="icon_cart" alt="Корзина" />
         <span v-if="store.cart.count" class="badge" style="right: 10px">
@@ -34,9 +34,11 @@
     <!-- Выпадающее меню -->
     <transition name="fade">
       <nav v-if="menuOpen" class="dropdown-menu" ref="menu">
-        <router-link to="/catalog" class="dropdown-link" @click="toggleMenu">Каталог</router-link>
-        <router-link to="/about" class="dropdown-link" @click="toggleMenu">О нас</router-link>
-        <router-link v-if="isAdmin" to="/admin" class="dropdown-link" @click="toggleMenu">Админ-панель</router-link>
+        <div @click="goToGender('')" class="dropdown-link">Каталог</div>
+        <div @click="goToGender('M')" class="dropdown-link">Мужчинам</div>
+        <div @click="goToGender('W')" class="dropdown-link">Женщинам</div>
+        <div @click="goToPage('About')" class="dropdown-link">О нас</div>
+        <div v-if="isAdmin" @click="goToPage('Admin')" class="dropdown-link">Админ-панель</div>
       </nav>
     </transition>
   </header>
@@ -45,7 +47,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from '@/store/index.js'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
 import icon_default_avatar_white from '@/assets/images/default_avatar_white.svg'
 import icon_favorites_grey from '@/assets/images/favorites_grey.svg'
@@ -59,6 +61,7 @@ import icon_logo_white from '@/assets/images/logo_white.svg'
 
 const store = useStore()
 const route = useRoute()
+const router = useRouter()
 const menu = ref(null)
 const menuBtn = ref(null)
 const menuOpen = ref(false)
@@ -70,8 +73,29 @@ const icon_cart = computed(() => isIconWhite.value ? icon_cart_white : icon_cart
 const icon_menu = computed(() => isIconWhite.value ? icon_menu_white : icon_menu_grey)
 const icon_logo = computed(() => isIconWhite.value ? icon_logo_white : icon_logo_orange)
 
+
+function goToGender(gender) {
+  toggleMenuClose()
+  store.selectedCategory = ''
+  router.push({
+    name:  'Catalog',
+    query: { gender }
+  })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function goToPage(page) {
+  toggleMenuClose()
+  router.push({ name: page })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
+}
+
+function toggleMenuClose() {
+  menuOpen.value = false
 }
 
 // Закрыть меню кликом вне

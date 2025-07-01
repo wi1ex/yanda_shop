@@ -217,6 +217,7 @@ function goToProductDetail(group) {
     params: { variant_sku: target.variant_sku },
     query: { category: target.category }
   })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // вспомогательная функция «анимации» (браур → снятие)
@@ -246,8 +247,12 @@ watch(() => [store.filterPriceMin, store.filterPriceMax], () => { page.value = 1
 onMounted(() => {
   if (route.query.sort) {
     const [by, order] = String(route.query.sort).split('_')
-    store.sortBy    = by
+    store.sortBy = by
     store.sortOrder = order
+  }
+  if (route.query.gender) {
+    const g = route.query.gender
+    store.filterGender = (g === 'M' || g === 'W') ? g : ''
   }
   animateGrid()
   loadCategory(store.selectedCategory)
