@@ -34,7 +34,7 @@ router.beforeEach((to, from, next) => {
   // }
   if (to.name === 'Home') {
     store.selectedCategory = ''
-    clearFilters()
+    store.clearFilters()
   }
   next()
 })
