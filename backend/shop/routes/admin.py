@@ -55,9 +55,9 @@ def get_daily_visits() -> Tuple[Response, int]:
 def get_logs() -> Tuple[Response, int]:
     # 1) читаем параметры пагинации
     try:
-        limit = int(request.args.get("limit", "25"))
+        limit = int(request.args.get("limit", "10"))
     except ValueError:
-        limit = 25
+        limit = 10
     try:
         offset = int(request.args.get("offset", "0"))
     except ValueError:

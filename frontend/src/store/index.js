@@ -621,7 +621,7 @@ export const useStore = defineStore('main', () => {
     }
   }
 
-  async function loadLogs(limit = 25, offset = 0) {
+  async function loadLogs(limit = 10, offset = 0) {
     logsLoading.value = true
     try {
       const url = new URL(`${API.baseUrl}${API.admin.getLogs}`, window.location.origin)
