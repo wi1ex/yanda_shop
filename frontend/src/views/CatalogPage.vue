@@ -18,6 +18,7 @@
         <span>Сортировка:</span>
         <select v-model="sortOption">
           <option value="date_desc">Новинки</option>
+          <option value="sales_desc">Бестселлеры</option>
           <option value="price_asc">Цена ↑</option>
           <option value="price_desc">Цена ↓</option>
         </select>
@@ -106,12 +107,13 @@
 <script setup>
 import { ref, onMounted, watch, computed, nextTick } from 'vue'
 import { useStore } from '@/store/index.js'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import category_shoes from '@/assets/images/category_shoes.png'
 import category_clothing from '@/assets/images/category_clothing.png'
 import category_accessories from '@/assets/images/category_accessories.png'
 
 const store = useStore()
+const route = useRoute()
 const router = useRouter()
 
 const page = ref(1)
@@ -157,6 +159,7 @@ function handleClearFilters() {
 }
 
 function onCategoryClick(cat) {
+  page.value = 1
   store.changeCategory(cat)
 }
 
@@ -209,16 +212,18 @@ async function loadCategory(cat) {
   productsLoading.value = false
 }
 
-watch(() => store.selectedCategory, loadCategory)
-// следим за сортировкой
-watch(() => sortOption.value, animateGrid)
-// за цветом
-watch(() => store.filterColor, animateGrid)
-// за диапазоном цен
-watch(() => [store.filterPriceMin, store.filterPriceMax], animateGrid)
+watch(() => store.selectedCategory, (cat) => { page.value = 1; loadCategory(cat)})
+watch(() => sortOption.value, () => { page.value = 1; animateGrid() })
+watch(() => store.filterColor, () => { page.value = 1; animateGrid() })
+watch(() => [store.filterPriceMin, store.filterPriceMax], () => { page.value = 1; animateGrid() })
 
 // При монтировании грузим товары
 onMounted(() => {
+  if (route.query.sort) {
+    const [by, order] = String(route.query.sort).split('_')
+    store.sortBy    = by
+    store.sortOrder = order
+  }
   animateGrid()
   loadCategory(store.selectedCategory)
 })
