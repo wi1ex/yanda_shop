@@ -26,9 +26,9 @@
 
         <!-- Колонка “Соцсети” -->
         <nav class="footer-nav" style="left: 1565px">
-          <a v-if="store.socialUrls.url_telegram" :href="store.socialUrls.url_telegram"
+          <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram"
              target="_blank" rel="noopener" class="footer-link">Telegram</a>
-          <a v-if="store.socialUrls.url_instagram" :href="store.socialUrls.url_instagram"
+          <a v-if="store.parameters.url_instagram" :href="store.parameters.url_instagram"
              target="_blank" rel="noopener" class="footer-link">Instagram</a>
         </nav>
       </div>
@@ -62,9 +62,9 @@
 
         <!-- Колонка “Соцсети” -->
         <nav class="footer-nav">
-          <a v-if="store.socialUrls.url_telegram" :href="store.socialUrls.url_telegram"
+          <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram"
              target="_blank" rel="noopener" class="footer-link">Telegram</a>
-          <a v-if="store.socialUrls.url_instagram" :href="store.socialUrls.url_instagram"
+          <a v-if="store.parameters.url_instagram" :href="store.parameters.url_instagram"
              target="_blank" rel="noopener" class="footer-link">Instagram</a>
         </nav>
       </div>
@@ -142,9 +142,6 @@ function goToCategory(cat) {
   goToPage('Catalog')
 }
 
-onMounted(() => {
-  store.loadSocialUrls()
-})
 </script>
 
 <style scoped lang="scss">

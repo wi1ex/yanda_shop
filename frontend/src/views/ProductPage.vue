@@ -471,9 +471,9 @@ onMounted(init)
 }
 
 label {
-  flex: 0 0 80px;
   font-weight: bold;
   color: #333;
+  margin: 10px 20px 20px 0;
 }
 
 .options-list {
@@ -508,8 +508,8 @@ label {
 }
 
 .color-thumb {
-  width: 24px;
-  height: 24px;
+  width: 50px;
+  height: 50px;
   object-fit: cover;
   border-radius: 50%;
   display: block;
@@ -710,16 +710,12 @@ label {
 
   /* Опции */
   .options-list {
-    flex-direction: column;
     gap: 4px;
   }
   .option {
     flex-direction: column;
     align-items: flex-start;
     padding: 4px 0;
-  }
-  .option label {
-    margin-bottom: 4px;
   }
   .option-btn {
     padding: 4px 8px;
