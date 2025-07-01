@@ -76,7 +76,9 @@
         </div>
         <button @click="nextBest" aria-label="Вперёд">→</button>
       </div>
-      <router-link to="/catalog" class="btn-catalog">Смотреть все</router-link>
+      <router-link :to="{ name:'Catalog', query:{ sort:'sales_desc' } }" class="btn-catalog">
+        Смотреть все
+      </router-link>
     </section>
 
     <!-- REQUEST FORM -->
@@ -109,7 +111,7 @@
               <img v-for="url in current.photo_urls" :key="url" :src="url" alt="photo"/>
             </div>
             <p class="shop-text">{{ current.shop_response }}</p>
-            <p v-if="current.client_text2" class="user-text">{{ current.client_text2 }}</p>
+            <p v-if="current.client_text2?.trim()" class="user-text">{{ current.client_text2 }}</p>
             <div class="meta">
               <div class="review-header">
                 <img class="avatar" :src="icon_default_avatar_white" alt="аватар"/>

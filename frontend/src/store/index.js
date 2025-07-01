@@ -372,6 +372,7 @@ export const useStore = defineStore('main', () => {
 
   const displayedProducts = computed(() => {
     let list = colorGroups.value.slice()
+
     if (filterColor.value) {
       list = list.filter(g => g.variants[0].color === filterColor.value)
     }
@@ -381,9 +382,15 @@ export const useStore = defineStore('main', () => {
     if (filterPriceMax.value != null) {
       list = list.filter(g => g.variants.some(v => v.price <= filterPriceMax.value))
     }
+    list.forEach(g => {
+      g.totalSales = g.variants.reduce((sum, v) => sum + (v.count_sales||0), 0)
+    })
+
     const mod = (sortOrder.value === 'asc' ? 1 : -1)
     if (sortBy.value === 'price') {
       list.sort((a, b) => mod * (a.minPrice - b.minPrice))
+    } else if (sortBy.value === 'sales') {
+      list.sort((a, b) => mod * (a.totalSales - b.totalSales) || mod * (a.minPrice - b.minPrice))
     } else {
       list.sort((a, b) => mod * a.minDate.localeCompare(b.minDate))
     }
