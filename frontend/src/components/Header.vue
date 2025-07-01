@@ -126,6 +126,7 @@ onBeforeUnmount(() => {
   width: calc(100% - 20px);
   height: 30px;
   padding: 10px;
+  background-color: $black-25;
   z-index: 1000;
   .actions {
     @include flex-c-l;
