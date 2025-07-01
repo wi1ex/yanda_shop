@@ -312,6 +312,7 @@ function toggleCharacteristics() {
 // ← Назад → каталог
 function goCatalog() {
   router.push({ name: 'Catalog' })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // Инициализация

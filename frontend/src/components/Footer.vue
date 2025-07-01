@@ -10,8 +10,8 @@
 
         <!-- Колонка “Категории” -->
         <nav class="footer-nav" style="left: 345px">
-          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Мужчинам</a>
-          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Женщинам</a>
+          <a href="#" class="footer-link" @click.prevent="goToGender('M')">Мужчинам</a>
+          <a href="#" class="footer-link" @click.prevent="goToGender('W')">Женщинам</a>
           <a href="#" class="footer-link" @click.prevent="goToCategory('Аксессуары')">Аксессуары</a>
           <a href="#" class="footer-link" @click.prevent="goToCategory('Одежда')">Одежда</a>
           <a href="#" class="footer-link" @click.prevent="goToCategory('Обувь')">Обувь</a>
@@ -44,8 +44,8 @@
 
         <!-- Колонка “Категории” -->
         <nav class="footer-nav">
-          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Мужчинам</a>
-          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Женщинам</a>
+          <a href="#" class="footer-link" @click.prevent="goToGender('M')">Мужчинам</a>
+          <a href="#" class="footer-link" @click.prevent="goToGender('W')">Женщинам</a>
           <a href="#" class="footer-link" @click.prevent="goToCategory('Аксессуары')">Аксессуары</a>
           <a href="#" class="footer-link" @click.prevent="goToCategory('Одежда')">Одежда</a>
           <a href="#" class="footer-link" @click.prevent="goToCategory('Обувь')">Обувь</a>
@@ -70,9 +70,9 @@
       </div>
     </div>
 
-    <router-link to="/" class="logo-router">
+    <div class="logo-icon-div">
       <img :src="icon_logo_orange" alt="Главная" class="logo-icon" />
-    </router-link>
+    </div>
 
     <!-- === Нижняя часть футера для desktop: крупные цифры + подписи === -->
     <div class="footer-bottom-web">
@@ -127,8 +127,8 @@ import icon_logo_orange from '@/assets/images/logo_orange.svg'
 import icon_logo_text from '@/assets/images/logo_text.svg'
 
 const store = useStore()
-const router = useRouter()
 const route = useRoute()
+const router = useRouter()
 
 function goToPage(page) {
   if (route.name !== page) {
@@ -140,6 +140,15 @@ function goToPage(page) {
 function goToCategory(cat) {
   store.changeCategory(cat)
   goToPage('Catalog')
+}
+
+function goToGender(gender) {
+  store.selectedCategory = ''
+  router.push({
+    name:  'Catalog',
+    query: { gender }
+  })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 </script>
@@ -196,7 +205,7 @@ function goToCategory(cat) {
   //}
 }
 
-.logo-router {
+.logo-icon-div {
   display: flex;
   align-self: center;
   margin: 80px 0;
@@ -293,7 +302,7 @@ function goToCategory(cat) {
     width: 50%;
     gap: 40px;
   }
-  .logo-router {
+  .logo-icon-div {
     margin: 60px 0;
   }
   .big-digit {

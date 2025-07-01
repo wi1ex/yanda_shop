@@ -8,6 +8,8 @@ import ProfilePage from '@/views/ProfilePage.vue'
 import FavoritesPage from '@/views/FavoritesPage.vue'
 import { useStore } from '@/store/index.js'
 
+const store = useStore()
+
 const routes = [
   { path: '/', name: 'Home', component: Home },
   { path: '/catalog', name: 'Catalog', component: CatalogPage },
@@ -27,11 +29,14 @@ const router = createRouter({
 // глобальный guard вместо beforeEnter на одном маршруте
 router.beforeEach((to, from, next) => {
   // if (to.name === 'Admin') {
-  //   const { adminToken } = useStore()
-  //   if (!adminToken) {
+  //   if (!store.adminToken) {
   //     return next({ name: 'Home' })
   //   }
   // }
+  if (to.name === 'Home') {
+    store.selectedCategory = ''
+    clearFilters()
+  }
   next()
 })
 

@@ -4,8 +4,7 @@
     <div v-else class="empty">Список избранного пуст</div>
 
     <div v-if="favoriteProducts.length" class="products-grid" :class="{ blurred: favoritesLoading }">
-      <router-link v-for="product in favoriteProducts" :key="product.color_sku" class="product-card"
-                   :to="{ name: 'ProductDetail', params: { variant_sku: product.variant_sku }, query: { category: product.category }}">
+      <div v-for="product in favoriteProducts" :key="product.color_sku" @click="goToProduct(product)" class="product-card">
         <button type="button" class="remove-fav-btn" @click.prevent.stop="store.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">×</button>
         <img :src="product.image" alt="product" class="product-image" />
         <div class="product-info">
@@ -13,7 +12,7 @@
           <p class="product-name">{{ product.name }}</p>
           <p v-if="product.color" class="product-color">Цвет: {{ product.color }}</p>
         </div>
-      </router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -21,10 +20,31 @@
 <script setup>
 import { onMounted, computed, ref, nextTick } from 'vue'
 import { useStore } from '@/store/index.js'
+import { useRouter } from 'vue-router'
 
 const store = useStore()
+const router = useRouter()
 
 const favoritesLoading = ref(false)
+
+// вычисляем реальный список products по каждому color_sku
+const favoriteProducts = computed(() =>
+  store.favorites.items
+      .slice().reverse()
+      .map(cs => store.colorGroups.find(g => g.color_sku === cs))
+      .filter(Boolean)
+      .map(g => g.minPriceVariant)
+)
+
+// Переход на страницу товара
+function goToProduct(p) {
+  router.push({
+    name: 'ProductDetail',
+    params: { variant_sku: p.variant_sku },
+    query: { category: p.category }
+  })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 
 // при монтировании: плавно показываем, грузим ВСЕ товары + избранное, убираем эффект
 onMounted(async () => {
@@ -37,15 +57,6 @@ onMounted(async () => {
     favoritesLoading.value = false
   }, 200)
 })
-
-// вычисляем реальный список products по каждому color_sku
-const favoriteProducts = computed(() =>
-  store.favorites.items
-      .slice().reverse()
-      .map(cs => store.colorGroups.find(g => g.color_sku === cs))
-      .filter(Boolean)
-      .map(g => g.minPriceVariant)
-)
 </script>
 
 <style scoped lang="scss">

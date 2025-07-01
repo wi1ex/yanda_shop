@@ -5,7 +5,7 @@
     <!-- Если мы решили редиректить или показывать сообщение гостю, можно добавить тут отдельный блок -->
     <div v-if="!store.isTelegramUserId(store.user?.id)" class="not-tg-message">
       <p>Профиль доступен только авторизованным через Telegram пользователям.</p>
-      <router-link to="/">Вернуться на главную</router-link>
+      <div @click="goToPage('Home')">Вернуться на главную</div>
     </div>
 
     <!-- Если идёт загрузка профиля (и это telegram-пользователь) -->
@@ -34,9 +34,19 @@
 
 <script setup>
 import { useStore } from '@/store/index.js'
+import { useRouter } from "vue-router";
+
 import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
 
 const store  = useStore()
+const router = useRouter()
+
+function goToPage(page) {
+  if (route.name !== page) {
+    router.push({ name: page })
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 </script>
 
 <style scoped lang="scss">
