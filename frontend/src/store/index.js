@@ -100,7 +100,7 @@ export const useStore = defineStore('main', () => {
   const profileLoading     = ref(false)
   const profileError       = ref('')
 
-  const parameters         = ref({})
+  const parameters         = ref([])
   const settings           = ref([])
   const reviews            = ref([])
   const users              = ref([])
