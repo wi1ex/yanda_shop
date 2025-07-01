@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, ref, watch, reactive } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 export const API = {
   baseUrl: 'https://shop.yanda.twc1.net',
@@ -19,7 +19,7 @@ export const API = {
     saveFavorites:      '/api/product/save_favorites',       // POST   - сохранить избранное
   },
   admin: {
-    getAdminIds:        '/api/admin/get_admin_ids',          // GET    - список admin_id
+    setUserRole:        '/api/admin/set_user_role',          // GET    - установить пользователю роль
     getDailyVisits:     '/api/admin/get_daily_visits',       // GET    - статистика визитов по часам
     getLogs:            '/api/admin/get_logs',               // GET    - журнал
     getSheetUrls:       '/api/admin/get_sheet_urls',         // GET    - URL Google Sheets
@@ -35,15 +35,16 @@ export const API = {
 }
 
 export const useStore = defineStore('main', () => {
-  const url = ref('https://shop.yanda.twc1.net')
-  const admin_ids = ref([])
-  const tg = ref(null)
-
-  const user = ref({
+  // -------------------------------------------------
+  // State
+  // -------------------------------------------------
+  const adminToken         = ref(localStorage.getItem('adminToken') || '')
+  const user               = ref({
     id: null,
-    first_name: null,
-    last_name: null,
-    username: null,
+    first_name: '',
+    last_name: '',
+    username: '',
+    role: 'visitor',
     photo_url: null
   })
 
@@ -51,42 +52,43 @@ export const useStore = defineStore('main', () => {
   const categoryList       = ref(['Одежда', 'Обувь', 'Аксессуары'])
   const selectedCategory   = ref('Одежда')
 
-  // Параметры сортировки
+  // Сортировка
   const sortBy             = ref('date')
   const sortOrder          = ref('desc')
 
-  // Фильтры (цена, цвет)
+  // Фильтры
   const filterPriceMin     = ref(null)
   const filterPriceMax     = ref(null)
   const filterColor        = ref('')
 
-  // Список загруженных товаров (для выбранной категории)
+  // Товары
   const products           = ref([])
 
   // Корзина
   const cartOrder          = ref([])
   const cart               = ref({ count: 0, total: 0, items: [] })
-
-  // Список избранного
-  const favorites          = ref({ items: [], count: 0 });
-  const favoritesOrder     = ref([]);
-  const favoritesLoaded    = ref(false);
-
-  // Флаг, который указывает, что корзина открыта/загружена
   const cartLoaded         = ref(false)
   const showCartDrawer     = ref(false)
+
+  // Избранное
+  const favorites          = ref({ items: [], count: 0 })
+  const favoritesLoaded    = ref(false)
 
   // === AdminPage ===
   const sheetUrls          = ref({ shoes: '', clothing: '', accessories: '' })
   const sheetSaveLoading   = reactive({ shoes: false, clothing: false, accessories: false })
   const sheetImportLoading = reactive({ shoes: false, clothing: false, accessories: false })
   const sheetResult        = reactive({ shoes: '', clothing: '', accessories: '' })
-  const logs               = ref([])
-  const logsLoading        = ref(false)
-  const visitsData         = ref({ date: '', hours: [] })
-  const visitsLoading      = ref(false)
+
   const zipResult          = ref('')
   const zipLoading         = ref(false)
+
+  const logs               = ref([])
+  const logsLoading        = ref(false)
+  const totalLogs          = ref(0)
+
+  const visitsData         = ref({ date: '', hours: [] })
+  const visitsLoading      = ref(false)
 
   // === ProductPage ===
   const detailData         = ref(null)
@@ -97,130 +99,179 @@ export const useStore = defineStore('main', () => {
   const profile            = ref(null)
   const profileLoading     = ref(false)
   const profileError       = ref('')
-
   const socialUrls         = reactive({ url_telegram: '', url_instagram: '', url_email: '' })
 
   const settings           = ref([])
   const reviews            = ref([])
   const users              = ref([])
 
-
-  async function fetchUsers() {
-    const res = await fetch(`${API.baseUrl}${API.admin.listUsers}`)
-    if (res.ok) {
-      const j = await res.json()
-      users.value = j.users
+  // -------------------------------------------------
+  // Watchers
+  // -------------------------------------------------
+  watch(() => user.value?.id, (newId) => {
+    if (newId && isTelegramUserId(newId)) {
+      loadCartFromServer()
+      loadFavoritesFromServer()
+    } else {
+      cartLoaded.value = true
+      favoritesLoaded.value = true
     }
-  }
+  })
 
-  async function fetchSettings() {
-    const res = await fetch(`${API.baseUrl}${API.admin.getSettings}`)
-    if (res.ok) settings.value = (await res.json()).settings
-  }
-
-  async function saveSetting(key, value) {
-    await fetch(`${API.baseUrl}${API.admin.updateSetting}`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({key, value})
-    })
-  }
-
-  async function fetchReviews() {
-    const res = await fetch(`${API.baseUrl}${API.general.listReviews}`)
-    if (res.ok) {
-      const j = await res.json()
-      reviews.value = j.reviews.map(r => ({ ...r, }))
-    }
-  }
-
-  async function createReview(formData) {
-    const res = await fetch(`${API.baseUrl}${API.admin.createReview}`, {
-      method:'POST', body: formData
-    });
-    const j = await res.json();
-    if (!res.ok) {
-      // возвращаем сообщение об ошибке
-      throw new Error(j.error || 'Неизвестная ошибка');
-    }
-    return j.message;  // "Отзыв успешно добавлен"
-  }
-
-  async function deleteReview(id) {
-    const res = await fetch(`${API.baseUrl}${API.admin.deleteReview}/${id}`, {
-      method:'DELETE'
-    })
-    if (!res.ok) throw new Error((await res.json()).error || res.status)
-    await fetchReviews()
-  }
-
-  async function loadSocialUrls() {
-    const r = await fetch(`${API.baseUrl}${API.general.getSocialUrls}`)
-    Object.assign(socialUrls, await r.json())
-  }
-
-  function openCartDrawer() {
-    showCartDrawer.value = true
-  }
-
-  function closeCartDrawer() {
-    showCartDrawer.value = false
-  }
-
-  // helper: true, если user.id можно преобразовать в int (строка из цифр)
+  // -------------------------------------------------
+  // Helpers
+  // -------------------------------------------------
   function isTelegramUserId(id) {
-    // попытка превратить строку/число в целое
     const asNum = parseInt(id, 10)
     return (!Number.isNaN(asNum) && String(asNum) === String(id))
   }
 
-  async function fetchAdminIds() {
+  function setAdminToken(token) {
+    adminToken.value = token
+    localStorage.setItem('adminToken', token)
+  }
+
+  // -------------------------------------------------
+  // Auth / Init
+  // -------------------------------------------------
+  async function saveUserToServer(payload) {
+    if (!payload?.id) return
     try {
-      const res = await fetch(`${API.baseUrl}${API.admin.getAdminIds}`)
-      if (res.ok) {
-        const data = await res.json()
-        admin_ids.value = data.admin_ids || []
-      }
+      await fetch(`${API.baseUrl}${API.general.saveUser}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
     } catch (e) {
-      console.error('Не удалось загрузить admin_ids:', e)
+      console.error('Не удалось сохранить TG пользователя:', e)
     }
   }
 
-  // Загрузка корзины из backend
+  async function fetchUserProfile(userId) {
+    profileLoading.value = true
+    profileError.value   = ''
+    try {
+      const res = await fetch(`${API.baseUrl}${API.general.getUserProfile}?user_id=${userId}`)
+      if (!res.ok) {
+        profileError.value = res.status === 404 ? 'Пользователь не найден' : `Ошибка ${res.status}`
+        return
+      }
+      return await res.json()
+    } catch (e) {
+      console.error(e)
+      profileError.value = 'Ошибка сети'
+    } finally {
+      profileLoading.value = false
+    }
+  }
+
+  async function initializeTelegramUser(tgUser) {
+    const payload = {
+      id:         tgUser.id,
+      first_name: tgUser.first_name,
+      last_name:  tgUser.last_name,
+      username:   tgUser.username,
+      photo_url:  tgUser.photo_url || null
+    }
+    try {
+      await saveUserToServer(payload)
+      const profileData = await fetchUserProfile(tgUser.id)
+      user.value = {
+        id:         profileData.user_id,
+        first_name: profileData.first_name,
+        last_name:  profileData.last_name,
+        username:   profileData.username,
+        role:       profileData.role,
+        photo_url:  profileData.photo_url,
+      }
+      if (profileData.access_token) {
+        setAdminToken(profileData.access_token)
+      }
+    } catch (e) {
+      console.error('Ошибка инициализации Telegram-пользователя:', e)
+    }
+  }
+
+  async function initializeVisitorUser() {
+    const stored = localStorage.getItem('visitorId')
+    const id = stored || crypto.randomUUID()
+    if (!stored) localStorage.setItem('visitorId', id)
+    user.value.id = id
+  }
+
+  // -------------------------------------------------
+  // General User Actions
+  // -------------------------------------------------
+  async function loadSocialUrls() {
+    const res = await fetch(`${API.baseUrl}${API.general.getSocialUrls}`)
+    Object.assign(socialUrls, await res.json())
+  }
+
+  // -------------------------------------------------
+  // Product Actions
+  // -------------------------------------------------
+  async function fetchProducts(cat = null) {
+    if (cat) selectedCategory.value = cat
+    try {
+      const url = cat ? `?category=${encodeURIComponent(cat)}` : ''
+      const res = await fetch(`${API.baseUrl}${API.product.listProducts}${url}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      products.value = await res.json()
+    } catch (e) {
+      console.error('Не удалось загрузить товары:', e)
+    }
+  }
+
+  async function fetchDetail(variantSku, category) {
+    detailLoading.value = true
+    try {
+      const pRes = await fetch(
+        `${API.baseUrl}${API.product.getProduct}?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(variantSku)}`
+      )
+      detailData.value = await pRes.json()
+      await fetchProducts(category)
+      variants.value = products.value.filter(p => p.sku === detailData.value.sku)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      detailLoading.value = false
+    }
+  }
+
+  // -------------------------------------------------
+  // Cart Actions
+  // -------------------------------------------------
   async function loadCartFromServer() {
-    if (!user.value || !user.value.id || !isTelegramUserId(user.value.id)) {
-      cartLoaded.value = true;
-      return;
+    if (!user.value?.id || !isTelegramUserId(user.value.id)) {
+      cartLoaded.value = true
+      return
     }
     try {
-      const resp = await fetch(`${API.baseUrl}${API.product.getCart}?user_id=${user.value.id}`);
+      const resp = await fetch(`${API.baseUrl}${API.product.getCart}?user_id=${user.value.id}`)
       if (!resp.ok) {
-        console.error('Cannot load cart:', resp.statusText);
-        return;
+        console.error('Cannot load cart:', resp.statusText)
+        return
       }
-      const data = await resp.json();
-      if (data && Array.isArray(data.items)) {
-        cart.value.items = data.items;
-        cart.value.count = data.count;
-        cart.value.total = data.total;
-        const vs = data.items.map(i => i.variant_sku);
-        cartOrder.value = Array.from(new Set(vs));
+      const data = await resp.json()
+      if (data.items) {
+        cart.value.items = data.items
+        cart.value.count = data.count
+        cart.value.total = data.total
+        cartOrder.value = Array.from(new Set(data.items.map(i => i.variant_sku)))
       }
-      cartLoaded.value = true;
+      cartLoaded.value = true
     } catch (e) {
-      console.error('Error loading cart from server:', e);
+      console.error('Error loading cart from server:', e)
     }
   }
 
-  // Сохранение корзины в backend
   async function saveCartToServer() {
-    // Сохраняем только Telegram-пользователя
     if (!user.value?.id || !isTelegramUserId(user.value.id)) return
     const payload = {
       user_id: user.value.id,
       items: cart.value.items.map(i => ({
-        variant_sku: i.variant_sku,
-        delivery_label: i.delivery_option?.label || null
+        variant_sku:     i.variant_sku,
+        delivery_label:  i.delivery_option?.label || null
       }))
     }
     try {
@@ -234,96 +285,69 @@ export const useStore = defineStore('main', () => {
     }
   }
 
-  // Загрузка избранного
+  function openCartDrawer() {
+    showCartDrawer.value = true
+  }
+  function closeCartDrawer() {
+    showCartDrawer.value = false
+  }
+
+  // -------------------------------------------------
+  // Favorites Actions
+  // -------------------------------------------------
   async function loadFavoritesFromServer() {
     if (!user.value?.id || !isTelegramUserId(user.value.id)) {
-      favoritesLoaded.value = true;
-      return;
+      favoritesLoaded.value = true
+      return
     }
     try {
-      const resp = await fetch(`${API.baseUrl}${API.product.getFavorites}?user_id=${user.value.id}`);
-      if (!resp.ok) throw new Error(resp.statusText);
-      const data = await resp.json();
-      favorites.value.items = data.items || [];
-      favorites.value.count = data.count || favorites.value.items.length;
+      const resp = await fetch(`${API.baseUrl}${API.product.getFavorites}?user_id=${user.value.id}`)
+      if (!resp.ok) throw new Error(resp.statusText)
+      const data = await resp.json()
+      favorites.value.items = data.items || []
+      favorites.value.count = data.count || favorites.value.items.length
     } catch (e) {
-      console.error('Cannot load favorites:', e);
+      console.error('Cannot load favorites:', e)
     } finally {
-      favoritesLoaded.value = true;
+      favoritesLoaded.value = true
     }
   }
 
-  // Сохранение избранного
   async function saveFavoritesToServer() {
-    if (!user.value?.id || !isTelegramUserId(user.value.id)) return;
-    const payload = {
-      user_id: user.value.id,
-      items: favorites.value.items
-    };
+    if (!user.value?.id || !isTelegramUserId(user.value.id)) return
+    const payload = { user_id: user.value.id, items: favorites.value.items }
     try {
       const resp = await fetch(`${API.baseUrl}${API.product.saveFavorites}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      });
-      if (!resp.ok) console.error('Cannot save favorites:', resp.statusText);
-    } catch (e) {
-      console.error('Error saving favorites:', e);
-    }
-  }
-
-  // Добавить/удалить из избранного
-  function addToFavorites(color_sku) {
-    if (favorites.value.items.includes(color_sku)) return;
-    favorites.value.items.push(color_sku);
-    favorites.value.count = favorites.value.items.length;
-    saveFavoritesToServer();
-  }
-  function removeFromFavorites(color_sku) {
-    favorites.value.items = favorites.value.items.filter(cs => cs !== color_sku);
-    favorites.value.count = favorites.value.items.length;
-    saveFavoritesToServer();
-  }
-  function isFavorite(color_sku) {
-    return favorites.value.items.includes(color_sku);
-  }
-
-  async function saveUserToServer() {
-    if (!user.value?.id) return
-    try {
-      await fetch(`${API.baseUrl}${API.general.saveUser}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id:         user.value.id,
-          first_name: user.value.first_name,
-          last_name:  user.value.last_name,
-          username:   user.value.username,
-          photo_url:  user.value.photo_url,
-        })
       })
+      if (!resp.ok) console.error('Cannot save favorites:', resp.statusText)
     } catch (e) {
-      console.error('Не удалось сохранить пользователя:', e)
+      console.error('Error saving favorites:', e)
     }
   }
 
-  // Будем следить за тем, когда пользователь определится (инициализируется)
-  watch(() => user.value?.id, (newId) => {
-      if (newId) saveUserToServer()
-      if (newId && isTelegramUserId(newId)) {
-        fetchAdminIds();
-        loadCartFromServer();
-        loadFavoritesFromServer();
-      } else {
-        cartLoaded.value = true;
-        favoritesLoaded.value = true;
-      }
-    }
-  )
+  function addToFavorites(color_sku) {
+    if (favorites.value.items.includes(color_sku)) return
+    favorites.value.items.push(color_sku)
+    favorites.value.count = favorites.value.items.length
+    saveFavoritesToServer()
+  }
+
+  function removeFromFavorites(color_sku) {
+    favorites.value.items = favorites.value.items.filter(cs => cs !== color_sku)
+    favorites.value.count = favorites.value.items.length
+    saveFavoritesToServer()
+  }
+
+  function isFavorite(color_sku) {
+    return favorites.value.items.includes(color_sku)
+  }
 
   // -------------------------------------------------
-
-  // Группируем все варианты по color_sku
+  // Utils: grouping & computed
+  // -------------------------------------------------
   const colorGroups = computed(() => {
     const map = {}
     products.value.forEach(p => {
@@ -332,67 +356,50 @@ export const useStore = defineStore('main', () => {
       map[key].variants.push(p)
     })
     return Object.values(map).map(group => {
-      // самый дешёвый вариант
       const minPriceVariant = group.variants.reduce((prev, cur) => prev.price <= cur.price ? prev : cur)
-      // самая ранняя дата (строковое сравнение ISO учитывает микросекунды)
-      const minDateVariant = group.variants.reduce((prev, cur) => prev.created_at <= cur.created_at ? prev : cur)
+      const minDateVariant  = group.variants.reduce((prev, cur) => prev.created_at <= cur.created_at ? prev : cur)
       return {
-        color_sku: group.color_sku,
-        variants: group.variants,
+        color_sku:      group.color_sku,
+        variants:       group.variants,
         minPriceVariant,
         minDateVariant,
-        minPrice: minPriceVariant.price,
-        minDate: minDateVariant.created_at
+        minPrice:       minPriceVariant.price,
+        minDate:        minDateVariant.created_at
       }
     })
   })
 
-  // «Отображаемые» продукты: group → фильтрация по цвету, цене и сортировка
   const displayedProducts = computed(() => {
     let list = colorGroups.value.slice()
-
-    // Фильтр по цвету (если задан)
     if (filterColor.value) {
       list = list.filter(g => g.variants[0].color === filterColor.value)
     }
-    // Фильтр по цене диапазонам
     if (filterPriceMin.value != null) {
-      list = list.filter(g =>
-        g.variants.some(v => v.price >= filterPriceMin.value)
-      )
+      list = list.filter(g => g.variants.some(v => v.price >= filterPriceMin.value))
     }
     if (filterPriceMax.value != null) {
-      list = list.filter(g =>
-        g.variants.some(v => v.price <= filterPriceMax.value)
-      )
+      list = list.filter(g => g.variants.some(v => v.price <= filterPriceMax.value))
     }
-    // Сортировка
-    const mod = sortOrder.value === 'asc' ? 1 : -1
+    const mod = (sortOrder.value === 'asc' ? 1 : -1)
     if (sortBy.value === 'price') {
       list.sort((a, b) => mod * (a.minPrice - b.minPrice))
     } else {
-      // по дате ISO-строку сравним напрямую, чтобы учесть все знаки
       list.sort((a, b) => mod * a.minDate.localeCompare(b.minDate))
     }
     return list
   })
 
-  // Группируем товары в корзине по variant_sku, считаем количество и суммарную цену
   const groupedCartItems = computed(() => {
-    const map = {};
+    const map = {}
     for (const item of cart.value.items) {
-      const key = `${item.variant_sku}_${item.delivery_option?.label}`;
-      if (!map[key]) {
-        map[key] = { ...item, quantity: 0, totalPrice: 0 };
-      }
-      map[key].quantity++;
-      map[key].totalPrice += item.price;
+      const key = `${item.variant_sku}_${item.delivery_option?.label}`
+      if (!map[key]) map[key] = { ...item, quantity: 0, totalPrice: 0 }
+      map[key].quantity++
+      map[key].totalPrice += item.unit_price
     }
-    // Собираем в порядке cartOrder (по variant_sku)
-    return Object.values(map);
-  });
+    return Object.values(map)
+  })
 
-  // Меняем категорию (сбрасываем фильтры, сортировку)
   function changeCategory(cat) {
     selectedCategory.value = cat
     sortBy.value = 'date'
@@ -402,29 +409,24 @@ export const useStore = defineStore('main', () => {
     filterColor.value = ''
   }
 
-  // Добавить товар в корзину
   function addToCart(product) {
-    // рассчитываем цену с учётом выбранной опции доставки, если есть
-    const unitPrice = product.computed_price ?? product.price;
-    const exist = cart.value.items.find(i => i.variant_sku === product.variant_sku && i.delivery_option?.label === product.delivery_option?.label);
+    const unitPrice = product.computed_price ?? product.price
+    const exist = cart.value.items.find(i =>
+      i.variant_sku === product.variant_sku
+      && i.delivery_option?.label === product.delivery_option?.label
+    )
     if (exist) {
-      increaseQuantity(exist);
+      increaseQuantity(exist)
     } else {
-      cart.value.count++;
-      cart.value.total += unitPrice;
-      const id = `${Date.now()}-${Math.random()}`;
-      // сохраняем delivery_option и итоговую цену в каждом элементе
-      cart.value.items.push({
-        ...product,
-        id,
-        unit_price: unitPrice,
-      });
-      cartOrder.value.push(product.variant_sku);
+      cart.value.count++
+      cart.value.total += unitPrice
+      const id = `${Date.now()}-${Math.random()}`
+      cart.value.items.push({ ...product, id, unit_price: unitPrice })
+      cartOrder.value.push(product.variant_sku)
     }
-    saveCartToServer();
+    saveCartToServer()
   }
 
-  // Увеличить количество выбранного товара в корзине
   function increaseQuantity(item) {
     cart.value.count++
     cart.value.total += item.unit_price
@@ -432,83 +434,140 @@ export const useStore = defineStore('main', () => {
     saveCartToServer()
   }
 
-  // Уменьшить количество
   function decreaseQuantity(product) {
-    const idx = cart.value.items.findIndex(i => i.variant_sku === product.variant_sku && i.delivery_option?.label === product.delivery_option?.label)
+    const idx = cart.value.items.findIndex(i =>
+      i.variant_sku === product.variant_sku
+      && i.delivery_option?.label === product.delivery_option?.label
+    )
     if (idx === -1) return
-
-    const qty = cart.value.items.filter(i => i.variant_sku === product.variant_sku && i.delivery_option?.label === product.delivery_option?.label).length
+    const qty = cart.value.items.filter(i =>
+      i.variant_sku === product.variant_sku
+      && i.delivery_option?.label === product.delivery_option?.label
+    ).length
     cart.value.count--
     const delta = product.unit_price ?? product.price
     cart.value.total = Math.max(cart.value.total - delta, 0)
-
     if (qty > 1) {
       cart.value.items.splice(idx, 1)
     } else {
-      cart.value.items = cart.value.items.filter(i => !(i.variant_sku === product.variant_sku && i.delivery_option?.label === product.delivery_option?.label))
-      cartOrder.value = cartOrder.value.filter(variant_sku => variant_sku !== product.variant_sku)
+      cart.value.items = cart.value.items.filter(i =>
+        !(i.variant_sku === product.variant_sku
+          && i.delivery_option?.label === product.delivery_option?.label)
+      )
+      cartOrder.value = cartOrder.value.filter(sku => sku !== product.variant_sku)
     }
     saveCartToServer()
   }
 
-  // Получить текущее количество единиц товара в корзине
   function getProductQuantity(product) {
-    return cart.value.items.filter(i => i.variant_sku === product.variant_sku && i.delivery_option?.label === product.delivery_option?.label).length;
+    return cart.value.items.filter(i =>
+      i.variant_sku === product.variant_sku
+      && i.delivery_option?.label === product.delivery_option?.label
+    ).length
   }
 
-  // Оформление заказа (тут просто чистим корзину и показываем alert)
   function checkout() {
     cart.value = { count: 0, total: 0, items: [] }
     cartOrder.value = []
     saveCartToServer()
   }
 
-  // Очистить фильтры
   function clearFilters() {
     filterPriceMin.value = null
     filterPriceMax.value = null
     filterColor.value = ''
   }
 
-  // Fetch: загрузка товаров по category
-  async function fetchProducts(cat) {
-    if (cat) selectedCategory.value = cat
-    try {
-      const res = await fetch(`${API.baseUrl}${API.product.listProducts}?category=${encodeURIComponent(selectedCategory.value)}`)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      products.value = await res.json()
-    } catch (e) {
-      console.error('Не удалось загрузить товары:', e)
+  // -------------------------------------------------
+  // Admin / Reviews Actions
+  // -------------------------------------------------
+  async function fetchUsers() {
+    const res = await fetch(`${API.baseUrl}${API.admin.listUsers}`, {
+      headers: { 'Authorization': `Bearer ${adminToken.value}` }
+    })
+    if (res.ok) {
+      const j = await res.json()
+      users.value = j.users
     }
   }
 
-  // Загрузка **всех** товаров (для страницы «Избранное»)
-  async function fetchAllProducts() {
-    try {
-      const res = await fetch(`${API.baseUrl}${API.product.listProducts}`)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      products.value = await res.json()
-    } catch (e) {
-      console.error('Не удалось загрузить все товары:', e)
-    }
+  async function fetchSettings() {
+    const res = await fetch(`${API.baseUrl}${API.admin.getSettings}`, {
+      headers: { 'Authorization': `Bearer ${adminToken.value}` }
+    })
+    if (res.ok) settings.value = (await res.json()).settings
   }
 
-  // --- Экшен: загрузить URL таблиц ---
+  async function saveSetting(key, value) {
+    await fetch(`${API.baseUrl}${API.admin.updateSetting}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken.value}`
+      },
+      body: JSON.stringify({ key, value })
+    })
+  }
+
+  async function createReview(formData) {
+    const res = await fetch(`${API.baseUrl}${API.admin.createReview}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${adminToken.value}` },
+      body: formData
+    })
+    const j = await res.json()
+    if (!res.ok) {
+      throw new Error(j.error || 'Неизвестная ошибка')
+    }
+    return j.message
+  }
+
+  async function deleteReview(id) {
+    const res = await fetch(`${API.baseUrl}${API.admin.deleteReview}/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${adminToken.value}` }
+    })
+    if (!res.ok) {
+      const j = await res.json()
+      throw new Error(j.error || res.status)
+    }
+    await fetchReviews()
+  }
+
+  async function updateUserRole(userId, role) {
+    const res = await fetch(`${API.baseUrl}${API.admin.setUserRole}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken.value}`
+      },
+      body: JSON.stringify({ user_id: userId, role: role, author_id: user.value.id, author_name: user.value.username })
+    })
+    if (!res.ok) {
+      const j = await res.json()
+      throw new Error(j.error || 'Ошибка смены роли')
+    }
+    await fetchUsers()
+  }
+
   async function loadSheetUrls() {
-    try {
-      const res = await fetch(`${API.baseUrl}${API.admin.getSheetUrls}`)
-      const data = await res.json()
-      Object.assign(sheetUrls.value, data)
-    } catch (e) { console.error(e) }
+    const res = await fetch(`${API.baseUrl}${API.admin.getSheetUrls}`, {
+      headers: { 'Authorization': `Bearer ${adminToken.value}` }
+    })
+    const data = await res.json()
+    Object.assign(sheetUrls.value, data)
   }
 
-  // --- Экшен: сохранить URL ---
   async function saveSheetUrl(cat) {
     sheetSaveLoading[cat] = true
     sheetResult[cat] = ''
     try {
       const res = await fetch(`${API.baseUrl}${API.admin.updateSheetUrl}`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken.value}`
+        },
         body: JSON.stringify({ category: cat, url: sheetUrls.value[cat] })
       })
       const j = await res.json()
@@ -527,21 +586,24 @@ export const useStore = defineStore('main', () => {
     }
   }
 
-  // --- Экшен: импорт данных из Google Sheets ---
-  async function importSheet(cat, authorId, authorName) {
+  async function importSheet(cat) {
     sheetImportLoading[cat] = true
     sheetResult[cat] = ''
     try {
       const res = await fetch(`${API.baseUrl}${API.admin.importSheet}`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ category: cat, author_id: authorId, author_name: authorName })
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken.value}`
+        },
+        body: JSON.stringify({ category: cat, author_id: user.value.id, author_name: user.value.username })
       })
       const j = await res.json()
-      if (res.ok && j.status==='ok') {
+      if (res.ok && j.status === 'ok') {
         sheetResult[cat] = `Добавлено: ${j.added}. Обновлено: ${j.updated}. Удалено: ${j.deleted}. Ошибки: ${j.warns}.`
         await loadLogs()
       } else {
-        sheetResult[cat] = `Ошибка: ${j.error||res.status}`
+        sheetResult[cat] = `Ошибка: ${j.error || res.status}`
       }
     } catch (e) {
       sheetResult[cat] = `Ошибка сети`
@@ -550,50 +612,63 @@ export const useStore = defineStore('main', () => {
     }
   }
 
-  // --- Экшен: загрузить логи ---
-  async function loadLogs(limit = 10) {
+  async function loadLogs(limit = 25, offset = 0) {
     logsLoading.value = true
     try {
-      const res = await fetch(`${API.baseUrl}${API.admin.getLogs}?limit=${limit}`)
-      logs.value = res.ok ? (await res.json()).logs : []
+      const url = new URL(`${API.baseUrl}${API.admin.getLogs}`, window.location.origin)
+      url.searchParams.set('limit',  limit)
+      url.searchParams.set('offset', offset)
+      const res = await fetch(url.toString(), {
+        headers: { 'Authorization': `Bearer ${adminToken.value}` }
+      })
+      if (!res.ok) throw new Error(res.statusText)
+      const data = await res.json()
+      logs.value      = data.logs
+      totalLogs.value = data.total
     } catch (e) {
-      console.error(e)
-      logs.value = []
+      console.error('loadLogs:', e)
+      logs.value      = []
+      totalLogs.value = 0
     } finally {
       logsLoading.value = false
     }
   }
 
-  // --- Экшен: загрузить статистику посещений ---
   async function loadVisits(date) {
     visitsLoading.value = true
     try {
-      const res = await fetch(`${API.baseUrl}${API.admin.getDailyVisits}?date=${date}`)
-      const j   = await res.json()
+      const res = await fetch(`${API.baseUrl}${API.admin.getDailyVisits}?date=${date}`, {
+        headers: { 'Authorization': `Bearer ${adminToken.value}` }
+      })
+      const j = await res.json()
       visitsData.value = { date: j.date, hours: j.hours }
     } catch (e) {
       console.error(e)
-      visitsData.value = { date:'', hours:[] }
+      visitsData.value = { date: '', hours: [] }
     } finally {
       visitsLoading.value = false
     }
   }
 
-  // --- Экшен: загрузить ZIP с изображениями ---
-  async function uploadZip(file, authorId, authorName) {
-    zipLoading.value = true; zipResult.value = ''
+  async function uploadZip(file) {
+    zipLoading.value = true
+    zipResult.value  = ''
     const form = new FormData()
     form.append('file', file)
-    form.append('author_id', authorId)
-    form.append('author_name', authorName)
+    form.append('author_id', user.value.id)
+    form.append('author_name', user.value.username)
     try {
-      const res = await fetch(`${API.baseUrl}${API.admin.uploadImages}`, { method:'POST', body: form })
-      const j   = await res.json()
-      if (res.status===201) {
+      const res = await fetch(`${API.baseUrl}${API.admin.uploadImages}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${adminToken.value}` },
+        body: form
+      })
+      const j = await res.json()
+      if (res.status === 201) {
         zipResult.value = `Добавлено: ${j.added}. Обновлено: ${j.replaced}. Удалено: ${j.deleted}. Ошибки: ${j.warns}.`
         await loadLogs()
       } else {
-        zipResult.value = `Ошибка ${res.status}: ${j.error||res.message}`
+        zipResult.value = `Ошибка ${res.status}: ${j.error || j.message}`
       }
     } catch (e) {
       zipResult.value = `Ошибка сети`
@@ -602,114 +677,65 @@ export const useStore = defineStore('main', () => {
     }
   }
 
-  // --- Экшен: получить детали продукта + варианты ---
-  async function fetchDetail(variantSku, category) {
-    detailLoading.value = true
-    try {
-      const pRes = await fetch(`${API.baseUrl}${API.product.getProduct}?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(variantSku)}`)
-      detailData.value = await pRes.json()
-      // подгружаем весь список и фильтруем по sku
-      await fetchProducts(category)
-      variants.value = products.value.filter(p => p.sku === detailData.value.sku)
-    } catch (e) {
-      console.error(e)
-    } finally {
-      detailLoading.value = false
-    }
-  }
-
-  // --- Экшен: получить профиль пользователя ---
-  async function fetchUserProfile(userId) {
-    profileLoading.value = true; profileError.value = ''
-    try {
-      const res = await fetch(`${API.baseUrl}${API.general.getUserProfile}?user_id=${userId}`)
-      if (!res.ok) {
-        profileError.value = res.status===404 ? 'Пользователь не найден' : `Ошибка ${res.status}`
-        return
-      }
-      profile.value = await res.json()
-    } catch (e) {
-      console.error(e)
-      profileError.value = 'Ошибка сети'
-    } finally {
-      profileLoading.value = false
-    }
-  }
-
+  // -------------------------------------------------
+  // Return state & actions
+  // -------------------------------------------------
   return {
-    url,
-    admin_ids,
-    tg,
-    user,
-    categoryList,
-    selectedCategory,
-    sortBy,
-    sortOrder,
-    filterPriceMin,
-    filterPriceMax,
-    filterColor,
+    // state
+    adminToken, user,
+    categoryList, selectedCategory,
+    sortBy, sortOrder,
+    filterPriceMin, filterPriceMax, filterColor,
     products,
-    cartOrder,
-    cart,
-    favorites,
-    favoritesOrder,
-    favoritesLoaded,
-    cartLoaded,
-    showCartDrawer,
-    colorGroups,
-    displayedProducts,
-    groupedCartItems,
-    sheetUrls,
-    sheetSaveLoading,
-    sheetImportLoading,
-    sheetResult,
-    logs,
-    logsLoading,
-    visitsData,
-    visitsLoading,
-    zipResult,
-    zipLoading,
-    detailData,
-    detailLoading,
-    variants,
-    profile,
-    profileLoading,
-    profileError,
-    socialUrls,
-    settings,
-    reviews,
-    users,
+    cartOrder, cart, cartLoaded, showCartDrawer,
+    favorites, favoritesLoaded,
+    sheetUrls, sheetSaveLoading, sheetImportLoading, sheetResult,
+    zipResult, zipLoading,
+    logs, logsLoading, totalLogs,
+    visitsData, visitsLoading,
+    detailData, detailLoading, variants,
+    profile, profileLoading, profileError, socialUrls,
+    settings, reviews, users,
 
+    // helpers
+    isTelegramUserId, setAdminToken,
+
+    // init/auth
+    saveUserToServer, fetchUserProfile,
+    initializeTelegramUser, initializeVisitorUser,
+
+    // general
     loadSocialUrls,
-    isTelegramUserId,
+
+    // product
+    fetchProducts, fetchDetail,
+
+    // cart
+    loadCartFromServer, saveCartToServer,
+    openCartDrawer, closeCartDrawer,
+
+    // favorites
+    loadFavoritesFromServer, saveFavoritesToServer,
+    addToFavorites, removeFromFavorites, isFavorite,
+
+    // grouping/computed
+    colorGroups, displayedProducts, groupedCartItems,
+
+    // filters/sorting
     changeCategory,
-    addToCart,
-    increaseQuantity,
-    decreaseQuantity,
-    getProductQuantity,
-    checkout,
-    clearFilters,
-    fetchProducts,
-    fetchAllProducts,
-    loadFavoritesFromServer,
-    addToFavorites,
-    removeFromFavorites,
-    isFavorite,
-    openCartDrawer,
-    closeCartDrawer,
-    loadSheetUrls,
-    saveSheetUrl,
-    importSheet,
-    loadLogs,
-    loadVisits,
-    uploadZip,
-    fetchDetail,
-    fetchUserProfile,
-    fetchSettings,
-    saveSetting,
-    fetchReviews,
-    createReview,
-    deleteReview,
-    fetchUsers,
+
+    // cart helpers
+    addToCart, increaseQuantity, decreaseQuantity,
+    getProductQuantity, checkout, clearFilters,
+
+    // admin / users / settings
+    fetchUsers, fetchSettings, saveSetting, updateUserRole,
+
+    // admin reviews
+    createReview, deleteReview,
+
+    // admin sheets & logs & visits & zip
+    loadSheetUrls, saveSheetUrl, importSheet,
+    loadLogs, loadVisits, uploadZip,
   }
 })

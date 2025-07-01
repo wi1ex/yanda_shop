@@ -1,7 +1,11 @@
+import io
+import requests
+from werkzeug.utils import secure_filename
 from datetime import datetime
 from typing import Any, Dict, Tuple, List
 from zoneinfo import ZoneInfo
 from flask import Blueprint, jsonify, request, Response
+from ..routes.auth import create_access_token
 from ..cors.config import BACKEND_URL
 from ..cors.logging import logger
 from ..db_utils import session_scope
@@ -36,22 +40,21 @@ def save_user() -> Tuple[Response, int]:
         int(raw_id)
         is_tg = True
     except (TypeError, ValueError):
-        # Неконвертируемый id — это не Telegram-пользователь, но не ошибка!
         logger.debug("save_user: non-integer id %r, skipping Postgres", raw_id)
         is_tg = False
 
     first_name = data.get("first_name")
     last_name = data.get("last_name")
     username = data.get("username")
-    # photo_url = data.get("photo_url")
+    photo_url = data.get("photo_url")
     now = datetime.now(ZoneInfo("Europe/Moscow"))
 
-    # --- Postgres только для целых id ---
+    # --- Postgres only for Telegram users ---
     if is_tg:
         try:
             user_id = int(raw_id)
             with session_scope() as session:
-                # получаем пользователя из сессии
+                # Get or create user
                 tg_user = session.get(Users, user_id)
                 if not tg_user:
                     tg_user = Users(
@@ -70,7 +73,7 @@ def save_user() -> Tuple[Response, int]:
                         timestamp=now
                     ))
                 else:
-                    # обновляем только изменившиеся поля и last_visit
+                    # Update changed fields
                     updated = False
                     for fld in ("first_name", "last_name", "username"):
                         val = data.get(fld)
@@ -80,11 +83,30 @@ def save_user() -> Tuple[Response, int]:
                     tg_user.last_visit = now
                     if updated:
                         session.merge(tg_user)
+
+                # Handle avatar update
+                if photo_url:
+                    filename = secure_filename(photo_url.split("/")[-1])
+                    new_key = f"users/{user_id}_{filename}"
+                    if tg_user.avatar_url != new_key:
+                        # Remove old avatar if exists
+                        if tg_user.avatar_url:
+                            try:
+                                minio_client.remove_object(BUCKET, tg_user.avatar_url)
+                            except Exception as e:
+                                logger.warning("Failed to remove old avatar %s: %s", tg_user.avatar_url, e)
+                        # Download and upload new avatar
+                        resp = requests.get(photo_url, timeout=10)
+                        if resp.ok:
+                            content = resp.content
+                            minio_client.put_object(BUCKET, new_key, io.BytesIO(content), len(content))
+                            tg_user.avatar_url = new_key
+
         except Exception as e:
             logger.exception("Postgres error in save_user: %s", e)
             return jsonify({"error": "internal server error"}), 500
 
-    # --- Redis всегда ---
+    # --- Redis always for visits ---
     try:
         now = datetime.now(ZoneInfo("Europe/Moscow"))
         date_str = now.strftime("%Y-%m-%d")
@@ -129,8 +151,14 @@ def get_user_profile() -> Tuple[Response, int]:
                 "first_name": u.first_name,
                 "last_name": u.last_name,
                 "username": u.username,
+                "role": u.role,
+                "photo_url": u.avatar_url and f"{BACKEND_URL}/images/{u.avatar_url}" or None,
                 "created_at": u.created_at.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d %H:%M:%S")
             }
+            # если админ — вручаем JWT
+            if u.role == "admin":
+                token = create_access_token(u.user_id, u.role)
+                profile["access_token"] = token
 
         return jsonify(profile), 200
 
@@ -148,7 +176,6 @@ def get_social_urls() -> Tuple[Response, int]:
             raw = session.query(AdminSetting).filter(AdminSetting.key.in_(keys)).all()
             result = {k: "" for k in keys}
             for s in raw:
-                # s.value уже подгружен, т. е. нет lazy-load после закрытия
                 result[s.key] = s.value or ""
         return jsonify(result), 200
 

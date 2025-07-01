@@ -10,6 +10,8 @@ class Users(db.Model):
     username       = db.Column(db.String(100), nullable=False)
     first_name     = db.Column(db.String(100), nullable=False)
     last_name      = db.Column(db.String(100), nullable=False)
+    role           = db.Column(db.String(100), default='customer', nullable=False)
+    avatar_url     = db.Column(db.String(100), nullable=True)
 
     password_hash  = db.Column(db.String, nullable=True)
     email          = db.Column(db.String(100), nullable=True)
@@ -18,7 +20,6 @@ class Users(db.Model):
     phone_verified = db.Column(db.Boolean, nullable=True)
     date_of_birth  = db.Column(db.Date, nullable=True)
     gender         = db.Column(db.String(100), nullable=True)
-    role           = db.Column(db.String(100), default='customer', nullable=True)
     mailing        = db.Column(db.Boolean, nullable=True)
     loyalty_points = db.Column(db.Integer, nullable=True)
     total_spent    = db.Column(db.Integer, nullable=True)

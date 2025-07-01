@@ -2,7 +2,7 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_cors import CORS
 
-from .cors.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS
+from .cors.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS, SECRET_KEY
 from .cors.logging import setup_logging, logger
 from .models import db
 from .utils import load_delivery_options
@@ -20,6 +20,7 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config['SECRET_KEY'] = SECRET_KEY
 
     # 3) Расширения
     db.init_app(app)

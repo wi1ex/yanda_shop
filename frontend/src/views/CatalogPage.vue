@@ -79,7 +79,7 @@
 
         <!-- Сетка товаров -->
         <div class="products-grid" :class="{ blurred: productsLoading }">
-          <article v-for="group in store.displayedProducts" :key="group.color_sku" class="product-card">
+          <article v-for="group in paged" :key="group.color_sku" class="product-card">
             <div class="clickable" @click="goToProductDetail(group)">
               <img :src="group.minPriceVariant.image" alt="" class="product-img"/>
               <div class="info">
@@ -91,6 +91,12 @@
             <button class="fav" v-if="!store.isFavorite(group.color_sku)" @click.stop="store.addToFavorites(group.color_sku)">♡</button>
             <button class="fav active" v-else @click.stop="store.removeFromFavorites(group.color_sku)">♥</button>
           </article>
+        </div>
+
+        <div class="load-more-container">
+          <button v-if="paged.length < store.displayedProducts.length" @click="loadMore" class="btn-load-more">
+            Ещё
+          </button>
         </div>
       </main>
     </div>
@@ -108,8 +114,15 @@ import category_accessories from '@/assets/images/category_accessories.png'
 const store = useStore()
 const router = useRouter()
 
+const page = ref(1)
+const perPage = 24
 const mobileFiltersOpen = ref(false)
 const productsLoading = ref(false)
+
+// товары для отображения: первые page*perPage элементов
+const paged = computed(() =>
+  store.displayedProducts.slice(0, page.value * perPage)
+)
 
 // Маппим заголовок категории на нужную картинку
 const categoryImages = {
@@ -130,6 +143,13 @@ const sortOption = computed({
 const distinctColors = computed(() =>
   Array.from(new Set(store.products.map(p => p.color).filter(Boolean)))
 )
+
+// увеличить страницу (если есть ещё)
+function loadMore() {
+  if (page.value * perPage < store.displayedProducts.length) {
+    page.value++
+  }
+}
 
 function handleClearFilters() {
   animateGrid()
@@ -305,6 +325,20 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 220px 1fr;
   gap: 24px;
+}
+.load-more-container {
+  text-align: center;
+  margin: 24px 0;
+}
+
+.btn-load-more {
+  padding: 10px 20px;
+  background: #FF3B30;
+  color: #FFF;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
 }
 
 /* Sidebar фильтров */
@@ -483,6 +517,14 @@ onMounted(() => {
 
   .catalog-body {
     grid-template-columns: 1fr;
+  }
+  .load-more-container {
+    margin: 16px 0;
+  }
+  .btn-load-more {
+    width: 100%;
+    padding: 12px 0;
+    font-size: 18px;
   }
 
   .catalog-header {

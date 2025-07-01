@@ -6,10 +6,7 @@
     <div v-if="favoriteProducts.length" class="products-grid" :class="{ blurred: favoritesLoading }">
       <router-link v-for="product in favoriteProducts" :key="product.color_sku" class="product-card"
                    :to="{ name: 'ProductDetail', params: { variant_sku: product.variant_sku }, query: { category: product.category }}">
-        <button type="button" class="remove-fav-btn" @click.prevent.stop="store.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">
-          ×
-        </button>
-
+        <button type="button" class="remove-fav-btn" @click.prevent.stop="store.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">×</button>
         <img :src="product.image" alt="product" class="product-image" />
         <div class="product-info">
           <p class="product-price">{{ product.price }} ₽</p>
@@ -32,7 +29,7 @@ const favoritesLoading = ref(false)
 // при монтировании: плавно показываем, грузим ВСЕ товары + избранное, убираем эффект
 onMounted(async () => {
   favoritesLoading.value = true
-  await store.fetchAllProducts()
+  await store.fetchProducts()
   await store.loadFavoritesFromServer()
   await nextTick()
   // совпадает со временем blur-анимации в CSS
