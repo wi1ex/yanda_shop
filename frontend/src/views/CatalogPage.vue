@@ -27,7 +27,7 @@
       <!-- Навигация по категориям под логотипом -->
       <nav class="header-cats">
         <button v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)"
-                :class="['cat-btn', { active: cat === store.selectedCategory }]">
+                :class="['cat-btn', { active: store.selectedCategory === cat }]">
           <img :src="categoryImages[cat]" :alt="cat" />
           <span>{{ cat }}</span>
         </button>
@@ -56,6 +56,7 @@
             <span>Сортировка:</span>
             <select v-model="sortOption">
               <option value="date_desc">Новинки</option>
+              <option value="sales_desc">Бестселлеры</option>
               <option value="price_asc">Цена ↑</option>
               <option value="price_desc">Цена ↓</option>
             </select>
@@ -117,7 +118,7 @@ const route = useRoute()
 const router = useRouter()
 
 const page = ref(1)
-const perPage = 1
+const perPage = 24
 const mobileFiltersOpen = ref(false)
 const productsLoading = ref(false)
 
@@ -160,7 +161,8 @@ function handleClearFilters() {
 
 function onCategoryClick(cat) {
   page.value = 1
-  store.changeCategory(cat)
+  store.selectedCategory = (store.selectedCategory === cat ? '' : cat);
+  loadCategory(store.selectedCategory);
 }
 
 function goToProductDetail(group) {

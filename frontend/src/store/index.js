@@ -50,7 +50,7 @@ export const useStore = defineStore('main', () => {
 
   // Категории
   const categoryList       = ref(['Одежда', 'Обувь', 'Аксессуары'])
-  const selectedCategory   = ref('Одежда')
+  const selectedCategory   = ref('')
 
   // Сортировка
   const sortBy             = ref('date')
