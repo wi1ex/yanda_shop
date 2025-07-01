@@ -179,7 +179,7 @@
         <li v-for="r in store.reviews" :key="r.id" class="admin-review">
           <div class="review-header">
             <strong>#{{ r.id }}</strong>
-            <span>{{ r.client_name }} (ID:{{ r.client_id }})</span>
+            <span>{{ r.client_name }}</span>
             <span class="review-date">{{ new Date(r.created_at).toLocaleString() }}</span>
           </div>
           <p class="user-text"><strong>Текст клиента 1:</strong> {{ r.client_text1 }}</p>
@@ -213,7 +213,7 @@
           <input type="file" @change="onFile($event,2)" ref="fileInput2"/>
           <input type="file" @change="onFile($event,3)" ref="fileInput3"/>
         </div>
-        <button type="submit" :disabled="!form.client_id || !form.client_text1 || !form.shop_response || !form.link_url || (!files[1] && !files[2] && !files[3])">
+        <button type="submit" :disabled="!form.client_name || !form.client_text1 || !form.shop_response || !form.link_url || (!files[1] && !files[2] && !files[3])">
           Добавить
         </button>
       </form>
@@ -241,7 +241,7 @@ const files        = reactive({})
 const saving       = ref(null)
 const selected     = ref('sheets')
 const logPage      = ref(1)
-const pageSize     = 25
+const pageSize     = 10
 const newSetting   = reactive({ key: '', value: '' })
 const tabs         = [
   { key:'sheets',      label:'Sheets'         },
