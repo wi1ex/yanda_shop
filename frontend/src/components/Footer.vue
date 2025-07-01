@@ -144,6 +144,7 @@ function goToCategory(cat) {
 
 function goToGender(gender) {
   store.selectedCategory = ''
+  store.filterGender = gender
   router.push({
     name:  'Catalog',
     query: { gender }
