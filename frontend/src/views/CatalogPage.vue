@@ -11,7 +11,7 @@
       <!-- Логотип по центру -->
       <div class="header-logo">
         <span class="logo-title">{{ headerTitle }}</span>
-        <sup class="logo-year">{{ totalItems }}</sup>
+        <sup class="logo-count">{{ totalItems }}</sup>
       </div>
 
       <!-- Селект сортировки (вёрстка web) -->
@@ -304,17 +304,22 @@ onMounted(() => {
   }
 
   .header-logo {
+    display: flex;
     grid-column: 2;
     grid-row: 1;
     justify-self: center;
     .logo-title {
-      font-size: 48px;
-      font-weight: 700;
+      font-family: Bounded-400;
+      font-size: 64px;
+      line-height: 90%;
+      letter-spacing: -5.12px;
     }
-    .logo-year  {
-      font-size: 18px;
-      color: #FF3B30;
-      margin-left: 8px;
+    .logo-count  {
+      margin-left: 4px;
+      margin-top: 10px;
+      font-size: 16px;
+      line-height: 110%;
+      letter-spacing: -0.64px;
     }
   }
 
@@ -619,6 +624,14 @@ onMounted(() => {
     }
     .header-logo   {
       grid-row: 1;
+      .logo-title {
+        font-size: 32px;
+        letter-spacing: -2.24px;
+      }
+      .logo-count  {
+        font-size: 15px;
+        letter-spacing: -0.6px;
+      }
     }
     .header-cats   {
       grid-row: 3;
