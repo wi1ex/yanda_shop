@@ -259,7 +259,7 @@ function selectVariantByOpt(type, opt) {
       router.replace({
         name: 'ProductDetail',
         params: { variant_sku: target.variant_sku },
-        query: { category: variant.category }
+        query: { category: target.category }
       })
     }
   }
