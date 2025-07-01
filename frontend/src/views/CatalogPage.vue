@@ -309,14 +309,16 @@ onMounted(() => {
     grid-row: 1;
     justify-self: center;
     .logo-title {
+      color: $black-100;
       font-family: Bounded-400;
       font-size: 64px;
       line-height: 90%;
       letter-spacing: -5.12px;
     }
     .logo-count  {
+      color: $red-active;
       margin-left: 4px;
-      margin-top: 10px;
+      margin-top: -1px;
       font-size: 16px;
       line-height: 110%;
       letter-spacing: -0.64px;
@@ -629,6 +631,8 @@ onMounted(() => {
         letter-spacing: -2.24px;
       }
       .logo-count  {
+        margin-left: 8px;
+        margin-top: 3px;
         font-size: 15px;
         letter-spacing: -0.6px;
       }
