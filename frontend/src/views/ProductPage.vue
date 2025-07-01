@@ -120,7 +120,9 @@
             <span class="arrow">{{ showCharacteristics ? '⯅' : '▼' }}</span>
           </div>
           <div class="section-body" :class="{ open: showCharacteristics }">
-            <p class="char-row"><strong>Пол:</strong>{{ store.detailData.gender }}</p>
+            <p class="char-row"><strong>Пол:</strong>
+              {{ store.detailData.gender === 'W' ? 'Женский' : store.detailData.gender === 'M' ? 'Мужской' : 'Унисекс'}}
+            </p>
             <p class="char-row"><strong>Категория:</strong>{{ store.detailData.category }}</p>
             <p class="char-row"><strong>Подкатегория:</strong>{{ store.detailData.subcategory }}</p>
             <p class="char-row"><strong>Материал:</strong>{{ store.detailData.material }}</p>
@@ -224,7 +226,6 @@ function getImageForColor(color) {
 
 // Переход на другой variant по опции
 function selectVariantByOpt(type, opt) {
-  const cat = route.query.category
   if (type === 'size') {
     // ищем вариант с точно таким же size_label (строкой)
     const currentColor = store.detailData?.color
@@ -233,7 +234,7 @@ function selectVariantByOpt(type, opt) {
       router.replace({
         name: 'ProductDetail',
         params: { variant_sku: variant.variant_sku },
-        query: { category: cat }
+        query: { category: variant.category }
       })
     }
     return
@@ -258,7 +259,7 @@ function selectVariantByOpt(type, opt) {
       router.replace({
         name: 'ProductDetail',
         params: { variant_sku: target.variant_sku },
-        query: { category: cat }
+        query: { category: variant.category }
       })
     }
   }
