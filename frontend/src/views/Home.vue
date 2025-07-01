@@ -237,10 +237,28 @@ function toggleOrig(block) {
 const bestIndex = ref(0)
 const perSlide  = 2
 
-// 1) Берём ВСЕ продукты, сортируем по продажам ↓, затем по цене ↓
-const bests = computed(() =>
-  store.products.slice().sort((a, b) => (b.count_sales - a.count_sales) || (b.price - a.price))
-)
+// 1) Группируем по color_sku, суммируем count_sales, берём «представительный» вариант и сортируем
+const bests = computed(() => {
+  // сгруппировать
+  const groups = {}
+  store.products.forEach(p => {
+    if (!groups[p.color_sku]) {
+      groups[p.color_sku] = { variants: [], totalSales: 0 }
+    }
+    groups[p.color_sku].variants.push(p)
+    groups[p.color_sku].totalSales += p.count_sales || 0
+  })
+  // собрать массив групп с «репрезентативным» вариантом
+  const arr = Object.values(groups).map(({ variants, totalSales }) => {
+    // выбираем вариант с минимальной ценой (или любой другой логику)
+    const rep = variants.reduce((prev, cur) => prev.price <= cur.price ? prev : cur)
+    return { ...rep, totalSales }
+  })
+  // сортируем по сумме продаж ↓, при равных — по цене ↓
+  return arr.sort((a, b) =>
+    (b.totalSales - a.totalSales) || (b.price - a.price)
+  )
+})
 
 // 2) Товары для текущей «страницы»
 const visibleBests = computed(() => {
