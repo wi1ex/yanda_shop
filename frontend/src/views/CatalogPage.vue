@@ -298,9 +298,10 @@ onMounted(() => {
   .header-text {
     grid-column: 1;
     grid-row: 2;
+    color: $grey-20;
     font-size: 16px;
-    line-height: 1.4;
-    color: #333;
+    line-height: 110%;
+    letter-spacing: -0.64px;
   }
 
   .header-logo {
@@ -366,8 +367,11 @@ onMounted(() => {
       }
       span {
         display: block;
-        font-size: 16px;
-        color: #000;
+        color: $black-100;
+        font-family: Bounded-350;
+        font-size: 14px;
+        line-height: 90%;
+        letter-spacing: -0.84px;
       }
     }
   }
@@ -558,7 +562,7 @@ onMounted(() => {
         color: #777;
       }
       .name  {
-        font-size: 14px;
+        font-size: 18px;
         color: #333;
         margin: 4px 0;
       }
@@ -623,6 +627,8 @@ onMounted(() => {
     .header-text   {
       grid-column: 2;
       grid-row: 2;
+      font-size: 15px;
+      letter-spacing: -0.6px;
     }
     .header-logo   {
       grid-row: 1;
