@@ -77,6 +77,7 @@ const icon_logo = computed(() => isIconWhite.value ? icon_logo_white : icon_logo
 function goToGender(gender) {
   toggleMenuClose()
   store.selectedCategory = ''
+  store.filterGender = gender
   router.push({
     name:  'Catalog',
     query: { gender }
