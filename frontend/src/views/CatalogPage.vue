@@ -45,14 +45,14 @@
             <option v-for="color in distinctColors" :key="color" :value="color">{{ color }}</option>
           </select>
           <div class="gender-filter">
+            <label :class="{ active: store.filterGender === '' }">
+              <input type="radio" v-model="store.filterGender" value="" /> Все
+            </label>
             <label :class="{ active: store.filterGender === 'M' }">
               <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
             </label>
             <label :class="{ active: store.filterGender === 'W' }">
               <input type="radio" v-model="store.filterGender" value="W" /> Женщинам
-            </label>
-            <label :class="{ active: store.filterGender === 'U' }">
-              <input type="radio" v-model="store.filterGender" value="U" /> Unisex
             </label>
           </div>
           <button @click="handleClearFilters" class="btn-clear">Сбросить</button>
@@ -86,15 +86,15 @@
                 <option v-for="color in distinctColors" :key="color" :value="color">{{ color }}</option>
               </select>
               <div class="gender-filter">
-                <label :class="{ active: store.filterGender === 'M' }">
-                  <input type="radio" v-model="store.filterGender" value="M" /> М
-                </label>
-                <label :class="{ active: store.filterGender === 'W' }">
-                  <input type="radio" v-model="store.filterGender" value="W" /> Ж
-                </label>
-                <label :class="{ active: store.filterGender === 'U' }">
-                  <input type="radio" v-model="store.filterGender" value="U" /> U
-                </label>
+              <label :class="{ active: store.filterGender === '' }">
+                <input type="radio" v-model="store.filterGender" value="" /> Все
+              </label>
+              <label :class="{ active: store.filterGender === 'M' }">
+                <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
+              </label>
+              <label :class="{ active: store.filterGender === 'W' }">
+                <input type="radio" v-model="store.filterGender" value="W" /> Женщинам
+              </label>
               </div>
               <button @click="handleClearFilters" class="btn-clear">Сбросить</button>
             </div>
@@ -153,7 +153,7 @@ const paged = computed(() =>
 const categoryImages = {
   'Одежда': category_clothing,
   'Обувь': category_shoes,
-  'Аксессуары': category_accessories
+  'Аксессуары': category_accessories,
 }
 
 const sortOption = computed({

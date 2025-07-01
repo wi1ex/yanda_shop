@@ -12,7 +12,7 @@
             <button @click="prevHero" aria-label="Назад">←</button>
             <button @click="nextHero" aria-label="Вперёд">→</button>
           </div>
-          <router-link to="/catalog" class="btn-catalog">В каталог →</router-link>
+          <div @click="goToCatalog('')" class="btn-catalog">В каталог →</div>
         </div>
       </div>
       <div class="marquee">
@@ -42,7 +42,7 @@
           <div class="image-placeholder">Изображение {{ categorySlides[currentCat].title }}</div>
           <h3>{{ categorySlides[currentCat].title }}</h3>
           <p>{{ categorySlides[currentCat].desc }}</p>
-          <router-link to="/catalog" class="btn-catalog">Каталог</router-link>
+          <div @click="goToCatalog(categorySlides[currentCat].title)" class="btn-catalog">Каталог</div>
         </div>
         <button @click="nextCat" aria-label="Вперёд">→</button>
       </div>
@@ -207,12 +207,13 @@ const workSteps = [
 ]
 
 // Categories
+const currentCat = ref(0)
+
 const categorySlides = [
   { title:'Аксессуары', desc:'Сумки, ремни и игрушки от Max Mara, Coach, Pop Mart и других официальных брендов.' },
   { title:'Одежда',     desc:'Только оригинальные вещи от Nike, Adidas, Supreme и т.д.' },
   { title:'Обувь',      desc:'Хиты от New Balance, Jacquemus и других.' },
 ]
-const currentCat = ref(0)
 
 function prevCat() {
   currentCat.value = (currentCat.value + categorySlides.length - 1) % categorySlides.length
@@ -229,13 +230,14 @@ const origBlocks = [
   { title:'Индивидуальный подход', text:'Не нашел нужную модель? Пришли фото — мы найдём и доставим.', open:false },
   { title:'Прозрачность и уверенность', text:'Открытые условия на каждом этапе без сюрпризов.', open:false },
 ]
+
 function toggleOrig(block) {
   block.open = !block.open
 }
 
 // Bestsellers
-const bestIndex = ref(0)
 const perSlide  = 2
+const bestIndex = ref(0)
 
 // 1) Группируем по color_sku, суммируем count_sales, берём «представительный» вариант и сортируем
 const bests = computed(() => {
@@ -266,13 +268,13 @@ const visibleBests = computed(() => {
   return bests.value.slice(start, start + perSlide)
 })
 
+function prevBest() {
+  if (bestIndex.value > 0) bestIndex.value--
+}
+
 function nextBest() {
   const maxPage = Math.ceil(bests.value.length / perSlide) - 1
   if (bestIndex.value < maxPage) bestIndex.value++
-}
-
-function prevBest() {
-  if (bestIndex.value > 0) bestIndex.value--
 }
 
 // 3) Переход на страницу товара
@@ -284,11 +286,15 @@ function goToProduct(p) {
   })
 }
 
+// 4) Переход на страницу каталога
+function goToCatalog(cat) {
+  store.selectedCategory = cat
+  router.push({ name: 'Catalog' })
+}
+
 // Сохранение в избранное оставляем, но вешаем .stop на клик, чтобы не перегружать маршрут
 function toggleFav(p) {
-  store.isFavorite(p.color_sku)
-    ? store.removeFromFavorites(p.color_sku)
-    : store.addToFavorites(p.color_sku)
+  store.isFavorite(p.color_sku) ? store.removeFromFavorites(p.color_sku) : store.addToFavorites(p.color_sku)
 }
 
 // Request form

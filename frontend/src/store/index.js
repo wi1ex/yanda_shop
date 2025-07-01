@@ -488,6 +488,7 @@ export const useStore = defineStore('main', () => {
   function clearFilters() {
     filterPriceMin.value = null
     filterPriceMax.value = null
+    filterGender.value = ''
     filterColor.value = ''
   }
 
