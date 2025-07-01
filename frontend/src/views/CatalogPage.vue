@@ -318,8 +318,8 @@ onMounted(() => {
     }
     .logo-count  {
       color: $red-active;
-      margin-left: 4px;
-      margin-top: -1px;
+      margin-left: 8px;
+      margin-top: 2px;
       font-size: 16px;
       line-height: 110%;
       letter-spacing: -0.64px;
@@ -637,8 +637,8 @@ onMounted(() => {
         letter-spacing: -2.24px;
       }
       .logo-count  {
-        margin-left: 8px;
-        margin-top: 3px;
+        margin-left: 4px;
+        margin-top: 0;
         font-size: 15px;
         letter-spacing: -0.6px;
       }
