@@ -109,7 +109,7 @@
               <img v-for="url in current.photo_urls" :key="url" :src="url" alt="photo"/>
             </div>
             <p class="shop-text">{{ current.shop_response }}</p>
-            <p class="user-text">{{ current.client_text2 }}</p>
+            <p v-if="current.client_text2" class="user-text">{{ current.client_text2 }}</p>
             <div class="meta">
               <div class="review-header">
                 <img class="avatar" :src="icon_default_avatar_white" alt="аватар"/>
@@ -314,9 +314,6 @@ function toggleFaq(i) {
 }
 
 onMounted(async () => {
-  await store.fetchProducts()
-  await store.fetchParameters()
-  await store.fetchReviews()
   buildFaqs()
 })
 
