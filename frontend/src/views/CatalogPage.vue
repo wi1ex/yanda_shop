@@ -115,7 +115,7 @@ const store = useStore()
 const router = useRouter()
 
 const page = ref(1)
-const perPage = 24
+const perPage = 1
 const mobileFiltersOpen = ref(false)
 const productsLoading = ref(false)
 
