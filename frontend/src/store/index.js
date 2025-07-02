@@ -150,7 +150,7 @@ export const useStore = defineStore('main', () => {
 
   async function fetchUserProfile(userId) {
     profileLoading.value = true
-    profileError.value   = ''
+    profileError.value = ''
     try {
       const res = await fetch(`${API.baseUrl}${API.general.getUserProfile}?user_id=${userId}`)
       if (!res.ok) {
@@ -359,14 +359,14 @@ export const useStore = defineStore('main', () => {
     })
     return Object.values(map).map(group => {
       const minPriceVariant = group.variants.reduce((prev, cur) => prev.price <= cur.price ? prev : cur)
-      const minDateVariant  = group.variants.reduce((prev, cur) => prev.created_at <= cur.created_at ? prev : cur)
+      const minDateVariant = group.variants.reduce((prev, cur) => prev.created_at <= cur.created_at ? prev : cur)
       return {
-        color_sku:      group.color_sku,
-        variants:       group.variants,
+        color_sku: group.color_sku,
+        variants: group.variants,
         minPriceVariant,
         minDateVariant,
-        minPrice:       minPriceVariant.price,
-        minDate:        minDateVariant.created_at
+        minPrice: minPriceVariant.price,
+        minDate: minDateVariant.created_at
       }
     })
   })
@@ -645,11 +645,11 @@ export const useStore = defineStore('main', () => {
       })
       if (!res.ok) throw new Error(res.statusText)
       const data = await res.json()
-      logs.value      = data.logs
+      logs.value = data.logs
       totalLogs.value = data.total
     } catch (e) {
       console.error('loadLogs:', e)
-      logs.value      = []
+      logs.value = []
       totalLogs.value = 0
     } finally {
       logsLoading.value = false
@@ -674,7 +674,7 @@ export const useStore = defineStore('main', () => {
 
   async function uploadZip(file) {
     zipLoading.value = true
-    zipResult.value  = ''
+    zipResult.value = ''
     const form = new FormData()
     form.append('file', file)
     form.append('author_id', user.value.id)
