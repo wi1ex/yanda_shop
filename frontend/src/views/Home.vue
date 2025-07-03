@@ -135,21 +135,16 @@
       </p>
 
       <div class="faq-list">
-        <div v-for="item in faqs" :key="item.id" class="faq-item" @click="toggleFaq(item.id)">
-          <!-- чёрный квадрат с номером -->
-          <div class="faq-number">{{ String(item.id + 1).padStart(2, '0') }}</div>
+        <div v-for="item in faqItems" :key="item.id" class="faq-item" @click="toggleFaq(item.id)">
+          <div class="faq-number">{{ String(item.id).padStart(2, '0') }}</div>
           <div class="faq-header">
-            <!-- текст вопроса -->
             <div class="faq-question">{{ item.question }}</div>
-            <!-- иконка: место под svg -->
-            <div class="faq-toggle-icon" :class="{ open: item.open }">
-              <!-- placeholder для вашей иконки -->
-              <img :src="item.open ? icon_faq_minus : icon_faq_plus" alt="toggle" class="faq-icon"/>
+            <div class="faq-toggle-icon" :class="{ open: openedFaq === item.id }">
+              <img :src="openedFaq === item.id ? icon_faq_minus : icon_faq_plus" alt="toggle" class="faq-icon"/>
             </div>
           </div>
-          <!-- ответ с плавным выезжанием -->
           <transition name="faq-slide">
-            <div v-if="item.open" class="faq-answer">
+            <div v-if="openedFaq === item.id" class="faq-answer">
               {{ item.answer }}
             </div>
           </transition>
@@ -173,8 +168,8 @@ const store = useStore()
 const router = useRouter()
 
 const idx = ref(0)
-const faqs = ref([])
 const heroIndex = ref(0)
+const openedFaq = ref(null);
 const current = computed(() => store.reviews[idx.value] || {})
 
 function prev() {
@@ -318,38 +313,24 @@ function onSubmitRequest() {
 }
 
 // FAQ
-const QUESTIONS = [
-  'Как оформить заказ?',
-  'Сколько по времени длится доставка?',
-  'Как происходит оплата?',
-  'Как я могу быть уверен(а) в качестве товара?',
-  'Можно ли вернуть или обменять товар?',
-  'Как выбрать правильный размер?',
-  'Хочу купить одну вещь, но не нашёл её у вас на сайте. Что делать?',
-  'Как отследить мой заказ?'
-]
-
-// Подтягиваем ответы из store.settings и собираем финальный массив
-function buildFaqs() {
-  faqs.value = QUESTIONS.map((q, idx) => {
-    const answerKey = `faq_answer_${idx + 1}`
-    return {
-      id: idx,
-      question: q,
-      answer: store.parameters[answerKey] || 'Нет ответа',
-      open: false
-    }
-  })
-}
+const faqItems = computed(() => {
+  const items = []
+  let i = 1
+  while (store.parameters[`faq_question_${i}`] || store.parameters[`faq_answer_${i}`]) {
+    items.push({
+      id: i,
+      question: store.parameters[`faq_question_${i}`] || `Вопрос ${i}`,
+      answer: store.parameters[`faq_answer_${i}`] || 'Ответ не найден',
+    })
+    i++
+  }
+  return items
+})
 
 // закрывает все пункты кроме переданного
-function toggleFaq(i) {
-  faqs.value = faqs.value.map((item, idx) => ({ ...item, open: idx === i ? !item.open : false}))
+function toggleFaq(id) {
+  openedFaq.value = openedFaq.value === id ? null : id;
 }
-
-onMounted(async () => {
-  buildFaqs()
-})
 
 </script>
 
