@@ -27,10 +27,10 @@ def login():
             return jsonify({"error": "Bad credentials"}), 401
 
         claims = {"role": user.role}
-        access_token = create_access_token(identity=user.user_id,
+        access_token = create_access_token(identity=str(user.user_id),
                                            additional_claims=claims,
                                            expires_delta=timedelta(hours=1))
-        refresh_token = create_refresh_token(identity=user.user_id,
+        refresh_token = create_refresh_token(identity=str(user.user_id),
                                              additional_claims=claims,
                                              expires_delta=timedelta(days=7))
 
