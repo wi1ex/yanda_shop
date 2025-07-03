@@ -6,7 +6,7 @@ from sqlalchemy import or_
 from typing import Any, Dict, Tuple, List
 from werkzeug.utils import secure_filename
 from flask import Blueprint, jsonify, request, Response
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, create_refresh_token
 from ..core.config import BACKEND_URL
 from ..core.logging import logger
 from ..utils.db_utils import session_scope
@@ -159,8 +159,10 @@ def get_user_profile() -> Tuple[Response, int]:
             }
             # если админ — вручаем JWT
             if u.role == "admin":
-                token = create_access_token(identity=str(u.user_id), additional_claims={"role": u.role})
-                profile["access_token"] = token
+                access = create_access_token(identity=str(u.user_id), additional_claims={"role": u.role})
+                refresh = create_refresh_token(identity=str(u.user_id), additional_claims={"role": u.role})
+                profile["access_token"] = access
+                profile["refresh_token"] = refresh
 
         return jsonify(profile), 200
 

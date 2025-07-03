@@ -27,7 +27,7 @@ const router = createRouter({
 // глобальный guard вместо beforeEnter на одном маршруте
 router.beforeEach((to, from, next) => {
   const store = useStore()
-  if (to.name === 'Admin' && !store.isAdmin) {
+  if (to.name === 'Admin' && !store.accessToken && !store.refreshToken) {
     return next({ name: 'Home' })
   }
   if (to.name === 'Home') {

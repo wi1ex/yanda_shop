@@ -17,7 +17,7 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 def login():
     try:
         data = request.get_json() or {}
-        logger.info("POST /api/auth/login payload=%s", data)
+        logger.debug("POST /api/auth/login payload=%s", data)
         username = data.get("username", "")
         password = data.get("password", "")
 
@@ -34,7 +34,7 @@ def login():
                                              additional_claims=claims,
                                              expires_delta=timedelta(days=7))
 
-        logger.info("User %s (id=%s) logged in, role=%s", username, user.user_id, user.role)
+        logger.debug("User %s (id=%s) logged in, role=%s", username, user.user_id, user.role)
         return jsonify({"access_token": access_token, "refresh_token": refresh_token}), 200
     except Exception as e:
         logger.exception("Error in /api/auth/login: %s", e)
@@ -45,7 +45,7 @@ def login():
 @jwt_required(refresh=True)
 def refresh():
     uid = get_jwt_identity()
-    logger.info("POST /api/auth/refresh for user_id=%s", uid)
+    logger.debug("POST /api/auth/refresh for user_id=%s", uid)
     claims = get_jwt()
     new_access = create_access_token(identity=uid, additional_claims={"role": claims.get("role")})
     return jsonify({"access_token": new_access}), 200
@@ -55,5 +55,5 @@ def refresh():
 @jwt_required()
 def protected():
     uid = get_jwt_identity()
-    logger.info("GET /api/auth/protected user_id=%s", uid)
+    logger.debug("GET /api/auth/protected user_id=%s", uid)
     return jsonify({"msg": f"Hello, user {get_jwt_identity()}"}), 200
