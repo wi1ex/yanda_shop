@@ -183,7 +183,10 @@ export const useStore = defineStore('main', () => {
         photo_url:  profileData.photo_url,
       }
       if (profileData.access_token) {
-        setTokens({ access: profileData.access_token })
+        setTokens({
+          access:  profileData.access_token,
+          refresh: profileData.refresh_token || ''
+        })
       }
     } catch (e) {
       console.error('Ошибка инициализации Telegram-пользователя:', e)
@@ -338,10 +341,6 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
   // Utils: grouping & computed
   // -------------------------------------------------
-  const userRole = computed(() => user.value?.role || 'visitor')
-
-  const isAdmin = computed(() => userRole.value === 'admin')
-
   const colorGroups = computed(() => {
     const map = {}
     products.value.forEach(p => {
@@ -623,7 +622,7 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
   return {
     // state
-    accessToken, refreshToken, userRole, isAdmin, user,
+    accessToken, refreshToken, user,
     categoryList, selectedCategory,
     sortBy, sortOrder,
     filterPriceMin, filterPriceMax, filterColor, filterGender,
@@ -638,11 +637,13 @@ export const useStore = defineStore('main', () => {
     profile, profileLoading, profileError,
     parameters, settings, reviews, users,
 
+    // grouping/computed
+    colorGroups, displayedProducts, groupedCartItems,
+
     // helpers
-    isTelegramUserId, setTokens,
+    isTelegramUserId,
 
     // init/auth
-    saveUserToServer, fetchUserProfile,
     initializeTelegramUser, initializeVisitorUser,
 
     // general
@@ -652,15 +653,12 @@ export const useStore = defineStore('main', () => {
     fetchProducts, fetchDetail,
 
     // cart
-    loadCartFromServer, saveCartToServer,
     openCartDrawer, closeCartDrawer,
 
     // favorites
-    loadFavoritesFromServer, saveFavoritesToServer,
+    loadFavoritesFromServer,
     addToFavorites, removeFromFavorites, isFavorite,
 
-    // grouping/computed
-    colorGroups, displayedProducts, groupedCartItems,
 
     // filters/sorting
     changeCategory,
