@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 from typing import Any, Dict, Tuple, List
 from zoneinfo import ZoneInfo
+from sqlalchemy import or_
 from flask import Blueprint, jsonify, request, Response
 from ..routes.auth import create_access_token
 from ..cors.config import BACKEND_URL
@@ -169,21 +170,24 @@ def get_user_profile() -> Tuple[Response, int]:
 
 @general_api.route("/get_parameters")
 def get_parameters() -> Tuple[Response, int]:
-    keys = ["url_telegram", "url_instagram", "url_email",
-            "faq_answer_1", "faq_answer_2", "faq_answer_3", "faq_answer_4",
-            "faq_answer_5", "faq_answer_6", "faq_answer_7", "faq_answer_8"]
+    base_keys = ["url_telegram", "url_instagram", "url_email"]
+    default_result = {k: "" for k in base_keys}
+
     try:
-        # сразу формируем результат внутри сессии
         with session_scope() as session:
-            raw = session.query(AdminSetting).filter(AdminSetting.key.in_(keys)).all()
-            result = {k: "" for k in keys}
-            for s in raw:
-                result[s.key] = s.value or ""
-        return jsonify(result), 200
+            faq_keys_query = session.query(AdminSetting.key).filter(or_(AdminSetting.key.like('faq_question_%'), AdminSetting.key.like('faq_answer_%'))).distinct()
+            faq_keys = [result.key for result in faq_keys_query]
+            all_keys = base_keys + faq_keys
+            settings = session.query(AdminSetting).filter(AdminSetting.key.in_(all_keys)).all()
+            result = {k: "" for k in all_keys}
+            for setting in settings:
+                result[setting.key] = setting.value or ""
+
+            return jsonify(result), 200
 
     except Exception as e:
-        logger.exception("Error in get_parameters: %s", e)
-        return jsonify({k: "" for k in keys}), 200
+        logger.exception("Failed to get_parameters: %s", e)
+        return jsonify(default_result), 500
 
 
 @general_api.route('/list_reviews', methods=['GET'])
