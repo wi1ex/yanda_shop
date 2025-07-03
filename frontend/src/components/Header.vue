@@ -1,15 +1,18 @@
 <template>
   <header class="header">
-    <!-- Кнопка меню -->
+    <!-- Логотип (ссылка на главную) -->
     <div class="actions">
-      <button class="icon-btn" ref="menuBtn" @click="toggleMenu">
-        <img :src="icon_menu" alt="Меню" />
-      </button>
+      <div @click="goToPage('Home')" class="icon-btn" title="Лого">
+        <img :src="icon_logo" alt="Главная" class="logo-icon" />
+      </div>
     </div>
 
-    <!-- Логотип (ссылка на главную) -->
-    <div @click="goToPage('Home')">
-      <img :src="icon_logo" alt="Главная" class="logo-icon" />
+    <!-- Кнопка меню -->
+    <div class="menu" @click="toggleMenu">
+      <button class="menu-btn" ref="menuBtn">
+        Меню
+        <img :src="icon_menu_grey" alt="Меню" />
+      </button>
     </div>
 
     <!-- Иконки действий -->
@@ -19,13 +22,13 @@
       </div>
       <div @click="goToPage('Favorites')" class="icon-btn" title="Избранное">
         <img :src="icon_favorites" alt="Избранное" />
-        <span v-if="store.favorites.count" class="badge" style="right: 52px">
+        <span v-if="store.favorites.count" class="badge badge-fav">
           {{ store.favorites.count < 10 ? store.favorites.count : "9+" }}
         </span>
       </div>
       <button @click="store.openCartDrawer()" class="icon-btn" title="Корзина">
         <img :src="icon_cart" alt="Корзина" />
-        <span v-if="store.cart.count" class="badge" style="right: 10px">
+        <span v-if="store.cart.count" class="badge badge-cart">
           {{ store.cart.count < 10 ? store.cart.count : "9+"}}
         </span>
       </button>
@@ -55,7 +58,6 @@ import icon_favorites_white from '@/assets/images/favorites_white.svg'
 import icon_cart_grey from '@/assets/images/cart_grey.svg'
 import icon_cart_white from '@/assets/images/cart_white.svg'
 import icon_menu_grey from '@/assets/images/menu_grey.svg'
-import icon_menu_white from '@/assets/images/menu_white.svg'
 import icon_logo_orange from '@/assets/images/logo_orange.svg'
 import icon_logo_white from '@/assets/images/logo_white.svg'
 
@@ -70,7 +72,6 @@ const isIconWhite = computed(() => route.name === 'About' || route.name === 'Hom
 const icon_default_avatar = computed(() => isIconWhite.value ? icon_default_avatar_white : icon_default_avatar_grey)
 const icon_favorites = computed(() => isIconWhite.value ? icon_favorites_white : icon_favorites_grey)
 const icon_cart = computed(() => isIconWhite.value ? icon_cart_white : icon_cart_grey)
-const icon_menu = computed(() => isIconWhite.value ? icon_menu_white : icon_menu_grey)
 const icon_logo = computed(() => isIconWhite.value ? icon_logo_white : icon_logo_orange)
 
 
@@ -139,6 +140,10 @@ onBeforeUnmount(() => {
       background: none;
       border: none;
       cursor: pointer;
+      .logo-icon {
+        width: 35px;
+        height: 30px;
+      }
       .avatar {
         border-radius: 50%;
         object-fit: cover;
@@ -157,15 +162,29 @@ onBeforeUnmount(() => {
         line-height: 100%;
         letter-spacing: -0.2px;
       }
+      .badge-fav {
+        right: 52px;
+      }
+      .badge-cart {
+        right: 10px;
+      }
     }
     img {
       width: 30px;
       height: 30px;
     }
   }
-  .logo-icon {
-    width: 35px;
-    height: 30px;
+  .menu {
+    @include flex-c-c;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    .menu-btn {
+      width: 30px;
+      height: 30px;
+    }
   }
 }
 
@@ -192,6 +211,7 @@ onBeforeUnmount(() => {
     background-color: $white-10;
   }
 }
+
 .fade-enter-active, .fade-leave-active {
   transition: opacity .2s ease;
 }
@@ -199,8 +219,44 @@ onBeforeUnmount(() => {
   opacity: 0;
 }
 
-//@media (max-width: 600px) {
-//
-//}
+@media (max-width: 600px) {
+  .header {
+    .actions {
+      width: 88px;
+      gap: 8px;
+      .icon-btn {
+        .logo-icon {
+          width: 27px;
+          height: 24px;
+        }
+        .avatar {
+        }
+        .badge {
+          top: 13px;
+        }
+        .badge-fav {
+          right: 42px;
+        }
+        .badge-cart {
+        }
+      }
+      img {
+        width: 24px;
+        height: 24px;
+      }
+    }
+    .menu {
+      .menu-btn {
+      }
+    }
+  }
+
+  .dropdown-menu {
+    .dropdown-link {
+    }
+    .dropdown-link:hover {
+    }
+  }
+}
 
 </style>
