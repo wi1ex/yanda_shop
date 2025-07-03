@@ -8,8 +8,8 @@
     </div>
 
     <!-- Кнопка меню -->
-    <div class="menu" @click="toggleMenu">
-      <button class="menu-btn" ref="menuBtn">
+    <div class="menu">
+      <button class="menu-btn" @click="toggleMenu">
         Меню
         <img :src="icon_menu_grey" alt="Меню" />
       </button>
@@ -36,7 +36,11 @@
 
     <!-- Выпадающее меню -->
     <transition name="fade">
-      <nav v-if="menuOpen" class="dropdown-menu" ref="menu">
+      <nav v-if="menuOpen" class="dropdown-menu">
+        <button class="dropdown-menu-btn" @click="toggleMenu">
+          Меню
+          <img :src="icon_menu_grey" alt="Меню" />
+        </button>
         <div @click="goToGender('')" class="dropdown-link">Каталог</div>
         <div @click="goToGender('M')" class="dropdown-link">Мужчинам</div>
         <div @click="goToGender('W')" class="dropdown-link">Женщинам</div>
@@ -64,8 +68,6 @@ import icon_logo_white from '@/assets/images/logo_white.svg'
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
-const menu = ref(null)
-const menuBtn = ref(null)
 const menuOpen = ref(false)
 const isAdmin = computed(() => store.user?.role === 'admin')
 const isIconWhite = computed(() => route.name === 'About' || route.name === 'Home')
@@ -100,24 +102,6 @@ function toggleMenuClose() {
   menuOpen.value = false
 }
 
-// Закрыть меню кликом вне
-function onClickOutside(e) {
-  if (!menuOpen.value) return
-  const clickedInsideBtn = menuBtn.value?.contains(e.target)
-  const clickedInsideMenu = menu.value?.contains(e.target)
-  if (!clickedInsideBtn && !clickedInsideMenu) {
-    menuOpen.value = false
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', onClickOutside)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', onClickOutside)
-})
-
 </script>
 
 <style scoped lang="scss">
@@ -125,7 +109,7 @@ onBeforeUnmount(() => {
   @include flex-c-sb;
   position: fixed;
   width: calc(100% - 20px);
-  height: 30px;
+  height: 72px;
   padding: 10px;
   background-color: $black-25;
   z-index: 1000;
@@ -176,14 +160,22 @@ onBeforeUnmount(() => {
   }
   .menu {
     @include flex-c-c;
-    margin: 0;
-    padding: 0;
-    background: none;
-    border: none;
-    cursor: pointer;
     .menu-btn {
-      width: 30px;
-      height: 30px;
+      @include flex-c-c;
+      padding: 8px 16px;
+      gap: 4px;
+      background-color: white;
+      border-radius: 999px;
+      border: none;
+      font-family: Manrope-Medium;
+      font-size: 20px;
+      line-height: 100%;
+      letter-spacing: -0.8px;
+      cursor: pointer;
+      img {
+        width: 30px;
+        height: 30px;
+      }
     }
   }
 }
@@ -192,20 +184,34 @@ onBeforeUnmount(() => {
 .dropdown-menu {
   display: flex;
   flex-direction: column;
-  position: absolute;
-  top: calc(1vh + 40px);
-  left: 2vw;
+  position: fixed;
+  inset: 0;
   padding: 8px 0;
-  width: 140px;
-  background-color: $grey-20;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px $black-25;
-  z-index: 1100;
+  background-color: white;
+  z-index: 3000;
+  .dropdown-menu-btn {
+    @include flex-c-c;
+    padding: 8px 16px;
+    gap: 4px;
+    background-color: white;
+    border-radius: 999px;
+    border: none;
+    font-family: Manrope-Medium;
+    font-size: 20px;
+    line-height: 100%;
+    letter-spacing: -0.8px;
+    cursor: pointer;
+    img {
+      width: 30px;
+      height: 30px;
+    }
+  }
   .dropdown-link {
     padding: 8px 16px;
     color: $white-100;
     font-size: 14px;
     text-decoration: none;
+    cursor: pointer;
   }
   .dropdown-link:hover {
     background-color: $white-10;
@@ -221,6 +227,7 @@ onBeforeUnmount(() => {
 
 @media (max-width: 600px) {
   .header {
+    height: 46px;
     .actions {
       width: 88px;
       gap: 8px;
@@ -247,11 +254,25 @@ onBeforeUnmount(() => {
     }
     .menu {
       .menu-btn {
+        font-size: 16px;
+        letter-spacing: -0.64px;
+        img {
+          width: 24px;
+          height: 24px;
+        }
       }
     }
   }
 
   .dropdown-menu {
+    .dropdown-menu-btn {
+      font-size: 16px;
+      letter-spacing: -0.64px;
+      img {
+        width: 24px;
+        height: 24px;
+      }
+    }
     .dropdown-link {
     }
     .dropdown-link:hover {
