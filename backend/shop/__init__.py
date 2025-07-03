@@ -39,14 +39,17 @@ def create_app() -> Flask:
 
     @jwt.unauthorized_loader
     def missing_token(err_str):
+        logger.warning("JWT unauthorized: %s", err_str)
         return jsonify({"error": "Authorization header required"}), 401
 
     @jwt.invalid_token_loader
     def invalid_token(err_str):
+        logger.warning("JWT invalid token: %s", err_str)
         return jsonify({"error": "Invalid token"}), 422
 
     @jwt.expired_token_loader
     def expired_token(header, payload):
+        logger.warning("JWT expired token: header=%s payload=%s", header, payload)
         return jsonify({"error": "Token has expired"}), 401
 
     # 5) Blueprint’ы
