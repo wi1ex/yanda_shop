@@ -1,8 +1,8 @@
 import axios from 'axios'
-import { useStore, API } from '@/store'
+import { useStore } from '@/store'
 
 const api = axios.create({
-  baseURL: API.baseUrl
+  baseURL: 'https://shop.yanda.twc1.net'
 })
 
 api.interceptors.request.use(config => {
