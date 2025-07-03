@@ -1,15 +1,15 @@
 import json
 from typing import Tuple
 from flask import Blueprint, jsonify, request, Response
-from ..cors.logging import logger
-from ..db_utils import session_scope
+from ..core.logging import logger
+from ..utils.db_utils import session_scope
 from ..extensions import redis_client
 from ..models import (
     Shoe,
     Clothing,
     Accessory,
 )
-from ..utils import (
+from ..utils.product_serializer import (
     serialize_product,
     model_by_category,
 )

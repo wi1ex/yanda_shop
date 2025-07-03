@@ -2,8 +2,8 @@ from redis import Redis
 from redis.exceptions import ConnectionError
 from minio import Minio
 from tenacity import retry, wait_exponential, wait_fixed, stop_after_attempt, retry_if_exception_type
-from .cors.logging import logger
-from .cors.config import (
+from .core.logging import logger
+from .core.config import (
     REDIS_HOST,
     REDIS_PORT,
     REDIS_PASSWORD,

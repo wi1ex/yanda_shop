@@ -1,11 +1,11 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_migrate import Migrate
 from flask_cors import CORS
-
-from .cors.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS, SECRET_KEY
-from .cors.logging import setup_logging, logger
+from flask_jwt_extended import JWTManager
+from .core.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS, SECRET_KEY
+from .core.logging import setup_logging, logger
 from .models import db
-from .utils import load_delivery_options
+from .utils.product_serializer import load_delivery_options
 from .routes.general import general_api
 from .routes.product import product_api
 from .routes.admin import admin_api
@@ -27,12 +27,33 @@ def create_app() -> Flask:
     Migrate(app, db)
     CORS(app, resources={r"/api/*": {"origins": CORS_ORIGINS}})
 
-    # 4) Blueprint’ы
+    # 4) Flask-JWT-Extended
+    app.config['JWT_SECRET_KEY'] = SECRET_KEY
+    app.config['JWT_TOKEN_LOCATION'] = ['headers']
+    app.config['JWT_HEADER_NAME'] = 'Authorization'
+    app.config['JWT_HEADER_TYPE'] = 'Bearer'
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 3600
+
+    jwt = JWTManager(app)
+
+    @jwt.unauthorized_loader
+    def missing_token(err_str):
+        return jsonify({"error": "Authorization header required"}), 401
+
+    @jwt.invalid_token_loader
+    def invalid_token(err_str):
+        return jsonify({"error": "Invalid token"}), 422
+
+    @jwt.expired_token_loader
+    def expired_token(header, payload):
+        return jsonify({"error": "Token has expired"}), 401
+
+    # 5) Blueprint’ы
     app.register_blueprint(general_api)  # общий API (/api/general/...)
     app.register_blueprint(product_api)  # товары    (/api/product/...)
     app.register_blueprint(admin_api)    # админка   (/api/admin/...)
 
-    # 5) Кэшируем delivery options
+    # 6) Кэшируем delivery options
     with app.app_context():
         load_delivery_options()
         logger.debug("Delivery options cached")

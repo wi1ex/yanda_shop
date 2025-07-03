@@ -1,5 +1,6 @@
 import {defineStore} from 'pinia'
 import {computed, reactive, ref, watch} from 'vue'
+import api from '@/services/api'
 
 export const API = {
   baseUrl: 'https://shop.yanda.twc1.net',
@@ -38,7 +39,8 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
   // State
   // -------------------------------------------------
-  const adminToken         = ref(localStorage.getItem('adminToken') || '')
+  const accessToken        = ref(localStorage.getItem('accessToken') || '')
+  const refreshToken       = ref(localStorage.getItem('refreshToken') || '')
   const user               = ref({
     id: null,
     first_name: '',
@@ -127,9 +129,11 @@ export const useStore = defineStore('main', () => {
     return (!Number.isNaN(asNum) && String(asNum) === String(id))
   }
 
-  function setAdminToken(token) {
-    adminToken.value = token
-    localStorage.setItem('adminToken', token)
+  function setTokens({ access, refresh = '' }) {
+    accessToken.value = access
+    refreshToken.value = refresh
+    localStorage.setItem('accessToken', access)
+    localStorage.setItem('refreshToken', refresh)
   }
 
   // -------------------------------------------------
@@ -138,11 +142,7 @@ export const useStore = defineStore('main', () => {
   async function saveUserToServer(payload) {
     if (!payload?.id) return
     try {
-      await fetch(`${API.baseUrl}${API.general.saveUser}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
+      await api.post(API.general.saveUser, payload)
     } catch (e) {
       console.error('Не удалось сохранить TG пользователя:', e)
     }
@@ -152,15 +152,13 @@ export const useStore = defineStore('main', () => {
     profileLoading.value = true
     profileError.value = ''
     try {
-      const res = await fetch(`${API.baseUrl}${API.general.getUserProfile}?user_id=${userId}`)
-      if (!res.ok) {
-        profileError.value = res.status === 404 ? 'Пользователь не найден' : `Ошибка ${res.status}`
-        return
-      }
-      return await res.json()
+      const { data } = await api.get(API.general.getUserProfile, {
+        params: { user_id: userId }
+      })
+      return data
     } catch (e) {
       console.error(e)
-      profileError.value = 'Ошибка сети'
+      profileError.value = e.response?.status === 404 ? 'Пользователь не найден' : `Ошибка ${e.response?.status || e.message}`
     } finally {
       profileLoading.value = false
     }
@@ -186,7 +184,7 @@ export const useStore = defineStore('main', () => {
         photo_url:  profileData.photo_url,
       }
       if (profileData.access_token) {
-        setAdminToken(profileData.access_token)
+        setTokens({ access: profileData.access_token })
       }
     } catch (e) {
       console.error('Ошибка инициализации Telegram-пользователя:', e)
@@ -204,8 +202,8 @@ export const useStore = defineStore('main', () => {
   // General User Actions
   // -------------------------------------------------
   async function fetchParameters() {
-    const res = await fetch(`${API.baseUrl}${API.general.getParameters}`)
-    parameters.value = await res.json()
+    const { data } = await api.get(API.general.getParameters)
+    parameters.value = data
   }
 
   // -------------------------------------------------
@@ -214,10 +212,10 @@ export const useStore = defineStore('main', () => {
   async function fetchProducts(cat = null) {
     if (cat) selectedCategory.value = cat
     try {
-      const url = cat ? `?category=${encodeURIComponent(cat)}` : ''
-      const res = await fetch(`${API.baseUrl}${API.product.listProducts}${url}`)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      products.value = await res.json()
+      const { data } = await api.get(API.product.listProducts, {
+        params: cat ? { category: cat } : {}
+      })
+      products.value = data
     } catch (e) {
       console.error('Не удалось загрузить товары:', e)
     }
@@ -226,10 +224,10 @@ export const useStore = defineStore('main', () => {
   async function fetchDetail(variantSku, category) {
     detailLoading.value = true
     try {
-      const pRes = await fetch(
-        `${API.baseUrl}${API.product.getProduct}?category=${encodeURIComponent(category)}&variant_sku=${encodeURIComponent(variantSku)}`
-      )
-      detailData.value = await pRes.json()
+      const { data } = await api.get(API.product.getProduct, {
+        params: { category, variant_sku: variantSku }
+      })
+      detailData.value = data
       await fetchProducts(category)
       variants.value = products.value.filter(p => p.sku === detailData.value.sku)
     } catch (e) {
@@ -248,21 +246,19 @@ export const useStore = defineStore('main', () => {
       return
     }
     try {
-      const resp = await fetch(`${API.baseUrl}${API.product.getCart}?user_id=${user.value.id}`)
-      if (!resp.ok) {
-        console.error('Cannot load cart:', resp.statusText)
-        return
-      }
-      const data = await resp.json()
+      const { data } = await api.get(API.product.getCart, {
+        params: { user_id: user.value.id }
+      })
       if (data.items) {
         cart.value.items = data.items
         cart.value.count = data.count
         cart.value.total = data.total
         cartOrder.value = Array.from(new Set(data.items.map(i => i.variant_sku)))
       }
-      cartLoaded.value = true
     } catch (e) {
-      console.error('Error loading cart from server:', e)
+      console.error('Cannot load cart:', e)
+    } finally {
+      cartLoaded.value = true
     }
   }
 
@@ -271,16 +267,12 @@ export const useStore = defineStore('main', () => {
     const payload = {
       user_id: user.value.id,
       items: cart.value.items.map(i => ({
-        variant_sku:     i.variant_sku,
-        delivery_label:  i.delivery_option?.label || null
+        variant_sku:    i.variant_sku,
+        delivery_label: i.delivery_option?.label || null
       }))
     }
     try {
-      await fetch(`${API.baseUrl}${API.product.saveCart}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
+      await api.post(API.product.saveCart, payload)
     } catch (e) {
       console.error('Error saving cart to server:', e)
     }
@@ -302,9 +294,9 @@ export const useStore = defineStore('main', () => {
       return
     }
     try {
-      const resp = await fetch(`${API.baseUrl}${API.product.getFavorites}?user_id=${user.value.id}`)
-      if (!resp.ok) throw new Error(resp.statusText)
-      const data = await resp.json()
+      const { data } = await api.get(API.product.getFavorites, {
+        params: { user_id: user.value.id }
+      })
       favorites.value.items = data.items || []
       favorites.value.count = data.count || favorites.value.items.length
     } catch (e) {
@@ -316,14 +308,12 @@ export const useStore = defineStore('main', () => {
 
   async function saveFavoritesToServer() {
     if (!user.value?.id || !isTelegramUserId(user.value.id)) return
-    const payload = { user_id: user.value.id, items: favorites.value.items }
+    const payload = {
+      user_id: user.value.id,
+      items: favorites.value.items
+    }
     try {
-      const resp = await fetch(`${API.baseUrl}${API.product.saveFavorites}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-      if (!resp.ok) console.error('Cannot save favorites:', resp.statusText)
+      await api.post(API.product.saveFavorites, payload)
     } catch (e) {
       console.error('Error saving favorites:', e)
     }
@@ -349,6 +339,10 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
   // Utils: grouping & computed
   // -------------------------------------------------
+  const userRole = computed(() => user.value?.role || 'visitor')
+
+  const isAdmin = computed(() => userRole.value === 'admin')
+
   const colorGroups = computed(() => {
     const map = {}
     products.value.forEach(p => {
@@ -495,87 +489,46 @@ export const useStore = defineStore('main', () => {
   // Admin / Reviews Actions
   // -------------------------------------------------
   async function fetchUsers() {
-    const res = await fetch(`${API.baseUrl}${API.admin.listUsers}`, {
-      headers: { 'Authorization': `Bearer ${adminToken.value}` }
-    })
-    if (res.ok) {
-      const j = await res.json()
-      users.value = j.users
-    }
+    const { data } = await api.get(API.admin.listUsers)
+    users.value = data.users
   }
 
   async function fetchSettings() {
-    const res = await fetch(`${API.baseUrl}${API.admin.getSettings}`, {
-      headers: { 'Authorization': `Bearer ${adminToken.value}` }
-    })
-    if (res.ok) settings.value = (await res.json()).settings
+    const { data } = await api.get(API.admin.getSettings)
+    settings.value = data.settings
   }
 
   async function saveSetting(key, value) {
-    await fetch(`${API.baseUrl}${API.admin.updateSetting}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${adminToken.value}`
-      },
-      body: JSON.stringify({ key, value })
-    })
+    await api.post(API.admin.updateSetting, { key, value })
   }
 
   async function fetchReviews() {
-    const res = await fetch(`${API.baseUrl}${API.general.listReviews}`)
-    if (res.ok) {
-      const j = await res.json()
-      reviews.value = j.reviews.map(r => ({ ...r, }))
-    }
+    const { data } = await api.get(API.general.listReviews)
+    reviews.value = data.reviews
   }
 
   async function createReview(formData) {
-    const res = await fetch(`${API.baseUrl}${API.admin.createReview}`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${adminToken.value}` },
-      body: formData
-    })
-    const j = await res.json()
-    if (!res.ok) {
-      throw new Error(j.error || 'Неизвестная ошибка')
-    }
-    return j.message
+    const { data } = await api.post(API.admin.createReview, formData)
+    return data.message
   }
 
   async function deleteReview(id) {
-    const res = await fetch(`${API.baseUrl}${API.admin.deleteReview}/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${adminToken.value}` }
-    })
-    if (!res.ok) {
-      const j = await res.json()
-      throw new Error(j.error || res.status)
-    }
+    await api.delete(`${API.admin.deleteReview}/${id}`)
     await fetchReviews()
   }
 
   async function updateUserRole(userId, role) {
-    const res = await fetch(`${API.baseUrl}${API.admin.setUserRole}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${adminToken.value}`
-      },
-      body: JSON.stringify({ user_id: userId, role: role, author_id: user.value.id, author_name: user.value.username })
+    await api.post(API.admin.setUserRole, {
+      user_id:     userId,
+      role:        role,
+      author_id:   user.value.id,
+      author_name: user.value.username
     })
-    if (!res.ok) {
-      const j = await res.json()
-      throw new Error(j.error || 'Ошибка смены роли')
-    }
     await fetchUsers()
   }
 
   async function loadSheetUrls() {
-    const res = await fetch(`${API.baseUrl}${API.admin.getSheetUrls}`, {
-      headers: { 'Authorization': `Bearer ${adminToken.value}` }
-    })
-    const data = await res.json()
+    const { data } = await api.get(API.admin.getSheetUrls)
     Object.assign(sheetUrls.value, data)
   }
 
@@ -583,24 +536,14 @@ export const useStore = defineStore('main', () => {
     sheetSaveLoading[cat] = true
     sheetResult[cat] = ''
     try {
-      const res = await fetch(`${API.baseUrl}${API.admin.updateSheetUrl}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken.value}`
-        },
-        body: JSON.stringify({ category: cat, url: sheetUrls.value[cat] })
+      await api.post(API.admin.updateSheetUrl, {
+        category: cat,
+        url: sheetUrls.value[cat]
       })
-      const j = await res.json()
-      if (res.ok) {
-        sheetResult[cat] = 'Ссылка сохранена'
-        return true
-      } else {
-        sheetResult[cat] = `Ошибка: ${j.error || res.status}`
-        return false
-      }
+      sheetResult[cat] = 'Ссылка сохранена'
+      return true
     } catch (e) {
-      sheetResult[cat] = `Ошибка сети`
+      sheetResult[cat] = `Ошибка: ${e.response?.data?.error || e.message}`
       return false
     } finally {
       sheetSaveLoading[cat] = false
@@ -611,23 +554,22 @@ export const useStore = defineStore('main', () => {
     sheetImportLoading[cat] = true
     sheetResult[cat] = ''
     try {
-      const res = await fetch(`${API.baseUrl}${API.admin.importSheet}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken.value}`
-        },
-        body: JSON.stringify({ category: cat, author_id: user.value.id, author_name: user.value.username })
+      const { data } = await api.post(API.admin.importSheet, {
+        category:    cat,
+        author_id:   user.value.id,
+        author_name: user.value.username
       })
-      const j = await res.json()
-      if (res.ok && j.status === 'ok') {
-        sheetResult[cat] = `Добавлено: ${j.added}. Обновлено: ${j.updated}. Удалено: ${j.deleted}. Ошибки: ${j.warns}.`
+      if (data.status === 'ok') {
+        sheetResult[cat] = `Добавлено: ${data.added}. Обновлено: ${data.updated}. Удалено: ${data.deleted}. Ошибки: ${data.warns}.`
         await loadLogs()
+        return true
       } else {
-        sheetResult[cat] = `Ошибка: ${j.error || res.status}`
+        sheetResult[cat] = `Ошибка: ${data.error || JSON.stringify(data)}`
+        return false
       }
     } catch (e) {
       sheetResult[cat] = `Ошибка сети`
+      return false
     } finally {
       sheetImportLoading[cat] = false
     }
@@ -636,20 +578,12 @@ export const useStore = defineStore('main', () => {
   async function loadLogs(limit = 10, offset = 0) {
     logsLoading.value = true
     try {
-      const url = new URL(`${API.baseUrl}${API.admin.getLogs}`, window.location.origin)
-      url.searchParams.set('limit',  limit)
-      url.searchParams.set('offset', offset)
-      const res = await fetch(url.toString(), {
-        headers: { 'Authorization': `Bearer ${adminToken.value}` }
-      })
-      if (!res.ok) throw new Error(res.statusText)
-      const data = await res.json()
+      const { data } = await api.get(API.admin.getLogs, { params: { limit, offset } })
       logs.value = data.logs
-      totalLogs.value = data.total
-    } catch (e) {
-      console.error('loadLogs:', e)
+      totalLogs.value  = data.total
+    } catch {
       logs.value = []
-      totalLogs.value = 0
+      totalLogs.value  = 0
     } finally {
       logsLoading.value = false
     }
@@ -658,13 +592,9 @@ export const useStore = defineStore('main', () => {
   async function loadVisits(date) {
     visitsLoading.value = true
     try {
-      const res = await fetch(`${API.baseUrl}${API.admin.getDailyVisits}?date=${date}`, {
-        headers: { 'Authorization': `Bearer ${adminToken.value}` }
-      })
-      const j = await res.json()
-      visitsData.value = { date: j.date, hours: j.hours }
-    } catch (e) {
-      console.error(e)
+      const { data } = await api.get(API.admin.getDailyVisits, { params: { date } })
+      visitsData.value = { date: data.date, hours: data.hours }
+    } catch {
       visitsData.value = { date: '', hours: [] }
     } finally {
       visitsLoading.value = false
@@ -679,20 +609,11 @@ export const useStore = defineStore('main', () => {
     form.append('author_id', user.value.id)
     form.append('author_name', user.value.username)
     try {
-      const res = await fetch(`${API.baseUrl}${API.admin.uploadImages}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${adminToken.value}` },
-        body: form
-      })
-      const j = await res.json()
-      if (res.status === 201) {
-        zipResult.value = `Добавлено: ${j.added}. Обновлено: ${j.replaced}. Удалено: ${j.deleted}. Ошибки: ${j.warns}.`
-        await loadLogs()
-      } else {
-        zipResult.value = `Ошибка ${res.status}: ${j.error || j.message}`
-      }
+      const { data } = await api.post(API.admin.uploadImages, form)
+      zipResult.value = `Добавлено: ${data.added}. Обновлено: ${data.replaced}. Удалено: ${data.deleted}. Ошибки: ${data.warns}.`
+      await loadLogs()
     } catch (e) {
-      zipResult.value = `Ошибка сети`
+      zipResult.value = `Ошибка: ${e.response?.data?.error || e.message}`
     } finally {
       zipLoading.value = false
     }
@@ -703,7 +624,7 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
   return {
     // state
-    adminToken, user,
+    accessToken, refreshToken, userRole, isAdmin, user,
     categoryList, selectedCategory,
     sortBy, sortOrder,
     filterPriceMin, filterPriceMax, filterColor, filterGender,
@@ -719,7 +640,7 @@ export const useStore = defineStore('main', () => {
     parameters, settings, reviews, users,
 
     // helpers
-    isTelegramUserId, setAdminToken,
+    isTelegramUserId, setTokens,
 
     // init/auth
     saveUserToServer, fetchUserProfile,

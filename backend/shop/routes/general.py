@@ -1,15 +1,15 @@
 import io
 import requests
-from werkzeug.utils import secure_filename
 from datetime import datetime
-from typing import Any, Dict, Tuple, List
 from zoneinfo import ZoneInfo
 from sqlalchemy import or_
+from typing import Any, Dict, Tuple, List
+from werkzeug.utils import secure_filename
 from flask import Blueprint, jsonify, request, Response
-from ..routes.auth import create_access_token
-from ..cors.config import BACKEND_URL
-from ..cors.logging import logger
-from ..db_utils import session_scope
+from flask_jwt_extended import create_access_token
+from ..core.config import BACKEND_URL
+from ..core.logging import logger
+from ..utils.db_utils import session_scope
 from ..extensions import redis_client, minio_client, BUCKET
 from ..models import (
     Users,
@@ -158,7 +158,7 @@ def get_user_profile() -> Tuple[Response, int]:
             }
             # если админ — вручаем JWT
             if u.role == "admin":
-                token = create_access_token(u.user_id, u.role)
+                token = create_access_token(identity = u.user_id, additional_claims={"role": u.role})
                 profile["access_token"] = token
 
         return jsonify(profile), 200
