@@ -1,5 +1,6 @@
 <template>
   <div class="app-container" v-if="store.user">
+    <div class="fake-header"></div>
     <Header/>
     <CartPage/>
     <router-view/>
@@ -65,6 +66,16 @@ onBeforeUnmount(() => {
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* IE/Edge */
   user-select: none; /* Стандартный синтаксис */
+
+  .fake-header {
+    height: 72px;
+  }
+}
+
+@media (max-width: 600px) {
+  .fake-header {
+    height: 46px;
+  }
 }
 
 </style>

@@ -41,7 +41,6 @@
           Меню
           <img :src="icon_menu_grey" alt="Меню" />
         </button>
-        <div @click="goToGender('')" class="dropdown-link">Каталог</div>
         <div @click="goToGender('M')" class="dropdown-link">Мужчинам</div>
         <div @click="goToGender('W')" class="dropdown-link">Женщинам</div>
         <div @click="goToPage('About')" class="dropdown-link">О нас</div>
@@ -186,20 +185,21 @@ function toggleMenuClose() {
   flex-direction: column;
   position: fixed;
   inset: 0;
-  padding: 8px 0;
-  background-color: white;
-  z-index: 3000;
+  padding: 22px 0;
+  background-color: $white-100;
+  z-index: 2000;
   .dropdown-menu-btn {
     @include flex-c-c;
-    padding: 8px 16px;
+    align-self: center;
+    margin: 8px 0;
+    width: 96px;
     gap: 4px;
-    background-color: white;
-    border-radius: 999px;
+    background: none;
     border: none;
     font-family: Manrope-Medium;
     font-size: 20px;
     line-height: 100%;
-    letter-spacing: -0.8px;
+    letter-spacing: -.8px;
     cursor: pointer;
     img {
       width: 30px;
@@ -265,7 +265,9 @@ function toggleMenuClose() {
   }
 
   .dropdown-menu {
+    padding: 12px 0;
     .dropdown-menu-btn {
+      width: 80px;
       font-size: 16px;
       letter-spacing: -0.64px;
       img {
