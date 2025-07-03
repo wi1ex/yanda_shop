@@ -25,9 +25,10 @@ from ..models import (
 admin_api: Blueprint = Blueprint("admin_api", __name__, url_prefix="/api/admin")
 
 
-@admin_api.route("/get_daily_visits")
+@admin_api.route("/get_daily_visits", methods=["GET"])
 @admin_required
 def get_daily_visits() -> Tuple[Response, int]:
+    logger.info("GET /api/admin/get_daily_visits")
     date_str = request.args.get("date") or datetime.now(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d")
     pipe = redis_client.pipeline()
     for h in range(24):
@@ -45,9 +46,10 @@ def get_daily_visits() -> Tuple[Response, int]:
     return jsonify({"date": date_str, "hours": hours}), 200
 
 
-@admin_api.route("/get_logs")
+@admin_api.route("/get_logs", methods=["GET"])
 @admin_required
 def get_logs() -> Tuple[Response, int]:
+    logger.info("GET /api/admin/get_logs")
     # 1) читаем параметры пагинации
     try:
         limit = int(request.args.get("limit", "10"))
@@ -83,9 +85,10 @@ def get_logs() -> Tuple[Response, int]:
         return jsonify({"error": "internal error"}), 500
 
 
-@admin_api.route("/get_sheet_urls")
+@admin_api.route("/get_sheet_urls", methods=["GET"])
 @admin_required
 def get_sheet_urls() -> Tuple[Response, int]:
+    logger.info("GET /api/admin/get_sheet_urls")
     urls = {cat: get_sheet_url(cat) for cat in ("shoes", "clothing", "accessories")}
     return jsonify(urls), 200
 
@@ -93,6 +96,7 @@ def get_sheet_urls() -> Tuple[Response, int]:
 @admin_api.route("/update_sheet_url", methods=["POST"])
 @admin_required
 def update_sheet_url() -> Tuple[Response, int]:
+    logger.info("POST /api/admin/update_sheet_url")
     data = request.get_json(force=True, silent=True) or {}
     category = data.get("category", "").lower()
     url = data.get("url", "").strip()
@@ -122,6 +126,7 @@ def update_sheet_url() -> Tuple[Response, int]:
 @admin_api.route("/import_sheet", methods=["POST"])
 @admin_required
 def import_sheet() -> Tuple[Response, int]:
+    logger.info("POST /api/admin/import_sheet")
     data = request.get_json(force=True, silent=True)
 
     author_id_raw = data.get("author_id")
@@ -185,6 +190,7 @@ def import_sheet() -> Tuple[Response, int]:
 @admin_api.route("/upload_images", methods=["POST"])
 @admin_required
 def upload_images() -> Tuple[Response, int]:
+    logger.info("POST /api/admin/upload_images")
     author_id_raw = request.form.get("author_id")
     if author_id_raw is None:
         return jsonify({"error": "author_id required"}), 400
@@ -259,7 +265,7 @@ def upload_images() -> Tuple[Response, int]:
 @admin_api.route('/get_settings', methods=['GET'])
 @admin_required
 def get_settings() -> Tuple[Response, int]:
-    logger.info("GET /api/admin/settings called")
+    logger.info("GET /api/admin/get_settings")
     try:
         with session_scope() as session:
             settings = session.query(AdminSetting).order_by(AdminSetting.key).all()
@@ -273,7 +279,7 @@ def get_settings() -> Tuple[Response, int]:
 @admin_api.route('/update_setting', methods=['POST'])
 @admin_required
 def update_setting() -> Tuple[Response, int]:
-    logger.info("POST /api/admin/settings called with %s", request.get_json())
+    logger.info("POST /api/admin/update_setting")
     try:
         data = request.get_json(force=True)
         key = data.get("key")
@@ -300,6 +306,7 @@ def update_setting() -> Tuple[Response, int]:
 @admin_api.route('/create_review', methods=['POST'])
 @admin_required
 def create_review() -> Tuple[Response, int]:
+    logger.info("POST /api/admin/create_review")
     form = request.form
     # 1) Проверяем обязательные поля
     required_fields = {
@@ -421,6 +428,7 @@ def list_users() -> Tuple[Response, int]:
 @admin_api.route("/set_user_role", methods=["POST"])
 @admin_required
 def set_user_role() -> Tuple[Response, int]:
+    logger.info("POST /api/admin/set_user_role")
     data = request.get_json(force=True)
 
     author_id_raw = data.get("author_id")
