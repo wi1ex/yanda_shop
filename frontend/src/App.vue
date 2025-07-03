@@ -68,13 +68,15 @@ onBeforeUnmount(() => {
   user-select: none; /* Стандартный синтаксис */
 
   .fake-header {
-    height: 72px;
+    height: 92px;
   }
 }
 
 @media (max-width: 600px) {
-  .fake-header {
-    height: 46px;
+  .app-container {
+    .fake-header {
+      height: 66px;
+    }
   }
 }
 
