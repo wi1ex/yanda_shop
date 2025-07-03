@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
-import { computed, reactive, ref, watch } from 'vue'
+import {defineStore} from 'pinia'
+import {computed, reactive, ref, watch} from 'vue'
 
 export const API = {
   baseUrl: 'https://shop.yanda.twc1.net',
@@ -205,8 +205,7 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
   async function fetchParameters() {
     const res = await fetch(`${API.baseUrl}${API.general.getParameters}`)
-    const data = await res.json()
-    parameters.value = Object.entries(data).map(([key, value]) => ({ key, value }))
+    parameters.value = await res.json()
   }
 
   // -------------------------------------------------

@@ -249,10 +249,7 @@ function goToGender(gender) {
 }
 
 .big-digit {
-  font-family: Bounded-250;
-  font-size: 26vw;
-  line-height: 80%;
-  letter-spacing: -26.2px;
+  width: 100%;
 }
 
 /* === Адаптив === */
@@ -305,8 +302,6 @@ function goToGender(gender) {
   }
   .big-digit {
     margin-bottom: 16px;
-    font-size: 25vw;
-    letter-spacing: -4.9px;
   }
 }
 </style>
