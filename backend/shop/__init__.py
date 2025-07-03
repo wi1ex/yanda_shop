@@ -9,6 +9,7 @@ from .utils.product_serializer import load_delivery_options
 from .routes.general import general_api
 from .routes.product import product_api
 from .routes.admin import admin_api
+from .routes.auth import auth_bp
 
 
 def create_app() -> Flask:
@@ -49,9 +50,10 @@ def create_app() -> Flask:
         return jsonify({"error": "Token has expired"}), 401
 
     # 5) Blueprint’ы
-    app.register_blueprint(general_api)  # общий API (/api/general/...)
-    app.register_blueprint(product_api)  # товары    (/api/product/...)
-    app.register_blueprint(admin_api)    # админка   (/api/admin/...)
+    app.register_blueprint(general_api)  # /api/general/...
+    app.register_blueprint(product_api)  # /api/product/...
+    app.register_blueprint(admin_api)    # /api/admin/...
+    app.register_blueprint(auth_bp)      # /api/auth
 
     # 6) Кэшируем delivery options
     with app.app_context():

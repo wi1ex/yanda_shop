@@ -133,6 +133,7 @@ def save_user() -> Tuple[Response, int]:
 @general_api.route("/get_user_profile")
 def get_user_profile() -> Tuple[Response, int]:
     uid_str = request.args.get("user_id")
+    logger.info("GET /api/general/get_user_profile?user_id=%s", uid_str)
     if not uid_str:
         return jsonify({"error": "user_id required"}), 400
 
@@ -164,7 +165,7 @@ def get_user_profile() -> Tuple[Response, int]:
         return jsonify(profile), 200
 
     except Exception as e:
-        logger.exception("Error fetching user %d: %s", uid, e)
+        logger.exception("Failed to get_user_profile: %s", e)
         return jsonify({"error": "internal error"}), 500
 
 
