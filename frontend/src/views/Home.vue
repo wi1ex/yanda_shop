@@ -195,19 +195,19 @@ function nextHero() {
 
 // How it works
 const workSteps = [
-  { step:1, title:'Ты выбираешь', text:'Найди товар в каталоге или пришли нам фотографию желаемой модели.' },
-  { step:2, title:'Мы проверяем на оригинал', text:'Мы проверяем наличие, подлинность и цену в официальных источниках.' },
-  { step:3, title:'Покупаем напрямую', text:'Мы заказываем товары в официальных магазинах без посредников и наценок.' },
-  { step:4, title:'Доставляем тебе', text:'Мы организуем доставку в твой город быстро и безопасно.' },
+  { step: 1, title: 'Ты выбираешь',             text: 'Найди товар в каталоге или пришли нам фотографию желаемой модели.' },
+  { step: 2, title: 'Мы проверяем на оригинал', text: 'Мы проверяем наличие, подлинность и цену в официальных источниках.' },
+  { step: 3, title: 'Покупаем напрямую',        text: 'Мы заказываем товары в официальных магазинах без посредников и наценок.' },
+  { step: 4, title: 'Доставляем тебе',          text: 'Мы организуем доставку в твой город быстро и безопасно.' },
 ]
 
 // Categories
 const currentCat = ref(0)
 
 const categorySlides = [
-  { title:'Аксессуары', desc:'Сумки, ремни и игрушки от Max Mara, Coach, Pop Mart и других официальных брендов.' },
-  { title:'Одежда',     desc:'Только оригинальные вещи от Nike, Adidas, Supreme и т.д.' },
-  { title:'Обувь',      desc:'Хиты от New Balance, Jacquemus и других.' },
+  { title: 'Аксессуары', desc: 'Сумки, ремни и игрушки от Max Mara, Coach, Pop Mart и других официальных брендов.' },
+  { title: 'Одежда',     desc: 'Только оригинальные вещи от Nike, Adidas, Supreme и т.д.' },
+  { title: 'Обувь',      desc: 'Хиты от New Balance, Jacquemus и других.' },
 ]
 
 function prevCat() {
@@ -220,10 +220,10 @@ function nextCat() {
 
 // Principles
 const origBlocks = [
-  { title:'Только оригиналы', text:'Работаем напрямую с официальными магазинами. Никаких подделок, никаких посредников.', open:false },
-  { title:'Честные цены', text:'Прямая закупка без посредников. Цены на 20–45% ниже, чем в розницах.', open:false },
-  { title:'Индивидуальный подход', text:'Не нашел нужную модель? Пришли фото — мы найдём и доставим.', open:false },
-  { title:'Прозрачность и уверенность', text:'Открытые условия на каждом этапе без сюрпризов.', open:false },
+  { open: false, title: 'Только оригиналы',           text: 'Работаем напрямую с официальными магазинами. Никаких подделок, никаких посредников.' },
+  { open: false, title: 'Честные цены',               text: 'Прямая закупка без посредников. Цены на 20–45% ниже, чем в розницах.' },
+  { open: false, title: 'Индивидуальный подход',      text: 'Не нашел нужную модель? Пришли фото — мы найдём и доставим.' },
+  { open: false, title: 'Прозрачность и уверенность', text: 'Открытые условия на каждом этапе без сюрпризов.' },
 ]
 
 function toggleOrig(block) {
@@ -315,17 +315,21 @@ function onSubmitRequest() {
 // FAQ
 const faqItems = computed(() => {
   const items = []
-  let i = 1
-  while (store.parameters[`faq_question_${i}`] || store.parameters[`faq_answer_${i}`]) {
+  const allKeys = Object.keys(store.parameters)
+  const faqNumbers = [ ...new Set(allKeys
+      .filter(key => key.startsWith('faq_question_') || key.startsWith('faq_answer_'))
+      .map(key => parseInt(key.replace(/\D+/g, '')))
+    )
+  ]
+  faqNumbers.sort((a, b) => a - b).forEach(num => {
     items.push({
-      id: i,
-      question: store.parameters[`faq_question_${i}`] || `Вопрос ${i}`,
-      answer: store.parameters[`faq_answer_${i}`] || 'Ответ не найден',
+      id: num,
+      question: store.parameters[`faq_question_${num}`] || `Вопрос ${num}`,
+      answer: store.parameters[`faq_answer_${num}`] || 'Ответ не найден',
     })
-    i++
-  }
+  })
   return items
-})
+});
 
 // закрывает все пункты кроме переданного
 function toggleFaq(id) {
