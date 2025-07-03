@@ -76,7 +76,7 @@
 
     <!-- === Нижняя часть футера для desktop: крупные цифры + подписи === -->
     <div class="footer-bottom-web">
-      <span class="big-digit">©2025</span>
+      <img :src="icon_logo_2025" alt="Лого 2025" class="big-digit" />
       <div class="footer-bottom-column">
         <div class="bottom-cell">
           <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Договор публичной оферты</a>
@@ -95,7 +95,7 @@
 
     <!-- === Нижняя часть футера для мобильных (<600px): две колонки ссылок === -->
     <div class="footer-bottom-mobile">
-      <span class="big-digit">©2025</span>
+      <img :src="icon_logo_2025" alt="Лого 2025" class="big-digit" />
       <div class="footer-bottom-row">
         <div class="footer-bottom-column">
           <div class="bottom-cell">
@@ -125,6 +125,7 @@ import { useStore } from '@/store/index.js'
 
 import icon_logo_orange from '@/assets/images/logo_orange.svg'
 import icon_logo_text from '@/assets/images/logo_text.svg'
+import icon_logo_2025 from '@/assets/images/logo_2025.svg'
 
 const store = useStore()
 const route = useRoute()
