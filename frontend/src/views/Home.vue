@@ -332,12 +332,11 @@ const QUESTIONS = [
 // Подтягиваем ответы из store.settings и собираем финальный массив
 function buildFaqs() {
   faqs.value = QUESTIONS.map((q, idx) => {
-    // ищем в parameters запись с key = `faq_answer_${i+1}`
-    const setting = store.parameters.find(s => s.key === `faq_answer_${idx+1}`)
+    const answerKey = `faq_answer_${idx + 1}`
     return {
       id: idx,
       question: q,
-      answer: setting ? setting.value : 'Нет ответа',
+      answer: store.parameters[answerKey] || 'Нет ответа',
       open: false
     }
   })
