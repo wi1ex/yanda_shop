@@ -124,17 +124,20 @@
       <table>
         <thead>
           <tr>
+            <th>Админ-права</th>
             <th v-for="col in userColumns" :key="col">{{ col }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="u in store.users" :key="u.user_id">
+            <td>
+              <button v-if="store.user.id !== u.user_id && u.role !== 'admin'" @click="makeAdmin(u.user_id)">Сделать админом</button>
+              <button v-if="store.user.id !== u.user_id && u.role === 'admin'" @click="revokeAdmin(u.user_id)">Снять админа</button>
+            </td>
             <td v-for="col in userColumns" :key="col">
               <span v-if="isDateField(col)">{{ formatDate(u[col]) }}</span>
               <span v-else>{{ u[col] }}</span>
             </td>
-            <button v-if="store.user.id !== u.user_id && u.role !== 'admin'" @click="makeAdmin(u.user_id)">Сделать админом</button>
-            <button v-if="store.user.id !== u.user_id && u.role === 'admin'" @click="revokeAdmin(u.user_id)">Снять админа</button>
           </tr>
           <tr v-if="!store.users.length">
             <td :colspan="userColumns.length" class="no-data">Нет пользователей</td>
