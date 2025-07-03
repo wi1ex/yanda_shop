@@ -200,10 +200,6 @@ function goToGender(gender) {
   font-size: 20px;
   line-height: 100%;
   letter-spacing: -0.8px;
-  //transition: opacity 0.2s;
-  //&:hover {
-  //  opacity: 0.6;
-  //}
 }
 
 .logo-icon-div {

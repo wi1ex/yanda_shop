@@ -39,7 +39,7 @@
       <nav v-if="menuOpen" class="dropdown-menu">
         <button class="dropdown-menu-btn" @click="toggleMenu">
           Меню
-          <img :src="icon_menu_grey" alt="Меню" />
+          <img :src="icon_close" alt="Меню" />
         </button>
         <div @click="goToGender('M')" class="dropdown-link">Мужчинам</div>
         <div @click="goToGender('W')" class="dropdown-link">Женщинам</div>
@@ -61,6 +61,7 @@ import icon_favorites_white from '@/assets/images/favorites_white.svg'
 import icon_cart_grey from '@/assets/images/cart_grey.svg'
 import icon_cart_white from '@/assets/images/cart_white.svg'
 import icon_menu_grey from '@/assets/images/menu_grey.svg'
+import icon_close from '@/assets/images/close.svg'
 import icon_logo_orange from '@/assets/images/logo_orange.svg'
 import icon_logo_white from '@/assets/images/logo_white.svg'
 
@@ -107,6 +108,7 @@ function toggleMenuClose() {
 .header {
   @include flex-c-sb;
   position: fixed;
+  top: 0;
   width: calc(100% - 20px);
   height: 72px;
   padding: 10px;
@@ -191,7 +193,7 @@ function toggleMenuClose() {
   .dropdown-menu-btn {
     @include flex-c-c;
     align-self: center;
-    margin: 8px 0;
+    margin: 8px 0 64px;
     width: 96px;
     gap: 4px;
     background: none;
@@ -207,14 +209,14 @@ function toggleMenuClose() {
     }
   }
   .dropdown-link {
-    padding: 8px 16px;
-    color: $white-100;
-    font-size: 14px;
-    text-decoration: none;
+    display: flex;
+    padding: 12px 10px;
+    color: $grey-20;
+    font-family: Bounded-350;
+    font-size: 16px;
+    line-height: 80%;
+    letter-spacing: -0.8px;
     cursor: pointer;
-  }
-  .dropdown-link:hover {
-    background-color: $white-10;
   }
 }
 
@@ -267,6 +269,7 @@ function toggleMenuClose() {
   .dropdown-menu {
     padding: 12px 0;
     .dropdown-menu-btn {
+      margin: 8px 0 32px;
       width: 80px;
       font-size: 16px;
       letter-spacing: -0.64px;
@@ -276,8 +279,9 @@ function toggleMenuClose() {
       }
     }
     .dropdown-link {
-    }
-    .dropdown-link:hover {
+      padding: 16px 8px;
+      font-size: 14px;
+      letter-spacing: -0.7px;
     }
   }
 }
