@@ -9,7 +9,7 @@
         </div>
 
         <!-- Колонка “Категории” -->
-        <nav class="footer-nav" style="left: 345px">
+        <nav class="footer-nav" style="left: 18vw">
           <a href="#" class="footer-link" @click.prevent="goToGender('M')">Мужчинам</a>
           <a href="#" class="footer-link" @click.prevent="goToGender('W')">Женщинам</a>
           <a href="#" class="footer-link" @click.prevent="goToCategory('Аксессуары')">Аксессуары</a>
@@ -18,18 +18,21 @@
         </nav>
 
         <!-- Колонка “Информация” -->
-        <nav class="footer-nav" style="left: 955px">
+        <nav class="footer-nav" style="left: 49.7vw">
           <a href="#" class="footer-link" @click.prevent="goToPage('About')">О нас</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Лайфстайл</a>
           <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Доставка и оплата</a>
           <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Возврат</a>
         </nav>
 
         <!-- Колонка “Соцсети” -->
-        <nav class="footer-nav" style="left: 1565px">
+        <nav class="footer-nav" style="left: 81.5vw">
           <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram"
              target="_blank" rel="noopener" class="footer-link">Telegram</a>
           <a v-if="store.parameters.url_instagram" :href="store.parameters.url_instagram"
              target="_blank" rel="noopener" class="footer-link">Instagram</a>
+          <a v-if="store.parameters.url_email" :href="`mailto:${store.parameters.url_email}`"
+             rel="noopener" class="footer-link">Mail</a>
         </nav>
       </div>
     </div>
@@ -56,6 +59,7 @@
         <!-- Колонка “Информация” -->
         <nav class="footer-nav">
           <a href="#" class="footer-link" @click.prevent="goToPage('About')">О нас</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Лайфстайл</a>
           <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Доставка и оплата</a>
           <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Возврат</a>
         </nav>
@@ -66,6 +70,8 @@
              target="_blank" rel="noopener" class="footer-link">Telegram</a>
           <a v-if="store.parameters.url_instagram" :href="store.parameters.url_instagram"
              target="_blank" rel="noopener" class="footer-link">Instagram</a>
+          <a v-if="store.parameters.url_email" :href="`mailto:${store.parameters.url_email}`"
+             rel="noopener" class="footer-link">Mail</a>
         </nav>
       </div>
     </div>
@@ -81,13 +87,13 @@
         <div class="bottom-cell">
           <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Договор публичной оферты</a>
         </div>
-        <div class="bottom-cell" style="left: 345px">
+        <div class="bottom-cell" style="left: 18vw">
           <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика конфиденциальности</a>
         </div>
-        <div class="bottom-cell" style="left: 955px">
+        <div class="bottom-cell" style="left: 49.7vw">
           <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика возврата и обмена</a>
         </div>
-        <div class="bottom-cell" style="left: 1565px">
+        <div class="bottom-cell" style="left: 81.5vw">
           <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Условия оплаты и доставки</a>
         </div>
       </div>
@@ -191,7 +197,7 @@ function goToGender(gender) {
 .footer-nav {
   display: flex;
   flex-direction: column;
-  position: relative;
+  position: absolute;
   gap: 4px;
 }
 
@@ -238,7 +244,7 @@ function goToGender(gender) {
 
 .bottom-cell {
   display: flex;
-  position: relative;
+  position: absolute;
 }
 .bottom-link {
   text-decoration: none;
@@ -274,6 +280,9 @@ function goToGender(gender) {
     width: 50%;
     gap: 8px;
   }
+  .bottom-cell {
+    position: relative;
+  }
   .bottom-link {
     font-size: 16px;
     letter-spacing: -0.64px;
@@ -286,6 +295,7 @@ function goToGender(gender) {
     height: 13px;
   }
   .footer-nav {
+    position: relative;
     gap: 8px;
   }
   .footer-link {
