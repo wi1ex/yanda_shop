@@ -1,39 +1,45 @@
-import jwt
-from datetime import datetime, timedelta
-from flask import request, jsonify
-from functools import wraps
-from ..cors.config import SECRET_KEY
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    jwt_required,
+    get_jwt_identity,
+    get_jwt
+)
+from datetime import timedelta
+from ..models import Users
 
 
-def create_access_token(user_id: int, role: str, expires_delta: timedelta = None) -> str:
-    now = datetime.utcnow()
-    if not expires_delta:
-        expires_delta = timedelta(hours=1)
-    payload = {
-        "sub": user_id,
-        "role": role,
-        "iat": now,
-        "exp": now + expires_delta
-    }
-    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
+
+@auth_bp.route('/login', methods=['POST'])
+def login():
+    data = request.get_json() or {}
+    user = Users.query.filter_by(username=data.get("username", "")).first()
+    if not user or not user.check_password(data.get("password", "")):
+        return jsonify({"error": "Bad credentials"}), 401
+
+    claims = {"role": user.role}
+    access_token = create_access_token(identity=user.user_id,
+                                       additional_claims=claims,
+                                       expires_delta=timedelta(hours=1))
+    refresh_token = create_refresh_token(identity=user.user_id,
+                                         additional_claims=claims,
+                                         expires_delta=timedelta(days=7))
+
+    return jsonify({"access_token": access_token, "refresh_token": refresh_token}), 200
 
 
-def decode_token(token: str):
-    try:
-        return jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-    except jwt.PyJWTError:
-        return None
+@auth_bp.route('/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    uid = get_jwt_identity()
+    claims = get_jwt()
+    new_access = create_access_token(identity=uid, additional_claims={"role": claims.get("role")})
+    return jsonify({"access_token": new_access}), 200
 
 
-def admin_required(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        auth = request.headers.get("Authorization", "")
-        parts = auth.split()
-        if len(parts) != 2 or parts[0] != "Bearer":
-            return jsonify({"error": "Authorization header required"}), 401
-        data = decode_token(parts[1])
-        if not data or data.get("role") != "admin":
-            return jsonify({"error": "Admin access required"}), 403
-        return f(*args, **kwargs)
-    return wrapper
+@auth_bp.route('/protected', methods=['GET'])
+@jwt_required()
+def protected():
+    return jsonify({"msg": f"Hello, user {get_jwt_identity()}"}), 200

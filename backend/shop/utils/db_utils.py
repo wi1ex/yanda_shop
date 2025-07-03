@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from sqlalchemy.exc import SQLAlchemyError
-from .cors.logging import logger
-from .models import db
+from ..core.logging import logger
+from ..models import db
 
 
 @contextmanager

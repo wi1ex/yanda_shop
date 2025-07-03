@@ -27,11 +27,9 @@ const router = createRouter({
 // глобальный guard вместо beforeEnter на одном маршруте
 router.beforeEach((to, from, next) => {
   const store = useStore()
-  // if (to.name === 'Admin') {
-  //   if (!store.adminToken) {
-  //     return next({ name: 'Home' })
-  //   }
-  // }
+  if (to.name === 'Admin' && !store.isAdmin) {
+    return next({ name: 'Home' })
+  }
   if (to.name === 'Home') {
     store.selectedCategory = ''
     store.clearFilters()

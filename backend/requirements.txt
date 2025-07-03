@@ -9,4 +9,4 @@ Alembic==1.16.2
 minio==7.2.15
 requests==2.32.4
 tenacity==9.1.2
-PyJWT==2.10.1
+Flask-JWT-Extended==4.7.1

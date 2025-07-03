@@ -202,6 +202,7 @@ function goToGender(gender) {
 }
 
 .footer-link {
+  width: fit-content;
   text-decoration: none;
   color: inherit;
   font-size: 20px;
