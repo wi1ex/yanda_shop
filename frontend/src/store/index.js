@@ -3,7 +3,6 @@ import {computed, reactive, ref, watch} from 'vue'
 import api from '@/services/api'
 
 export const API = {
-  baseUrl: 'https://shop.yanda.twc1.net',
   general: {
     healthCheck:        '/api/general',                      // GET    - health check
     saveUser:           '/api/general/save_user',            // POST   - сохранить/обновить Telegram-пользователя
