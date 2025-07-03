@@ -159,7 +159,7 @@ def get_user_profile() -> Tuple[Response, int]:
             }
             # если админ — вручаем JWT
             if u.role == "admin":
-                token = create_access_token(identity = u.user_id, additional_claims={"role": u.role})
+                token = create_access_token(identity=str(u.user_id), additional_claims={"role": u.role})
                 profile["access_token"] = token
 
         return jsonify(profile), 200
