@@ -13,7 +13,7 @@
    4.1. [Подготовка сервера](#1-подготовка-сервера)  
    4.2. [Клон и конфигурация](#2-клон-и-конфигурация)  
    4.3. [SSL через Certbot](#3-ssl-через-certbot)  
-   4.4. [Запуск и миграции](#4-запуск-и-миграции)  
+   4.4. [Запуск](#4-запуск)  
 5. [Скрипты](#5-скрипты)  
 6. [Автодеплой (GitHub Actions)](#6-автодеплой-проекта-на-сервер-с-помощью-github-actions)
 
@@ -196,7 +196,7 @@ certbot renew --force-renewal
 
 ---
 
-### 4. Запуск и миграции
+### 4. Запуск
 
 ```bash
 # npm install локально для обновления package-lock.json
@@ -233,7 +233,7 @@ docker-compose ps
 docker-compose logs -f
 ```
 
-*При первом запуске миграций (если ещё не применялись в проде):*
+*Миграции:*
 
 ```bash
 docker-compose up -d db backend
@@ -241,6 +241,25 @@ docker-compose exec backend flask db init
 docker-compose exec backend flask db migrate -m "initial schema"
 docker-compose exec backend flask db upgrade
 docker-compose up -d
+```
+
+
+*MinIO и Redis:*
+
+```bash
+# если mc ещё не установлена, на сервере:
+wget https://dl.min.io/client/mc/release/linux-amd64/mc
+chmod +x mc
+# затем прописать алиас к вашему MinIO
+./mc alias set myminio http://127.0.0.1:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}
+# Установить anonymous-политику для бакета
+./mc anonymous set download myminio/images
+
+# Включить vm.overcommit_memory для Redis
+# Создадим конфиг для sysctl
+echo "vm.overcommit_memory = 1" | sudo tee /etc/sysctl.d/99-redis-overcommit.conf
+# Применим сразу, без перезагрузки
+sudo sysctl --system
 ```
 
 ---
