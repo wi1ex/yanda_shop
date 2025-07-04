@@ -7,16 +7,11 @@ from typing import Any, Dict, Tuple, List
 from werkzeug.utils import secure_filename
 from flask import Blueprint, jsonify, request, Response
 from flask_jwt_extended import create_access_token, create_refresh_token
+from ..extensions import redis_client, minio_client, BUCKET
+from ..utils.db_utils import session_scope
 from ..core.config import BACKEND_URL
 from ..core.logging import logger
-from ..utils.db_utils import session_scope
-from ..extensions import redis_client, minio_client, BUCKET
-from ..models import (
-    Users,
-    ChangeLog,
-    AdminSetting,
-    Review,
-)
+from ..models import Users, ChangeLog, AdminSetting, Review
 
 general_api: Blueprint = Blueprint("general_api", __name__, url_prefix="/api/general")
 
@@ -88,20 +83,24 @@ def save_user() -> Tuple[Response, int]:
                 # Handle avatar update
                 if photo_url:
                     filename = secure_filename(photo_url.split("/")[-1])
-                    new_key = f"users/{user_id}_{filename}"
-                    if tg_user.avatar_url != new_key:
+                    if tg_user.avatar_url != filename:
                         # Remove old avatar if exists
                         if tg_user.avatar_url:
+                            old_key = f"users/{user_id}_{tg_user.avatar_url}"
                             try:
-                                minio_client.remove_object(BUCKET, tg_user.avatar_url)
+                                minio_client.remove_object(BUCKET, old_key)
                             except Exception as e:
-                                logger.warning("Failed to remove old avatar %s: %s", tg_user.avatar_url, e)
+                                logger.warning("Failed to remove old avatar %s: %s", old_key, e)
                         # Download and upload new avatar
                         resp = requests.get(photo_url, timeout=10)
                         if resp.ok:
                             content = resp.content
-                            minio_client.put_object(BUCKET, new_key, io.BytesIO(content), len(content))
-                            tg_user.avatar_url = new_key
+                            new_key = f"users/{user_id}_{filename}"
+                            try:
+                                minio_client.put_object(BUCKET, new_key, io.BytesIO(content), len(content))
+                            except Exception as e:
+                                logger.warning("Failed to upload new avatar %s: %s", new_key, e)
+                            tg_user.avatar_url = filename
 
         except Exception as e:
             logger.exception("Postgres error in save_user: %s", e)
@@ -154,7 +153,7 @@ def get_user_profile() -> Tuple[Response, int]:
                 "last_name": u.last_name,
                 "username": u.username,
                 "role": u.role,
-                "photo_url": u.avatar_url and f"{BACKEND_URL}/images/{u.avatar_url}" or None,
+                "photo_url": u.avatar_url and f"{BACKEND_URL}/{BUCKET}/users/{u.user_id}_{u.avatar_url}" or None,
                 "created_at": u.created_at.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d %H:%M:%S")
             }
             # если админ — вручаем JWT
@@ -203,7 +202,7 @@ def list_reviews() -> Tuple[Response, int]:
             for r in revs:
                 # находим в MinIO все объекты reviews/{r.id}_*
                 objs = minio_client.list_objects(BUCKET, prefix=f'reviews/{r.id}_', recursive=True)
-                urls = [f"{BACKEND_URL}/images/{obj.object_name}" for obj in objs]
+                urls = [f"{BACKEND_URL}/{BUCKET}/{obj.object_name}" for obj in objs]
                 data.append({
                     "id":            r.id,
                     "client_name":   r.client_name,

@@ -52,7 +52,7 @@
             <label :class="{ active: store.filterGender === 'M' }">
               <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
             </label>
-            <label :class="{ active: store.filterGender === 'W' }">
+            <label :class="{ active: store.filterGender === 'F' }">
               <input type="radio" v-model="store.filterGender" value="W" /> Женщинам
             </label>
           </div>
@@ -93,7 +93,7 @@
               <label :class="{ active: store.filterGender === 'M' }">
                 <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
               </label>
-              <label :class="{ active: store.filterGender === 'W' }">
+              <label :class="{ active: store.filterGender === 'F' }">
                 <input type="radio" v-model="store.filterGender" value="W" /> Женщинам
               </label>
               </div>
@@ -151,7 +151,7 @@ const totalItems = computed(() => store.displayedProducts.length)
 // 2) Динамический заголовок
 const headerTitle = computed(() => {
   if (store.filterGender === 'M') return 'ДЛЯ НЕГО'
-  if (store.filterGender === 'W') return 'ДЛЯ НЕЁ'
+  if (store.filterGender === 'F') return 'ДЛЯ НЕЁ'
   return 'КАТАЛОГ'
 })
 
@@ -263,7 +263,7 @@ onMounted(() => {
   }
   if (route.query.gender) {
     const g = route.query.gender
-    store.filterGender = (g === 'M' || g === 'W') ? g : ''
+    store.filterGender = (g === 'M' || g === 'F') ? g : ''
   }
   animateGrid()
   loadCategory(store.selectedCategory)

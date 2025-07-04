@@ -365,7 +365,7 @@ export const useStore = defineStore('main', () => {
   const displayedProducts = computed(() => {
     let list = colorGroups.value.slice()
 
-    if (['M','W'].includes(filterGender.value)) {
+    if (['M','F'].includes(filterGender.value)) {
       list = list.filter(g => g.variants.some(v => v.gender === filterGender.value || v.gender === 'U'))
     }
     if (filterColor.value) {

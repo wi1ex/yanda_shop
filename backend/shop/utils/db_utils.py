@@ -8,19 +8,24 @@ from ..models import db
 def session_scope():
     """
     Контекстный менеджер для SQLAlchemy-сессии:
-    - при выходе без ошибок — commit()
-    - при исключении — rollback() и проброс ошибки
+      - при выходе без ошибок — commit()
+      - при исключении — rollback() и проброс ошибки
     """
-    logger.debug("Session scope ENTER")
+    context = "session_scope"
+    logger.info("%s START", context)
     session = db.session
     try:
         yield session
         session.commit()
-        logger.debug("Session scope COMMIT")
+        logger.info("%s COMMIT", context)
     except SQLAlchemyError:
         session.rollback()
-        logger.warning("Session scope ROLLBACK on SQLAlchemyError", exc_info=True)
+        logger.warning("%s ROLLBACK on SQLAlchemyError", context, exc_info=True)
+        raise
+    except Exception:
+        session.rollback()
+        logger.exception("%s UNEXPECTED error, ROLLBACK", context)
         raise
     finally:
         db.session.remove()
-        logger.debug("Session scope EXIT")
+        logger.info("%s EXIT", context)

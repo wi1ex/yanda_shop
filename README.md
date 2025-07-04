@@ -38,22 +38,35 @@
 
 ### Технологический стек
 
-| Компонент             | Технология              | Версия     |
-| --------------------- | ----------------------- | ---------- |
-| Язык программирования | Python                  | 3.11       |
-| Web-фреймворк         | Flask                   | 3.0        |
-| WSGI-сервер           | Gunicorn                | 21.2       |
-| ORM                   | SQLAlchemy              | 1.11       |
-| Миграции              | Alembic                 | 3.1        |
-| База данных           | PostgreSQL              | 17         |
-| Кэш и сессии          | Redis                   | 7          |
-| Объектное хранилище   | MinIO                   | latest     |
-| SPA-фреймворк         | Vue.js                  | 3.3        |
-| Сборщик               | Vite                    | 4.4        |
-| State management      | Pinia                   | 3.0        |
-| HTTP-клиент           | Axios                   | 1.6        |
-| Telegram-бот          | Aiogram                 | 3.10       |
-| Reverse proxy         | Nginx                   | 1.25.x     |
+| Компонент             | Технология              | Версия         |
+|-----------------------| ----------------------- | -------------- |
+| Язык программирования | Python                  | 3.11           |
+| Веб-фреймворк         | Flask                   | 3.1.1          |
+| CORS                  | flask-cors              | 6.0.1          |
+| WSGI-сервер           | Gunicorn                | 23.0.0         |
+| ORM                   | Flask-SQLAlchemy        | 3.1.1          |
+| Драйвер PostgreSQL    | psycopg2-binary         | 2.9.10         |
+| Миграции              | Flask-Migrate / Alembic | 4.1.0 / 1.16.2 |
+| Клиент Redis          | redis-py                | 6.2.0          |
+| Клиент MinIO          | minio                   | 7.2.15         |
+| HTTP-клиент           | requests                | 2.32.4         |
+| Retry-логика          | tenacity                | 9.1.2          |
+| JWT-аутентификация    | Flask-JWT-Extended      | 4.7.1          |
+| Telegram-бот          | aiogram                 | 3.10.0         |
+| База данных           | PostgreSQL              | 17             |
+| Кэш и сессии          | Redis                   | 7              |
+| Объектное хранилище   | MinIO                   | latest         |
+| Reverse proxy         | Nginx                   | 1.25.x         |
+| Рантайм фронтенда     | Node.js                 | 20.x           |
+| SPA-фреймворк         | Vue.js                  | 3.5.17         |
+| Маршрутизация         | Vue Router              | 4.5.1          |
+| State management      | Pinia                   | 3.0.3          |
+| HTTP-клиент (фронт)   | Axios                   | 1.10.0         |
+| Сборщик               | Vite                    | 7.0.0          |
+| Плагин Vue для Vite   | @vitejs/plugin-vue      | 6.0.0          |
+| CSS-препроцессор      | Sass                    | 1.89.2         |
+| Статический сервер    | serve                   | 14.2.4         |
+
 
 ---
 
