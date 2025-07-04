@@ -7,20 +7,19 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Tuple, List, Dict, Any
 from flask import Blueprint, jsonify, request, Response
-from werkzeug.utils import secure_filename
 from ..core.logging import logger
-from ..extensions import redis_client, minio_client, BUCKET
+from ..extensions import redis_client
 from ..utils.jwt_utils import admin_required
 from ..utils.db_utils import session_scope
 from ..utils.google_sheets import get_sheet_url, process_rows
 from ..utils.product_serializer import model_by_category
-from ..utils.storage_utils import cleanup_old_images, upload_new_images, cleanup_review_images
-from ..models import (
-    ChangeLog,
-    AdminSetting,
-    Users,
-    Review,
+from ..utils.storage_utils import (
+    cleanup_product_images,
+    upload_product_images,
+    cleanup_review_images,
+    upload_review_images,
 )
+from ..models import ChangeLog, AdminSetting, Users, Review
 
 admin_api: Blueprint = Blueprint("admin_api", __name__, url_prefix="/api/admin")
 
@@ -213,8 +212,10 @@ def upload_images() -> Tuple[Response, int]:
 
     logger.debug("upload_images START filename=%s author_id=%d author_name=%s", z.filename, author_id, author_name)
 
-    # 2) Определяем папку и expected-набор имён
-    folder   = os.path.splitext(z.filename)[0].lower()
+    # 2) Определяем папку
+    folder = os.path.splitext(z.filename)[0].lower()
+
+    # 3) Удаляем «лишние» файлы
     expected = set()
     if folder in ("shoes", "clothing", "accessories"):
         Model = model_by_category(folder)
@@ -226,13 +227,12 @@ def upload_images() -> Tuple[Response, int]:
                 for i in range(1, cnt + 1):
                     expected.add(f"{cs}_{i}")
 
-    # 3) Удаляем «лишние» файлы
-    deleted, cleanup_warns = cleanup_old_images(folder, expected)
+    deleted, cleanup_warns = cleanup_product_images(folder, expected)
     logger.debug("upload_images cleanup done deleted=%d warns=%d", deleted, cleanup_warns)
 
     # 4) Загружаем новые/заменяем существующие из ZIP
     archive_bytes = z.stream.read()
-    added, replaced = upload_new_images(folder, archive_bytes)
+    added, replaced = upload_product_images(folder, archive_bytes)
     logger.debug("upload_images upload done added=%d replaced=%d", added, replaced)
 
     # 5) Логируем результат (в Postgres через session_scope)
@@ -336,24 +336,13 @@ def create_review() -> Tuple[Response, int]:
             session.flush()
 
             # 6) Сохраняем фото в MinIO
-            saved = 0
-            for idx, f in enumerate(photos, start=1):
-                if not f:
-                    continue
-                ext = secure_filename(f.filename).rsplit('.', 1)[-1]
-                key = f'reviews/{review.id}_{idx}.{ext}'
-                minio_client.put_object(BUCKET, key, f.stream, length=-1, part_size=10*1024*1024)
-                saved += 1
+            saved = upload_review_images(review.id, photos)
 
             # 7) Логируем результат внутри сессии
             logger.info("Review %d created, photos=%d", review.id, saved)
             review_id = review.id  # запомним для ответа
 
-        # 8) Удаляем лишние изображения
-        removed = cleanup_review_images()
-        logger.debug("cleanup_review_images removed %d stale objects", len(removed))
-
-        # 9) Возвращаем успех
+        # 8) Возвращаем успех
         return jsonify({'status': 'ok', 'message': 'Отзыв успешно добавлен', 'review_id': review_id}), 201
 
     except Exception as e:
@@ -375,7 +364,7 @@ def delete_review(review_id: int) -> Tuple[Response, int]:
             session.delete(rev)
 
         removed = cleanup_review_images()
-        logger.debug("cleanup_review_images removed %d stale objects", len(removed))
+        logger.debug("cleanup_review_images removed %d stale objects", removed)
 
         logger.info("Review %d deleted", review_id)
         return jsonify({'status': 'deleted'}), 200
@@ -391,13 +380,7 @@ def list_users() -> Tuple[Response, int]:
     logger.info("GET /api/admin/list_users")
     try:
         # поля, которые не хотим отдавать в API
-        hidden_fields = {
-            "avatar_url",
-            "password_hash",
-            "email_verified",
-            "phone_verified",
-            "updated_at",
-        }
+        hidden_fields = {"avatar_url", "password_hash", "email_verified", "phone_verified", "updated_at"}
 
         with session_scope() as session:
             users = session.query(Users).order_by(Users.user_id).all()

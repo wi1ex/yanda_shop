@@ -42,7 +42,7 @@
           <img :src="icon_close" alt="Меню" />
         </button>
         <div @click="goToGender('M')" class="dropdown-link">Мужчинам</div>
-        <div @click="goToGender('W')" class="dropdown-link">Женщинам</div>
+        <div @click="goToGender('F')" class="dropdown-link">Женщинам</div>
         <div @click="goToPage('About')" class="dropdown-link">О нас</div>
         <div v-if="isAdmin" @click="goToPage('Admin')" class="dropdown-link">Админ-панель</div>
       </nav>

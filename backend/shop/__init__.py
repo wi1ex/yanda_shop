@@ -13,54 +13,64 @@ from .routes.auth import auth_bp
 
 
 def create_app() -> Flask:
-    # 1) Логирование
+    context = "create_app"
     setup_logging()
-    logger.info("Starting application")
+    logger.info("%s START", context)
 
-    # 2) Flask + конфиг SQLAlchemy
-    app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config['SECRET_KEY'] = SECRET_KEY
+    try:
+        # ——— Flask и конфигурация ————————————————————————————————
+        app = Flask(__name__)
+        app.config.update({
+            "SQLALCHEMY_DATABASE_URI":        SQLALCHEMY_DATABASE_URI,
+            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+            "SECRET_KEY":                     SECRET_KEY,
+            "JWT_SECRET_KEY":                 SECRET_KEY,
+            "JWT_TOKEN_LOCATION":             ["headers"],
+            "JWT_HEADER_NAME":                "Authorization",
+            "JWT_HEADER_TYPE":                "Bearer",
+            "JWT_ACCESS_TOKEN_EXPIRES":       3600,
+        })
+        logger.debug("%s: Flask app configured", context)
 
-    # 3) Расширения
-    db.init_app(app)
-    Migrate(app, db)
-    CORS(app, resources={r"/api/*": {"origins": CORS_ORIGINS}})
+        # ——— Расширения —————————————————————————————————————————
+        db.init_app(app)
+        Migrate(app, db)
+        CORS(app, resources={r"/api/*": {"origins": CORS_ORIGINS}})
+        logger.debug("%s: Extensions initialized", context)
 
-    # 4) Flask-JWT-Extended
-    app.config['JWT_SECRET_KEY'] = SECRET_KEY
-    app.config['JWT_TOKEN_LOCATION'] = ['headers']
-    app.config['JWT_HEADER_NAME'] = 'Authorization'
-    app.config['JWT_HEADER_TYPE'] = 'Bearer'
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 3600
+        # ——— JWT менеджер и ошибки —————————————————————————
+        jwt = JWTManager(app)
 
-    jwt = JWTManager(app)
+        @jwt.unauthorized_loader
+        def _missing_token(err_str):
+            logger.warning("%s: JWT unauthorized: %s", context, err_str)
+            return jsonify({"error": "Authorization header required"}), 401
 
-    @jwt.unauthorized_loader
-    def missing_token(err_str):
-        logger.debug("JWT unauthorized: %s", err_str)
-        return jsonify({"error": "Authorization header required"}), 401
+        @jwt.invalid_token_loader
+        def _invalid_token(err_str):
+            logger.warning("%s: JWT invalid token: %s", context, err_str)
+            return jsonify({"error": "Invalid token"}), 422
 
-    @jwt.invalid_token_loader
-    def invalid_token(err_str):
-        logger.debug("JWT invalid token: %s", err_str)
-        return jsonify({"error": "Invalid token"}), 422
+        @jwt.expired_token_loader
+        def _expired_token(header, payload):
+            logger.warning("%s: JWT expired token", context, header, payload)
+            return jsonify({"error": "Token has expired"}), 401
 
-    @jwt.expired_token_loader
-    def expired_token(header, payload):
-        logger.debug("JWT expired token: header=%s payload=%s", header, payload)
-        return jsonify({"error": "Token has expired"}), 401
+        logger.debug("%s: JWT callbacks registered", context)
 
-    # 5) Blueprint’ы
-    app.register_blueprint(general_api)  # /api/general/...
-    app.register_blueprint(product_api)  # /api/product/...
-    app.register_blueprint(admin_api)    # /api/admin/...
-    app.register_blueprint(auth_bp)      # /api/auth
+        # ——— Роуты ————————————————————————————————————————————
+        for bp in (general_api, product_api, admin_api, auth_bp):
+            app.register_blueprint(bp)
+            logger.debug("%s: registered blueprint %s", context, bp.name)
 
-    # 6) Кэшируем delivery options
-    with app.app_context():
-        load_delivery_options()
-        logger.debug("Delivery options cached")
+        # ——— Кэширование опций доставки ————————————————————————
+        with app.app_context():
+            load_delivery_options()
+            logger.debug("%s: delivery options cached", context)
 
+    except Exception:
+        logger.exception("%s: Error during app initialization", context)
+        raise
+
+    logger.info("%s END", context)
     return app

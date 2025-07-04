@@ -121,7 +121,7 @@
           </div>
           <div class="section-body" :class="{ open: showCharacteristics }">
             <p class="char-row"><strong>Пол:</strong>
-              {{ store.detailData.gender === 'W' ? 'Женский' : store.detailData.gender === 'M' ? 'Мужской' : 'Унисекс'}}
+              {{ store.detailData.gender === 'F' ? 'Женский' : store.detailData.gender === 'M' ? 'Мужской' : 'Унисекс'}}
             </p>
             <p class="char-row"><strong>Категория:</strong>{{ store.detailData.category }}</p>
             <p class="char-row"><strong>Подкатегория:</strong>{{ store.detailData.subcategory }}</p>
