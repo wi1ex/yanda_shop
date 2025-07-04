@@ -136,7 +136,7 @@ function toggleMenuClose() {
       .badge {
         @include flex-c-c;
         position: absolute;
-        top: 10px;
+        top: 31px;
         width: 14px;
         height: 12px;
         border-radius: 1px;
@@ -241,7 +241,7 @@ function toggleMenuClose() {
         .avatar {
         }
         .badge {
-          top: 13px;
+          top: 21px;
         }
         .badge-fav {
           right: 42px;
