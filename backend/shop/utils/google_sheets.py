@@ -52,10 +52,6 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
                         val = parse_int(v)
                         if val is None:
                             warns += 1
-                    elif k == "size_label" and Model is Shoe:
-                        val = parse_float(v)
-                        if val is None:
-                            warns += 1
                     elif k in ("chest_cm", "width_cm", "height_cm", "depth_cm", "depth_mm"):
                         val = parse_float(v)
                         if val is None:
@@ -78,17 +74,12 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
                         new_val = parse_int(v)
                         if new_val is None:
                             warns += 1
-                    elif k == "size_label" and Model is Shoe:
-                        new_val = parse_float(v)
-                        if new_val is None:
-                            warns += 1
                     elif k in ("chest_cm", "width_cm", "height_cm", "depth_cm", "depth_mm"):
                         new_val = parse_float(v)
                         if new_val is None:
                             warns += 1
                     else:
                         new_val = normalize_str(v)
-
                     if getattr(obj, k) != new_val:
                         setattr(obj, k, new_val)
                         has_changes = True
@@ -102,6 +93,7 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
                 if has_changes:
                     obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
                     updated += 1
+
     logger.info("process_rows END category=%s added=%d updated=%d deleted=%d warns=%d",
                 category, added, updated, deleted, warns)
     return added, updated, deleted, warns

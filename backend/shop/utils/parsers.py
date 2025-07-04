@@ -18,4 +18,7 @@ def parse_float(s: str) -> Optional[float]:
 
 
 def normalize_str(s: str) -> Optional[str]:
-    return s[0].upper() + s[1:] if isinstance(s, str) and s else s
+    if not (isinstance(s, str) and s):
+        return s
+    cleaned = s.replace(",", ".")
+    return cleaned[0].upper() + cleaned[1:]
