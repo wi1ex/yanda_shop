@@ -75,6 +75,7 @@ class BaseProduct(db.Model):
     description    = db.Column(db.Text)
     material       = db.Column(db.String(100))
     color          = db.Column(db.String(100), index=True)
+    size_label     = db.Column(db.String(100))
     size_category  = db.Column(db.Integer)
     price          = db.Column(db.Integer, index=True)
     count_in_stock = db.Column(db.Integer, index=True)
@@ -87,20 +88,17 @@ class BaseProduct(db.Model):
 
 class Shoe(BaseProduct):
     __tablename__  = "shoes"
-    size_label     = db.Column(db.Float)
     depth_mm       = db.Column(db.Float)
 
 
 class Clothing(BaseProduct):
     __tablename__  = "clothing"
-    size_label     = db.Column(db.String(100))
     chest_cm       = db.Column(db.Float)
     height_cm      = db.Column(db.Float)
 
 
 class Accessory(BaseProduct):
     __tablename__  = "accessories"
-    size_label     = db.Column(db.String(100))
     width_cm       = db.Column(db.Float)
     height_cm      = db.Column(db.Float)
     depth_cm       = db.Column(db.Float)
