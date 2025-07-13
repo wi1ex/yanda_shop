@@ -1,10 +1,32 @@
-**/.git
-**/node_modules
+# Git
+.git
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python build artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Node modules & build outputs
 frontend/node_modules/
-backend/__pycache__/
-**/*.pyc
-**/.env
-**/.dockerignore
-**/.gitignore
-**/README.md
-Dockerfile
+frontend/package-lock.json
+frontend/dist/
+
+# Env files & secrets
+.env
+
+# Logs & temp
+*.log
+/tmp
+*.pid
+
+# Dockerfile contexts: если билдятся свои контексты
+nginx/*.conf    # если монтируете отдельно, можно исключить
+
+# IDE
+.vscode/
+.idea/

@@ -2,7 +2,7 @@ from flask import Flask, jsonify
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from .core.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS, SECRET_KEY
+from .core.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS, SECRET_KEY, JWT_SECRET_KEY
 from .core.logging import setup_logging, logger
 from .models import db
 from .utils.product_serializer import load_delivery_options
@@ -24,7 +24,7 @@ def create_app() -> Flask:
             "SQLALCHEMY_DATABASE_URI":        SQLALCHEMY_DATABASE_URI,
             "SQLALCHEMY_TRACK_MODIFICATIONS": False,
             "SECRET_KEY":                     SECRET_KEY,
-            "JWT_SECRET_KEY":                 SECRET_KEY,
+            "JWT_SECRET_KEY":                 JWT_SECRET_KEY,
             "JWT_TOKEN_LOCATION":             ["headers"],
             "JWT_HEADER_NAME":                "Authorization",
             "JWT_HEADER_TYPE":                "Bearer",

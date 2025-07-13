@@ -165,7 +165,7 @@ apt install -y docker-ce docker-ce-cli containerd.io \
 systemctl enable docker.socket
 systemctl start docker.socket
 systemctl restart docker
-docker login --username <your-username> <your-password>
+docker login --username <your-username>
 ```
 
 ---
@@ -308,9 +308,6 @@ mkdir -p ~/.ssh && chmod 700 ~/.ssh
 # добавляем публичный ключ в авторизованные
 cat ~/github_deploy_key.pub >> ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/authorized_keys
-
-# удаляем временный файл
-rm ~/github_deploy_key.pub
 
 # чтобы GitHub Actions мог «доверять» вашему серверу
 ssh-keyscan -H SERVER_HOST > known_hosts.txt
