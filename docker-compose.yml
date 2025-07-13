@@ -17,8 +17,13 @@ services:
 
   redis:
     image: redis:7
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
     env_file: .env
+    command:
+      - redis-server
+      - --requirepass
+      - "${REDIS_PASSWORD}"
+      - --appendonly
+      - "yes"
     ports:
       - "6379:6379"
     volumes:
@@ -29,11 +34,8 @@ services:
 
   minio:
     image: minio/minio:latest
-    command: server /data
     env_file: .env
-    environment:
-      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
-      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+    command: server /data
     ports:
       - "9000:9000"
     volumes:
@@ -49,29 +51,29 @@ services:
       - ./backend:/app
     ports:
       - "8000:8000"
-    networks:
-      - app-network
     depends_on:
       - db
+      - redis
+      - minio
+    networks:
+      - app-network
     restart: always
 
   bot:
     build: ./bot
     env_file: .env
-    networks:
-      - app-network
     depends_on:
       - backend
+    networks:
+      - app-network
     restart: always
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    networks:
-      - app-network
+    build: ./frontend
     depends_on:
       - backend
+    networks:
+      - app-network
     restart: always
 
   proxy:
@@ -83,18 +85,20 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    depends_on:
+      - frontend
     networks:
       - app-network
-    depends_on:
-      - backend
-      - frontend
     restart: always
+
+volumes:
+  db_data:
+    external: true
+  redis_data:
+    external: true
+  minio_data:
+    external: true
 
 networks:
   app-network:
     driver: bridge
-
-volumes:
-  db_data:
-  redis_data:
-  minio_data:

@@ -3,9 +3,10 @@ from typing import List
 
 BACKEND_URL: str = os.environ.get("BACKEND_URL", "")
 SECRET_KEY: str = os.environ.get("SECRET_KEY", "")
+JWT_SECRET_KEY: str = os.environ.get("JWT_SECRET_KEY", "")
 LOG_LEVEL: str = os.environ.get("LOG_LEVEL", "INFO").upper()
 
-CORS_ORIGINS: List[str] = [origin.strip() for origin in os.environ.get("CORS_ORIGINS", BACKEND_URL).split(",")]
+CORS_ORIGINS: List[str] = [origin.strip() for origin in BACKEND_URL.split(",")]
 
 DB_USER: str = os.environ["DB_USER"]
 DB_PASSWORD: str = os.environ["DB_PASSWORD"]
