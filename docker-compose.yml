@@ -94,10 +94,13 @@ services:
 volumes:
   db_data:
     external: true
+    name: yanda_shop_db_data
   redis_data:
     external: true
+    name: yanda_shop_redis_data
   minio_data:
     external: true
+    name: yanda_shop_minio_data
 
 networks:
   app-network:
