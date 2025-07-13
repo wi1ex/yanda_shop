@@ -558,7 +558,9 @@ export const useStore = defineStore('main', () => {
         author_name: user.value.username
       })
       if (data.status === 'ok') {
-        sheetResult[cat] = `Добавлено: ${data.added}. Обновлено: ${data.updated}. Удалено: ${data.deleted}. Ошибки: ${data.warns}.`
+        // Форматируем warn_skus
+        const warnSkus = Array.isArray(data.warn_skus) && data.warn_skus.length ? data.warn_skus.join(', ') : 'нет'
+        sheetResult[cat] = `Добавлено: ${data.added}. Обновлено: ${data.updated}. Удалено: ${data.deleted}. Ошибки: ${data.warns}. Проблемные SKU: ${warnSkus}`
         await loadLogs()
         return true
       } else {

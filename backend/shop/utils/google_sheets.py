@@ -1,13 +1,15 @@
+import re
 from datetime import datetime
-from typing import Optional, List, Dict, Tuple
+from typing import Dict, List, Tuple, Optional
 from zoneinfo import ZoneInfo
+from .db_utils import session_scope
+from .parsers import parse_int, parse_float, normalize_str
+from .product_serializer import model_by_category
 from ..core.logging import logger
-from ..utils.db_utils import session_scope
 from ..models import AdminSetting
-from ..utils.parsers import parse_int, parse_float, normalize_str
-from ..utils.product_serializer import model_by_category
 
 
+# Google Sheets utilities
 def get_sheet_url(category: str) -> Optional[str]:
     """
     Возвращает URL Google Sheets для заданной категории или None.
@@ -19,106 +21,187 @@ def get_sheet_url(category: str) -> Optional[str]:
         with session_scope() as session:
             setting = session.get(AdminSetting, key)
             url = setting.value if setting else None
+            logger.info("%s END url=%s", context, url)
+            return url
     except Exception:
-        logger.exception("%s: failed to get sheet URL for %s", context, category)
+        logger.exception("%s: failed to fetch sheet URL for %s", context, category)
         return None
-    else:
-        logger.info("%s END url=%s", context, url)
-        return url
 
 
-def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, int, int]:
+SKU_PATTERN    = re.compile(r"^[^_]+_[^_]+_.+")
+VALID_GENDERS  = {"U", "F", "M"}
+VALID_CATS     = {"Обувь", "Одежда", "Аксессуары"}
+OPTIONAL_EMPTY = {"description", "width_cm", "height_cm", "depth_cm", "chest_cm", "depth_mm"}
+INT_FIELDS     = {"price", "count_in_stock", "count_images", "size_category"}
+FLOAT_FIELDS   = {"chest_cm", "width_cm", "height_cm", "depth_cm", "depth_mm"}
+
+def validate_row(row: Dict[str, str]) -> Tuple[Optional[str], Optional[Dict[str, str]], Optional[str]]:
     """
-    Обрабатывает список строк из CSV для категории category:
-      - добавляет новые записи
-      - обновляет существующие
-      - удаляет пустые
-    Возвращает (added, updated, deleted, warns).
+    Валидация одной строки:
+      - variant_sku, gender, category
+      - обязательные поля не пусты
+    Возвращает tuple(variant_sku, clean_data, error_sku):
+      • если всё ок — возвращается (variant, data, None)
+      • иначе — (variant, None, variant)
+    """
+    variant = row.get("variant_sku", "").strip()
+    if not SKU_PATTERN.match(variant):
+        return variant, None, variant
+
+    gender = row.get("gender", "").strip()
+    if gender not in VALID_GENDERS:
+        return variant, None, variant
+
+    cat_val = row.get("category", "").strip()
+    if cat_val not in VALID_CATS:
+        return variant, None, variant
+
+    # собираем и чистим поля
+    data = {k: v.strip() for k, v in row.items() if k != "variant_sku"}
+    # проверяем непустоту обязательных
+    missing = [fld for fld, val in data.items() if not val and fld not in OPTIONAL_EMPTY]
+    if missing:
+        return variant, None, variant
+
+    return variant, data, None
+
+
+# Creation / Update helpers
+def apply_creation(obj, data: Dict[str, str], warn_skus: List[str], context: str) -> Tuple[int, int]:
+    """
+    Заполняет и сохраняет новый объект из data.
+    Возвращает (1_added, warns_increment).
+    """
+    warns = 0
+    for field, val_str in data.items():
+        if not hasattr(obj, field):
+            continue
+        # int-поля
+        if field in INT_FIELDS:
+            val = parse_int(val_str)
+            if val is None or val < 0:
+                warns += 1
+                warn_skus.append(obj.variant_sku)
+                logger.warning("%s: invalid int %s='%s' for %s", context, field, val_str, obj.variant_sku)
+                continue
+        # float-поля
+        elif field in FLOAT_FIELDS:
+            val = parse_float(val_str)
+            if val is None or val < 0:
+                warns += 1
+                warn_skus.append(obj.variant_sku)
+                logger.warning("%s: invalid float %s='%s' for %s", context, field, val_str, obj.variant_sku)
+                continue
+        # остальные
+        else:
+            val = normalize_str(val_str)
+
+        setattr(obj, field, val)
+    # финальное поле
+    obj.color_sku = f"{obj.sku}_{obj.world_sku}"
+    return 1, warns
+
+
+def apply_update(obj, data: Dict[str, str], warn_skus: List[str], context: str) -> Tuple[int, int]:
+    """
+    Обновляет существующий объект полями из data.
+    Возвращает (1_updated, warns_increment).
+    """
+    updated = warns = 0
+    has_changes = False
+    for field, val_str in data.items():
+        if not hasattr(obj, field):
+            continue
+        if field in INT_FIELDS:
+            new_val = parse_int(val_str)
+            if new_val is None or new_val < 0:
+                warns += 1
+                warn_skus.append(obj.variant_sku)
+                logger.warning("%s: invalid int %s='%s' for %s", context, field, val_str, obj.variant_sku)
+                continue
+        elif field in FLOAT_FIELDS:
+            new_val = parse_float(val_str)
+            if new_val is None or new_val < 0:
+                warns += 1
+                warn_skus.append(obj.variant_sku)
+                logger.warning("%s: invalid float %s='%s' for %s", context, field, val_str, obj.variant_sku)
+                continue
+        else:
+            new_val = normalize_str(val_str)
+
+        if getattr(obj, field) != new_val:
+            setattr(obj, field, new_val)
+            has_changes = True
+
+    # пересчитать color_sku
+    new_cs = f"{obj.sku}_{obj.world_sku}"
+    if obj.color_sku != new_cs:
+        obj.color_sku = new_cs
+        has_changes = True
+
+    if has_changes:
+        obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
+        updated = 1
+    return updated, warns
+
+
+def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, int, int, List[str]]:
+    """
+    Обрабатывает CSV-строки:
+      - добавляет, обновляет, удаляет записи
+    Возвращает (added, updated, deleted, warns, warn_skus).
     """
     context = "process_rows"
     logger.info("%s START category=%s rows=%d", context, category, len(rows))
 
     Model = model_by_category(category)
     if Model is None:
-        logger.error("%s: unknown category '%s'", context, category)
+        logger.error("%s: unknown category %s", context, category)
         raise ValueError(f"Unknown category {category}")
 
     added = updated = deleted = warns = 0
-    try:
-        with session_scope() as session:
-            # Получаем существующие объекты
-            variants = [row.get("variant_sku", "").strip() for row in rows]
-            existing_objs = session.query(Model).filter(Model.variant_sku.in_(variants)).all()
-            existing_map = {obj.variant_sku: obj for obj in existing_objs}
+    warn_skus: List[str] = []
 
-            for row in rows:
-                variant = row.get("variant_sku", "").strip()
-                data = {k: v.strip() for k, v in row.items() if k != "variant_sku"}
+    with session_scope() as session:
+        variants      = [r.get("variant_sku", "").strip() for r in rows]
+        existing_objs = session.query(Model).filter(Model.variant_sku.in_(variants)).all()
+        existing_map  = {o.variant_sku: o for o in existing_objs}
 
-                # 1) Удаление: все поля пустые
-                if variant and all(not v for v in data.values()):
-                    obj = existing_map.get(variant)
-                    if obj:
-                        session.delete(obj)
-                        deleted += 1
-                        logger.debug("%s: deleted variant=%s", context, variant)
-                    continue
-
+        for row in rows:
+            variant = row.get("variant_sku", "").strip()
+            # 0) Удаление: если есть SKU и все остальные поля пустые — удаляем
+            data_for_delete = {k: v.strip() for k, v in row.items() if k != "variant_sku"}
+            if variant and all(not v for v in data_for_delete.values()):
                 obj = existing_map.get(variant)
-                if obj is None:
-                    # 2) Создание нового объекта
-                    obj = Model(variant_sku=variant)
-                    for field, val_str in data.items():
-                        if not hasattr(obj, field):
-                            continue
-                        if field in ("price", "count_in_stock", "count_images", "size_category"):
-                            val = parse_int(val_str)
-                        elif field in ("chest_cm", "width_cm", "height_cm", "depth_cm", "depth_mm"):
-                            val = parse_float(val_str)
-                        else:
-                            val = normalize_str(val_str)
-                        if val is None:
-                            warns += 1
-                        setattr(obj, field, val)
+                if obj:
+                    session.delete(obj)
+                    deleted += 1
+                    logger.debug("%s: deleted %s", context, variant)
+                continue
 
-                    obj.color_sku = f"{obj.sku}_{obj.world_sku}"
-                    session.add(obj)
-                    added += 1
-                    logger.debug("%s: added variant=%s", context, variant)
+            # 1) Валидация
+            variant, data, err = validate_row(row)
+            if err:
+                warns += 1
+                warn_skus.append(variant)
+                continue
 
-                else:
-                    # 3) Обновление существующего
-                    has_changes = False
-                    for field, val_str in data.items():
-                        if not hasattr(obj, field):
-                            continue
-                        if field in ("price", "count_in_stock", "count_images", "size_category"):
-                            new_val = parse_int(val_str)
-                        elif field in ("chest_cm", "width_cm", "height_cm", "depth_cm", "depth_mm"):
-                            new_val = parse_float(val_str)
-                        else:
-                            new_val = normalize_str(val_str)
+            # 2) Создание или обновление
+            obj = existing_map.get(variant)
+            if obj is None:
+                obj = Model(variant_sku=variant)
+                inc_added, inc_warn = apply_creation(obj, data, warn_skus, context)
+                session.add(obj)
+                added += inc_added
+                warns += inc_warn
+                logger.debug("%s: added %s", context, variant)
+            else:
+                inc_upd, inc_warn = apply_update(obj, data, warn_skus, context)
+                if inc_upd:
+                    session.merge(obj)
+                    updated += inc_upd
+                    logger.debug("%s: updated %s", context, variant)
+                warns += inc_warn
 
-                        if new_val is None:
-                            warns += 1
-                        if getattr(obj, field) != new_val:
-                            setattr(obj, field, new_val)
-                            has_changes = True
-
-                    # Проверяем и обновляем color_sku
-                    new_cs = f"{obj.sku}_{obj.world_sku}"
-                    if getattr(obj, "color_sku", None) != new_cs:
-                        obj.color_sku = new_cs
-                        has_changes = True
-
-                    if has_changes:
-                        obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
-                        updated += 1
-                        logger.debug("%s: updated variant=%s", context, variant)
-
-    except Exception:
-        logger.exception("%s: error processing rows for category=%s", context, category)
-        raise
-    else:
-        logger.info("%s END added=%d updated=%d deleted=%d warns=%d", context, added, updated, deleted, warns)
-        return added, updated, deleted, warns
+    logger.info("%s END added=%d updated=%d deleted=%d warns=%d", context, added, updated, deleted, warns)
+    return added, updated, deleted, warns, warn_skus

@@ -20,10 +20,10 @@ from .core.config import (
     MINIO_BUCKET,
 )
 
-# ——— Constants & Context ——————————————————————————————————————
+# Constants & Context
 _context = "extensions"
 
-# ——— Redis Client Initialization ——————————————————————————————
+# Redis Client Initialization
 try:
     redis_client = Redis(
         host=REDIS_HOST,
@@ -59,7 +59,7 @@ def redis_cmd(cmd: str, *args: Any, **kwargs: Any) -> Any:
         logger.exception("%s: unexpected error executing redis_cmd %s", _context, cmd)
         raise
 
-# ——— MinIO Client Initialization ——————————————————————————————
+# MinIO Client Initialization
 try:
     minio_client = Minio(
         endpoint=MINIO_HOST,
@@ -94,7 +94,7 @@ def ensure_bucket_exists() -> None:
         logger.exception("%s: error ensuring MinIO bucket %s exists", _context, BUCKET)
         raise
 
-# ——— Guarantee Bucket on Startup ——————————————————————————————
+# Guarantee Bucket on Startup
 try:
     ensure_bucket_exists()
     logger.info("%s: ensure_bucket_exists completed", _context)

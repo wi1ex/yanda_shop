@@ -2,55 +2,58 @@ import io
 import requests
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from sqlalchemy import or_
 from typing import Any, Dict, Tuple, List
-from werkzeug.utils import secure_filename
 from flask import Blueprint, jsonify, request, Response
 from flask_jwt_extended import create_access_token, create_refresh_token
-from ..extensions import redis_client, minio_client, BUCKET
-from ..utils.db_utils import session_scope
+from werkzeug.utils import secure_filename
+from sqlalchemy import or_
 from ..core.config import BACKEND_URL
 from ..core.logging import logger
+from ..extensions import redis_client, minio_client, BUCKET
 from ..models import Users, ChangeLog, AdminSetting, Review
+from ..utils.db_utils import session_scope
+from ..utils.route_utils import handle_errors, require_args, require_json
 
 general_api: Blueprint = Blueprint("general_api", __name__, url_prefix="/api/general")
 
 
 @general_api.route("/")
+@handle_errors
 def home() -> Tuple[Response, int]:
-    logger.debug("Health check: /api/ called")
+    """Health check endpoint"""
     return jsonify({"message": "App is working!"}), 200
 
 
 @general_api.route("/save_user", methods=["POST"])
+@handle_errors
+@require_json("id")
 def save_user() -> Tuple[Response, int]:
-    data: Dict[str, Any] = request.get_json(force=True, silent=True) or {}
-    logger.debug("save_user payload: %s", data)
-
-    if "id" not in data:
-        logger.error("save_user: missing 'id'")
-        return jsonify({"error": "missing user id"}), 400
+    """
+    POST /api/general/save_user
+    JSON body must include "id"; optional fields:
+      first_name, last_name, username, photo_url
+    """
+    data: Dict[str, Any] = request.get_json()
+    logger.debug("save_user: payload=%s", data)
 
     raw_id = data["id"]
+    # Determine if Telegram user (numeric)
     try:
-        int(raw_id)
+        user_id = int(raw_id)
         is_tg = True
     except (TypeError, ValueError):
-        logger.debug("save_user: non-integer id %r, skipping Postgres", raw_id)
+        logger.debug("save_user: non-integer id %r, skip Postgres", raw_id)
         is_tg = False
 
-    first_name = data.get("first_name")
-    last_name = data.get("last_name")
-    username = data.get("username")
-    photo_url = data.get("photo_url")
     now = datetime.now(ZoneInfo("Europe/Moscow"))
-
-    # --- Postgres only for Telegram users ---
     if is_tg:
+        first_name = data.get("first_name")
+        last_name = data.get("last_name")
+        username = data.get("username")
+        photo_url = data.get("photo_url")
+
         try:
-            user_id = int(raw_id)
             with session_scope() as session:
-                # Get or create user
                 tg_user = session.get(Users, user_id)
                 if not tg_user:
                     tg_user = Users(
@@ -58,7 +61,7 @@ def save_user() -> Tuple[Response, int]:
                         first_name=first_name,
                         last_name=last_name,
                         username=username,
-                        last_visit=now
+                        last_visit=now,
                     )
                     session.add(tg_user)
                     session.add(ChangeLog(
@@ -66,10 +69,9 @@ def save_user() -> Tuple[Response, int]:
                         author_name=username,
                         action_type="Регистрация",
                         description=f"Новый пользователь Telegram: {first_name} {last_name}",
-                        timestamp=now
+                        timestamp=now,
                     ))
                 else:
-                    # Update changed fields
                     updated = False
                     for fld in ("first_name", "last_name", "username"):
                         val = data.get(fld)
@@ -80,141 +82,131 @@ def save_user() -> Tuple[Response, int]:
                     if updated:
                         session.merge(tg_user)
 
-                # Handle avatar update
+                # Avatar handling
                 if photo_url:
                     filename = secure_filename(photo_url.split("/")[-1])
                     if tg_user.avatar_url != filename:
-                        # Remove old avatar if exists
                         if tg_user.avatar_url:
                             old_key = f"users/{user_id}_{tg_user.avatar_url}"
                             try:
                                 minio_client.remove_object(BUCKET, old_key)
-                            except Exception as e:
-                                logger.warning("Failed to remove old avatar %s: %s", old_key, e)
-                        # Download and upload new avatar
+                            except Exception as exc:
+                                logger.warning("save_user: failed remove old avatar %s: %s", old_key, exc)
                         resp = requests.get(photo_url, timeout=10)
                         if resp.ok:
                             content = resp.content
                             new_key = f"users/{user_id}_{filename}"
                             try:
                                 minio_client.put_object(BUCKET, new_key, io.BytesIO(content), len(content))
-                            except Exception as e:
-                                logger.warning("Failed to upload new avatar %s: %s", new_key, e)
-                            tg_user.avatar_url = filename
-
-        except Exception as e:
-            logger.exception("Postgres error in save_user: %s", e)
+                                tg_user.avatar_url = filename
+                            except Exception as exc:
+                                logger.warning("save_user: failed upload new avatar %s: %s", new_key, exc)
+        except Exception:
+            logger.exception("save_user: Postgres error")
             return jsonify({"error": "internal server error"}), 500
 
-    # --- Redis always for visits ---
+    # Redis: track visit counts
     try:
         now = datetime.now(ZoneInfo("Europe/Moscow"))
         date_str = now.strftime("%Y-%m-%d")
         hour_str = now.strftime("%H")
-
         total_key = f"visits:{date_str}:{hour_str}:total"
         unique_key = f"visits:{date_str}:{hour_str}:unique"
 
-        # если raw_id не число, всё равно кладём в Redis строку raw_id
         redis_client.incr(total_key)
         redis_client.sadd(unique_key, raw_id)
         ttl = 60 * 60 * 24 * 365
         redis_client.expire(total_key, ttl)
         redis_client.expire(unique_key, ttl)
 
-        logger.debug("save_user REDIS updated visit counters for %r", raw_id)
+        logger.debug("save_user: Redis visit counters updated for %r", raw_id)
         return jsonify({"status": "ok"}), 201
-    except Exception as e:
-        logger.exception("Redis error in save_user: %s", e)
+    except Exception:
+        logger.exception("save_user: Redis error")
         return jsonify({"error": "internal redis error"}), 500
 
 
-@general_api.route("/get_user_profile")
+@general_api.route("/get_user_profile", methods=["GET"])
+@handle_errors
+@require_args("user_id")
 def get_user_profile() -> Tuple[Response, int]:
-    uid_str = request.args.get("user_id")
-    logger.info("GET /api/general/get_user_profile?user_id=%s", uid_str)
-    if not uid_str:
-        return jsonify({"error": "user_id required"}), 400
-
+    """
+    GET /api/general/get_user_profile?user_id=<int>
+    Returns user profile and tokens if admin.
+    """
+    uid_str = request.args["user_id"]
     try:
         uid = int(uid_str)
     except ValueError:
         return jsonify({"error": "invalid user_id"}), 400
 
-    try:
-        with session_scope() as session:
-            u = session.get(Users, uid)
-            if not u:
-                return jsonify({"error": "not found"}), 404
+    with session_scope() as session:
+        u = session.get(Users, uid)
+        if not u:
+            return jsonify({"error": "not found"}), 404
 
-            profile = {
-                "user_id": u.user_id,
-                "first_name": u.first_name,
-                "last_name": u.last_name,
-                "username": u.username,
-                "role": u.role,
-                "photo_url": u.avatar_url and f"{BACKEND_URL}/{BUCKET}/users/{u.user_id}_{u.avatar_url}" or None,
-                "created_at": u.created_at.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d %H:%M:%S")
-            }
-            # если админ — вручаем JWT
-            if u.role == "admin":
-                access = create_access_token(identity=str(u.user_id), additional_claims={"role": u.role})
-                refresh = create_refresh_token(identity=str(u.user_id), additional_claims={"role": u.role})
-                profile["access_token"] = access
-                profile["refresh_token"] = refresh
+        profile: Dict[str, Any] = {
+            "user_id":    u.user_id,
+            "first_name": u.first_name,
+            "last_name":  u.last_name,
+            "username":   u.username,
+            "role":       u.role,
+            "photo_url":  f"{BACKEND_URL}/{BUCKET}/users/{u.user_id}_{u.avatar_url}" if u.avatar_url else None,
+            "created_at": u.created_at.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        if u.role == "admin":
+            profile["access_token"]  = create_access_token(identity=str(u.user_id), additional_claims={"role": u.role})
+            profile["refresh_token"] = create_refresh_token(identity=str(u.user_id), additional_claims={"role": u.role})
 
-        return jsonify(profile), 200
-
-    except Exception as e:
-        logger.exception("Failed to get_user_profile: %s", e)
-        return jsonify({"error": "internal error"}), 500
+    return jsonify(profile), 200
 
 
-@general_api.route("/get_parameters")
+@general_api.route("/get_parameters", methods=["GET"])
+@handle_errors
 def get_parameters() -> Tuple[Response, int]:
+    """
+    GET /api/general/get_parameters
+    Returns base URLs and FAQ settings.
+    """
     base_keys = ["url_telegram", "url_instagram", "url_email"]
-    default_result = {k: "" for k in base_keys}
+    default = {k: "" for k in base_keys}
 
     try:
         with session_scope() as session:
-            faq_keys_query = session.query(AdminSetting.key).filter(or_(AdminSetting.key.like('faq_question_%'), AdminSetting.key.like('faq_answer_%'))).distinct()
-            faq_keys = [result.key for result in faq_keys_query]
+            faq_keys = [row.key for row in session.query(AdminSetting.key).filter(or_(AdminSetting.key.like("faq_question_%"), AdminSetting.key.like("faq_answer_%"))).distinct()]
             all_keys = base_keys + faq_keys
             settings = session.query(AdminSetting).filter(AdminSetting.key.in_(all_keys)).all()
             result = {k: "" for k in all_keys}
-            for setting in settings:
-                result[setting.key] = setting.value or ""
-
-            return jsonify(result), 200
-
-    except Exception as e:
-        logger.exception("Failed to get_parameters: %s", e)
-        return jsonify(default_result), 500
+            for s in settings:
+                result[s.key] = s.value or ""
+        return jsonify(result), 200
+    except Exception:
+        logger.exception("get_parameters: failed")
+        return jsonify(default), 500
 
 
-@general_api.route('/list_reviews', methods=['GET'])
+@general_api.route("/list_reviews", methods=["GET"])
+@handle_errors
 def list_reviews() -> Tuple[Response, int]:
-    logger.info("GET /api/general/list_reviews")
-    try:
-        with session_scope() as session:
-            revs = session.query(Review).order_by(Review.created_at.desc()).all()
-            data: List[Dict[str, Any]] = []
-            for r in revs:
-                # находим в MinIO все объекты reviews/{r.id}_*
-                objs = minio_client.list_objects(BUCKET, prefix=f'reviews/{r.id}_', recursive=True)
-                urls = [f"{BACKEND_URL}/{BUCKET}/{obj.object_name}" for obj in objs]
-                data.append({
-                    "id":            r.id,
-                    "client_name":   r.client_name,
-                    "client_text1":  r.client_text1,
-                    "shop_response": r.shop_response,
-                    "client_text2":  r.client_text2,
-                    "link_url":      r.link_url,
-                    "photo_urls":    urls,
-                    "created_at":    r.created_at.astimezone(ZoneInfo("Europe/Moscow")).isoformat()
-                })
-        return jsonify({"reviews": data}), 200
+    """
+    GET /api/general/list_reviews
+    Returns reviews with associated photo URLs.
+    """
+    data: List[Dict[str, Any]] = []
+    with session_scope() as session:
+        revs = session.query(Review).order_by(Review.created_at.desc()).all()
+        for r in revs:
+            objs = minio_client.list_objects(BUCKET, prefix=f"reviews/{r.id}_", recursive=True)
+            urls = [f"{BACKEND_URL}/{BUCKET}/{obj.object_name}" for obj in objs]
+            data.append({
+                "id":            r.id,
+                "client_name":   r.client_name,
+                "client_text1":  r.client_text1,
+                "shop_response": r.shop_response,
+                "client_text2":  r.client_text2,
+                "link_url":      r.link_url,
+                "photo_urls":    urls,
+                "created_at":    r.created_at.astimezone(ZoneInfo("Europe/Moscow")).isoformat(),
+            })
 
-    except Exception as e:
-        logger.exception("Failed to list_reviews: %s", e)
-        return jsonify({"error": "internal error"}), 500
+    return jsonify({"reviews": data}), 200
