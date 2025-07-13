@@ -6,29 +6,34 @@ from typing import Set, Tuple, List
 from minio.error import S3Error
 from werkzeug.utils import secure_filename
 from ..core.logging import logger
-from ..utils.db_utils import session_scope
 from ..extensions import minio_client, BUCKET
 from ..models import Review
+from .db_utils import session_scope
 
 
-# ——— Helpers —————————————————————————————————————————————
+# Helpers: safe MinIO operations
 def _safe_stat(bucket: str, key: str) -> bool:
-    """Возвращает True, если объект key существует в bucket, иначе False."""
+    """
+    Проверяет, существует ли объект key в bucket.
+    Возвращает True, если есть, иначе False.
+    """
+    context = "safe_stat"
     try:
         minio_client.stat_object(bucket, key)
+        logger.debug("%s: object exists %s/%s", context, bucket, key)
         return True
     except S3Error:
+        logger.debug("%s: object not found %s/%s", context, bucket, key)
         return False
-    except Exception:
-        logger.exception("safe_stat: unexpected error on %s", key)
+    except Exception as exc:
+        logger.exception("%s: unexpected error checking %s/%s", context, bucket, key, exc_info=exc)
         return False
 
 
 def _safe_remove(bucket: str, key: str, context: str) -> bool:
     """
-    Пытается удалить объект key из bucket.
-    Возвращает True, если удалено, иначе False.
-    Логирует успех и все ошибки.
+    Удаляет объект key из bucket.
+    Логирует успех и все ошибки. Возвращает True, если удалено.
     """
     try:
         minio_client.remove_object(bucket, key)
@@ -37,24 +42,25 @@ def _safe_remove(bucket: str, key: str, context: str) -> bool:
     except S3Error as err:
         logger.warning("%s: MinIO error removing %s: %s", context, key, err)
         return False
-    except Exception:
-        logger.exception("%s: unexpected error removing %s", context, key)
+    except Exception as exc:
+        logger.exception("%s: unexpected error removing %s", context, key, exc_info=exc)
         return False
 
 
-# ——— Product images ——————————————————————————————————————
+# Product images: upload and cleanup
 def upload_product_images(folder: str, archive_bytes: bytes) -> Tuple[int, int]:
     """
-    Загружает файлы из ZIP-архива в папку folder/ на MinIO.
+    Извлекает файлы из ZIP-архива и загружает их в MinIO под префиксом folder/.
     Возвращает (added_count, replaced_count).
     """
     context = "upload_product_images"
-    logger.info("%s START folder=%s size=%dB", context, folder, len(archive_bytes))
+    total_size = len(archive_bytes)
+    logger.info("%s START folder=%s size=%dB", context, folder, total_size)
 
     try:
         archive = zipfile.ZipFile(io.BytesIO(archive_bytes))
-    except zipfile.BadZipFile as e:
-        logger.error("%s: invalid ZIP for %s: %s", context, folder, e)
+    except zipfile.BadZipFile as exc:
+        logger.error("%s: invalid ZIP for %s: %s", context, folder, exc)
         return 0, 0
 
     added_count = replaced_count = 0
@@ -74,8 +80,8 @@ def upload_product_images(folder: str, archive_bytes: bytes) -> Tuple[int, int]:
 
                 minio_client.put_object(BUCKET, key, stream, length=info.file_size, part_size=10 * 1024 * 1024)
                 logger.info("%s: uploaded %s", context, key)
-        except Exception as e:
-            logger.exception("%s: error processing %s: %s", context, key, e)
+        except Exception as exc:
+            logger.exception("%s: error processing %s: %s", context, key, exc_info=exc)
 
     logger.info("%s END added=%d replaced=%d", context, added_count, replaced_count)
     return added_count, replaced_count
@@ -88,16 +94,17 @@ def cleanup_product_images(folder: str, expected: Set[str]) -> Tuple[int, int]:
     Возвращает (deleted_count, warning_count).
     """
     context = "cleanup_product_images"
-    logger.info("%s START folder=%s expected=%d", context, folder, len(expected))
+    logger.info("%s START folder=%s expected_count=%d", context, folder, len(expected))
 
     try:
         objects = minio_client.list_objects(BUCKET, prefix=f"{folder}/", recursive=True)
-    except Exception as e:
-        logger.error("%s: list_objects failed for %s/: %s", context, folder, e)
+    except Exception as exc:
+        logger.error("%s: list_objects failed for %s/: %s", context, folder, exc)
         return 0, 0
 
     deleted_count = warning_count = 0
     for obj in objects:
+        # basename without extension and folder prefix
         base = os.path.splitext(obj.object_name)[0].split("/", 1)[1]
         if expected and base in expected:
             continue
@@ -111,19 +118,19 @@ def cleanup_product_images(folder: str, expected: Set[str]) -> Tuple[int, int]:
     return deleted_count, warning_count
 
 
-# ——— Review images ——————————————————————————————————————
+# Review images: upload and cleanup
 def upload_review_images(review_id: int, files: List) -> int:
     """
     Загружает изображения отзывов в MinIO под префиксом reviews/{review_id}_*.
     Возвращает количество успешно сохранённых файлов.
     """
     context = "upload_review_images"
-    logger.info("%s START review_id=%d files=%d", context, review_id, len(files))
+    logger.info("%s START review_id=%d files_count=%d", context, review_id, len(files))
 
     saved = 0
     for idx, file in enumerate(files, start=1):
         if not file or not getattr(file, "filename", None):
-            logger.debug("%s: skip empty slot %d for review %d", context, idx, review_id)
+            logger.debug("%s: skip empty slot %d", context, idx)
             continue
 
         filename = secure_filename(os.path.basename(file.filename))
@@ -136,8 +143,8 @@ def upload_review_images(review_id: int, files: List) -> int:
             logger.info("%s: uploaded %s", context, key)
         except S3Error as err:
             logger.warning("%s: MinIO error on %s: %s", context, key, err)
-        except Exception:
-            logger.exception("%s: unexpected error uploading %s", context, key)
+        except Exception as exc:
+            logger.exception("%s: unexpected error uploading %s", context, key, exc_info=exc)
 
     logger.info("%s END review_id=%d saved=%d", context, review_id, saved)
     return saved
@@ -156,18 +163,19 @@ def cleanup_review_images() -> int:
 
     try:
         objects = minio_client.list_objects(BUCKET, prefix="reviews/", recursive=True)
-    except Exception as e:
-        logger.error("%s: list_objects failed: %s", context, e)
+    except Exception as exc:
+        logger.error("%s: list_objects failed: %s", context, exc)
         return 0
 
     deleted_count = 0
     pattern = re.compile(r"^reviews/(\d+)_(\d+)\.\w+$")
 
     for obj in objects:
-        m = pattern.match(obj.object_name)
+        match = pattern.match(obj.object_name)
         valid = False
-        if m:
-            rid, idx = int(m.group(1)), int(m.group(2))
+        if match:
+            rid = int(match.group(1))
+            idx = int(match.group(2))
             valid = (rid in existing_ids) and (1 <= idx <= 3)
 
         if not valid and _safe_remove(BUCKET, obj.object_name, context):
