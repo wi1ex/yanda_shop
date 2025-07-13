@@ -68,14 +68,18 @@ jobs:
 
       - name: Copy .env to server
         run: |
-          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes ./.env \
+          scp -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=yes \
+            ./.env \
             "${{ secrets.SERVER_USER }}"@"${{ secrets.SERVER_HOST }}":/root/app/yanda_shop/.env
         shell: bash
 
       - name: Deploy via SSH
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
-              -l "${{ secrets.SERVER_USER }}" "${{ secrets.SERVER_HOST }}" << 'EOF'
+          ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=yes \
+              -l "${{ secrets.SERVER_USER }}" \
+              "${{ secrets.SERVER_HOST }}" << 'EOF'
             set -euo pipefail
             cd /root/app/yanda_shop
             git fetch --all
