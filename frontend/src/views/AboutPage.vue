@@ -7,10 +7,16 @@
       </div>
       <div class="cover-overlay">
         <img class="title" :src="about_text_logo" alt="Название" />
-        <p class="subtitle">Оригинальность</p>
-        <p class="subtitle">во всём.</p>
-        <p class="subtitle">Честность</p>
-        <p class="subtitle">в деталях.</p>
+        <div class="subtitle-div">
+          <div class="subtitle-column">
+            <p class="subtitle" style="align-self: flex-start;">Оригинальность</p>
+            <p class="subtitle" style="align-self: flex-end;">во всём.</p>
+          </div>
+          <div class="subtitle-column">
+            <p class="subtitle" style="align-self: flex-start;">в деталях.</p>
+            <p class="subtitle" style="align-self: flex-end;">Честность</p>
+          </div>
+        </div>
       </div>
       <div class="marquee-wrap">
         <div class="marquee-content">ЧЕСТНОСТЬ ОРИГИНАЛЬНОСТЬ СТИЛЬ ГАРАНТИИ ВЫГОДА</div>
@@ -139,8 +145,8 @@ const store = useStore()
 <style scoped lang="scss">
 .about-page {
   width: 100%;
-  background: #f5f5f5;
-  color: #000;
+  background-color: $grey-87;
+  color: $black-100;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -162,8 +168,14 @@ const store = useStore()
 .cover-section {
   position: relative;
   width: 100%;
-  height: 60vh;
+  height: 1000px;
   overflow: hidden;
+}
+.cover-bg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 .cover-bg img {
   width: 100%;
@@ -171,24 +183,42 @@ const store = useStore()
   object-fit: cover;
 }
 .cover-overlay {
+  display: flex;
+  flex-direction: column;
   position: absolute;
-  top: 20%;
-  left: 10%;
-  transform: translateY(-20%);
+  top: 66px;
 }
 .title {
+  position: relative;
+  top: 94px;
   width: 100%;
+  mix-blend-mode: exclusion;
+}
+.subtitle-div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 94px;
+  padding: 10px;
+}
+.subtitle-column {
+  display: flex;
+  flex-direction: column;
+  width: 25%;
 }
 .subtitle {
-  font-size: 24px;
-  color: #fff;
-  margin-top: 16px;
+  margin: 0;
+  font-size: 20px;
+  background-color: $white-100;
+  line-height: 110%;
+  letter-spacing: -0.4px;
 }
 .marquee-wrap {
   position: absolute;
   bottom: 0;
+  padding: 10px;
   width: 100%;
-  background: rgba(0,0,0,0.6);
+  background-color: $white-100;
   overflow: hidden;
 }
 .marquee-content {
@@ -196,20 +226,25 @@ const store = useStore()
   white-space: nowrap;
   padding-left: 100%;
   animation: marquee 15s linear infinite;
-  color: #fff;
-  font-size: 24px;
-  line-height: 1.5;
+  color: $grey-20;
+  font-size: 16px;
+  line-height: 110%;
+  letter-spacing: -0.6px;
   word-spacing: 50px;
 }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 
-.about-us .section-title,
-.philosophy .section-title,
-.details .section-title,
-.community .section-title {
+.about-us{
+  padding: 56px 16px;
+}
+
+.section-title {
+  margin: 40px;
+  font-family: Bounded-500;
   text-align: center;
-  font-size: 36px;
-  margin-bottom: 48px;
+  font-size: 32px;
+  line-height: 90%;
+  letter-spacing: -0.72px;
 }
 
 .about-content {
@@ -218,8 +253,24 @@ const store = useStore()
   gap: 32px;
 }
 .text-main p {
-  font-size: 18px;
+  color: $grey-20;
+  font-size: 20px;
+  font-family: Bounded-300;
+  line-height: 110%;
+  letter-spacing: -1px;
   margin-bottom: 16px;
+}
+.column h3{
+  color: $black-40;
+  font-size: 15px;
+  line-height: 110%;
+  letter-spacing: -0.6px;
+}
+.column p{
+  color: $black-100;
+  font-size: 15px;
+  line-height: 110%;
+  letter-spacing: -0.6px;
 }
 .text-columns {
   display: flex;
@@ -232,7 +283,7 @@ const store = useStore()
 }
 
 .mosaic {
-  background: #fff;
+  background-color: $white-100;
 }
 .mosaic-grid {
   display: grid;
@@ -247,13 +298,15 @@ const store = useStore()
 }
 .mosaic-text {
   grid-column: 1 / -1;
-  font-size: 18px;
-  line-height: 1.6;
+  color: $grey-20;
+  font-size: 14px;
+  line-height: 100%;
+  letter-spacing: -0.56px;
 }
 
 .philosophy {
-  background: #000;
-  color: #fff;
+  background-color: $black-100;
+  color: $white-100;
   text-align: center;
   padding: 80px 32px;
 }
@@ -276,7 +329,7 @@ const store = useStore()
   gap: 24px;
 }
 .card {
-  background: #fff;
+  background-color: $white-100;
   padding: 24px;
   position: relative;
 }
@@ -284,8 +337,8 @@ const store = useStore()
   position: absolute;
   top: 16px;
   left: 16px;
-  background: #000;
-  color: #fff;
+  background-color: $black-100;
+  color: $white-100;
   padding: 4px 8px;
   font-size: 14px;
 }
@@ -315,8 +368,8 @@ const store = useStore()
 .join-button {
   display: block;
   margin: 0 auto 32px;
-  background: #000;
-  color: #fff;
+  background-color: $black-100;
+  color: $white-100;
   padding: 16px 32px;
   border-radius: 24px;
   font-size: 18px;
@@ -337,14 +390,22 @@ const store = useStore()
   .section {
     padding: 40px 16px;
   }
+  .section-title {
+    font-size: 24px;
+  }
   .cover-section {
-    height: 40vh;
+    height: 739px;
+  }
+  .cover-image {
+    position: relative;
+    top: -24px;
   }
   .subtitle {
     font-size: 16px;
+    letter-spacing: -0.64px;
   }
   .marquee-content {
-    font-size: 14px;
+    font-size: 15px;
   }
   .about-content {
     grid-template-columns: 1fr;
