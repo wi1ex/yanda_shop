@@ -93,6 +93,7 @@ onMounted(async () => {
 
 .line-vert {
   position: absolute;
+  top: 0;
   left: calc(50% - 0.5px);
   width: 1px;
   height: 100%;
@@ -103,7 +104,7 @@ onMounted(async () => {
   width: 100%;
   height: 1px;
   background-color: $white-100;
-  z-index: 1000;
+  z-index: 100;
 }
 .favorites-container {
   display: flex;
