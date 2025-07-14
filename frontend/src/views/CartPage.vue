@@ -4,14 +4,18 @@
       <div class="cart-drawer">
 
         <div class="cart-header">
-          <h2>Корзина [ {{ store.cart.count }} ]</h2>
+          <h2 v-if="store.cart.items.length === 0">Корзина</h2>
+          <h2 v-else>Корзина [ {{ store.cart.count }} ]</h2>
           <button class="close-btn" @click="store.closeCartDrawer()">
             <img :src="icon_close" alt="Закрыть" />
           </button>
         </div>
 
         <div v-if="store.cart.items.length === 0" class="empty-cart">
-          Корзина пуста
+          В корзине пока что ничего нет...
+          <button v-else class="action-button" @click="goToCatalog">
+            Перейти в каталог
+          </button>
         </div>
 
         <div v-else class="cart-items-frame">
@@ -78,11 +82,14 @@
 
 <script setup>
 import { useStore } from '@/store/index.js'
+import { useRouter } from 'vue-router'
 import icon_trash from '@/assets/images/trash.svg'
 import icon_close from '@/assets/images/close.svg'
 import icon_minus from '@/assets/images/minus.svg'
 import icon_plus from '@/assets/images/plus.svg'
+
 const store = useStore()
+const router = useRouter()
 
 function removeItem(item) {
   const qty = store.getProductQuantity(item)
@@ -101,6 +108,13 @@ function onRegister() {
   } else {
     alert('Пожалуйста, авторизуйтесь');
   }
+}
+
+function goToCatalog() {
+  store.closeCartDrawer()
+  store.selectedCategory = ''
+  router.push({ name: 'Catalog' })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 </script>
@@ -123,7 +137,7 @@ function onRegister() {
   height: 100vh;
   width: 100vw;
   max-width: 600px;
-  background: #fff;
+  background-color: $white-100;
   display: flex;
   flex-direction: column;
 }
@@ -134,15 +148,15 @@ function onRegister() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff;
+  background-color: $white-100;
   flex-shrink: 0;
 }
 .cart-header h2 {
   margin: 0;
   font-size: 32px;
-  font-family: Bounded-400;
+  font-family: Bounded-250;
   line-height: 80%;
-  letter-spacing: -0.05em;
+  letter-spacing: -1.6px;
 }
 .close-btn {
   background: none;
@@ -161,8 +175,11 @@ function onRegister() {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #bbb;
+  gap: 40px;
+  color: $grey-20;
   font-size: 16px;
+  line-height: 110%;
+  letter-spacing: -0.64px;
 }
 
 .cart-items-frame {
@@ -173,7 +190,7 @@ function onRegister() {
   line-height: 100%;
   letter-spacing: -0.04em;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0,0,0,0.3) transparent;
+  scrollbar-color: $black-25 transparent;
 }
 .cart-items-frame::after {
   content: '';
@@ -182,7 +199,7 @@ function onRegister() {
   left: 0;
   right: 0;
   height: 20px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.1));
+  background: linear-gradient(transparent, $black-10);
   pointer-events: none;
 }
 .cart-items-frame::-webkit-scrollbar {
@@ -192,20 +209,20 @@ function onRegister() {
   background: transparent;
 }
 .cart-items-frame::-webkit-scrollbar-thumb {
-  background-color: rgba(0,0,0,0.3);
+  background-color: $black-40;
   border-radius: 3px;
 }
 
 .cart-item {
   display: flex;
   padding: 20px 0;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid $grey-87;
 }
 
 .item-image-container {
   width: 150px;
   height: 200px;
-  background: #f4f4f4;
+  background-color: $grey-95;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -224,8 +241,10 @@ function onRegister() {
 }
 .item-brand {
   font-size: 12px;
-  color: #333333;
+  color: $grey-20;
   margin: 0 0 8px;
+  line-height: 100%;
+  letter-spacing: -0.48px;
 }
 .item-title-price {
   display: flex;
@@ -237,20 +256,24 @@ function onRegister() {
   font-size: 15px;
   font-family: Manrope-SemiBold;
   margin: 0;
-  color: #0A0A0A;
+  color: $black-100;
+  line-height: 100%;
+  letter-spacing: -0.6px;
 }
 .item-price {
   font-size: 15px;
   font-family: Manrope-SemiBold;
   margin: 0;
-  color: #0A0A0A;
+  color: $black-100;
+  line-height: 100%;
+  letter-spacing: -0.6px;
 }
 
 .item-quantity-controls {
   display: flex;
   align-items: center;
   width: fit-content;
-  background: #F1F1F1;
+  background-color: $grey-95;
   border-radius: 4px;
 }
 .qty-btn {
@@ -279,16 +302,15 @@ function onRegister() {
   align-items: center;
   margin-top: 76px;
   font-size: 12px;
-  color: #858697;
 }
 .item-info {
   flex: 0 0 80%;
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.4);
+  color: $black-40;
   margin: 0;
 }
 .item-info-value {
-  color: #333333;
+  color: $grey-20;
 }
 .remove-btn {
   margin-left: auto;
@@ -301,8 +323,8 @@ function onRegister() {
 .remove-text {
   display: inline-block;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.4);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+  color: $black-40;
+  border-bottom: 1px solid $black-40;
 }
 .remove-icon {
   display: none;
@@ -315,7 +337,7 @@ function onRegister() {
   align-items: flex-start;
   flex-shrink: 0;
   padding: 0 20px 10px;
-  background: #fff;
+  background-color: $white-100;
 }
 .summary-block {
   display: flex;
@@ -325,30 +347,29 @@ function onRegister() {
 .summary-label {
   font-size: 20px;
   margin: 18px 0 4px;
-  color: #333333;
+  color: $grey-20;
   line-height: 110%;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.4px;
 }
 .summary-total {
-  font-size: 24px;
-  font-family: Bounded-400;
-  color: #0a0a0a;
+  font-size: 20px;
+  font-family: Bounded-250;
+  color: $black-100;
   margin: 18px 0 4px;
-  font-weight: 400;
   line-height: 80%;
-  letter-spacing: -0.05em;
+  letter-spacing: -1px;
 }
 .summary-note {
   font-size: 12px;
-  color: rgba(10, 10, 10, 0.6);
+  color: $black-60;
   margin: 0 0 16px;
   line-height: 100%;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.48px;
 }
 
 .cart-action {
   padding: 0 20px 20px;
-  background: #fff;
+  background-color: $white-100;
   flex-shrink: 0;
 }
 .action-button {
@@ -356,14 +377,13 @@ function onRegister() {
   height: 72px;
   padding: 14px;
   font-size: 16px;
-  font-weight: 500;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  background-color: #333333;
-  color: #fff;
+  background-color: $grey-20;
+  color: $white-100;
   line-height: 100%;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.64px;
 }
 
 .drawer-enter-active,
@@ -394,20 +414,23 @@ function onRegister() {
   .item-title-price {
     flex-direction: column;
     align-items: flex-start;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
+    gap: 16px;
   }
   .item-info-row {
-    margin-top: 46px;
+    margin-top: 22px;
   }
   .action-button {
     height: 56px;
   }
   .summary-label {
     font-size: 16px;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.64px;
   }
   .summary-total {
-    font-size: 18px;
+    font-family: Bounded-350;
+    font-size: 16px;
+    letter-spacing: -0.8px;
   }
   .item-image-container {
     width: 134px;
@@ -418,7 +441,7 @@ function onRegister() {
   }
   .cart-action {
     padding: 0 10px 20px;
-    background: #fff;
+    background-color: $white-100;
     flex-shrink: 0;
   }
   .remove-text {
