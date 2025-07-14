@@ -173,8 +173,10 @@ function goToCatalog() {
 .empty-cart {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 20px;
   gap: 40px;
   color: $grey-20;
   font-size: 16px;
@@ -217,6 +219,9 @@ function goToCatalog() {
   display: flex;
   padding: 20px 0;
   border-top: 1px solid $grey-87;
+}
+.cart-item:last-child {
+  border-bottom: 1px solid $grey-87;
 }
 
 .item-image-container {
@@ -300,7 +305,7 @@ function goToCatalog() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  margin-top: 76px;
+  margin-top: 80px;
   font-size: 12px;
 }
 .item-info {
@@ -418,7 +423,7 @@ function goToCatalog() {
     gap: 16px;
   }
   .item-info-row {
-    margin-top: 22px;
+    margin-top: 28px;
   }
   .action-button {
     height: 56px;
