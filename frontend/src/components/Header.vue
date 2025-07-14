@@ -178,10 +178,9 @@ watch(
         border-radius: 1px;
         background-color: $grey-20;
         color: $white-100;
-        font-family: NeueHaas-400;
         font-size: 10px;
-        line-height: 100%;
-        letter-spacing: -0.2px;
+        line-height: 80%;
+        letter-spacing: -0.4px;
       }
       .badge-fav {
         right: 52px;

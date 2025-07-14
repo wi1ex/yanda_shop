@@ -1,5 +1,6 @@
 <template>
   <div class="favorites-container">
+    <div class="line-vert"></div>
     <div class="header-logo">
       <span class="logo-title">ИЗБРАННОЕ</span>
       <sup class="logo-count">{{ favoriteProducts.length }}</sup>
@@ -10,13 +11,17 @@
       Назад
     </button>
 
+    <div class="line-hor"></div>
+
     <div v-if="favoriteProducts.length" class="products-grid" :class="{ blurred: favoritesLoading }">
       <div v-for="product in favoriteProducts" :key="product.color_sku" @click="goToProduct(product)" class="product-card">
         <button type="button" class="remove-fav-btn" @click.prevent.stop="store.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">
           <img :src="icon_product_in_favorites" alt="product" />
         </button>
 
-        <img :src="product.image" alt="product" class="product-image" />
+        <div class="product-image">
+          <img :src="product.image" alt="product" />
+        </div>
 
         <div class="product-info">
           <p class="product-brand">{{ product.brand }}</p>
@@ -26,6 +31,7 @@
       </div>
     </div>
   </div>
+  <div class="line-hor"></div>
 </template>
 
 <script setup>
@@ -85,13 +91,27 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 
+.line-vert {
+  position: absolute;
+  left: calc(50% - 0.5px);
+  width: 1px;
+  height: 100%;
+  background-color: $white-100;
+  z-index: 10;
+}
+.line-hor {
+  width: 100%;
+  height: 1px;
+  background-color: $white-100;
+  z-index: 1000;
+}
 .favorites-container {
   display: flex;
   flex-direction: column;
-  margin-top: 60px;
+  margin: 60px 0 96px;
   .header-logo {
     display: flex;
-    justify-self: center;
+    justify-content: center;
     margin: 40px;
     .logo-title {
       color: $black-100;
@@ -112,8 +132,7 @@ onMounted(async () => {
   .back-button {
     display: flex;
     align-items: center;
-    margin-left: 10px;
-    margin-bottom: 50px;
+    margin: 0 10px 10px;
     padding: 0;
     width: fit-content;
     gap: 4px;
@@ -136,6 +155,7 @@ onMounted(async () => {
   .products-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(187px, 1fr));
+    margin-top: 40px;
     gap: 16px;
     transition: filter 0.25s ease-in-out;
     .product-card {
@@ -164,13 +184,18 @@ onMounted(async () => {
         }
       }
       .product-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+        display: flex;
+        padding: 40px 24px;
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
       }
       .product-info {
         display: flex;
         flex-direction: column;
+        padding: 10px 10px 16px;
         background-color: $grey-87;
         .product-brand {
           margin: 0;
