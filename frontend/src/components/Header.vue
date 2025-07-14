@@ -9,7 +9,7 @@
 
     <!-- Кнопка меню -->
     <div class="menu">
-      <button class="menu-btn" @click="toggleMenu">
+      <button class="menu-btn" @click="store.toggleMenu()">
         Меню
         <img :src="icon_menu_grey" alt="Меню" />
       </button>
@@ -36,9 +36,9 @@
 
     <!-- Выпадающее меню -->
     <transition name="fade">
-      <nav v-if="menuOpen" class="dropdown-menu">
+      <nav v-if="store.menuOpen" class="dropdown-menu">
         <div class="dropdown-menu-top">
-          <button class="dropdown-menu-btn" @click="toggleMenu">
+          <button class="dropdown-menu-btn" @click="store.toggleMenu()">
             Меню
             <img :src="icon_close" alt="Меню" />
           </button>
@@ -84,7 +84,6 @@ import icon_logo_mail from '@/assets/images/logo_mail.svg'
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
-const menuOpen = ref(false)
 const isAdmin = computed(() => store.user?.role === 'admin')
 const isIconWhite = computed(() => route.name === 'About' || route.name === 'Home')
 const icon_default_avatar = computed(() => isIconWhite.value ? icon_default_avatar_white : icon_default_avatar_grey)
@@ -94,7 +93,7 @@ const icon_logo = computed(() => isIconWhite.value ? icon_logo_white : icon_logo
 
 
 function goToGender(gender) {
-  toggleMenuClose()
+  store.toggleMenuClose()
   store.selectedCategory = ''
   store.filterGender = gender
   router.push({
@@ -105,17 +104,9 @@ function goToGender(gender) {
 }
 
 function goToPage(page) {
-  toggleMenuClose()
+  store.toggleMenuClose()
   router.push({ name: page })
   window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-function toggleMenu() {
-  menuOpen.value = !menuOpen.value
-}
-
-function toggleMenuClose() {
-  menuOpen.value = false
 }
 
 </script>
@@ -244,13 +235,18 @@ function toggleMenuClose() {
     }
   }
   .dropdown-menu-bottom {
-    @include flex-c-c;
+    display: flex;
+    justify-content: center;
     margin-bottom: 6px;
+    height: 30px;
     gap: 24px;
     a {
+      width: 30px;
+      height: 30px;
       img {
         width: 30px;
         height: 30px;
+        object-fit: cover;
       }
     }
   }
@@ -304,20 +300,22 @@ function toggleMenuClose() {
 
   .dropdown-menu {
     padding: 12px 0;
-    .dropdown-menu-btn {
-      margin: 8px 0 32px;
-      width: 80px;
-      font-size: 16px;
-      letter-spacing: -0.64px;
-      img {
-        width: 24px;
-        height: 24px;
+    .dropdown-menu-top {
+      .dropdown-menu-btn {
+        margin: 8px 0 32px;
+        width: 80px;
+        font-size: 16px;
+        letter-spacing: -0.64px;
+        img {
+          width: 24px;
+          height: 24px;
+        }
       }
-    }
-    .dropdown-link {
-      padding: 12px 10px;
-      font-size: 14px;
-      letter-spacing: -0.7px;
+      .dropdown-link {
+        padding: 12px 10px;
+        font-size: 14px;
+        letter-spacing: -0.7px;
+      }
     }
   }
 }

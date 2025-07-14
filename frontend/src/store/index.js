@@ -72,6 +72,9 @@ export const useStore = defineStore('main', () => {
   const cartLoaded         = ref(false)
   const showCartDrawer     = ref(false)
 
+  // Меню
+  const menuOpen           = ref(false)
+
   // Избранное
   const favorites          = ref({ items: [], count: 0 })
   const favoritesLoaded    = ref(false)
@@ -285,6 +288,13 @@ export const useStore = defineStore('main', () => {
   }
   function closeCartDrawer() {
     showCartDrawer.value = false
+  }
+
+  function toggleMenu() {
+    menuOpen.value = !menuOpen.value
+  }
+  function toggleMenuClose() {
+    menuOpen.value = false
   }
 
   // -------------------------------------------------
@@ -656,6 +666,9 @@ export const useStore = defineStore('main', () => {
 
     // cart
     openCartDrawer, closeCartDrawer,
+
+    // menu
+    toggleMenu, toggleMenuClose,
 
     // favorites
     loadFavoritesFromServer,
