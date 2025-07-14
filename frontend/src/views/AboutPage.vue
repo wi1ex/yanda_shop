@@ -79,14 +79,14 @@
         <img :src="about_image4" alt="Декоративное изображение философии" />
       </div>
       <div class="philosophy-div">
-        <img :src="about_image13" alt="Философия иконка 1" />
+        <img :src="about_image13" alt="Философия иконка 1" style="width: 27%;"/>
         <h2 class="section-title">Философия</h2>
         <div class="philosophy-row">
-          <img :src="about_image14" alt="Философия иконка 2" />
+          <img :src="about_image14" alt="Философия иконка 2" style="width: 5%;"/>
           <p class="philosophy-text">Мы выбираем путь, где качество важнее количества. Где честность — это не формат, а основа. Где одежда становится частью того, кто ты есть.</p>
-          <img :src="about_image15" alt="Философия иконка 3" />
+          <img :src="about_image15" alt="Философия иконка 3" style="width: 5%;"/>
         </div>
-        <img :src="about_image16" alt="Философия иконка 4" />
+        <img :src="about_image16" alt="Философия иконка 4" style="width: 33%;"/>
       </div>
       <div class="philosophy-image" style="justify-content: flex-start;">
         <img :src="about_image5" alt="Декоративное изображение философии" />
@@ -127,15 +127,28 @@
     <!-- Community Section -->
     <section class="section community">
       <h2 class="section-title">Сообщество</h2>
-      <p class="community-text">Пиши нам в Телеграм — это самый быстрый и легкий способ для связи.</p>
+      <div class="community-column">
+        <div class="community-div">
+          <img :src="about_image17" alt=""/>
+          <p>Пиши нам</p>
+        </div>
+        <div class="community-div">
+          <p>в Телеграм</p>
+          <img :src="about_image18" alt=""/>
+        </div>
+        <p>это самый</p>
+        <p>быстрый и легкий</p>
+        <p>способ для связи</p>
+      </div>
+      <p class="community-text">Там мы помогаем с выбором размера, обсуждаем модели, делимся новинками и отвечаем без формальностей. Живой диалог, в котором тебе действительно хотят помочь.</p>
       <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram" target="_blank" rel="noopener" class="join-button">Присоединиться</a>
       <div class="community-images">
         <div class="img-item-div">
           <div class="img-item"><img :src="about_image11" alt=""/></div>
           <div class="img-item">
-            <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram" target="_blank" rel="noopener" class="link">Telegram</a>
-            <a v-if="store.parameters.url_instagram" :href="store.parameters.url_instagram" target="_blank" rel="noopener" class="link">Instagram</a>
-            <a v-if="store.parameters.url_email" :href="`mailto:${store.parameters.url_email}`" rel="noopener" class="link">E-mail</a>
+            <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram" target="_blank" rel="noopener" class="link">TELEGRAM</a>
+            <a v-if="store.parameters.url_instagram" :href="store.parameters.url_instagram" target="_blank" rel="noopener" class="link">INSTAGRAM</a>
+            <a v-if="store.parameters.url_email" :href="`mailto:${store.parameters.url_email}`" rel="noopener" class="link">E-MAIL</a>
           </div>
         </div>
         <div class="img-item-div">
@@ -165,6 +178,8 @@ import about_image13 from '@/assets/images/about_image13.svg'
 import about_image14 from '@/assets/images/about_image14.svg'
 import about_image15 from '@/assets/images/about_image15.svg'
 import about_image16 from '@/assets/images/about_image16.svg'
+import about_image17 from '@/assets/images/about_image17.svg'
+import about_image18 from '@/assets/images/about_image18.svg'
 import about_text_logo from '@/assets/images/about_text_logo.svg'
 
 const store = useStore()
@@ -181,9 +196,16 @@ const store = useStore()
 }
 .link {
   color: inherit;
-  text-decoration: none;
-  font-size: 14px;
+  font-size: 16px;
+  line-height: 110%;
+  letter-spacing: -0.64px;
   transition: opacity 0.2s;
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-skip-ink: auto;
+  text-decoration-thickness: auto;
+  text-underline-offset: 25%;
+  text-underline-position: from-font;
 }
 
 .section {
@@ -364,15 +386,20 @@ const store = useStore()
   background-color: $black-100;
   color: $white-100;
   text-align: center;
-  padding: 80px 32px;
+  padding: 0;
 }
 .philosophy-div {
   display: flex;
   flex-direction: column;
+  align-items: center;
   padding: 56px 0;
 }
 .philosophy-row {
   display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 0 10px 40px;
+  gap: 20px;
 }
 .philosophy-text {
   margin: 0;
@@ -384,12 +411,6 @@ const store = useStore()
 .philosophy-image {
   display: flex;
   width: 100%;
-}
-.philosophy-div img {
-  width: 50%;
-}
-.philosophy-row img {
-  width: 50%;
 }
 .philosophy-image img {
   width: 50%;
@@ -452,16 +473,34 @@ const store = useStore()
   letter-spacing: -0.6px;
 }
 
+.community-column {
+  display: flex;
+  flex-direction: column;
+}
+.community-div {
+  display: flex;
+}
+.community-column img {
+  width: 100%;
+}
+.community-column p {
+  font-family: Bounded-400;
+  font-size: 32px;
+  line-height: 90%;
+  letter-spacing: -1.92px;
+}
 .community-text {
+  margin: 32px 0 24px;
   text-align: center;
-  font-size: 20px;
-  max-width: 600px;
-  margin: 0 auto 24px;
+  font-size: 15px;
+  line-height: 110%;
+  letter-spacing: -0.6px;
 }
 .join-button {
   display: flex;
   justify-content: center;
   justify-self: center;
+  margin-bottom: 40px;
   padding: 8px 32px;
   width: fit-content;
   border-radius: 999px;
@@ -491,6 +530,7 @@ const store = useStore()
   flex-direction: column;
   justify-content: flex-end;
   width: 50%;
+  gap: 8px;
 }
 .community-images .img-item img {
   width: 100%;
