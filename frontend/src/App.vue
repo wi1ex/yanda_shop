@@ -19,28 +19,17 @@ import CartPage from '@/views/CartPage.vue'
 const store = useStore()
 const route = useRoute()
 const isNoFooterRoute = computed(() => route.name === 'Admin' || route.name === 'Profile')
-let prevOverflow
+let prevOverflowCart
 
 // следим за открытием/закрытием корзины/меню
 watch(
   () => store.showCartDrawer,
   (isOpen) => {
     if (isOpen) {
-      prevOverflow = document.body.style.overflow
+      prevOverflowCart = document.body.style.overflow
       document.body.style.overflow = 'hidden'
     } else {
-      document.body.style.overflow = prevOverflow || ''
-    }
-  }
-)
-watch(
-  () => store.menuOpen,
-  (isOpen) => {
-    if (isOpen) {
-      prevOverflow = document.body.style.overflow
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = prevOverflow || ''
+      document.body.style.overflow = prevOverflowCart || ''
     }
   }
 )
