@@ -235,7 +235,7 @@ const store = useStore()
   width: 100%;
   height: 1px;
   background-color: $white-100;
-  z-index: 1000;
+  z-index: 100;
 }
 
 .line-div {
@@ -244,7 +244,7 @@ const store = useStore()
   width: 100%;
   height: 1px;
   background-color: $white-100;
-  z-index: 1000;
+  z-index: 100;
 }
 
 .line-phil {
