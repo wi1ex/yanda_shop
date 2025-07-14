@@ -18,7 +18,7 @@
         </nav>
 
         <!-- Колонка “Информация” -->
-        <nav class="footer-nav" style="left: 49.7vw">
+        <nav class="footer-nav" style="left: 49.8vw">
           <a href="#" class="footer-link" @click.prevent="goToPage('About')">О нас</a>
           <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Лайфстайл</a>
           <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Доставка и оплата</a>
@@ -218,8 +218,8 @@ function goToGender(gender) {
   letter-spacing: -0.8px;
 }
 .footer-link-text {
-  width: 60%;
-  text-align: center;
+  width: 90%;
+  margin: -4px 0 0;
   color: $black-40;
   font-size: 10px;
   line-height: 100%;
