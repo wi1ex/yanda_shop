@@ -92,26 +92,26 @@
         <div class="card">
           <div class="card-number">01</div>
           <div class="card-icon"><img :src="about_image6" alt="Иконка 1" /></div>
-          <h3>Никаких подделок</h3>
-          <p>Только оригинальные товары, заказанные напрямую из Poizon и проверенных магазинов.</p>
+          <h3>Никаких подделок Никаких иллюзий</h3>
+          <p>Только оригинальные товары, заказанные напрямую из Poizon и проверенных магазинов. Трижды проверяем товар, прежде чем он попадет к тебе в руки.</p>
         </div>
         <div class="card">
           <div class="card-number">02</div>
           <div class="card-icon"><img :src="about_image7" alt="Иконка 2" /></div>
           <h3>Дешевле, потому что честно</h3>
-          <p>Наши товары на 20–45% дешевле, чем в российских магазинах — по реальной цене без накруток.</p>
+          <p>Наши товары на 20–45% дешевле, чем в российских магазинах. Не потому, что они хуже, а потому, что мы не играем с наценками и продаем по реальной цене.</p>
         </div>
         <div class="card">
           <div class="card-number">03</div>
           <div class="card-icon"><img :src="about_image8" alt="Иконка 3" /></div>
           <h3>Ты выбираешь — мы находим</h3>
-          <p>Пришли нам фото, ссылку или просто описание — и мы подберем то, что тебе подойдет.</p>
+          <p>Пришли нам фото, ссылку или просто описание — и мы подберем то, что тебе подойдет. Это не шаблонный каталог, это персональный подход.</p>
         </div>
         <div class="card">
           <div class="card-number">04</div>
           <div class="card-icon"><img :src="about_image9" alt="Иконка 4" /></div>
           <h3>Мы не бот</h3>
-          <p>Пиши в Telegram: тебе ответит человек, а не автоответчик — мы действительно хотим помочь.</p>
+          <p>Пиши в Telegram: тебе ответит человек, а не автоответчик. Мы не просто консультируем — мы подскажем по-дружески, ведь нам действительно не все равно.</p>
         </div>
       </div>
     </section>
@@ -120,7 +120,7 @@
     <section class="section community">
       <h2 class="section-title">Сообщество</h2>
       <p class="community-text">Пиши нам в Телеграм — это самый быстрый и легкий способ для связи.</p>
-      <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram" target="_blank" rel="noopener" class="join-button">Telegram</a>
+      <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram" target="_blank" rel="noopener" class="join-button">Присоединиться</a>
       <div class="community-images">
         <div class="img-item-div">
           <div class="img-item"><img :src="about_image11" alt=""/></div>
@@ -338,6 +338,9 @@ const store = useStore()
 .mosaic-text {
   display: flex;
   width: 50%;
+}
+.mosaic-text p {
+  margin: 0;
   align-self: flex-end;
   color: $grey-20;
   font-size: 14px;
@@ -364,41 +367,58 @@ const store = useStore()
   margin: 0 auto;
 }
 
+.details {
+  padding: 56px 10px 0;
+}
 .details .cards {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 .card {
-  background-color: $white-100;
-  margin: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   position: relative;
+  background-color: $white-100;
+  gap: 16px;
+  height: 355px;
+  padding: 20px 10px;
 }
 .card-number {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: 0;
+  left: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 4px;
   background-color: $black-100;
   color: $white-100;
-  padding: 8px 8px 0;
   font-size: 32px;
   line-height: 90%;
   letter-spacing: -1.28px;
 }
 .card-icon img {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 24px;
-  height: 24px;
+  top: 20px;
+  right: 10px;
+  width: 50px;
+  height: 50px;
 }
 .card h3 {
+  display: flex;
+  margin: 0;
   font-family: Bounded-300;
   font-size: 28px;
   line-height: 90%;
   letter-spacing: -1.4px;
 }
 .card p {
+  display: flex;
+  margin: 0;
   font-size: 15px;
   line-height: 110%;
   letter-spacing: -0.6px;
@@ -411,28 +431,33 @@ const store = useStore()
   margin: 0 auto 24px;
 }
 .join-button {
-  display: block;
-  margin: 0 auto 32px;
+  display: flex;
+  justify-content: center;
+  justify-self: center;
+  padding: 16px 32px;
+  width: fit-content;
+  border-radius: 999px;
   background-color: $black-100;
   color: $white-100;
-  padding: 16px 32px;
-  border-radius: 24px;
   font-size: 18px;
   cursor: pointer;
+  text-decoration: none;
 }
 .community-images {
-  display: flex;
-  width: 100%;
-  gap: 10px;
-}
-.community-images .img-item-div{
   display: flex;
   flex-direction: column;
   width: 100%;
   gap: 10px;
 }
+.community-images .img-item-div{
+  display: flex;
+  width: 100%;
+  gap: 10px;
+}
 .community-images .img-item {
   display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   width: 50%;
 }
 .community-images .img-item img {
