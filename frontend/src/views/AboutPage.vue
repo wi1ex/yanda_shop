@@ -1,11 +1,13 @@
 <template>
   <div class="about-page">
     <!-- Cover Section -->
+    <div class="line-div"></div>
     <section class="cover-section">
       <div class="cover-bg">
         <img class="cover-image" :src="about_image1" alt="Главное изображение" />
       </div>
       <div class="cover-overlay">
+        <div class="line-div" style="top: 84px;"></div>
         <img class="title" :src="about_text_logo" alt="Название" />
         <div class="subtitle-div">
           <div class="subtitle-column">
@@ -18,6 +20,7 @@
           </div>
         </div>
       </div>
+      <div class="line-div" style="bottom: 156px;"></div>
       <div class="marquee-wrap">
         <div class="marquee-content">ЧЕСТНОСТЬ ОРИГИНАЛЬНОСТЬ СТИЛЬ ГАРАНТИИ ВЫГОДА</div>
       </div>
@@ -34,7 +37,7 @@
           <p style="width: 60%; left: 25%;">
             Мы знаем: можно одеваться стильно, честно и без лишних вещей. Мы только начали — и не боимся об этом сказать.
           </p>
-          <p style="width: 40%; left: 50%;">
+          <p style="width: 40%; left: 51%;">
             Потому что мы строим не магазин, а культуру выбора.
           </p>
         </div>
@@ -63,7 +66,7 @@
           <img :src="about_image2" alt="Изображение 1" />
         </div>
         <div class="mosaic-div">
-          <div class="mosaic-item" style="width: 50%;">
+          <div class="mosaic-item" style="width: 51%;">
             <img :src="about_image3" alt="Изображение 2" />
           </div>
           <div class="mosaic-text">
@@ -78,6 +81,7 @@
       <div class="philosophy-image" style="justify-content: flex-end;">
         <img :src="about_image4" alt="Декоративное изображение философии" />
       </div>
+      <div class="line-hor" style="opacity: 60%;"></div>
       <div class="philosophy-div">
         <img :src="about_image13" alt="Философия иконка 1" style="width: 27%;"/>
         <h2 class="section-title">Философия</h2>
@@ -88,6 +92,7 @@
         </div>
         <img :src="about_image16" alt="Философия иконка 4" style="width: 33%;"/>
       </div>
+      <div class="line-hor" style="opacity: 60%;"></div>
       <div class="philosophy-image" style="justify-content: flex-start;">
         <img :src="about_image5" alt="Декоративное изображение философии" />
       </div>
@@ -158,6 +163,7 @@
       </div>
     </section>
   </div>
+  <div class="line-hor"></div>
 </template>
 
 <script setup>
@@ -195,6 +201,7 @@ const store = useStore()
   align-items: center;
 }
 .link {
+  margin-left: 5px;
   color: inherit;
   font-size: 16px;
   line-height: 110%;
@@ -206,6 +213,31 @@ const store = useStore()
   text-decoration-thickness: auto;
   text-underline-offset: 25%;
   text-underline-position: from-font;
+}
+
+.line-vert {
+  position: absolute;
+  left: 50%;
+  width: 1px;
+  height: 100%;
+  background-color: white;
+  z-index: 10;
+}
+
+.line-hor {
+  width: 100%;
+  height: 1px;
+  background-color: white;
+  z-index: 1000;
+}
+
+.line-div {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: white;
+  z-index: 1000;
 }
 
 .section {
@@ -220,6 +252,7 @@ const store = useStore()
   width: 100%;
   height: 1000px;
   overflow: hidden;
+  z-index: 20;
 }
 .cover-bg {
   display: flex;
@@ -287,6 +320,7 @@ const store = useStore()
 
 .about-us{
   padding: 56px 16px;
+  z-index: 20;
 }
 
 .section-title {
@@ -352,6 +386,7 @@ const store = useStore()
 
 .mosaic {
   padding: 0;
+  z-index: 20;
 }
 .mosaic-grid {
   display: flex;
@@ -393,6 +428,8 @@ const store = useStore()
   flex-direction: column;
   align-items: center;
   padding: 56px 0;
+  background-color: $black-100;
+  z-index: 20;
 }
 .philosophy-row {
   display: flex;
@@ -411,13 +448,16 @@ const store = useStore()
 .philosophy-image {
   display: flex;
   width: 100%;
+  background-color: $black-40;
+  z-index: 20;
 }
 .philosophy-image img {
-  width: 50%;
+  width: calc(50% - 0.5px);
 }
 
 .details {
   padding: 56px 10px 0;
+  z-index: 20;
 }
 .details .cards {
   display: flex;
@@ -468,6 +508,7 @@ const store = useStore()
 .card p {
   display: flex;
   margin: 0;
+  color: $grey-20;
   font-size: 15px;
   line-height: 110%;
   letter-spacing: -0.6px;
@@ -476,21 +517,27 @@ const store = useStore()
 .community-column {
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 .community-div {
   display: flex;
+  gap: 16px;
 }
 .community-column img {
-  width: 100%;
+  width: 32px;
+  height: 32px;
 }
 .community-column p {
+  margin: 0;
+  color: $grey-20;
   font-family: Bounded-400;
   font-size: 32px;
   line-height: 90%;
   letter-spacing: -1.92px;
 }
 .community-text {
-  margin: 32px 0 24px;
+  color: $grey-20;
+  margin: 32px 10px 24px;
   text-align: center;
   font-size: 15px;
   line-height: 110%;
@@ -504,7 +551,7 @@ const store = useStore()
   padding: 8px 32px;
   width: fit-content;
   border-radius: 999px;
-  background-color: $black-100;
+  background-color: $grey-20;
   color: $white-100;
   font-size: 18px;
   cursor: pointer;
@@ -512,7 +559,8 @@ const store = useStore()
 }
 
 .community {
-  padding: 56px 0;
+  padding: 56px 0 96px;
+  z-index: 20;
 }
 .community-images {
   display: flex;

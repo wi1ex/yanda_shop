@@ -174,11 +174,14 @@ function goToGender(gender) {
 .footer-top-web {
   display: flex;
   width: 100%;
+  z-index: 20;
 }
 /* === Верхний грид MOBILE === */
 .footer-top-mobile {
   display: none;
   width: 100%;
+  gap: 10px;
+  z-index: 20;
 }
 
 .footer-top-column {
@@ -214,6 +217,7 @@ function goToGender(gender) {
   display: flex;
   align-self: center;
   margin: 80px 0;
+  z-index: 20;
 }
 .logo-icon {
   width: 58px;
@@ -226,12 +230,14 @@ function goToGender(gender) {
   display: flex;
   flex-direction: column;
   width: 100%;
+  z-index: 20;
 }
 /* === Нижний блок MOBILE === */
 .footer-bottom-mobile {
   display: none;
   flex-direction: column;
   width: 100%;
+  z-index: 20;
 }
 
 .footer-bottom-row {
