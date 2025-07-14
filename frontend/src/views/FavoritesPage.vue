@@ -88,11 +88,11 @@ onMounted(async () => {
 .favorites-container {
   display: flex;
   flex-direction: column;
-  margin-top: 12vh;
-  padding: 2vh;
+  margin-top: 60px;
   .header-logo {
     display: flex;
     justify-self: center;
+    margin: 40px;
     .logo-title {
       color: $black-100;
       font-family: Bounded-400;
@@ -110,6 +110,13 @@ onMounted(async () => {
     }
   }
   .back-button {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    margin-bottom: 50px;
+    padding: 0;
+    width: fit-content;
+    gap: 4px;
     background: none;
     border: none;
     color: $black-100;
@@ -130,26 +137,26 @@ onMounted(async () => {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(187px, 1fr));
     gap: 16px;
-    transition: filter 0.2s ease-in-out;
+    transition: filter 0.25s ease-in-out;
     .product-card {
-      background: $grey-87;
-      border-radius: 15px;
-      padding: 16px;
-      text-align: center;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      transition: transform 0.25s ease-in-out;
-      cursor: pointer;
+      display: flex;
+      flex-direction: column;
       position: relative;
+      padding: 10px 10px 16px;
+      background-color: $grey-89;
+      cursor: pointer;
+      transition: transform 0.25s ease-in-out;
       .remove-fav-btn {
+        display: flex;
         position: absolute;
-        top: 8px;
-        right: 8px;
+        padding: 0;
+        top: 10px;
+        right: 10px;
         background: none;
         border: none;
         width: 24px;
         height: 24px;
         cursor: pointer;
-        z-index: 10;
         img {
           width: 24px;
           height: 24px;
@@ -158,30 +165,33 @@ onMounted(async () => {
       }
       .product-image {
         width: 100%;
-        border-radius: 10px;
+        height: 100%;
         object-fit: cover;
       }
       .product-info {
-        margin-top: 8px;
+        display: flex;
+        flex-direction: column;
+        background-color: $grey-87;
         .product-brand {
-          font-family: NeueHaas-400;
+          margin: 0;
           font-size: 12px;
           line-height: 100%;
-          letter-spacing: -0.24px;
+          letter-spacing: -0.48px;
           color: $black-100;
         }
         .product-name {
-          font-family: NeueHaas-500;
+          margin: 4px 0 12px;
+          font-family: Manrope-SemiBold;
           font-size: 15px;
           line-height: 100%;
-          letter-spacing: -0.3px;
+          letter-spacing: -0.6px;
           color: $black-100;
         }
         .product-price {
-          font-family: NeueHaas-400;
+          margin: 0;
           font-size: 15px;
           line-height: 80%;
-          letter-spacing: -0.3px;
+          letter-spacing: -0.6px;
           color: $grey-20;
         }
       }
@@ -191,6 +201,18 @@ onMounted(async () => {
 
 @media (max-width: 600px) {
   .favorites-container {
+    .header-logo {
+      .logo-title {
+        font-size: 32px;
+        letter-spacing: -2.24px;
+      }
+      .logo-count  {
+        margin-left: 4px;
+        margin-top: 0;
+        font-size: 15px;
+        letter-spacing: -0.6px;
+      }
+    }
     .products-grid {
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
