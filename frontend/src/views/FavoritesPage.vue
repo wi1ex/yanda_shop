@@ -113,6 +113,7 @@ onMounted(async () => {
     display: flex;
     justify-content: center;
     margin: 40px;
+    z-index: 20;
     .logo-title {
       color: $black-100;
       font-family: Bounded-400;
@@ -156,13 +157,12 @@ onMounted(async () => {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(187px, 1fr));
     margin-top: 40px;
-    gap: 16px;
     transition: filter 0.25s ease-in-out;
     .product-card {
       display: flex;
       flex-direction: column;
       position: relative;
-      padding: 10px 10px 16px;
+      min-width: 0;
       background-color: $grey-89;
       cursor: pointer;
       transition: transform 0.25s ease-in-out;
@@ -186,9 +186,9 @@ onMounted(async () => {
       .product-image {
         display: flex;
         padding: 40px 24px;
+        height: 100%;
         img {
           width: 100%;
-          height: 100%;
           object-fit: cover;
         }
       }
@@ -202,7 +202,7 @@ onMounted(async () => {
           font-size: 12px;
           line-height: 100%;
           letter-spacing: -0.48px;
-          color: $black-100;
+          color: $black-60;
         }
         .product-name {
           margin: 4px 0 12px;
@@ -211,6 +211,9 @@ onMounted(async () => {
           line-height: 100%;
           letter-spacing: -0.6px;
           color: $black-100;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .product-price {
           margin: 0;
@@ -240,7 +243,6 @@ onMounted(async () => {
     }
     .products-grid {
       grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
     }
   }
 }
