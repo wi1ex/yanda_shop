@@ -13,7 +13,7 @@
 
         <div v-if="store.cart.items.length === 0" class="empty-cart">
           В корзине пока что ничего нет...
-          <button v-else class="action-button" @click="goToCatalog">
+          <button class="action-button" @click="goToCatalog">
             Перейти в каталог
           </button>
         </div>
