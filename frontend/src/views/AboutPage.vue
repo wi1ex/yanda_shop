@@ -13,8 +13,8 @@
             <p class="subtitle" style="align-self: flex-end;">во всём.</p>
           </div>
           <div class="subtitle-column">
-            <p class="subtitle" style="align-self: flex-start;">в деталях.</p>
-            <p class="subtitle" style="align-self: flex-end;">Честность</p>
+            <p class="subtitle" style="align-self: flex-end;">в деталях.</p>
+            <p class="subtitle" style="align-self: flex-start;">Честность</p>
           </div>
         </div>
       </div>
@@ -28,19 +28,29 @@
       <h2 class="section-title">О нас</h2>
       <div class="about-content">
         <div class="text-main">
-          <p>Мы запустили YANDA, потому что устали от шума, фейков и бессмысленных наценок.</p>
-          <p>Мы знаем: можно одеваться стильно, честно и без лишних вещей. Мы только начали — и не боимся об этом сказать.</p>
-          <p>Потому что мы строим не магазин, а культуру выбора.</p>
+          <p>
+            Мы запустили YANDA, потому что устали от шума, фейков и бессмысленных наценок.
+          </p>
+          <p style="width: 60%; left: 25%;">
+            Мы знаем: можно одеваться стильно, честно и без лишних вещей. Мы только начали — и не боимся об этом сказать.
+          </p>
+          <p style="width: 40%; left: 50%;">
+            Потому что мы строим не магазин, а культуру выбора.
+          </p>
         </div>
         <div class="text-columns">
           <div class="column">
             <h3>Наше видение</h3>
-            <p>В мире, где слишком много одинакового, мы помогаем тебе найти оригинал.</p>
-            <p>Не то, что просто доступно, а то, что действительно тебе подойдет.</p>
+            <div class="column-div">
+              <p>В мире, где слишком много одинакового, мы помогаем тебе найти оригинал.</p>
+              <p>Не то, что просто доступно, а то, что действительно тебе подойдет.</p>
+            </div>
           </div>
           <div class="column">
             <h3>Наша миссия</h3>
-            <p>Мы верим в осознанную моду, справедливое ценообразование и вещи, которые говорят за человека, а не вместо него.</p>
+            <div class="column-div">
+              <p>Мы верим в осознанную моду, справедливое ценообразование и вещи, которые говорят за человека, а не вместо него.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -52,11 +62,13 @@
         <div class="mosaic-item">
           <img :src="about_image2" alt="Изображение 1" />
         </div>
-        <div class="mosaic-item">
-          <img :src="about_image3" alt="Изображение 2" />
-        </div>
-        <div class="mosaic-text">
-          <p>Мы закупаем товары напрямую, тщательно проверяем их и передаем дальше — с заботой, вниманием и уважением к твоему стилю.</p>
+        <div class="mosaic-div">
+          <div class="mosaic-item">
+            <img :src="about_image3" alt="Изображение 2" />
+          </div>
+          <div class="mosaic-text">
+            <p>Мы закупаем товары напрямую, тщательно проверяем их и передаем дальше — с заботой, вниманием и уважением к твоему стилю.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -110,14 +122,18 @@
       <p class="community-text">Пиши нам в Телеграм — это самый быстрый и легкий способ для связи.</p>
       <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram" target="_blank" rel="noopener" class="join-button">Telegram</a>
       <div class="community-images">
-        <div class="img-item"><img :src="about_image11" alt=""/></div>
-        <div class="img-item">
-          <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram" target="_blank" rel="noopener" class="link">Telegram</a>
-          <a v-if="store.parameters.url_instagram" :href="store.parameters.url_instagram" target="_blank" rel="noopener" class="link">Instagram</a>
-          <a v-if="store.parameters.url_email" :href="`mailto:${store.parameters.url_email}`" rel="noopener" class="link">E-mail</a>
+        <div class="img-item-div">
+          <div class="img-item"><img :src="about_image11" alt=""/></div>
+          <div class="img-item">
+            <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram" target="_blank" rel="noopener" class="link">Telegram</a>
+            <a v-if="store.parameters.url_instagram" :href="store.parameters.url_instagram" target="_blank" rel="noopener" class="link">Instagram</a>
+            <a v-if="store.parameters.url_email" :href="`mailto:${store.parameters.url_email}`" rel="noopener" class="link">E-mail</a>
+          </div>
         </div>
-        <div class="img-item"><img :src="about_image10" alt=""/></div>
-        <div class="img-item"><img :src="about_image12" alt=""/></div>
+        <div class="img-item-div">
+          <div class="img-item"><img :src="about_image10" alt=""/></div>
+          <div class="img-item"><img :src="about_image12" alt=""/></div>
+        </div>
       </div>
     </section>
   </div>
@@ -187,6 +203,7 @@ const store = useStore()
   flex-direction: column;
   position: absolute;
   top: 66px;
+  width: 100%;
 }
 .title {
   position: relative;
@@ -209,7 +226,7 @@ const store = useStore()
 .subtitle {
   margin: 0;
   font-size: 20px;
-  background-color: $white-100;
+  color: $white-100;
   line-height: 110%;
   letter-spacing: -0.4px;
 }
@@ -248,56 +265,80 @@ const store = useStore()
 }
 
 .about-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  display: flex;
+  flex-direction: column;
+}
+.text-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 .text-main p {
+  position: relative;
+  margin: 0;
   color: $grey-20;
   font-size: 20px;
   font-family: Bounded-300;
   line-height: 110%;
   letter-spacing: -1px;
-  margin-bottom: 16px;
 }
-.column h3{
+
+.text-columns {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin: 32px 0;
+}
+.column {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+}
+.column-div {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+}
+.column h3 {
+  margin: 0;
+  width: 50%;
+  text-align: end;
   color: $black-40;
   font-size: 15px;
   line-height: 110%;
   letter-spacing: -0.6px;
 }
-.column p{
+.column p {
+  margin: 0;
   color: $black-100;
   font-size: 15px;
   line-height: 110%;
   letter-spacing: -0.6px;
 }
-.text-columns {
+
+.mosaic {
+  padding: 0;
+}
+.mosaic-grid {
   display: flex;
   flex-direction: column;
   gap: 24px;
-}
-.text-columns .column h3 {
-  font-size: 20px;
-  margin-bottom: 12px;
-}
-
-.mosaic {
-  background-color: $white-100;
-}
-.mosaic-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: auto auto;
-  gap: 16px;
+  margin-bottom: 96px;
 }
 .mosaic-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 4px;
+}
+.mosaic-div {
+  display: flex;
+  gap: 5px;
 }
 .mosaic-text {
-  grid-column: 1 / -1;
+  display: flex;
+  width: 50%;
+  align-self: flex-end;
   color: $grey-20;
   font-size: 14px;
   line-height: 100%;
@@ -324,13 +365,13 @@ const store = useStore()
 }
 
 .details .cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 .card {
   background-color: $white-100;
-  padding: 24px;
+  margin: 10px;
   position: relative;
 }
 .card-number {
@@ -339,8 +380,10 @@ const store = useStore()
   left: 16px;
   background-color: $black-100;
   color: $white-100;
-  padding: 4px 8px;
-  font-size: 14px;
+  padding: 8px 8px 0;
+  font-size: 32px;
+  line-height: 90%;
+  letter-spacing: -1.28px;
 }
 .card-icon img {
   position: absolute;
@@ -350,13 +393,15 @@ const store = useStore()
   height: 24px;
 }
 .card h3 {
-  margin-top: 48px;
-  font-size: 20px;
-  margin-bottom: 12px;
+  font-family: Bounded-300;
+  font-size: 28px;
+  line-height: 90%;
+  letter-spacing: -1.4px;
 }
 .card p {
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 110%;
+  letter-spacing: -0.6px;
 }
 
 .community-text {
@@ -376,20 +421,28 @@ const store = useStore()
   cursor: pointer;
 }
 .community-images {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  display: flex;
+  width: 100%;
+  gap: 10px;
+}
+.community-images .img-item-div{
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 10px;
+}
+.community-images .img-item {
+  display: flex;
+  width: 50%;
 }
 .community-images .img-item img {
   width: 100%;
   height: auto;
   object-fit: cover;
+  border-radius: 4px;
 }
 
 @media (max-width: 600px) {
-  .section {
-    padding: 40px 16px;
-  }
   .section-title {
     font-size: 24px;
   }
@@ -406,18 +459,6 @@ const store = useStore()
   }
   .marquee-content {
     font-size: 15px;
-  }
-  .about-content {
-    grid-template-columns: 1fr;
-  }
-  .details .cards {
-    grid-template-columns: 1fr;
-  }
-  .mosaic-grid {
-    grid-template-columns: 1fr;
-  }
-  .community-images {
-    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>
