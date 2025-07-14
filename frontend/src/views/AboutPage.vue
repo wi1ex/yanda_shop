@@ -219,7 +219,7 @@ const store = useStore()
 
 .line-vert {
   position: absolute;
-  left: 50%;
+  left: calc(50% - 0.5px);
   width: 1px;
   height: 100%;
   background-color: $white-100;
@@ -456,7 +456,7 @@ const store = useStore()
   width: 100%;
 }
 .philosophy-image img {
-  width: 50%;
+  width: calc(50% - 0.5px);
 }
 
 .details {
