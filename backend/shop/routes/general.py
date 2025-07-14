@@ -166,15 +166,13 @@ def get_user_profile() -> Tuple[Response, int]:
 def get_parameters() -> Tuple[Response, int]:
     """
     GET /api/general/get_parameters
-    Returns base URLs and FAQ settings.
+    Returns social URLs and FAQ parameters.
     """
-    base_keys = ["url_telegram", "url_instagram", "url_email"]
-    default = {k: "" for k in base_keys}
-
     try:
         with session_scope() as session:
             faq_keys = [row.key for row in session.query(AdminSetting.key).filter(or_(AdminSetting.key.like("faq_question_%"), AdminSetting.key.like("faq_answer_%"))).distinct()]
-            all_keys = base_keys + faq_keys
+            social_keys = [row.key for row in session.query(AdminSetting.key).filter(AdminSetting.key.like("url_social_%")).distinct()]
+            all_keys = faq_keys + social_keys
             settings = session.query(AdminSetting).filter(AdminSetting.key.in_(all_keys)).all()
             result = {k: "" for k in all_keys}
             for s in settings:
@@ -182,7 +180,7 @@ def get_parameters() -> Tuple[Response, int]:
         return jsonify(result), 200
     except Exception:
         logger.exception("get_parameters: failed")
-        return jsonify(default), 500
+        return jsonify({}), 500
 
 
 @general_api.route("/list_reviews", methods=["GET"])

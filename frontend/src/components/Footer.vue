@@ -27,11 +27,13 @@
 
         <!-- Колонка “Соцсети” -->
         <nav class="footer-nav" style="left: 81.5vw">
-          <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram"
+          <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
              target="_blank" rel="noopener" class="footer-link">Telegram</a>
-          <a v-if="store.parameters.url_instagram" :href="store.parameters.url_instagram"
+          <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp"
+             target="_blank" rel="noopener" class="footer-link">WhatsApp</a>
+          <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram"
              target="_blank" rel="noopener" class="footer-link">Instagram</a>
-          <a v-if="store.parameters.url_email" :href="`mailto:${store.parameters.url_email}`"
+          <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
              rel="noopener" class="footer-link">Mail</a>
         </nav>
       </div>
@@ -66,11 +68,13 @@
 
         <!-- Колонка “Соцсети” -->
         <nav class="footer-nav">
-          <a v-if="store.parameters.url_telegram" :href="store.parameters.url_telegram"
+          <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
              target="_blank" rel="noopener" class="footer-link">Telegram</a>
-          <a v-if="store.parameters.url_instagram" :href="store.parameters.url_instagram"
+          <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp"
+             target="_blank" rel="noopener" class="footer-link">WhatsApp</a>
+          <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram"
              target="_blank" rel="noopener" class="footer-link">Instagram</a>
-          <a v-if="store.parameters.url_email" :href="`mailto:${store.parameters.url_email}`"
+          <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
              rel="noopener" class="footer-link">Mail</a>
         </nav>
       </div>
