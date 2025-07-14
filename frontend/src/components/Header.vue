@@ -48,6 +48,7 @@
           <div v-if="isAdmin" @click="goToPage('Admin')" class="dropdown-link">Админ-панель</div>
         </div>
         <div class="dropdown-menu-bottom">
+          <p class="dropdown-menu-symb">*</p>
           <div class="dropdown-menu-urls">
             <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram" target="_blank" rel="noopener">
               <img :src="icon_logo_telegram" alt="Telegram" />
@@ -61,7 +62,6 @@
             <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram" target="_blank" rel="noopener">
               <img :src="icon_logo_instagram" alt="Instagram" />
             </a>
-            <p>*</p>
           </div>
           <div class="dropdown-menu-text">*принадлежит компании Meta, признанной экстремистской и запрещенной на территории РФ</div>
         </div>
@@ -266,7 +266,14 @@ watch(
   .dropdown-menu-bottom {
     display: flex;
     flex-direction: column;
+    align-items: center;
     margin-bottom: 6px;
+    gap: 4px;
+    .dropdown-menu-symb {
+      position: relative;
+      top: 38px;
+      left: 100px;
+    }
     .dropdown-menu-urls {
       display: flex;
       justify-content: center;
@@ -283,7 +290,9 @@ watch(
       }
     }
     .dropdown-menu-text {
+      width: 60%;
       text-align: center;
+      color: $black-40;
       font-size: 10px;
       line-height: 100%;
       letter-spacing: -0.4px;

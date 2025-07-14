@@ -34,7 +34,7 @@
           <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
              rel="noopener" class="footer-link">Mail</a>
           <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram"
-             target="_blank" rel="noopener" class="footer-link">Instagram</a>
+             target="_blank" rel="noopener" class="footer-link">Instagram*</a>
         </nav>
       </div>
     </div>
@@ -75,7 +75,8 @@
           <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
              rel="noopener" class="footer-link">Mail</a>
           <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram"
-             target="_blank" rel="noopener" class="footer-link">Instagram</a>
+             target="_blank" rel="noopener" class="footer-link">Instagram*</a>
+          <p class="footer-link-text">*принадлежит компании Meta, признанной экстремистской и запрещенной на территории РФ</p>
         </nav>
       </div>
     </div>
@@ -215,6 +216,14 @@ function goToGender(gender) {
   font-size: 20px;
   line-height: 100%;
   letter-spacing: -0.8px;
+}
+.footer-link-text {
+  width: 60%;
+  text-align: center;
+  color: $black-40;
+  font-size: 10px;
+  line-height: 100%;
+  letter-spacing: -0.4px;
 }
 
 .logo-icon-div {
