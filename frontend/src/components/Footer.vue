@@ -35,6 +35,7 @@
              rel="noopener" class="footer-link">Mail</a>
           <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram"
              target="_blank" rel="noopener" class="footer-link">Instagram*</a>
+          <p class="footer-link-text">*принадлежит компании Meta, признанной экстремистской и запрещенной на территории РФ</p>
         </nav>
       </div>
     </div>
@@ -95,7 +96,7 @@
         <div class="bottom-cell" style="left: 18vw">
           <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика конфиденциальности</a>
         </div>
-        <div class="bottom-cell" style="left: 49.7vw">
+        <div class="bottom-cell" style="left: 49.8vw">
           <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика возврата и обмена</a>
         </div>
         <div class="bottom-cell" style="left: 81.5vw">
@@ -218,7 +219,7 @@ function goToGender(gender) {
   letter-spacing: -0.8px;
 }
 .footer-link-text {
-  width: 90%;
+  width: 70%;
   margin: -4px 0 0;
   color: $black-40;
   font-size: 10px;
@@ -229,7 +230,7 @@ function goToGender(gender) {
 .logo-icon-div {
   display: flex;
   align-self: center;
-  margin: 80px 0;
+  margin: 160px 0 80px;
   z-index: 20;
 }
 .logo-icon {
@@ -321,6 +322,9 @@ function goToGender(gender) {
   .footer-link {
     font-size: 16px;
     letter-spacing: -0.64px;
+  }
+  .footer-link-text {
+    width: 90%;
   }
   .footer-top-column {
     flex-direction: column;
