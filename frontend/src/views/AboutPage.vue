@@ -63,7 +63,7 @@
           <img :src="about_image2" alt="Изображение 1" />
         </div>
         <div class="mosaic-div">
-          <div class="mosaic-item">
+          <div class="mosaic-item" style="width: 50%;">
             <img :src="about_image3" alt="Изображение 2" />
           </div>
           <div class="mosaic-text">
@@ -75,12 +75,20 @@
 
     <!-- Philosophy Section -->
     <section class="section philosophy">
-      <div class="philosophy-image">
+      <div class="philosophy-image" style="justify-content: flex-end;">
         <img :src="about_image4" alt="Декоративное изображение философии" />
       </div>
-      <h2 class="section-title">Философия</h2>
-      <p class="philosophy-text">Мы выбираем путь, где качество важнее количества. Где честность — это не формат, а основа. Где одежда становится частью того, кто ты есть.</p>
-      <div class="philosophy-image">
+      <div class="philosophy-div">
+        <img :src="about_image13" alt="Философия иконка 1" />
+        <h2 class="section-title">Философия</h2>
+        <div class="philosophy-row">
+          <img :src="about_image14" alt="Философия иконка 2" />
+          <p class="philosophy-text">Мы выбираем путь, где качество важнее количества. Где честность — это не формат, а основа. Где одежда становится частью того, кто ты есть.</p>
+          <img :src="about_image15" alt="Философия иконка 3" />
+        </div>
+        <img :src="about_image16" alt="Философия иконка 4" />
+      </div>
+      <div class="philosophy-image" style="justify-content: flex-start;">
         <img :src="about_image5" alt="Декоративное изображение философии" />
       </div>
     </section>
@@ -153,6 +161,10 @@ import about_image9 from '@/assets/images/about_image9.svg'
 import about_image10 from '@/assets/images/about_image10.png'
 import about_image11 from '@/assets/images/about_image11.png'
 import about_image12 from '@/assets/images/about_image12.png'
+import about_image13 from '@/assets/images/about_image13.png'
+import about_image14 from '@/assets/images/about_image14.png'
+import about_image15 from '@/assets/images/about_image15.png'
+import about_image16 from '@/assets/images/about_image16.png'
 import about_text_logo from '@/assets/images/about_text_logo.svg'
 
 const store = useStore()
@@ -221,7 +233,7 @@ const store = useStore()
 .subtitle-column {
   display: flex;
   flex-direction: column;
-  width: 25%;
+  width: 35%;
 }
 .subtitle {
   margin: 0;
@@ -354,17 +366,33 @@ const store = useStore()
   text-align: center;
   padding: 80px 32px;
 }
+.philosophy-div {
+  display: flex;
+  flex-direction: column;
+  padding: 56px 0;
+}
+.philosophy-row {
+  display: flex;
+}
 .philosophy-text {
-  max-width: 800px;
-  margin: 0 auto 40px;
-  font-size: 18px;
-  line-height: 1.6;
+  margin: 0;
+  font-family: Bounded-300;
+  font-size: 20px;
+  line-height: 90%;
+  letter-spacing: -1px;
+}
+.philosophy-image {
+  display: flex;
+  width: 100%;
+}
+.philosophy-div img {
+  width: 50%;
+}
+.philosophy-row img {
+  width: 50%;
 }
 .philosophy-image img {
-  width: 100%;
-  max-width: 400px;
-  display: block;
-  margin: 0 auto;
+  width: 50%;
 }
 
 .details {
@@ -382,7 +410,7 @@ const store = useStore()
   position: relative;
   background-color: $white-100;
   gap: 16px;
-  height: 355px;
+  height: 300px;
   padding: 20px 10px;
 }
 .card-number {
@@ -434,7 +462,7 @@ const store = useStore()
   display: flex;
   justify-content: center;
   justify-self: center;
-  padding: 16px 32px;
+  padding: 8px 32px;
   width: fit-content;
   border-radius: 999px;
   background-color: $black-100;
@@ -442,6 +470,10 @@ const store = useStore()
   font-size: 18px;
   cursor: pointer;
   text-decoration: none;
+}
+
+.community {
+  padding: 56px 0;
 }
 .community-images {
   display: flex;
