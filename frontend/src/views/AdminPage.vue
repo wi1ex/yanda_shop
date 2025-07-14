@@ -57,7 +57,7 @@
 
     <!-- Логи изменений товаров/изображений -->
     <section class="logs-section" v-if="selected === 'logs'">
-      <h2>Последние 10 изменений</h2>
+      <h2>Последние 10 событий</h2>
       <div v-if="store.logsLoading" class="loading-logs">Загрузка журналов...</div>
       <div v-else>
         <table class="logs-table">
