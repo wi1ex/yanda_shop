@@ -9,7 +9,7 @@
 
     <!-- Кнопка меню -->
     <div class="menu">
-      <button class="menu-btn" @click="store.toggleMenu()">
+      <button class="menu-btn" @click="toggleMenu()">
         Меню
         <img :src="icon_menu_grey" alt="Меню" />
       </button>
@@ -36,9 +36,9 @@
 
     <!-- Выпадающее меню -->
     <transition name="fade">
-      <nav v-if="store.menuOpen" class="dropdown-menu">
+      <nav v-if="menuOpen" class="dropdown-menu">
         <div class="dropdown-menu-top">
-          <button class="dropdown-menu-btn" @click="store.toggleMenu()">
+          <button class="dropdown-menu-btn" @click="toggleMenu()">
             Меню
             <img :src="icon_close" alt="Меню" />
           </button>
@@ -64,7 +64,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRoute, useRouter } from 'vue-router'
 import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
@@ -84,6 +84,8 @@ import icon_logo_mail from '@/assets/images/logo_mail.svg'
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
+const menuOpen = ref(false)
+let prevOverflowMenu
 const isAdmin = computed(() => store.user?.role === 'admin')
 const isIconWhite = computed(() => route.name === 'About' || route.name === 'Home')
 const icon_default_avatar = computed(() => isIconWhite.value ? icon_default_avatar_white : icon_default_avatar_grey)
@@ -93,7 +95,7 @@ const icon_logo = computed(() => isIconWhite.value ? icon_logo_white : icon_logo
 
 
 function goToGender(gender) {
-  store.toggleMenuClose()
+  toggleMenuClose()
   store.selectedCategory = ''
   store.filterGender = gender
   router.push({
@@ -104,10 +106,29 @@ function goToGender(gender) {
 }
 
 function goToPage(page) {
-  store.toggleMenuClose()
+  toggleMenuClose()
   router.push({ name: page })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+function toggleMenu() {
+  menuOpen.value = !menuOpen.value
+}
+function toggleMenuClose() {
+  if (menuOpen.value === true) menuOpen.value = false
+}
+
+watch(
+  () => menuOpen.value,
+  (isOpen) => {
+    if (isOpen) {
+      prevOverflowMenu = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = prevOverflowMenu || ''
+    }
+  }
+)
 
 </script>
 
