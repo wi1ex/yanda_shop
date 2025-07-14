@@ -1,7 +1,7 @@
 <template>
   <div class="about-page">
     <!-- Cover Section -->
-    <div class="line-div"></div>
+    <div class="line-vert"></div>
     <section class="cover-section">
       <div class="cover-bg">
         <img class="cover-image" :src="about_image1" alt="Главное изображение" />
@@ -37,7 +37,7 @@
           <p style="width: 60%; left: 25%;">
             Мы знаем: можно одеваться стильно, честно и без лишних вещей. Мы только начали — и не боимся об этом сказать.
           </p>
-          <p style="width: 40%; left: 51%;">
+          <p style="width: 40%; left: 51.5%;">
             Потому что мы строим не магазин, а культуру выбора.
           </p>
         </div>
@@ -79,6 +79,7 @@
     <!-- Philosophy Section -->
     <section class="section philosophy">
       <div class="philosophy-image" style="justify-content: flex-end;">
+        <div class="line-phil"></div>
         <img :src="about_image4" alt="Декоративное изображение философии" />
       </div>
       <div class="line-hor" style="opacity: 60%;"></div>
@@ -95,6 +96,7 @@
       <div class="line-hor" style="opacity: 60%;"></div>
       <div class="philosophy-image" style="justify-content: flex-start;">
         <img :src="about_image5" alt="Декоративное изображение философии" />
+        <div class="line-phil"></div>
       </div>
     </section>
 
@@ -220,14 +222,14 @@ const store = useStore()
   left: 50%;
   width: 1px;
   height: 100%;
-  background-color: white;
+  background-color: $white-100;
   z-index: 10;
 }
 
 .line-hor {
   width: 100%;
   height: 1px;
-  background-color: white;
+  background-color: $white-100;
   z-index: 1000;
 }
 
@@ -236,8 +238,13 @@ const store = useStore()
   left: 0;
   width: 100%;
   height: 1px;
-  background-color: white;
+  background-color: $white-100;
   z-index: 1000;
+}
+
+.line-phil {
+  width: 1px;
+  background-color: $white-60;
 }
 
 .section {
@@ -422,14 +429,13 @@ const store = useStore()
   color: $white-100;
   text-align: center;
   padding: 0;
+  z-index: 20;
 }
 .philosophy-div {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 56px 0;
-  background-color: $black-100;
-  z-index: 20;
 }
 .philosophy-row {
   display: flex;
@@ -448,11 +454,9 @@ const store = useStore()
 .philosophy-image {
   display: flex;
   width: 100%;
-  background-color: $black-40;
-  z-index: 20;
 }
 .philosophy-image img {
-  width: calc(50% - 0.5px);
+  width: 50%;
 }
 
 .details {
