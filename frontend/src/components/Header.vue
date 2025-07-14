@@ -48,15 +48,22 @@
           <div v-if="isAdmin" @click="goToPage('Admin')" class="dropdown-link">Админ-панель</div>
         </div>
         <div class="dropdown-menu-bottom">
-          <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram" target="_blank" rel="noopener">
-            <img :src="icon_logo_telegram" alt="Telegram" />
-          </a>
-          <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp" target="_blank" rel="noopener">
-            <img :src="icon_logo_whatsapp" alt="WhatsApp" />
-          </a>
-          <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`" rel="noopener">
-            <img :src="icon_logo_mail" alt="Mail" />
-          </a>
+          <div class="dropdown-menu-urls">
+            <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram" target="_blank" rel="noopener">
+              <img :src="icon_logo_telegram" alt="Telegram" />
+            </a>
+            <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp" target="_blank" rel="noopener">
+              <img :src="icon_logo_whatsapp" alt="WhatsApp" />
+            </a>
+            <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`" rel="noopener">
+              <img :src="icon_logo_mail" alt="Mail" />
+            </a>
+            <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram" target="_blank" rel="noopener">
+              <img :src="icon_logo_instagram" alt="Instagram" />
+            </a>
+            <p>*</p>
+          </div>
+          <div class="dropdown-menu-text">*принадлежит компании Meta, признанной экстремистской и запрещенной на территории РФ</div>
         </div>
       </nav>
     </transition>
@@ -80,6 +87,7 @@ import icon_logo_white from '@/assets/images/logo_white.svg'
 import icon_logo_telegram from '@/assets/images/logo_telegram.svg'
 import icon_logo_whatsapp from '@/assets/images/logo_whatsapp.svg'
 import icon_logo_mail from '@/assets/images/logo_mail.svg'
+import icon_logo_instagram from '@/assets/images/logo_instagram.svg'
 
 const store = useStore()
 const route = useRoute()
@@ -257,18 +265,28 @@ watch(
   }
   .dropdown-menu-bottom {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     margin-bottom: 6px;
-    height: 30px;
-    gap: 24px;
-    a {
-      width: 30px;
+    .dropdown-menu-urls {
+      display: flex;
+      justify-content: center;
       height: 30px;
-      img {
+      gap: 24px;
+      a {
         width: 30px;
         height: 30px;
-        object-fit: cover;
+        img {
+          width: 30px;
+          height: 30px;
+          object-fit: cover;
+        }
       }
+    }
+    .dropdown-menu-text {
+      text-align: center;
+      font-size: 10px;
+      line-height: 100%;
+      letter-spacing: -0.4px;
     }
   }
 }
