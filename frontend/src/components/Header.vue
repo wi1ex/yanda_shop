@@ -37,14 +37,27 @@
     <!-- Выпадающее меню -->
     <transition name="fade">
       <nav v-if="menuOpen" class="dropdown-menu">
-        <button class="dropdown-menu-btn" @click="toggleMenu">
-          Меню
-          <img :src="icon_close" alt="Меню" />
-        </button>
-        <div @click="goToGender('M')" class="dropdown-link">Мужчинам</div>
-        <div @click="goToGender('F')" class="dropdown-link">Женщинам</div>
-        <div @click="goToPage('About')" class="dropdown-link">О нас</div>
-        <div v-if="isAdmin" @click="goToPage('Admin')" class="dropdown-link">Админ-панель</div>
+        <div class="dropdown-menu-top">
+          <button class="dropdown-menu-btn" @click="toggleMenu">
+            Меню
+            <img :src="icon_close" alt="Меню" />
+          </button>
+          <div @click="goToGender('M')" class="dropdown-link">Мужчинам</div>
+          <div @click="goToGender('F')" class="dropdown-link">Женщинам</div>
+          <div @click="goToPage('About')" class="dropdown-link">О нас</div>
+          <div v-if="isAdmin" @click="goToPage('Admin')" class="dropdown-link">Админ-панель</div>
+        </div>
+        <div class="dropdown-menu-bottom">
+          <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram" target="_blank" rel="noopener">
+            <img :src="icon_logo_telegram" alt="Telegram" />
+          </a>
+          <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp" target="_blank" rel="noopener">
+            <img :src="icon_logo_whatsapp" alt="WhatsApp" />
+          </a>
+          <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`" rel="noopener">
+            <img :src="icon_logo_mail" alt="Mail" />
+          </a>
+        </div>
       </nav>
     </transition>
   </header>
@@ -64,6 +77,9 @@ import icon_menu_grey from '@/assets/images/menu_grey.svg'
 import icon_close from '@/assets/images/close.svg'
 import icon_logo_orange from '@/assets/images/logo_orange.svg'
 import icon_logo_white from '@/assets/images/logo_white.svg'
+import icon_logo_telegram from '@/assets/images/logo_telegram.svg'
+import icon_logo_whatsapp from '@/assets/images/logo_whatsapp.svg'
+import icon_logo_mail from '@/assets/images/logo_mail.svg'
 
 const store = useStore()
 const route = useRoute()
@@ -185,38 +201,58 @@ function toggleMenuClose() {
 .dropdown-menu {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   position: fixed;
   inset: 0;
   padding: 22px 0;
   background-color: $white-100;
   z-index: 2000;
-  .dropdown-menu-btn {
-    @include flex-c-c;
-    align-self: center;
-    margin: 8px 0 64px;
-    width: 96px;
-    gap: 4px;
-    background: none;
-    border: none;
-    font-family: Manrope-Medium;
-    font-size: 20px;
-    line-height: 100%;
-    letter-spacing: -.8px;
-    cursor: pointer;
-    img {
-      width: 30px;
-      height: 30px;
+  .dropdown-menu-top {
+    display: flex;
+    flex-direction: column;
+    .dropdown-menu-btn {
+      @include flex-c-c;
+      align-self: center;
+      margin: 8px 0 64px;
+      width: 96px;
+      gap: 4px;
+      background: none;
+      border: none;
+      font-family: Manrope-Medium;
+      font-size: 20px;
+      line-height: 100%;
+      letter-spacing: -.8px;
+      cursor: pointer;
+      img {
+        width: 30px;
+        height: 30px;
+      }
+    }
+    .dropdown-link {
+      display: flex;
+      padding: 16px 8px;
+      color: $grey-20;
+      font-family: Bounded-350;
+      font-size: 16px;
+      line-height: 80%;
+      letter-spacing: -0.8px;
+      cursor: pointer;
+      border-top: 1px solid $grey-87;
+    }
+    .dropdown-link:last-child {
+      border-bottom: 1px solid $grey-87;
     }
   }
-  .dropdown-link {
-    display: flex;
-    padding: 12px 10px;
-    color: $grey-20;
-    font-family: Bounded-350;
-    font-size: 16px;
-    line-height: 80%;
-    letter-spacing: -0.8px;
-    cursor: pointer;
+  .dropdown-menu-bottom {
+    @include flex-c-c;
+    margin-bottom: 6px;
+    gap: 24px;
+    a {
+      img {
+        width: 30px;
+        height: 30px;
+      }
+    }
   }
 }
 
@@ -279,7 +315,7 @@ function toggleMenuClose() {
       }
     }
     .dropdown-link {
-      padding: 16px 8px;
+      padding: 12px 10px;
       font-size: 14px;
       letter-spacing: -0.7px;
     }
