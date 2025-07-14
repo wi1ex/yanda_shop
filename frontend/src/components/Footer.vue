@@ -31,10 +31,10 @@
              target="_blank" rel="noopener" class="footer-link">Telegram</a>
           <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp"
              target="_blank" rel="noopener" class="footer-link">WhatsApp</a>
-          <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram"
-             target="_blank" rel="noopener" class="footer-link">Instagram</a>
           <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
              rel="noopener" class="footer-link">Mail</a>
+          <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram"
+             target="_blank" rel="noopener" class="footer-link">Instagram</a>
         </nav>
       </div>
     </div>
@@ -72,10 +72,10 @@
              target="_blank" rel="noopener" class="footer-link">Telegram</a>
           <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp"
              target="_blank" rel="noopener" class="footer-link">WhatsApp</a>
-          <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram"
-             target="_blank" rel="noopener" class="footer-link">Instagram</a>
           <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
              rel="noopener" class="footer-link">Mail</a>
+          <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram"
+             target="_blank" rel="noopener" class="footer-link">Instagram</a>
         </nav>
       </div>
     </div>
