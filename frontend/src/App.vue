@@ -21,9 +21,20 @@ const route = useRoute()
 const isNoFooterRoute = computed(() => route.name === 'Admin' || route.name === 'Profile')
 let prevOverflow
 
-// следим за открытием/закрытием корзины
+// следим за открытием/закрытием корзины/меню
 watch(
   () => store.showCartDrawer,
+  (isOpen) => {
+    if (isOpen) {
+      prevOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = prevOverflow || ''
+    }
+  }
+)
+watch(
+  () => store.menuOpen,
   (isOpen) => {
     if (isOpen) {
       prevOverflow = document.body.style.overflow

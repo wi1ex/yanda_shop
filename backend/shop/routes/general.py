@@ -6,7 +6,7 @@ from typing import Any, Dict, Tuple, List
 from flask import Blueprint, jsonify, request, Response
 from flask_jwt_extended import create_access_token, create_refresh_token
 from werkzeug.utils import secure_filename
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 from ..core.config import BACKEND_URL
 from ..core.logging import logger
 from ..extensions import redis_client, minio_client, BUCKET
@@ -170,13 +170,21 @@ def get_parameters() -> Tuple[Response, int]:
     """
     try:
         with session_scope() as session:
-            faq_keys = [row.key for row in session.query(AdminSetting.key).filter(or_(AdminSetting.key.like("faq_question_%"), AdminSetting.key.like("faq_answer_%"))).distinct()]
-            social_keys = [row.key for row in session.query(AdminSetting.key).filter(AdminSetting.key.like("url_social_%")).distinct()]
-            all_keys = faq_keys + social_keys
-            settings = session.query(AdminSetting).filter(AdminSetting.key.in_(all_keys)).all()
+            # 1. Селектим сразу записи по обоим префиксам
+            settings = session.query(AdminSetting).filter(
+                or_(
+                    AdminSetting.key.like("faq_question_%"),
+                    AdminSetting.key.like("faq_answer_%"),
+                    AdminSetting.key.like("url_social_%"),
+                )
+            ).all()
+            # 2. Собираем ожидаемые ключи (если они динамические) или оставляем только те, что пришли из БД
+            all_keys = [s.key for s in settings]
+            # 3. Формируем результирующий словарь
             result = {k: "" for k in all_keys}
             for s in settings:
                 result[s.key] = s.value or ""
+
         return jsonify(result), 200
     except Exception:
         logger.exception("get_parameters: failed")
