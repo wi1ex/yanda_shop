@@ -14,7 +14,10 @@
       <div class="detail-card" :class="{ blurred: store.detailLoading || variantLoading }">
         <!-- Шапка: назад + наличие -->
         <div v-if="store.detailData" class="top-row">
-          <button class="back-button" @click="goCatalog">← Назад</button>
+          <button class="back-button" @click="goBack">
+            <img :src="icon_arrow_back" alt="arrow back" />
+            Назад
+          </button>
           <div class="availability">
             <span v-if="store.detailData?.count_in_stock > 0">
               В НАЛИЧИИ: {{ store.detailData.count_in_stock }}
@@ -149,6 +152,7 @@
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/store/index.js'
+import icon_arrow_back from "@/assets/images/arrow_back.svg";
 
 const store = useStore()
 const route = useRoute()
@@ -310,9 +314,12 @@ function toggleCharacteristics() {
 }
 
 // ← Назад → каталог
-function goCatalog() {
-  router.push({ name: 'Catalog' })
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+function goBack() {
+  if (window.history.length > 1) {
+    router.back()
+  } else {
+    router.replace({ name: 'Home' })
+  }
 }
 
 // Инициализация
@@ -343,9 +350,7 @@ onMounted(init)
 <style scoped lang="scss">
 
 .product-detail {
-  padding: 2vh;
-  max-width: 480px;
-  margin: 12vh auto 0;
+  margin-top: 120px;
 }
 
 .loading {
@@ -359,7 +364,7 @@ onMounted(init)
   background: $grey-87;
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   will-change: filter;
   transition: filter 0.2s ease-in-out;
 }
@@ -375,11 +380,24 @@ onMounted(init)
 }
 
 .back-button {
+  display: flex;
+  align-items: center;
+  margin: 0 10px 10px;
+  padding: 0;
+  width: fit-content;
+  gap: 4px;
   background: none;
   border: none;
-  color: #007bff;
+  color: $black-100;
   font-size: 16px;
+  line-height: 100%;
+  letter-spacing: -0.64px;
   cursor: pointer;
+  img {
+    width: 24px;
+    height: 24px;
+    object-fit: cover;
+  }
 }
 
 .availability span {
@@ -647,8 +665,7 @@ label {
 @media (max-width: 600px) {
   /* общий контейнер */
   .product-detail {
-    padding: 1vh;
-    margin-top: 8vh;
+    margin-top: 96px;
   }
   .detail-card {
     padding: 12px;
