@@ -2,13 +2,13 @@
   <div class="product-detail">
     <!-- 1. Загрузка -->
     <div v-if="!store.detailData && !variantLoading" class="loading">
-      Загрузка...
+      <div class="spinner"></div>
     </div>
 
     <!-- 2. Основная карточка -->
     <div v-else class="detail-wrapper">
       <div v-if="store.detailLoading || variantLoading" class="variant-spinner">
-        Загрузка...
+        <div class="spinner"></div>
       </div>
 
       <div class="detail-card" :class="{ blurred: store.detailLoading || variantLoading }">
@@ -348,27 +348,49 @@ onMounted(init)
 
 <style scoped lang="scss">
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 .product-detail {
   margin-top: 120px;
   .loading {
     text-align: center;
-    color: $black-100;
-    font-size: 16px;
     margin-top: 40px;
+    .spinner {
+      margin: 0 auto;
+      width: 40px;
+      height: 40px;
+      border: 6px solid $black-10;
+      border-top-color: $black-100;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
   }
   .detail-wrapper {
     display: flex;
     position: relative;
     .variant-spinner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       position: absolute;
+      padding: 12px;
       top: 50%;
       left: 50%;
+      border-radius: 8px;
       transform: translate(-50%, -50%);
-      font-size: 16px;
-      color: $black-100;
       background-color: $white-80;
-      padding: 8px 12px;
       box-shadow: 0 2px 4px $black-10;
+      .spinner {
+        width: 24px;
+        height: 24px;
+        border: 4px solid $black-10;
+        border-top-color: $black-100;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
     }
     .detail-card {
       display: flex;
@@ -449,7 +471,11 @@ onMounted(init)
       }
 
       .carousel-container {
-        margin-bottom: 16px;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 24px;
+        padding: 40px 10px 10px;
+        background-color: $grey-89;
         .main-image-wrapper {
           overflow: hidden;
           border-radius: 8px;
@@ -487,7 +513,11 @@ onMounted(init)
       }
 
       .options-block {
+        display: flex;
+        flex-direction: column;
+        background-color: $grey-95;
         margin: 16px 0;
+        padding: 16px 10px;
         .option {
           display: flex;
           align-items: center;
@@ -537,8 +567,10 @@ onMounted(init)
 
       .delivery-price-block {
         display: flex;
+        flex-direction: column;
         justify-content: space-between;
-        padding: 8px 0;
+        background-color: $grey-95;
+        padding: 16px 10px;
         .delivery {
           margin-bottom: 12px;
           label {
