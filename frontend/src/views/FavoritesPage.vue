@@ -13,7 +13,14 @@
 
     <div class="line-hor"></div>
 
-    <div v-if="favoriteProducts.length" class="products-grid" :class="{ blurred: favoritesLoading }">
+    <div v-if="store.cart.items.length === 0" class="empty-cart">
+      Ты еще не добавлял товары в избранное.
+      <button class="action-button" @click="goToCatalog">
+        Перейти в каталог
+      </button>
+    </div>
+
+    <div v-else class="products-grid" :class="{ blurred: favoritesLoading }">
       <div v-for="product in favoriteProducts" :key="product.color_sku" @click="goToProduct(product)" class="product-card">
         <button type="button" class="remove-fav-btn" @click.prevent.stop="store.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">
           <img :src="icon_product_in_favorites" alt="product" />
@@ -110,6 +117,32 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   margin: 60px 0 96px;
+  .empty-cart {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    gap: 40px;
+    color: $grey-20;
+    font-size: 16px;
+    line-height: 110%;
+    letter-spacing: -0.64px;
+    .action-button {
+      width: 100%;
+      height: 72px;
+      padding: 14px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background-color: $grey-20;
+      color: $white-100;
+      line-height: 100%;
+      letter-spacing: -0.64px;
+    }
+  }
   .header-logo {
     display: flex;
     justify-content: center;
@@ -230,6 +263,11 @@ onMounted(async () => {
 
 @media (max-width: 600px) {
   .favorites-container {
+    .empty-cart {
+      .action-button {
+        height: 56px;
+      }
+    }
     .header-logo {
       .logo-title {
         font-size: 32px;
