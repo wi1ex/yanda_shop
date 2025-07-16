@@ -70,8 +70,15 @@ function goBack() {
   if (window.history.length > 1) {
     router.back()
   } else {
-    router.replace({ name: 'Home' })
+    router.push({ name: 'Home' })
   }
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function goToCatalog() {
+  store.selectedCategory = ''
+  router.push({ name: 'Catalog' })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // Переход на страницу товара
@@ -129,10 +136,11 @@ onMounted(async () => {
     font-size: 16px;
     line-height: 110%;
     letter-spacing: -0.64px;
+    z-index: 20;
     .action-button {
-      width: 100%;
+      width: fit-content;
       height: 72px;
-      padding: 14px;
+      padding: 0 24px;
       font-size: 16px;
       border: none;
       border-radius: 4px;
