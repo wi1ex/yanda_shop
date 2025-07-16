@@ -22,17 +22,15 @@
 
         <!-- Бренд, имя, артикул, наличие -->
         <div v-if="store.detailData" class="title-block">
-          <div class="brand-name-sku">
-            <p class="brand">{{ store.detailData.brand }}</p>
-            <h1 class="name">{{ store.detailData.name }}</h1>
-            <p class="sku">артикул: {{ store.detailData.world_sku }}</p>
-          </div>
           <div class="availability">
+            <p class="brand">{{ store.detailData.brand }}</p>
             <span v-if="store.detailData?.count_in_stock > 0">
               В НАЛИЧИИ: {{ store.detailData.count_in_stock }}
             </span>
             <span v-else>ПОД ЗАКАЗ</span>
           </div>
+          <h1 class="name">{{ store.detailData.name }}</h1>
+          <p class="sku">артикул: {{ store.detailData.world_sku }}</p>
         </div>
 
         <!-- Галерея: главное + миниатюры + свайп -->
@@ -355,10 +353,11 @@ onMounted(init)
   .loading {
     text-align: center;
     color: $black-100;
-    font-size: 18px;
+    font-size: 16px;
     margin-top: 40px;
   }
   .detail-wrapper {
+    display: flex;
     position: relative;
     .variant-spinner {
       position: absolute;
@@ -367,27 +366,25 @@ onMounted(init)
       transform: translate(-50%, -50%);
       font-size: 16px;
       color: $black-100;
-      background-color: rgba(255, 255, 255, 0.8);
+      background-color: $white-80;
       padding: 8px 12px;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px $black-10;
     }
     .detail-card {
-      background-color: $grey-87;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      width: 100%;
       will-change: filter;
-      transition: filter 0.2s ease-in-out;
-      .blurred {
+      transition: filter 0.25s ease-in-out;
+      &.blurred {
         filter: blur(4px);
+        pointer-events: none;
       }
 
       .top-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 12px;
         .back-button {
           display: flex;
           align-items: center;
@@ -411,30 +408,20 @@ onMounted(init)
       }
 
       .title-block {
-        margin-bottom: 12px;
-        .brand-name-sku {
+        display: flex;
+        flex-direction: column;
+        margin: 10px;
+        .availability {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
           .brand {
+            margin: 0;
             font-size: 16px;
             color: $black-60;
             line-height: 100%;
             letter-spacing: -0.64px;
           }
-          .name {
-            color: $black-100;
-            font-family: Bounded-250;
-            font-size: 20px;
-            line-height: 80%;
-            letter-spacing: -1px;
-          }
-          .sku {
-            color: $grey-20;
-            font-size: 12px;
-            line-height: 100%;
-            letter-spacing: -0.48px;
-            opacity: 0.7;
-          }
-        }
-        .availability {
           span {
             color: $grey-20;
             font-size: 12px;
@@ -442,6 +429,22 @@ onMounted(init)
             letter-spacing: -0.48px;
             opacity: 0.7;
           }
+        }
+        .name {
+          margin: 12px 0 8px;
+          color: $black-100;
+          font-family: Bounded-250;
+          font-size: 20px;
+          line-height: 80%;
+          letter-spacing: -1px;
+        }
+        .sku {
+          margin: 0;
+          color: $grey-20;
+          font-size: 12px;
+          line-height: 100%;
+          letter-spacing: -0.48px;
+          opacity: 0.7;
         }
       }
 
@@ -472,9 +475,9 @@ onMounted(init)
             flex: 0 0 auto;
             border: 2px solid transparent;
             scroll-snap-align: center;
-            .active {
+            &.active {
               opacity: 1;
-              border-color: #007bff;
+              border-color: $black-40;
             }
           }
         }
@@ -502,18 +505,18 @@ onMounted(init)
             gap: 8px;
             .option-btn {
               padding: 6px 10px;
-              border: 1px solid #ccc;
+              border: 1px solid $white-100;
               border-radius: 6px;
-              background-color: #fff;
+              background-color: $white-100;
               cursor: pointer;
               color: $black-100;
               font-size: 15px;
               line-height: 100%;
               letter-spacing: -0.6px;
-              .active {
-                background-color: #007bff;
-                color: #fff;
-                border-color: #007bff;
+              &.active {
+                background-color: $black-40;
+                color: $white-100;
+                border-color: $black-40;
               }
             }
             .color-btn {
@@ -550,18 +553,18 @@ onMounted(init)
             gap: 8px;
             .option-btn {
               padding: 6px 10px;
-              border: 1px solid #ccc;
+              border: 1px solid $grey-95;
               border-radius: 6px;
-              background-color: #fff;
+              background-color: $white-100;
               cursor: pointer;
               color: $black-100;
               font-size: 15px;
               line-height: 100%;
               letter-spacing: -0.6px;
-              .active {
-                background-color: #007bff;
-                color: #fff;
-                border-color: #007bff;
+              &.active {
+                background-color: $black-40;
+                color: $white-100;
+                border-color: $black-40;
               }
             }
           }
@@ -596,8 +599,8 @@ onMounted(init)
           align-items: center;
           gap: 12px;
           .quantity-buttons {
-            background-color: #007bff;
-            color: #fff;
+            background-color: $black-40;
+            color: $white-100;
             border: none;
             padding: 6px 10px;
             border-radius: 6px;
@@ -633,7 +636,7 @@ onMounted(init)
           font-size: 16px;
           line-height: 100%;
           letter-spacing: -0.64px;
-          border: 1px solid #000;
+          border: 1px solid $black-100;
           cursor: pointer;
           img {
             width: 20px;
@@ -644,10 +647,10 @@ onMounted(init)
 
       .section {
         margin-top: 16px;
-        .section-disabled {
+        &.section-disabled {
           opacity: 0.6;
           .section-header {
-            color: #999;
+            color: $grey-30;
             cursor: default;
             pointer-events: none;
           }
@@ -676,7 +679,7 @@ onMounted(init)
           opacity: 0;
           overflow: hidden;
           transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
-          .open {
+          &.open {
             max-height: 800px;
             opacity: 1;
           }
