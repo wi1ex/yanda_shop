@@ -516,11 +516,11 @@ onMounted(init)
         display: flex;
         flex-direction: column;
         background-color: $grey-95;
-        margin: 16px 0;
         padding: 16px 10px;
+        border-radius: 4px;
         .option {
           display: flex;
-          align-items: center;
+          flex-direction: column;
           padding: 8px 0;
           label {
             margin: 10px 20px 20px 0;
@@ -624,8 +624,7 @@ onMounted(init)
       .actions-block {
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        margin: 16px 0;
+        gap: 8px;
         .quantity-controls {
           display: flex;
           align-items: center;
@@ -647,6 +646,7 @@ onMounted(init)
           align-items: center;
           justify-content: center;
           padding: 0 24px;
+          height: 56px;
           border-radius: 4px;
           background-color: $grey-20;
           border: none;
@@ -661,14 +661,15 @@ onMounted(init)
           align-items: center;
           justify-content: center;
           padding: 0 24px;
+          height: 56px;
           gap: 8px;
           border-radius: 4px;
           background-color: $white-80;
+          border: none;
           color: $black-100;
           font-size: 16px;
           line-height: 100%;
           letter-spacing: -0.64px;
-          border: 1px solid $black-100;
           cursor: pointer;
           img {
             width: 20px;
