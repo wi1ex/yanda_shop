@@ -380,7 +380,7 @@ function goToCatalog() {
 .action-button {
   width: 100%;
   height: 72px;
-  padding: 14px;
+  padding: 0 14px;
   font-size: 16px;
   border: none;
   border-radius: 4px;
