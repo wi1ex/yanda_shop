@@ -159,13 +159,13 @@
         </tr>
         <tr v-for="s in filteredSettings" :key="s.key">
           <td>{{ s.key }}</td>
-          <td><input :key="s.key" v-model="s.value" /></td>
-          <td><button class="delete-icon" :disabled="s.key.startsWith('delivery_')" @click="deleteSetting(s.key)"
+          <td><input v-model="s.value" /></td>
+          <td><button type="button" class="delete-icon" :disabled="s.key.startsWith('delivery_')" @click="deleteSetting(s.key)"
                       :title="s.key.startsWith('delivery_') ? 'Нельзя удалить системный параметр' : 'Удалить параметр'">🗑️</button></td>
         </tr>
       </table>
 
-      <button class="btn-save-all" @click="saveAllSettings" :disabled="!hasSettingsChanged || savingAll">
+      <button type="button" class="btn-save-all" @click="saveAllSettings" :disabled="!hasSettingsChanged || savingAll">
         {{ savingAll ? 'Сохраняем…' : 'Сохранить все изменения' }}
       </button>
 
