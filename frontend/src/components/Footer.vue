@@ -20,7 +20,6 @@
         <!-- Колонка “Информация” -->
         <nav class="footer-nav" style="left: 49.8vw">
           <a href="#" class="footer-link" @click.prevent="goToPage('About')">О нас</a>
-          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Лайфстайл</a>
           <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Доставка и оплата</a>
           <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Возврат</a>
         </nav>
@@ -62,7 +61,6 @@
         <!-- Колонка “Информация” -->
         <nav class="footer-nav">
           <a href="#" class="footer-link" @click.prevent="goToPage('About')">О нас</a>
-          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Лайфстайл</a>
           <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Доставка и оплата</a>
           <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Возврат</a>
         </nav>

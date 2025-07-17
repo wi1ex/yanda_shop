@@ -5,7 +5,7 @@ from flask_jwt_extended import JWTManager
 from .core.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS, SECRET_KEY, JWT_SECRET_KEY
 from .core.logging import setup_logging, logger
 from .models import db
-from .utils.product_serializer import load_delivery_options
+from .utils.cache_utils import load_delivery_options, load_parameters
 from .routes.general import general_api
 from .routes.product import product_api
 from .routes.admin import admin_api
@@ -65,6 +65,7 @@ def create_app() -> Flask:
 
         # ——— Кэширование опций доставки ————————————————————————
         with app.app_context():
+            load_parameters()
             load_delivery_options()
             logger.debug("%s: delivery options cached", context)
 

@@ -130,7 +130,7 @@
             <img :src="showDescription ? icon_arrow_up : icon_arrow_down" alt="" />
           </div>
           <div class="section-body" :class="{ open: showDescription }">
-            <p v-if="store.detailData?.description">{{ store.detailData.description }}</p>
+            <p>{{ store.detailData.description }}</p>
           </div>
         </div>
 
@@ -142,7 +142,7 @@
             <img :src="showMaterial ? icon_arrow_up : icon_arrow_down" alt="" />
           </div>
           <div class="section-body" :class="{ open: showMaterial }">
-            <p v-if="store.detailData?.material">{{ store.detailData.material }}</p>
+            <p>{{ store.detailData.material }}</p>
           </div>
         </div>
 
@@ -166,6 +166,30 @@
               <p>Высота:</p>{{ store.detailData.height_cm }} см
               <p>Глубина:</p>{{ store.detailData.depth_cm }} см
             </p>
+          </div>
+        </div>
+
+        <!-- Доставка и оплата -->
+        <div v-if="store.parameters" class="section"
+             @click="toggleDelivery" :class="{ open: showDelivery }">
+          <div class="section-header">
+            <span>Доставка и оплата</span>
+            <img :src="showDelivery ? icon_arrow_up : icon_arrow_down" alt="" />
+          </div>
+          <div class="section-body" :class="{ open: showDelivery }">
+            <p>{{ store.parameters.info_delivery_short }}</p>
+          </div>
+        </div>
+
+        <!-- Возврат -->
+        <div v-if="store.parameters" class="section"
+             @click="toggleRefund" :class="{ open: showRefund }">
+          <div class="section-header">
+            <span>Возврат</span>
+            <img :src="showRefund ? icon_arrow_up : icon_arrow_down" alt="" />
+          </div>
+          <div class="section-body" :class="{ open: showRefund }">
+            <p>{{ store.parameters.info_refund_short }}</p>
           </div>
         </div>
       </div>
@@ -196,6 +220,8 @@ const thumbsRef = ref(null)
 const showDescription = ref(false)
 const showMaterial = ref(false)
 const showSize = ref(false)
+const showDelivery = ref(false)
+const showRefund = ref(false)
 const variantLoading = ref(false)
 
 function formatPrice(val) {
@@ -233,9 +259,9 @@ const visibleDeliveryOptions = computed(() => {
   if (!store.detailData) return []
   const opts = [...store.detailData.delivery_options]
   if (store.detailData.count_in_stock > 0) {
-    return opts.reverse()
+    return opts
   } else {
-    return opts.slice(1).reverse()
+    return opts.slice(1)
   }
 })
 
@@ -359,6 +385,14 @@ function toggleSize() {
   showSize.value = !showSize.value
 }
 
+function toggleDelivery() {
+  showDelivery.value = !showDelivery.value
+}
+
+function toggleRefund() {
+  showRefund.value = !showRefund.value
+}
+
 // ← Назад
 function goBack() {
   if (window.history.length > 1) {
@@ -374,6 +408,8 @@ async function init() {
   showDescription.value = false
   showMaterial.value = false
   showSize.value = false
+  showDelivery.value = false
+  showRefund.value = false
   variantLoading.value = true
   try {
     const sku = route.params.variant_sku

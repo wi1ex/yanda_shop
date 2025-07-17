@@ -1,4 +1,5 @@
 import io
+import json
 import requests
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -6,12 +7,11 @@ from typing import Any, Dict, Tuple, List
 from flask import Blueprint, jsonify, request, Response
 from flask_jwt_extended import create_access_token, create_refresh_token
 from werkzeug.utils import secure_filename
-from sqlalchemy import or_, select
-from ..core.config import BACKEND_URL
 from ..core.logging import logger
-from ..extensions import redis_client, minio_client, BUCKET
-from ..models import Users, ChangeLog, AdminSetting, Review
+from ..core.config import BACKEND_URL
 from ..utils.db_utils import session_scope
+from ..models import Users, ChangeLog, Review
+from ..extensions import redis_client, minio_client, BUCKET
 from ..utils.route_utils import handle_errors, require_args, require_json
 
 general_api: Blueprint = Blueprint("general_api", __name__, url_prefix="/api/general")
@@ -169,22 +169,8 @@ def get_parameters() -> Tuple[Response, int]:
     Returns social URLs and FAQ parameters.
     """
     try:
-        with session_scope() as session:
-            # 1. Селектим сразу записи по обоим префиксам
-            settings = session.query(AdminSetting).filter(
-                or_(
-                    AdminSetting.key.like("faq_question_%"),
-                    AdminSetting.key.like("faq_answer_%"),
-                    AdminSetting.key.like("url_social_%"),
-                )
-            ).all()
-            # 2. Собираем ожидаемые ключи (если они динамические) или оставляем только те, что пришли из БД
-            all_keys = [s.key for s in settings]
-            # 3. Формируем результирующий словарь
-            result = {k: "" for k in all_keys}
-            for s in settings:
-                result[s.key] = s.value or ""
-
+        raw = redis_client.get("parameters") or "{}"
+        result = json.loads(raw)
         return jsonify(result), 200
     except Exception:
         logger.exception("get_parameters: failed")
