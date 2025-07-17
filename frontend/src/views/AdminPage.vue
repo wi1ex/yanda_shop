@@ -159,7 +159,7 @@
         </tr>
         <tr v-for="s in filteredSettings" :key="s.key">
           <td>{{ s.key }}</td>
-          <td><input v-model="s.value" /></td>
+          <td><input :key="s.key" v-model="s.value" /></td>
           <td><button class="delete-icon" :disabled="s.key.startsWith('delivery_')" @click="deleteSetting(s.key)"
                       :title="s.key.startsWith('delivery_') ? 'Нельзя удалить системный параметр' : 'Удалить параметр'">🗑️</button></td>
         </tr>
@@ -473,9 +473,25 @@ watch(
   (newSettings) => {
     const filtered = newSettings
       .filter(s => !s.key.startsWith('sheet_url_'))
-      .map(s => ({ key: s.key, value: s.value }))
-    localSettings.splice(0, localSettings.length, ...filtered)
-    originalSnapshot.value = JSON.stringify(filtered)
+    // Обновляем или добавляем
+    filtered.forEach(ns => {
+      const idx = localSettings.findIndex(ls => ls.key === ns.key)
+      if (idx >= 0) {
+        localSettings[idx].value = ns.value
+      } else {
+        localSettings.push({ key: ns.key, value: ns.value })
+      }
+    })
+    // Убираем удалённые
+    for (let i = localSettings.length - 1; i >= 0; i--) {
+      if (!filtered.some(ns => ns.key === localSettings[i].key)) {
+        localSettings.splice(i, 1)
+      }
+    }
+    // Снимок для кнопки «Сохранить всё»
+    originalSnapshot.value = JSON.stringify(
+      localSettings.map(s => ({ key: s.key, value: s.value }))
+    )
   },
   { immediate: true }
 )
