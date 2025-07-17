@@ -89,27 +89,32 @@
             <span class="price">{{ formatPrice(computedPrice) }} ₽</span>
           </div>
           <!-- Корзина -->
-          <div v-if="currentQuantity > 0" class="quantity-controls">
-            <button class="quantity-buttons" @click="store.decreaseQuantity(cartItem)">➖</button>
-            <span class="quantity">{{ currentQuantity }} в корзине</span>
-            <button class="quantity-buttons" @click="store.increaseQuantity(cartItem)">➕</button>
-            <button type="button" class="cart-button" @click="store.openCartDrawer()">
+          <div class="quantity-controls">
+            <div v-if="currentQuantity > 0" class="quantity-div">
+              <button class="quantity-buttons" @click="store.decreaseQuantity(cartItem)">➖</button>
+              <span class="quantity">{{ currentQuantity }} в корзине</span>
+              <button class="quantity-buttons" @click="store.increaseQuantity(cartItem)">➕</button>
+            </div>
+            <button v-if="currentQuantity > 0" type="button" class="cart-button" @click="store.openCartDrawer()">
               Оформить заказ
             </button>
+            <button v-if="currentQuantity == 0" type="button" class="cart-button" @click="handleAddToCart">
+              Добавить в корзину
+            </button>
           </div>
-          <button v-else type="button" class="cart-button" @click="handleAddToCart">
-            Добавить в корзину
-          </button>
         </div>
 
-        <button v-if="!store.isFavorite(store.detailData.color_sku)" type="button" class="fav-button" @click="store.addToFavorites(store.detailData.color_sku)">
-          Добавить в избранное
-          <img :src="icon_favorites_grey" alt="" />
-        </button>
-        <button v-else type="button" class="fav-button" @click="store.removeFromFavorites(store.detailData.color_sku)">
-          Товар в избранном
-          <img :src="icon_favorites_black" alt="" />
-        </button>
+        <div v-if="store.detailData" class="fav-block">
+          <button v-if="!store.isFavorite(store.detailData.color_sku)" type="button" class="fav-button"
+                  @click="store.addToFavorites(store.detailData.color_sku)">
+            Добавить в избранное
+            <img :src="icon_favorites_grey" alt="" />
+          </button>
+          <button v-else type="button" class="fav-button" @click="store.removeFromFavorites(store.detailData.color_sku)">
+            Товар в избранном
+            <img :src="icon_favorites_black" alt="" />
+          </button>
+        </div>
 
         <!-- Описание -->
         <div v-if="store.detailData" class="section" :class="{ 'section-disabled': !store.detailData?.description?.trim() }">
@@ -430,6 +435,7 @@ onMounted(init)
       display: flex;
       flex-direction: column;
       width: 100%;
+      z-index: 20;
       will-change: filter;
       transition: filter 0.25s ease-in-out;
       &.blurred {
@@ -649,6 +655,7 @@ onMounted(init)
         }
         .quantity-controls {
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: space-between;
           padding: 0 10px;
@@ -663,42 +670,46 @@ onMounted(init)
           .quantity {
             font-size: 16px;
           }
+          .cart-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 24px;
+            height: 56px;
+            border-radius: 4px;
+            background-color: $grey-20;
+            border: none;
+            color: $white-100;
+            font-size: 16px;
+            line-height: 100%;
+            letter-spacing: -0.64px;
+            cursor: pointer;
+          }
         }
-        .cart-button {
+      }
+
+      .fav-block {
+        display: flex;
+        margin-top: 8px;
+        .fav-button {
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 0 24px;
-          height: 56px;
+          height: 40px;
+          gap: 8px;
           border-radius: 4px;
-          background-color: $grey-20;
+          background-color: $white-100;
           border: none;
-          color: $white-100;
+          color: $black-100;
           font-size: 16px;
           line-height: 100%;
           letter-spacing: -0.64px;
           cursor: pointer;
-        }
-      }
-
-      .fav-button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 24px;
-        height: 40px;
-        gap: 8px;
-        border-radius: 4px;
-        background-color: $white-80;
-        border: none;
-        color: $black-100;
-        font-size: 16px;
-        line-height: 100%;
-        letter-spacing: -0.64px;
-        cursor: pointer;
-        img {
-          width: 20px;
-          height: 20px;
+          img {
+            width: 20px;
+            height: 20px;
+          }
         }
       }
 
