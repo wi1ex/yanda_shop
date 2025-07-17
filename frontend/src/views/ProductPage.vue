@@ -1,5 +1,6 @@
 <template>
   <div class="product-detail">
+    <div class="line-vert"></div>
     <!-- 1. Загрузка -->
     <div v-if="!store.detailData && !variantLoading" class="loading">
       <div class="spinner"></div>
@@ -19,6 +20,8 @@
             Назад
           </button>
         </div>
+
+        <div class="line-hor"></div>
 
         <!-- Бренд, имя, артикул, наличие -->
         <div v-if="store.detailData" class="title-block">
@@ -56,6 +59,7 @@
               </button>
             </div>
           </div>
+          <div class="line-hor"></div>
           <!-- Цвет -->
           <div class="option">
             <label>Цвет</label>
@@ -66,6 +70,7 @@
               </button>
             </div>
           </div>
+          <div class="line-hor"></div>
           <!-- Доставка -->
           <div class="option">
             <label>Доставка</label>
@@ -77,30 +82,34 @@
               </button>
             </div>
           </div>
+          <div class="line-hor"></div>
           <!-- Цена -->
           <div class="option-price">
             <label>Цена:</label>
-            <span class="price">{{ formatPrice(computedPrice) }}₽</span>
+            <span class="price">{{ formatPrice(computedPrice) }} ₽</span>
           </div>
-        </div>
-
-        <!-- Кнопка/контролы корзины + избранное -->
-        <div v-if="store.detailData" class="actions-block">
+          <!-- Корзина -->
           <div v-if="currentQuantity > 0" class="quantity-controls">
             <button class="quantity-buttons" @click="store.decreaseQuantity(cartItem)">➖</button>
-            <span class="quantity">{{ currentQuantity }}</span>
+            <span class="quantity">{{ currentQuantity }} в корзине</span>
             <button class="quantity-buttons" @click="store.increaseQuantity(cartItem)">➕</button>
+            <button type="button" class="cart-button" @click="store.openCartDrawer()">
+              Оформить заказ
+            </button>
           </div>
           <button v-else type="button" class="cart-button" @click="handleAddToCart">
             Добавить в корзину
           </button>
-          <button v-if="!store.isFavorite(store.detailData.color_sku)" type="button" class="fav-button" @click="store.addToFavorites(store.detailData.color_sku)">
-            Добавить в избранное ♡
-          </button>
-          <button v-else type="button" class="fav-button" @click="store.removeFromFavorites(store.detailData.color_sku)">
-            Товар в избранном ♥
-          </button>
         </div>
+
+        <button v-if="!store.isFavorite(store.detailData.color_sku)" type="button" class="fav-button" @click="store.addToFavorites(store.detailData.color_sku)">
+          Добавить в избранное
+          <img :src="icon_favorites_grey" alt="" />
+        </button>
+        <button v-else type="button" class="fav-button" @click="store.removeFromFavorites(store.detailData.color_sku)">
+          Товар в избранном
+          <img :src="icon_favorites_black" alt="" />
+        </button>
 
         <!-- Описание -->
         <div v-if="store.detailData" class="section" :class="{ 'section-disabled': !store.detailData?.description?.trim() }">
@@ -150,6 +159,8 @@ import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/store/index.js'
 import icon_arrow_back from "@/assets/images/arrow_back.svg";
+import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
+import icon_favorites_black from "@/assets/images/favorites_black.svg";
 
 const store = useStore()
 const route = useRoute()
@@ -195,7 +206,7 @@ const computedPrice = computed(() => {
 
 const visibleDeliveryOptions = computed(() => {
   if (!store.detailData) return []
-  return store.detailData.count_in_stock > 0 ? store.detailData.delivery_options : store.detailData.delivery_options.slice(1)
+  return store.detailData.count_in_stock > 0 ? store.detailData.delivery_options.reverse() : store.detailData.delivery_options.slice(1).reverse()
 })
 
 const cartItem = computed(() =>
@@ -356,6 +367,21 @@ onMounted(init)
   to   { transform: rotate(360deg); }
 }
 
+.line-vert {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 0.5px);
+  width: 1px;
+  height: 100%;
+  background-color: $white-100;
+  z-index: 10;
+}
+.line-hor {
+  width: 100%;
+  height: 1px;
+  background-color: $white-100;
+  z-index: 100;
+}
 .product-detail {
   margin-top: 120px;
   .loading {
@@ -537,6 +563,7 @@ onMounted(init)
             gap: 8px;
             .option-btn {
               padding: 8px;
+              min-width: 50px;
               border: none;
               border-radius: 4px;
               background-color: $white-100;
@@ -570,7 +597,9 @@ onMounted(init)
             .option-btn-delivery {
               display: flex;
               flex-direction: column;
+              margin-right: -4px;
               padding: 8px;
+              min-width: 85px;
               gap: 8px;
               border-radius: 4px;
               border: none;
@@ -607,22 +636,17 @@ onMounted(init)
           }
           .price {
             color: $grey-20;
-            font-family: Bounded-350;
+            font-family: Bounded-250;
             font-size: 16px;
             line-height: 80%;
             letter-spacing: -0.8px;
           }
         }
-      }
-
-      .actions-block {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
         .quantity-controls {
           display: flex;
           align-items: center;
-          gap: 12px;
+          justify-content: space-between;
+          padding: 0 10px;
           .quantity-buttons {
             background-color: $black-40;
             color: $white-100;
@@ -650,25 +674,26 @@ onMounted(init)
           letter-spacing: -0.64px;
           cursor: pointer;
         }
-        .fav-button {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0 24px;
-          height: 40px;
-          gap: 8px;
-          border-radius: 4px;
-          background-color: $white-80;
-          border: none;
-          color: $black-100;
-          font-size: 16px;
-          line-height: 100%;
-          letter-spacing: -0.64px;
-          cursor: pointer;
-          img {
-            width: 20px;
-            height: 20px;
-          }
+      }
+
+      .fav-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 24px;
+        height: 40px;
+        gap: 8px;
+        border-radius: 4px;
+        background-color: $white-80;
+        border: none;
+        color: $black-100;
+        font-size: 16px;
+        line-height: 100%;
+        letter-spacing: -0.64px;
+        cursor: pointer;
+        img {
+          width: 20px;
+          height: 20px;
         }
       }
 
