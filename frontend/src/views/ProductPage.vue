@@ -29,7 +29,7 @@
             </span>
             <span v-else>ПОД ЗАКАЗ</span>
           </div>
-          <h1 class="name">{{ store.detailData.name }}</h1>
+          <p class="name">{{ store.detailData.name }}</p>
           <p class="sku">артикул: {{ store.detailData.world_sku }}</p>
         </div>
 
@@ -44,7 +44,7 @@
           </div>
         </div>
 
-        <!-- 4. Параметры: Размер или Г×Ш×В + Цвет -->
+        <!-- Параметры -->
         <div v-if="store.detailData" class="options-block">
           <!-- Размер -->
           <div class="option">
@@ -60,32 +60,30 @@
           <div class="option">
             <label>Цвет</label>
             <div class="options-list">
-              <button  v-for="opt in colorOptions" :key="opt" class="option-btn color-btn" :title="opt"
+              <button  v-for="opt in colorOptions" :key="opt" class="option-btn-color" :title="opt"
                        :class="{ active: opt === store.detailData.color }" @click="selectVariantByOpt('color', opt)">
                 <img :src="getImageForColor(opt)" alt="" class="color-thumb"/>
               </button>
             </div>
           </div>
-        </div>
-
-        <!-- Доставка и цена -->
-        <div v-if="store.detailData" class="delivery-price-block">
-          <div class="delivery">
+          <!-- Доставка -->
+          <div class="option">
             <label>Доставка</label>
             <div class="options-list">
-              <button v-for="(opt, idx) in visibleDeliveryOptions" :key="idx" class="option-btn"
+              <button v-for="(opt, idx) in visibleDeliveryOptions" :key="idx" class="option-btn-delivery"
                       :class="{ active: idx === selectedDeliveryIndex }" @click="selectedDeliveryIndex = idx">
                 {{ opt.label }} {{ Math.round(store.detailData.price * opt.multiplier) }} ₽
               </button>
             </div>
           </div>
+          <!-- Цена -->
           <div class="price-row">
             <label>Цена:</label>
             <span class="price">{{ computedPrice }}₽</span>
           </div>
         </div>
 
-        <!-- 1. Кнопка/контролы корзины + избранное -->
+        <!-- Кнопка/контролы корзины + избранное -->
         <div v-if="store.detailData" class="actions-block">
           <div v-if="currentQuantity > 0" class="quantity-controls">
             <button class="quantity-buttons" @click="store.decreaseQuantity(cartItem)">➖</button>
@@ -474,36 +472,35 @@ onMounted(init)
         display: flex;
         flex-direction: column;
         margin-bottom: 24px;
-        padding: 40px 10px 10px;
+        padding: 24px 10px 10px;
         background-color: $grey-89;
         .main-image-wrapper {
+          display: flex;
+          align-items: center;
+          justify-content: center;
           overflow: hidden;
-          border-radius: 8px;
           .main-image {
             width: 100%;
-            display: block;
           }
         }
         .thumbnails-wrapper {
           display: flex;
-          gap: 8px;
+          gap: 4px;
           overflow-x: auto;
-          margin-top: 8px;
-          -webkit-overflow-scrolling: touch; /* плавный тач-скролл на iOS */
+          -webkit-overflow-scrolling: touch;
           scroll-snap-type: x mandatory;
           .thumbnail {
-            width: 60px;
-            height: 60px;
+            display: flex;
+            flex: 0 0 auto;
+            width: 68px;
+            height: 68px;
             object-fit: cover;
             border-radius: 4px;
-            opacity: 0.6;
             cursor: pointer;
-            flex: 0 0 auto;
-            border: 2px solid transparent;
             scroll-snap-align: center;
+            background-color: $white-40;
             &.active {
-              opacity: 1;
-              border-color: $black-40;
+              background-color: $white-100;
             }
           }
         }
@@ -517,13 +514,13 @@ onMounted(init)
         flex-direction: column;
         background-color: $grey-95;
         padding: 16px 10px;
-        border-radius: 4px;
+        border-radius: 4px 4px 0 0;
         .option {
           display: flex;
           flex-direction: column;
-          padding: 8px 0;
+          gap: 16px;
+          margin-bottom: 32px;
           label {
-            margin: 10px 20px 20px 0;
             color: $grey-20;
             font-size: 15px;
             line-height: 110%;
@@ -534,9 +531,9 @@ onMounted(init)
             flex-wrap: wrap;
             gap: 8px;
             .option-btn {
-              padding: 6px 10px;
-              border: 1px solid $white-100;
-              border-radius: 6px;
+              padding: 8px;
+              border: none;
+              border-radius: 4px;
               background-color: $white-100;
               cursor: pointer;
               color: $black-100;
@@ -544,12 +541,11 @@ onMounted(init)
               line-height: 100%;
               letter-spacing: -0.6px;
               &.active {
-                background-color: $black-40;
+                background-color: $black-100;
                 color: $white-100;
-                border-color: $black-40;
               }
             }
-            .color-btn {
+            .option-btn-color {
               min-width: 40px;
               text-align: center;
               padding: 4px;
@@ -560,30 +556,13 @@ onMounted(init)
                 border-radius: 50%;
                 display: block;
               }
+              &.active {
+                background-color: $black-40;
+                color: $white-100;
+                border-color: $black-40;
+              }
             }
-          }
-        }
-      }
-
-      .delivery-price-block {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        background-color: $grey-95;
-        padding: 16px 10px;
-        .delivery {
-          margin-bottom: 12px;
-          label {
-            color: $grey-20;
-            font-size: 15px;
-            line-height: 100%;
-            letter-spacing: -0.6px;
-          }
-          .options-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            .option-btn {
+            .option-btn-delivery {
               padding: 6px 10px;
               border: 1px solid $grey-95;
               border-radius: 6px;
@@ -661,7 +640,7 @@ onMounted(init)
           align-items: center;
           justify-content: center;
           padding: 0 24px;
-          height: 56px;
+          height: 40px;
           gap: 8px;
           border-radius: 4px;
           background-color: $white-80;
