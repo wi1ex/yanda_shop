@@ -127,7 +127,7 @@
              :class="{ 'section-disabled': !store.detailData?.description?.trim() }">
           <div class="section-header">
             <span>Описание</span>
-            <img :src="showMaterial ? icon_arrow_up : icon_arrow_down" alt="" />
+            <img :src="showDescription ? icon_arrow_up : icon_arrow_down" alt="" />
           </div>
           <div class="section-body" :class="{ open: showDescription }">
             <p v-if="store.detailData?.description">{{ store.detailData.description }}</p>
