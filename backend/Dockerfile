@@ -6,4 +6,4 @@ COPY . .
 ENV FLASK_APP=app.py
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
-CMD ["gunicorn", "app:app", "-b", "0.0.0.0:8000", "--workers", "3", "--timeout", "30"]
+CMD ["gunicorn", "app:app", "-b", "0.0.0.0:8000", "--workers", "1", "--timeout", "30"]
