@@ -134,20 +134,26 @@
           </div>
         </div>
 
-        <!-- Характеристики -->
-        <div v-if="store.detailData" class="section" style="margin-bottom: 96px;"
-             @click="toggleCharacteristics" :class="{ open: showCharacteristics }">
+        <!-- Материал -->
+        <div v-if="store.detailData" class="section"
+             @click="toggleMaterial" :class="{ open: showMaterial }">
           <div class="section-header">
-            <span>Характеристики</span>
-            <img :src="showCharacteristics ? icon_arrow_up : icon_arrow_down" alt="" />
+            <span>Материал</span>
+            <img :src="showMaterial ? icon_arrow_up : icon_arrow_down" alt="" />
           </div>
-          <div class="section-body" :class="{ open: showCharacteristics }">
-            <p class="char-row"><p>Пол:</p>
-              {{ store.detailData.gender === 'F' ? 'Женский' : store.detailData.gender === 'M' ? 'Мужской' : 'Унисекс'}}
-            </p>
-            <p class="char-row"><p>Категория:</p>{{ store.detailData.category }}</p>
-            <p class="char-row"><p>Подкатегория:</p>{{ store.detailData.subcategory }}</p>
-            <p class="char-row"><p>Материал:</p>{{ store.detailData.material }}</p>
+          <div class="section-body" :class="{ open: showMaterial }">
+            <p v-if="store.detailData?.material">{{ store.detailData.material }}</p>
+          </div>
+        </div>
+
+        <!-- Размеры -->
+        <div v-if="store.detailData" class="section" style="margin-bottom: 96px;"
+             @click="toggleSize" :class="{ open: showSize }">
+          <div class="section-header">
+            <span>Размеры</span>
+            <img :src="showSize ? icon_arrow_up : icon_arrow_down" alt="" />
+          </div>
+          <div class="section-body" :class="{ open: showSize }">
             <p class="char-row" v-if="store.detailData.category === 'Обувь'">
               <p>Глубина:</p>{{ store.detailData.depth_mm }} мм
             </p>
@@ -188,7 +194,8 @@ const selectedDeliveryIndex  = ref(2)
 const currentIndex = ref(0)
 const thumbsRef = ref(null)
 const showDescription = ref(false)
-const showCharacteristics = ref(false)
+const showMaterial = ref(false)
+const showSize = ref(false)
 const variantLoading = ref(false)
 
 function formatPrice(val) {
@@ -344,8 +351,12 @@ function toggleDescription() {
   showDescription.value = !showDescription.value
 }
 
-function toggleCharacteristics() {
-  showCharacteristics.value = !showCharacteristics.value
+function toggleMaterial() {
+  showMaterial.value = !showMaterial.value
+}
+
+function toggleSize() {
+  showSize.value = !showSize.value
 }
 
 // ← Назад
@@ -752,6 +763,9 @@ onMounted(init)
         flex-direction: column;
         padding: 12px 10px;
         background-color: $grey-95;
+        font-size: 15px;
+        line-height: 110%;
+        letter-spacing: -0.6px;
         &.section-disabled {
           cursor: default;
           pointer-events: none;
@@ -771,9 +785,6 @@ onMounted(init)
           cursor: pointer;
           span {
             color: $black-100;
-            font-size: 15px;
-            line-height: 110%;
-            letter-spacing: -0.6px;
           }
           img {
             width: 20px;
@@ -794,9 +805,6 @@ onMounted(init)
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 15px;
-            line-height: 110%;
-            letter-spacing: -0.6px;
           }
         }
         &.open {
