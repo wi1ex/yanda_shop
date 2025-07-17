@@ -152,17 +152,19 @@
 
       <!-- Существующие -->
       <table>
-        <tr><th>Ключ</th><th>Значение</th><th></th></tr>
+        <tr>
+          <th>Ключ</th>
+          <th>Значение</th>
+        </tr>
         <tr v-for="s in filteredSettings" :key="s.key">
           <td>{{ s.key }}</td>
           <td><input v-model="s.value" /></td>
-          <td>
-            <button @click="saveSetting(s)" :disabled="saving === s.key">
-              {{ saving===s.key ? 'Сохраняем…' : 'Сохранить' }}
-            </button>
-          </td>
         </tr>
       </table>
+
+      <button class="btn-save-all" @click="saveAllSettings" :disabled="!hasSettingsChanged || savingAll">
+        {{ savingAll ? 'Сохраняем…' : 'Сохранить все изменения' }}
+      </button>
 
       <!-- Форма «Добавить новый параметр» -->
       <div class="add-setting">
@@ -229,24 +231,27 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useStore } from '@/store/index.js'
 
-const store        = useStore()
+const store            = useStore()
 
-const zipFile      = ref(null)
-const zipInput     = ref(null)
-const editingUrl   = reactive({ shoes:false, clothing:false, accessories:false })
-const selectedDate = ref(new Date().toISOString().slice(0, 10))
-const fileInput1   = ref(null)
-const fileInput2   = ref(null)
-const fileInput3   = ref(null)
-const formError    = ref('')
-const formSuccess  = ref('')
-const files        = reactive({})
-const saving       = ref(null)
-const selected     = ref('sheets')
-const logPage      = ref(1)
-const pageSize     = 10
-const newSetting   = reactive({ key: '', value: '' })
-const tabs         = [
+const localSettings    = reactive([])
+const originalSnapshot = ref('')
+const savingAll        = ref(false)
+const saving           = ref(null)
+const zipFile          = ref(null)
+const zipInput         = ref(null)
+const editingUrl       = reactive({ shoes:false, clothing:false, accessories:false })
+const selectedDate     = ref(new Date().toISOString().slice(0, 10))
+const fileInput1       = ref(null)
+const fileInput2       = ref(null)
+const fileInput3       = ref(null)
+const formError        = ref('')
+const formSuccess      = ref('')
+const files            = reactive({})
+const selected         = ref('sheets')
+const logPage          = ref(1)
+const pageSize         = 10
+const newSetting       = reactive({ key: '', value: '' })
+const tabs             = [
   { key:'sheets',      label:'Sheets'         },
   { key:'upload',      label:'ZIP Upload'     },
   { key:'logs',        label:'Логи'           },
@@ -274,7 +279,12 @@ const userColumns = computed(() => {
 
 // Фильтруем настройки: убираем все, ключи которых начинаются на `sheet_url_`
 const filteredSettings = computed(() =>
-  store.settings.filter(s => !s.key.startsWith('sheet_url_'))
+  localSettings.filter(s => !s.key.startsWith('sheet_url_'))
+)
+
+// Флаг: было ли хоть одно изменение?
+const hasSettingsChanged = computed(() =>
+  JSON.stringify(filteredSettings.value) !== originalSnapshot.value
 )
 
 const maxTotal = computed(() => {
@@ -373,11 +383,25 @@ function deleteReview(id) {
   if (confirm(`Удалить отзыв #${id}?`)) store.deleteReview(id)
 }
 
-function saveSetting(s) {
-  saving.value = s.key
-  store.saveSetting(s.key, s.value)
-    .then(() => store.fetchSettings())
-    .finally(() => saving.value = null)
+// Сохраняем все изменённые настройки подряд
+async function saveAllSettings() {
+  savingAll.value = true
+  try {
+    const changed = filteredSettings.value.filter(s => {
+      const orig = JSON.parse(originalSnapshot.value)
+        .find(o => o.key === s.key)
+      return orig && orig.value !== s.value
+    })
+    for (const s of changed) {
+      await store.saveSetting(s.key, s.value)
+    }
+    await store.fetchSettings()
+    // оригинальный снимок обновится через watch
+  } catch (err) {
+    alert(err.message || 'Ошибка при сохранении')
+  } finally {
+    savingAll.value = false
+  }
 }
 
 async function onAddSetting() {
@@ -425,6 +449,19 @@ onMounted(() => {
   store.fetchReviews()
   store.fetchUsers()
 })
+
+// Когда store.settings обновляются — заполняем localSettings и снимаем снимок
+watch(
+  () => store.settings,
+  (newSettings) => {
+    const filtered = newSettings
+      .filter(s => !s.key.startsWith('sheet_url_'))
+      .map(s => ({ key: s.key, value: s.value }))
+    localSettings.splice(0, localSettings.length, ...filtered)
+    originalSnapshot.value = JSON.stringify(filtered)
+  },
+  { immediate: true }
+)
 
 // **Новый watch**: при каждом переключении вкладки обновляем её данные
 watch(selected, (tab) => {
@@ -681,6 +718,20 @@ watch(selected, (tab) => {
 }
 .add-setting button {
   padding: 6px 12px;
+}
+.settings-section .btn-save-all {
+  margin-top: 16px;
+  padding: 8px 16px;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.settings-section .btn-save-all:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }
 
 /* Секция «Все отзывы» */

@@ -1,52 +1,11 @@
+import json
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from zoneinfo import ZoneInfo
-from ..extensions import BUCKET
+from ..extensions import BUCKET, redis_client
 from ..core.config import BACKEND_URL
 from ..core.logging import logger
-from ..models import AdminSetting, Shoe, Clothing, Accessory
-from .db_utils import session_scope
-
-
-# Delivery Options Cache
-_delivery_options: List[Dict[str, Any]] = []
-
-def load_delivery_options() -> None:
-    """
-    Загружает delivery_time_i и delivery_price_i из БД в _delivery_options.
-    После обновления настроек доставки нужно вызвать снова.
-    """
-    context = "load_delivery_options"
-    logger.info("%s START", context)
-    opts: List[Dict[str, Any]] = []
-
-    try:
-        with session_scope() as session:
-            for i in range(1, 4):
-                time_key = f"delivery_time_{i}"
-                price_key = f"delivery_price_{i}"
-                st_time = session.get(AdminSetting, time_key)
-                st_price = session.get(AdminSetting, price_key)
-
-                if not st_time or not st_price:
-                    logger.debug("%s: missing setting for keys %s / %s", context, time_key, price_key)
-                    continue
-
-                try:
-                    multiplier = float(st_price.value)
-                except (TypeError, ValueError) as exc:
-                    logger.warning("%s: invalid price for %s: %s", context, price_key, exc)
-                    continue
-
-                opts.append({"label": st_time.value, "multiplier": multiplier})
-
-    except Exception as exc:
-        logger.exception("%s: unexpected error loading delivery options", context, exc_info=exc)
-        return
-
-    _delivery_options.clear()
-    _delivery_options.extend(opts)
-    logger.info("%s END loaded_count=%d", context, len(opts))
+from ..models import Shoe, Clothing, Accessory
 
 
 # Product Serialization
@@ -69,8 +28,9 @@ def serialize_product(obj: Any) -> Dict[str, Any]:
             else:
                 data[col.name] = val
 
-        # Опции доставки из кэша
-        data["delivery_options"] = list(_delivery_options)
+        # Опции доставки из Redis
+        raw = redis_client.get("delivery_options") or "[]"
+        data["delivery_options"] = json.loads(raw)
 
         # Ссылки на изображения
         cnt = getattr(obj, "count_images", 0) or 0

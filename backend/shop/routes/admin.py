@@ -14,13 +14,14 @@ from ..utils.db_utils import session_scope
 from ..utils.google_sheets import get_sheet_url, process_rows
 from ..utils.jwt_utils import admin_required
 from ..utils.route_utils import handle_errors, require_json
+from ..utils.cache_utils import load_delivery_options, load_parameters
+from ..utils.product_serializer import model_by_category
 from ..utils.storage_utils import (
     cleanup_product_images,
     upload_product_images,
     cleanup_review_images,
     upload_review_images,
 )
-from ..utils.product_serializer import model_by_category
 
 admin_api: Blueprint = Blueprint("admin_api", __name__, url_prefix="/api/admin")
 
@@ -259,6 +260,9 @@ def update_setting() -> Tuple[Response, int]:
         else:
             session.add(AdminSetting(key=key, value=value))
         session.flush()
+
+    load_parameters()
+    load_delivery_options()
 
     logger.info("update_setting: %s -> %s", key, value)
     return jsonify({"status": "ok"}), 200
