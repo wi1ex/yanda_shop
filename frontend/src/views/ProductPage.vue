@@ -88,22 +88,24 @@
             <label>Цена:</label>
             <span class="price">{{ formatPrice(computedPrice) }} ₽</span>
           </div>
-          <!-- Корзина -->
-          <div class="quantity-controls">
-            <div v-if="currentQuantity > 0" class="quantity-div">
-              <button class="quantity-buttons" @click="store.decreaseQuantity(cartItem)">➖</button>
-              <span class="quantity">{{ currentQuantity }} в корзине</span>
-              <button class="quantity-buttons" @click="store.increaseQuantity(cartItem)">➕</button>
-            </div>
-            <button v-if="currentQuantity > 0" type="button" class="cart-button" @click="store.openCartDrawer()">
-              Оформить заказ
-            </button>
-            <button v-if="currentQuantity == 0" type="button" class="cart-button" @click="handleAddToCart">
-              Добавить в корзину
-            </button>
-          </div>
         </div>
 
+        <!-- В корзину -->
+        <div class="quantity-controls">
+          <div v-if="currentQuantity > 0" class="quantity-div">
+            <button class="quantity-buttons" @click="store.decreaseQuantity(cartItem)">➖</button>
+            <span class="quantity">{{ currentQuantity }} в корзине</span>
+            <button class="quantity-buttons" @click="store.increaseQuantity(cartItem)">➕</button>
+          </div>
+          <button v-if="currentQuantity > 0" type="button" class="cart-button" @click="store.openCartDrawer()">
+            Оформить заказ
+          </button>
+          <button v-if="currentQuantity == 0" type="button" class="cart-button" @click="handleAddToCart">
+            Добавить в корзину
+          </button>
+        </div>
+
+        <!-- В избранное -->
         <div v-if="store.detailData" class="fav-block">
           <button v-if="!store.isFavorite(store.detailData.color_sku)" type="button" class="fav-button"
                   @click="store.addToFavorites(store.detailData.color_sku)">
@@ -653,12 +655,15 @@ onMounted(init)
             letter-spacing: -0.8px;
           }
         }
-        .quantity-controls {
+      }
+
+      .quantity-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        .quantity-div {
           display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 10px;
           .quantity-buttons {
             background-color: $black-40;
             color: $white-100;
@@ -670,21 +675,21 @@ onMounted(init)
           .quantity {
             font-size: 16px;
           }
-          .cart-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 24px;
-            height: 56px;
-            border-radius: 4px;
-            background-color: $grey-20;
-            border: none;
-            color: $white-100;
-            font-size: 16px;
-            line-height: 100%;
-            letter-spacing: -0.64px;
-            cursor: pointer;
-          }
+        }
+        .cart-button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 24px;
+          height: 56px;
+          border-radius: 4px;
+          background-color: $grey-20;
+          border: none;
+          color: $white-100;
+          font-size: 16px;
+          line-height: 100%;
+          letter-spacing: -0.64px;
+          cursor: pointer;
         }
       }
 
@@ -696,6 +701,7 @@ onMounted(init)
           align-items: center;
           justify-content: center;
           padding: 0 24px;
+          width: 100%;
           height: 40px;
           gap: 8px;
           border-radius: 4px;
