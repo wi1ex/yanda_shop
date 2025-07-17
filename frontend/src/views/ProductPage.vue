@@ -127,7 +127,7 @@
              :class="{ 'section-disabled': !store.detailData?.description?.trim() }">
           <div class="section-header">
             <span>Описание</span>
-            <span class="arrow">{{ showDescription ? '⯅' : '▼' }}</span>
+            <img :src="showMaterial ? icon_arrow_up : icon_arrow_down" alt="" />
           </div>
           <div class="section-body" :class="{ open: showDescription }">
             <p v-if="store.detailData?.description">{{ store.detailData.description }}</p>
@@ -764,6 +764,9 @@ onMounted(init)
         flex-direction: column;
         padding: 12px 10px;
         background-color: $grey-95;
+        border-bottom: 1px solid $white-100;
+        border-top: 1px solid $white-100;
+        cursor: pointer;
         font-size: 15px;
         line-height: 110%;
         letter-spacing: -0.6px;
@@ -783,7 +786,6 @@ onMounted(init)
           display: flex;
           align-items: center;
           justify-content: space-between;
-          cursor: pointer;
           span {
             color: $black-100;
           }
@@ -797,8 +799,9 @@ onMounted(init)
           opacity: 0;
           overflow: hidden;
           white-space: pre-wrap;
-          transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
+          transition: all 0.5s ease-in-out;
           &.open {
+            margin-top: 24px;
             max-height: 800px;
             opacity: 1;
           }
