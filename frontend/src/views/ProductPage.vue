@@ -72,14 +72,15 @@
             <div class="options-list">
               <button v-for="(opt, idx) in visibleDeliveryOptions" :key="idx" class="option-btn-delivery"
                       :class="{ active: idx === selectedDeliveryIndex }" @click="selectedDeliveryIndex = idx">
-                {{ opt.label }} {{ Math.round(store.detailData.price * opt.multiplier) }} ₽
+                <span>{{ opt.label }}</span>
+                <span class="delivery-price">{{ formatPrice(Math.round(store.detailData.price * opt.multiplier)) }} ₽</span>
               </button>
             </div>
           </div>
           <!-- Цена -->
-          <div class="price-row">
+          <div class="option-price">
             <label>Цена:</label>
-            <span class="price">{{ computedPrice }}₽</span>
+            <span class="price">{{ formatPrice(computedPrice) }}₽</span>
           </div>
         </div>
 
@@ -160,6 +161,10 @@ const thumbsRef = ref(null)
 const showDescription = ref(false)
 const showCharacteristics = ref(false)
 const variantLoading = ref(false)
+
+function formatPrice(val) {
+  return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
 
 const colorOptions = computed(() =>
   Array.from(new Set(store.variants.map(v => v.color)))
@@ -513,13 +518,13 @@ onMounted(init)
         display: flex;
         flex-direction: column;
         background-color: $grey-95;
-        padding: 16px 10px;
+        padding: 0 10px;
         border-radius: 4px 4px 0 0;
         .option {
           display: flex;
           flex-direction: column;
           gap: 16px;
-          margin-bottom: 32px;
+          margin: 16px 0;
           label {
             color: $grey-20;
             font-size: 15px;
@@ -546,44 +551,54 @@ onMounted(init)
               }
             }
             .option-btn-color {
-              min-width: 40px;
-              text-align: center;
-              padding: 4px;
+              display: flex;
+              margin-right: -4px;
+              padding: 0;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              background-color: $white-40;
               .color-thumb {
                 width: 50px;
                 height: 50px;
                 object-fit: cover;
-                border-radius: 50%;
-                display: block;
               }
               &.active {
-                background-color: $black-40;
-                color: $white-100;
-                border-color: $black-40;
+                background-color: $white-100;
               }
             }
             .option-btn-delivery {
-              padding: 6px 10px;
-              border: 1px solid $grey-95;
-              border-radius: 6px;
+              display: flex;
+              flex-direction: column;
+              padding: 8px;
+              gap: 8px;
+              border-radius: 4px;
+              border: none;
               background-color: $white-100;
               cursor: pointer;
               color: $black-100;
               font-size: 15px;
               line-height: 100%;
               letter-spacing: -0.6px;
+              .delivery-price {
+                font-size: 12px;
+                line-height: 80%;
+                letter-spacing: -0.48px;
+                opacity: 0.4;
+              }
               &.active {
-                background-color: $black-40;
+                background-color: $black-100;
                 color: $white-100;
                 border-color: $black-40;
               }
             }
           }
         }
-        .price-row {
+        .option-price {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          margin: 16px 0;
           label {
             color: $grey-20;
             font-size: 15px;
