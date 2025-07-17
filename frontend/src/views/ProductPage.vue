@@ -206,7 +206,12 @@ const computedPrice = computed(() => {
 
 const visibleDeliveryOptions = computed(() => {
   if (!store.detailData) return []
-  return store.detailData.count_in_stock > 0 ? store.detailData.delivery_options.reverse() : store.detailData.delivery_options.slice(1).reverse()
+  const opts = [...store.detailData.delivery_options]
+  if (store.detailData.count_in_stock > 0) {
+    return opts.reverse()
+  } else {
+    return opts.slice(1).reverse()
+  }
 })
 
 const cartItem = computed(() =>
@@ -347,7 +352,7 @@ async function init() {
   } finally {
     variantLoading.value = false
   }
-  selectedDeliveryIndex.value = Math.min(2, visibleDeliveryOptions.value.length - 1)
+  selectedDeliveryIndex.value = 0
   currentIndex.value = 0
 }
 
