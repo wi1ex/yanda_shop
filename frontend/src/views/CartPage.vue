@@ -32,11 +32,11 @@
 
               <div class="item-quantity-controls">
                 <button class="qty-btn" @click="store.decreaseQuantity(item)">
-                  <img :src="icon_minus" alt="Минус" />
+                  <img :src="icon_minus_grey" alt="Минус" />
                 </button>
                 <span class="qty">{{ item.quantity }}</span>
                 <button class="qty-btn" @click="store.increaseQuantity(item)">
-                  <img :src="icon_plus" alt="Плюс" />
+                  <img :src="icon_plus_grey" alt="Плюс" />
                 </button>
               </div>
 
@@ -85,8 +85,8 @@ import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 import icon_trash from '@/assets/images/trash.svg'
 import icon_close from '@/assets/images/close.svg'
-import icon_minus from '@/assets/images/minus.svg'
-import icon_plus from '@/assets/images/plus.svg'
+import icon_minus_grey from '@/assets/images/minus_grey.svg'
+import icon_plus_grey from '@/assets/images/plus_grey.svg'
 
 const store = useStore()
 const router = useRouter()
