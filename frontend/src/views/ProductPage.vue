@@ -372,7 +372,8 @@ function goBack() {
 // Инициализация
 async function init() {
   showDescription.value = false
-  showCharacteristics.value = false
+  showMaterial.value = false
+  showSize.value = false
   variantLoading.value = true
   try {
     const sku = route.params.variant_sku
