@@ -409,8 +409,8 @@ async function saveAllSettings() {
 
 // Удаляем один параметр
 async function deleteSetting(key) {
-  await nextTick()
-  if (!confirm(`Удалить параметр «${key}»?`)) return
+  // await nextTick()
+  // if (!confirm(`Удалить параметр «${key}»?`)) return
   savingAll.value = true
   try {
     await store.deleteSetting(key)
