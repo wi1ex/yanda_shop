@@ -231,7 +231,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useStore } from '@/store/index.js'
 
 const store            = useStore()
@@ -409,8 +409,6 @@ async function saveAllSettings() {
 
 // Удаляем один параметр
 async function deleteSetting(key) {
-  // await nextTick()
-  // if (!confirm(`Удалить параметр «${key}»?`)) return
   savingAll.value = true
   try {
     await store.deleteSetting(key)
