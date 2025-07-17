@@ -147,7 +147,7 @@
         </div>
 
         <!-- Размеры -->
-        <div v-if="store.detailData" class="section" style="margin-bottom: 96px;"
+        <div v-if="store.detailData" class="section"
              @click="toggleSize" :class="{ open: showSize }">
           <div class="section-header">
             <span>Размеры</span>
@@ -182,7 +182,7 @@
         </div>
 
         <!-- Возврат -->
-        <div v-if="store.parameters" class="section"
+        <div v-if="store.parameters" class="section" style="margin-bottom: 96px;"
              @click="toggleRefund" :class="{ open: showRefund }">
           <div class="section-header">
             <span>Возврат</span>

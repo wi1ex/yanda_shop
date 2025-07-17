@@ -28,6 +28,7 @@ export const API = {
     uploadImages:       '/api/admin/upload_images',          // POST   - загрузка ZIP с изображениями
     getSettings:        '/api/admin/get_settings',           // GET    - получить список настроек
     updateSetting:      '/api/admin/update_setting',         // POST   - изменить список настроек
+    deleteSetting:      '/api/admin/delete_setting',         // DELETE - удалить параметр настроек
     createReview:       '/api/admin/create_review',          // POST   - загрузить новый отзыв
     deleteReview:       '/api/admin/delete_review',          // DELETE - удалить отзыв
     listUsers:          '/api/admin/list_users',             // GET    - получить список пользователей
@@ -500,6 +501,10 @@ export const useStore = defineStore('main', () => {
     await api.post(API.admin.updateSetting, { key, value })
   }
 
+  async function deleteSetting(key) {
+    await api.delete(`${API.admin.deleteSetting}/${encodeURIComponent(key)}`)
+  }
+
   async function fetchReviews() {
     const { data } = await api.get(API.general.listReviews)
     reviews.value = data.reviews
@@ -670,7 +675,7 @@ export const useStore = defineStore('main', () => {
     getProductQuantity, checkout, clearFilters,
 
     // admin / users / settings
-    fetchUsers, fetchSettings, saveSetting, updateUserRole,
+    fetchUsers, fetchSettings, saveSetting, deleteSetting, updateUserRole,
 
     // admin reviews
     fetchReviews, createReview, deleteReview,

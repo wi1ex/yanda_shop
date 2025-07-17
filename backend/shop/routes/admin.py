@@ -261,11 +261,39 @@ def update_setting() -> Tuple[Response, int]:
             session.add(AdminSetting(key=key, value=value))
         session.flush()
 
+    # обновить кеш параметров
     load_parameters()
     load_delivery_options()
 
     logger.info("update_setting: %s -> %s", key, value)
     return jsonify({"status": "ok"}), 200
+
+
+@admin_api.route("/delete_setting/<string:key>", methods=["DELETE"])
+@admin_required
+@handle_errors
+def delete_setting(key: str) -> Tuple[Response, int]:
+    """
+    DELETE /api/admin/delete_setting/<key>
+    Удаляет AdminSetting по ключу и обновляет кеш параметров.
+    """
+
+    # защита системных delivery_ параметров
+    if key.startswith("delivery_"):
+        return jsonify({"error": "protected setting"}), 400
+
+    with session_scope() as session:
+        setting = session.get(AdminSetting, key)
+        if not setting:
+            return jsonify({"error": "not found"}), 404
+        session.delete(setting)
+
+    # обновить кеш публичных параметров
+    load_parameters()
+    load_delivery_options()
+
+    logger.info("delete_setting: %s deleted", key)
+    return jsonify({"status": "deleted"}), 200
 
 
 @admin_api.route("/create_review", methods=["POST"])
