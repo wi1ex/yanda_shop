@@ -124,7 +124,7 @@
 
         <!-- Описание -->
         <div v-if="store.detailData" class="section" @click="toggleDescription"
-             :class="{ 'section-disabled': !store.detailData?.description?.trim() }">
+             :class="{ 'section-disabled': !store.detailData?.description?.trim(), open: showMaterial }">
           <div class="section-header">
             <span>Описание</span>
             <img :src="showDescription ? icon_arrow_up : icon_arrow_down" alt="" />
