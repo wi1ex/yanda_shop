@@ -13,7 +13,7 @@
 
     <div class="line-hor"></div>
 
-    <div v-if="store.cart.items.length === 0" class="empty-cart">
+    <div v-if="favoriteProducts.length === 0" class="empty-cart">
       Ты еще не добавлял товары в избранное.
       <button class="action-button" @click="goToCatalog">
         Перейти в каталог
