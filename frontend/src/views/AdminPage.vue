@@ -231,7 +231,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import { useStore } from '@/store/index.js'
 
 const store            = useStore()
@@ -409,15 +409,16 @@ async function saveAllSettings() {
 
 // Удаляем один параметр
 async function deleteSetting(key) {
-  if (!confirm(`Удалить параметр «${key}»?`)) return;
-  savingAll.value = true;
+  await nextTick()
+  if (!confirm(`Удалить параметр «${key}»?`)) return
+  savingAll.value = true
   try {
-    await store.deleteSetting(key);
-    await store.fetchSettings();
+    await store.deleteSetting(key)
+    await store.fetchSettings()
   } catch (err) {
-    alert(err.message || 'Ошибка при удалении');
+    alert(err.message || 'Ошибка при удалении')
   } finally {
-    savingAll.value = false;
+    savingAll.value = false
   }
 }
 
@@ -468,33 +469,33 @@ onMounted(() => {
 })
 
 // Когда store.settings обновляются — заполняем localSettings и снимаем снимок
-// watch(
-//   () => store.settings,
-//   (newSettings) => {
-//     const filtered = newSettings
-//       .filter(s => !s.key.startsWith('sheet_url_'))
-//     // Обновляем или добавляем
-//     filtered.forEach(ns => {
-//       const idx = localSettings.findIndex(ls => ls.key === ns.key)
-//       if (idx >= 0) {
-//         localSettings[idx].value = ns.value
-//       } else {
-//         localSettings.push({ key: ns.key, value: ns.value })
-//       }
-//     })
-//     // Убираем удалённые
-//     for (let i = localSettings.length - 1; i >= 0; i--) {
-//       if (!filtered.some(ns => ns.key === localSettings[i].key)) {
-//         localSettings.splice(i, 1)
-//       }
-//     }
-//     // Снимок для кнопки «Сохранить всё»
-//     originalSnapshot.value = JSON.stringify(
-//       localSettings.map(s => ({ key: s.key, value: s.value }))
-//     )
-//   },
-//   { immediate: true }
-// )
+watch(
+  () => store.settings,
+  (newSettings) => {
+    const filtered = newSettings
+      .filter(s => !s.key.startsWith('sheet_url_'))
+    // Обновляем или добавляем
+    filtered.forEach(ns => {
+      const idx = localSettings.findIndex(ls => ls.key === ns.key)
+      if (idx >= 0) {
+        localSettings[idx].value = ns.value
+      } else {
+        localSettings.push({ key: ns.key, value: ns.value })
+      }
+    })
+    // Убираем удалённые
+    for (let i = localSettings.length - 1; i >= 0; i--) {
+      if (!filtered.some(ns => ns.key === localSettings[i].key)) {
+        localSettings.splice(i, 1)
+      }
+    }
+    // Снимок для кнопки «Сохранить всё»
+    originalSnapshot.value = JSON.stringify(
+      localSettings.map(s => ({ key: s.key, value: s.value }))
+    )
+  },
+  { immediate: true }
+)
 
 // **Новый watch**: при каждом переключении вкладки обновляем её данные
 watch(selected, (tab) => {
