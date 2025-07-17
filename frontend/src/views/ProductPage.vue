@@ -123,8 +123,9 @@
         </div>
 
         <!-- Описание -->
-        <div v-if="store.detailData" class="section" :class="{ 'section-disabled': !store.detailData?.description?.trim() }">
-          <div class="section-header" @click="toggleDescription">
+        <div v-if="store.detailData" class="section" @click="toggleDescription"
+             :class="{ 'section-disabled': !store.detailData?.description?.trim() }">
+          <div class="section-header">
             <span>Описание</span>
             <span class="arrow">{{ showDescription ? '⯅' : '▼' }}</span>
           </div>
@@ -134,10 +135,11 @@
         </div>
 
         <!-- Характеристики -->
-        <div v-if="store.detailData" class="section" @click="toggleCharacteristics">
+        <div v-if="store.detailData" class="section" style="margin-bottom: 96px;"
+             @click="toggleCharacteristics" :class="{ open: showCharacteristics }">
           <div class="section-header">
             <span>Характеристики</span>
-            <span class="arrow">{{ showCharacteristics ? '⯅' : '▼' }}</span>
+            <img :src="showCharacteristics ? icon_arrow_up : icon_arrow_down" alt="" />
           </div>
           <div class="section-body" :class="{ open: showCharacteristics }">
             <p class="char-row"><p>Пол:</p>
@@ -175,6 +177,8 @@ import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
 import icon_favorites_black from "@/assets/images/favorites_black.svg";
 import icon_minus_grey from '@/assets/images/minus_grey.svg'
 import icon_plus_red from '@/assets/images/plus_red.svg'
+import icon_arrow_down from '@/assets/images/arrow_down.svg'
+import icon_arrow_up from '@/assets/images/arrow_up.svg'
 
 const store = useStore()
 const route = useRoute()
@@ -752,8 +756,13 @@ onMounted(init)
           cursor: default;
           pointer-events: none;
           .section-header {
-            color: $black-40;
+            span {
+              color: $black-40;
+            }
           }
+        }
+        p {
+          margin: 0;
         }
         .section-header {
           display: flex;
@@ -783,12 +792,15 @@ onMounted(init)
           }
           .char-row {
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            margin: 0;
             font-size: 15px;
             line-height: 110%;
             letter-spacing: -0.6px;
           }
+        }
+        &.open {
+          background-color: $white-100;
         }
       }
     }
