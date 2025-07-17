@@ -134,35 +134,36 @@
         </div>
 
         <!-- Характеристики -->
-        <div v-if="store.detailData" class="section">
-          <div class="section-header" @click="toggleCharacteristics">
+        <div v-if="store.detailData" class="section" @click="toggleCharacteristics">
+          <div class="section-header">
             <span>Характеристики</span>
             <span class="arrow">{{ showCharacteristics ? '⯅' : '▼' }}</span>
           </div>
           <div class="section-body" :class="{ open: showCharacteristics }">
-            <p class="char-row"><strong>Пол:</strong>
+            <p class="char-row"><p>Пол:</p>
               {{ store.detailData.gender === 'F' ? 'Женский' : store.detailData.gender === 'M' ? 'Мужской' : 'Унисекс'}}
             </p>
-            <p class="char-row"><strong>Категория:</strong>{{ store.detailData.category }}</p>
-            <p class="char-row"><strong>Подкатегория:</strong>{{ store.detailData.subcategory }}</p>
-            <p class="char-row"><strong>Материал:</strong>{{ store.detailData.material }}</p>
+            <p class="char-row"><p>Категория:</p>{{ store.detailData.category }}</p>
+            <p class="char-row"><p>Подкатегория:</p>{{ store.detailData.subcategory }}</p>
+            <p class="char-row"><p>Материал:</p>{{ store.detailData.material }}</p>
             <p class="char-row" v-if="store.detailData.category === 'Обувь'">
-              <strong>Глубина:</strong>{{ store.detailData.depth_mm }} мм
+              <p>Глубина:</p>{{ store.detailData.depth_mm }} мм
             </p>
             <p class="char-row" v-else-if="store.detailData.category === 'Одежда'">
-              <strong>Плечи:</strong>{{ store.detailData.chest_cm }} см
-              <strong>Высота:</strong>{{ store.detailData.height_cm }} см
+              <p>Плечи:</p>{{ store.detailData.chest_cm }} см
+              <p>Высота:</p>{{ store.detailData.height_cm }} см
             </p>
             <p class="char-row" v-else-if="store.detailData.category === 'Аксессуары'">
-              <strong>Ширина:</strong>{{ store.detailData.width_cm }} см
-              <strong>Высота:</strong>{{ store.detailData.height_cm }} см
-              <strong>Глубина:</strong>{{ store.detailData.depth_cm }} см
+              <p>Ширина:</p>{{ store.detailData.width_cm }} см
+              <p>Высота:</p>{{ store.detailData.height_cm }} см
+              <p>Глубина:</p>{{ store.detailData.depth_cm }} см
             </p>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <div class="line-hor"></div>
 </template>
 
 <script setup>
@@ -718,7 +719,7 @@ onMounted(init)
 
       .fav-block {
         display: flex;
-        margin-top: 8px;
+        margin: 8px 0 40px;
         .fav-button {
           display: flex;
           align-items: center;
@@ -743,16 +744,15 @@ onMounted(init)
       }
 
       .section {
-        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        padding: 12px 10px;
+        background-color: $grey-95;
         &.section-disabled {
-          opacity: 0.6;
+          cursor: default;
+          pointer-events: none;
           .section-header {
-            color: $grey-30;
-            cursor: default;
-            pointer-events: none;
-          }
-          .arrow {
-            opacity: 0.5;
+            color: $black-40;
           }
         }
         .section-header {
@@ -760,21 +760,22 @@ onMounted(init)
           align-items: center;
           justify-content: space-between;
           cursor: pointer;
-          padding: 8px 0;
           span {
             color: $black-100;
             font-size: 15px;
             line-height: 110%;
             letter-spacing: -0.6px;
           }
-          .arrow {
-            font-size: 14px;
+          img {
+            width: 20px;
+            height: 20px;
           }
         }
         .section-body {
           max-height: 0;
           opacity: 0;
           overflow: hidden;
+          white-space: pre-wrap;
           transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
           &.open {
             max-height: 800px;
@@ -783,8 +784,10 @@ onMounted(init)
           .char-row {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
-            font-size: 14px;
+            margin: 0;
+            font-size: 15px;
+            line-height: 110%;
+            letter-spacing: -0.6px;
           }
         }
       }
