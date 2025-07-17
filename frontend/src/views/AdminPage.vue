@@ -146,19 +146,22 @@
       </table>
     </section>
 
-    <!-- Настройки AdminSetting -->
+    <!-- Параметры AdminSetting -->
     <section class="settings-section" v-if="selected === 'settings'">
-      <h2>Настройки</h2>
+      <h2>Параметры</h2>
 
       <!-- Существующие -->
       <table>
         <tr>
           <th>Ключ</th>
           <th>Значение</th>
+          <th></th>
         </tr>
         <tr v-for="s in filteredSettings" :key="s.key">
           <td>{{ s.key }}</td>
           <td><input v-model="s.value" /></td>
+          <td><button class="delete-icon" :disabled="s.key.startsWith('delivery_')" @click="deleteSetting(s.key)"
+                      :title="s.key.startsWith('delivery_') ? 'Нельзя удалить системный параметр' : 'Удалить параметр'">🗑️</button></td>
         </tr>
       </table>
 
@@ -257,7 +260,7 @@ const tabs             = [
   { key:'logs',        label:'Логи'           },
   { key:'visits',      label:'Посещения'      },
   { key:'users',       label:'Пользователи'   },
-  { key:'settings',    label:'Настройки'      },
+  { key:'settings',    label:'Параметры'      },
   { key:'all_reviews', label:'Все отзывы'     },
   { key:'add_review',  label:'Добавить отзыв' },
 ]
@@ -277,7 +280,7 @@ const userColumns = computed(() => {
   return [...first, ...rest]
 })
 
-// Фильтруем настройки: убираем все, ключи которых начинаются на `sheet_url_`
+// Фильтруем параметры: убираем все, ключи которых начинаются на `sheet_url_`
 const filteredSettings = computed(() =>
   localSettings.filter(s => !s.key.startsWith('sheet_url_'))
 )
@@ -383,7 +386,7 @@ function deleteReview(id) {
   if (confirm(`Удалить отзыв #${id}?`)) store.deleteReview(id)
 }
 
-// Сохраняем все изменённые настройки подряд
+// Сохраняем все изменённые параметры подряд
 async function saveAllSettings() {
   savingAll.value = true
   try {
@@ -401,6 +404,20 @@ async function saveAllSettings() {
     alert(err.message || 'Ошибка при сохранении')
   } finally {
     savingAll.value = false
+  }
+}
+
+// Удаляем один параметр
+async function deleteSetting(key) {
+  if (!confirm(`Удалить параметр «${key}»?`)) return;
+  savingAll.value = true;
+  try {
+    await store.deleteSetting(key);
+    await store.fetchSettings();
+  } catch (err) {
+    alert(err.message || 'Ошибка при удалении');
+  } finally {
+    savingAll.value = false;
   }
 }
 
@@ -687,7 +704,7 @@ watch(selected, (tab) => {
   color: #fff;
 }
 
-/* Секция «Настройки» */
+/* Секция «Параметры» */
 .settings-section {
   margin-top: 24px;
 }
@@ -718,6 +735,16 @@ watch(selected, (tab) => {
 }
 .add-setting button {
   padding: 6px 12px;
+}
+.delete-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1em;
+  color: #e94f37;
+  padding: 2px;
+  line-height: 1;
+  transition: color 0.2s;
 }
 .settings-section .btn-save-all {
   margin-top: 16px;
