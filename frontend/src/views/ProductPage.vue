@@ -93,9 +93,13 @@
         <!-- В корзину -->
         <div class="quantity-controls">
           <div v-if="currentQuantity > 0" class="quantity-div">
-            <button class="quantity-buttons" @click="store.decreaseQuantity(cartItem)">➖</button>
+            <button class="quantity-buttons" @click="store.decreaseQuantity(cartItem)">
+              <img :src="icon_minus_grey" alt="" />
+            </button>
             <span class="quantity">{{ currentQuantity }} в корзине</span>
-            <button class="quantity-buttons" @click="store.increaseQuantity(cartItem)">➕</button>
+            <button class="quantity-buttons" @click="store.increaseQuantity(cartItem)">
+              <img :src="icon_plus_red" alt="" />
+            </button>
           </div>
           <button v-if="currentQuantity > 0" type="button" class="cart-button" @click="store.openCartDrawer()">
             Оформить заказ
@@ -168,6 +172,8 @@ import { useStore } from '@/store/index.js'
 import icon_arrow_back from "@/assets/images/arrow_back.svg";
 import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
 import icon_favorites_black from "@/assets/images/favorites_black.svg";
+import icon_minus_grey from '@/assets/images/minus_grey.svg'
+import icon_plus_red from '@/assets/images/plus_red.svg'
 
 const store = useStore()
 const route = useRoute()
@@ -662,18 +668,34 @@ onMounted(init)
         flex-direction: column;
         align-items: center;
         justify-content: space-between;
+        background-color: $grey-95;
         .quantity-div {
           display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: calc(100% - 20px);
+          height: 40px;
+          border-radius: 4px 4px 0 0;
+          background-color: $white-100;
           .quantity-buttons {
-            background-color: $black-40;
-            color: $white-100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: none;
             border: none;
-            padding: 6px 10px;
-            border-radius: 6px;
             cursor: pointer;
+            img {
+              width: 20px;
+              height: 20px;
+              object-fit: cover;
+            }
           }
           .quantity {
-            font-size: 16px;
+            font-size: 15px;
+            line-height: 100%;
+            letter-spacing: -0.6px;
           }
         }
         .cart-button {
@@ -681,6 +703,7 @@ onMounted(init)
           align-items: center;
           justify-content: center;
           padding: 0 24px;
+          width: 100%;
           height: 56px;
           border-radius: 4px;
           background-color: $grey-20;

@@ -23,7 +23,7 @@
     <div v-else class="products-grid" :class="{ blurred: favoritesLoading }">
       <div v-for="product in favoriteProducts" :key="product.color_sku" @click="goToProduct(product)" class="product-card">
         <button type="button" class="remove-fav-btn" @click.prevent.stop="store.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">
-          <img :src="icon_product_in_favorites" alt="product" />
+          <img :src="icon_favorites_black" alt="product" />
         </button>
 
         <div class="product-image">
@@ -46,7 +46,7 @@ import { onMounted, computed, ref, nextTick } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 import icon_arrow_back from '@/assets/images/arrow_back.svg'
-import icon_product_in_favorites from '@/assets/images/product_in_favorites.svg'
+import icon_favorites_black from '@/assets/images/favorites_black.svg'
 
 const store = useStore()
 const router = useRouter()

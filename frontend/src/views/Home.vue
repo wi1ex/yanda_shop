@@ -140,7 +140,7 @@
           <div class="faq-header">
             <div class="faq-question">{{ item.question }}</div>
             <div class="faq-toggle-icon" :class="{ open: openedFaq === item.id }">
-              <img :src="openedFaq === item.id ? icon_faq_minus : icon_faq_plus" alt="toggle" class="faq-icon"/>
+              <img :src="openedFaq === item.id ? icon_minus_red : icon_faq_plus" alt="toggle" class="faq-icon"/>
             </div>
           </div>
           <transition name="faq-slide">
@@ -162,7 +162,7 @@ import { useRouter } from 'vue-router'
 
 import icon_default_avatar_white from '@/assets/images/default_avatar_white.svg'
 import icon_faq_plus from '@/assets/images/faq_plus.svg'
-import icon_faq_minus from '@/assets/images/faq_minus.svg'
+import icon_minus_red from '@/assets/images/minus_red.svg'
 
 const store = useStore()
 const router = useRouter()
