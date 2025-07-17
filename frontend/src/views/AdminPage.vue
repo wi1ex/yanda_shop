@@ -3,7 +3,7 @@
     <h1>Админ-панель</h1>
 
     <nav class="tabs">
-      <button v-for="t in tabs" :key="t.key" :class="{ active: selected === t.key }" @click="selected = t.key">
+      <button type="button" v-for="t in tabs" :key="t.key" :class="{ active: selected === t.key }" @click="selected = t.key">
         {{ t.label }}
       </button>
     </nav>
@@ -18,21 +18,21 @@
         <!-- Режим редактирования ссылки -->
         <template v-if="editingUrl[cat]">
           <input type="text" v-model="store.sheetUrls[cat]" :placeholder="`URL для ${cat}`" class="sheet-input"/>
-          <button @click="onSaveUrl(cat)" :disabled="store.sheetSaveLoading[cat]" class="sheet-save">
+          <button type="button" @click="onSaveUrl(cat)" :disabled="store.sheetSaveLoading[cat]" class="sheet-save">
             {{ store.sheetSaveLoading[cat] ? 'Сохранение…' : 'Сохранить ссылку' }}
           </button>
         </template>
 
         <!-- Стандартный режим -->
         <template v-else>
-          <button v-if="!store.sheetUrls[cat]" @click="startEdit(cat)">
+          <button type="button" v-if="!store.sheetUrls[cat]" @click="startEdit(cat)">
             Загрузить ссылку
           </button>
-          <button v-else @click="startEdit(cat)" :disabled="store.sheetImportLoading[cat]">
+          <button type="button" v-else @click="startEdit(cat)" :disabled="store.sheetImportLoading[cat]">
             Обновить ссылку
           </button>
 
-          <button @click="store.importSheet(cat)" :disabled="!store.sheetUrls[cat] || store.sheetImportLoading[cat] || editingUrl[cat]" class="sheet-import">
+          <button type="button" @click="store.importSheet(cat)" :disabled="!store.sheetUrls[cat] || store.sheetImportLoading[cat] || editingUrl[cat]" class="sheet-import">
             {{ store.sheetImportLoading[cat] ? 'Обновление…' : 'Обновить данные' }}
           </button>
         </template>
@@ -86,9 +86,9 @@
           </tbody>
         </table>
         <div class="pagination-controls">
-          <button @click="prevPage" :disabled="logPage===1">← Предыдущие</button>
+          <button type="button" @click="prevPage" :disabled="logPage===1">← Предыдущие</button>
           <span>Стр. {{ logPage }} из {{ Math.ceil(store.totalLogs / pageSize) }}</span>
-          <button @click="nextPage" :disabled="logPage*pageSize>=store.totalLogs">Следующие →</button>
+          <button type="button" @click="nextPage" :disabled="logPage*pageSize>=store.totalLogs">Следующие →</button>
         </div>
       </div>
     </section>
@@ -100,7 +100,7 @@
       <div class="date-picker">
         <label for="visit-date">Дата:</label>
         <input type="date" id="visit-date" v-model="selectedDate" @change="fetchVisits" />
-        <button class="refresh-button" @click="fetchVisits">Обновить</button>
+        <button type="button" class="refresh-button" @click="fetchVisits">Обновить</button>
       </div>
 
       <div v-if="store.visitsLoading" class="loading-visits">Загрузка данных...</div>
@@ -131,8 +131,8 @@
         <tbody>
           <tr v-for="u in store.users" :key="u.user_id">
             <td>
-              <button v-if="store.user.id !== u.user_id && u.role !== 'admin'" @click="makeAdmin(u.user_id)">Сделать админом</button>
-              <button v-if="store.user.id !== u.user_id && u.role === 'admin'" @click="revokeAdmin(u.user_id)">Снять админа</button>
+              <button type="button" v-if="store.user.id !== u.user_id && u.role !== 'admin'" @click="makeAdmin(u.user_id)">Сделать админом</button>
+              <button type="button" v-if="store.user.id !== u.user_id && u.role === 'admin'" @click="revokeAdmin(u.user_id)">Снять админа</button>
             </td>
             <td v-for="col in userColumns" :key="col">
               <span v-if="isDateField(col)">{{ formatDate(u[col]) }}</span>
@@ -174,7 +174,7 @@
         <h3>Добавить новый параметр</h3>
         <input v-model="newSetting.key" placeholder="Ключ (уникальный)"/>
         <input v-model="newSetting.value" placeholder="Значение"/>
-        <button @click="onAddSetting" :disabled="!newSetting.key.trim() || newSetting.value === '' || saving==='add'">
+        <button type="button" @click="onAddSetting" :disabled="!newSetting.key.trim() || newSetting.value === '' || saving==='add'">
           {{ saving==='add' ? 'Добавляем…' : 'Добавить' }}
         </button>
       </div>
@@ -199,7 +199,7 @@
           <div class="review-link">
             <a :href="r.link_url" target="_blank">Ссылка на оригинал →</a>
           </div>
-          <button class="delete-btn" @click="deleteReview(r.id)">Удалить</button>
+          <button type="button" class="delete-btn" @click="deleteReview(r.id)">Удалить</button>
         </li>
       </ul>
       <p v-else>Отзывов пока нет.</p>
@@ -212,9 +212,9 @@
       <div v-if="formSuccess" class="success">{{ formSuccess }}</div>
       <form @submit.prevent="onSubmitReview">
         <input v-model="form.client_name" placeholder="Имя клиента" required/>
-        <textarea v-model="form.client_text1" placeholder="Текст клиента 1" required/>
-        <textarea v-model="form.shop_response" placeholder="Ответ магазина" required/>
-        <textarea v-model="form.client_text2" placeholder="Текст клиента 2"/>
+        <textarea v-model="form.client_text1" placeholder="Текст клиента 1" required></textarea>
+        <textarea v-model="form.shop_response" placeholder="Ответ магазина" required></textarea>
+        <textarea v-model="form.client_text2" placeholder="Текст клиента 2"></textarea>
         <input v-model="form.link_url" placeholder="Ссылка" required/>
         <div class="photos-inputs">
           <input type="file" @change="onFile($event,1)" ref="fileInput1"/>
