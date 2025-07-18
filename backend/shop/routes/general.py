@@ -68,7 +68,7 @@ def save_user() -> Tuple[Response, int]:
                         author_id=user_id,
                         author_name=username,
                         action_type="Регистрация",
-                        description=f"Новый пользователь Telegram: {first_name} {last_name}",
+                        description=f"Новый Telegram-пользователь: {first_name} {last_name}",
                         timestamp=now,
                     ))
                 else:
