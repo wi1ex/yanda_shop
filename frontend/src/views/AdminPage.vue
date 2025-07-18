@@ -8,6 +8,55 @@
       </button>
     </nav>
 
+    <!-- Превью-проверка -->
+    <section class="preview-section" v-if="selected==='preview'">
+      <h2>Превью: Sheets & Images</h2>
+
+      <!-- 3 Google Sheets -->
+      <div class="sheet-preview-block">
+        <button @click="store.previewAllSheets()" :disabled="isAny(store.previewSheetLoading)">
+          {{ isAny(store.previewSheetLoading) ? 'Проверяем…' : 'Проверить все таблицы' }}
+        </button>
+        <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="preview-result">
+          <h4>{{ catLabel(cat) }}</h4>
+          <div v-if="store.previewSheetLoading[cat]">…</div>
+          <ul v-else-if="store.previewSheetResult[cat]?.warn_skus">
+            <li v-for="sku in store.previewSheetResult[cat].warn_skus" :key="sku">{{ sku }}</li>
+          </ul>
+          <div v-else>Ошибок нет</div>
+        </div>
+      </div>
+
+      <!-- 3 ZIP для изображений -->
+      <div class="zip-preview-block">
+        <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="zip-input-block">
+          <label>{{ catLabel(cat) }}.zip</label>
+          <input type="file" :ref="`${cat}Zip`" @change="onPreviewZip($event,cat)" accept=".zip"/>
+        </div>
+        <button @click="submitPreviewZip" :disabled="isAny(previewZipLoading)">
+          {{ isAny(previewZipLoading) ? 'Проверяем…' : 'Проверить изображения' }}
+        </button>
+
+        <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="preview-result">
+          <h4>{{ catLabel(cat) }}</h4>
+          <div v-if="store.previewZipLoading[cat]">…</div>
+          <div v-else-if="store.previewZipResult[cat]">
+            <div v-if="store.previewZipResult[cat].error" class="error">{{ store.previewZipResult[cat].error }}</div>
+            <div v-else>
+              <p>Неверные имена: {{ store.previewZipResult[cat].invalid_files.join(', ') || 'нет' }}</p>
+              <p>Лишние файлы: {{ store.previewZipResult[cat].extra_files.join(', ') || 'нет' }}</p>
+              <p>Недостающие:</p>
+              <ul>
+                <li v-for="(miss, sku) in store.previewZipResult[cat].missing" :key="sku">
+                  {{ sku }}: не хватает {{ miss }}
+                </li>
+                <li v-if="!Object.keys(store.previewZipResult[cat].missing).length">нет</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Google Sheets -->
     <section class="sheets-section" v-if="selected === 'sheets'">
@@ -255,6 +304,7 @@ const logPage          = ref(1)
 const pageSize         = 10
 const newSetting       = reactive({ key: '', value: '' })
 const tabs             = [
+  { key:'preview',     label:'Проверка'       },
   { key:'sheets',      label:'Sheets'         },
   { key:'upload',      label:'ZIP Upload'     },
   { key:'logs',        label:'Логи'           },
@@ -264,6 +314,8 @@ const tabs             = [
   { key:'all_reviews', label:'Все отзывы'     },
   { key:'add_review',  label:'Добавить отзыв' },
 ]
+
+const zipPreviewFiles = reactive({ shoes:null, clothing:null, accessories:null });
 
 // Форма добавления отзыва
 const form = reactive({
@@ -296,6 +348,22 @@ const maxTotal = computed(() => {
 })
 
 // Утилиты
+function onPreviewZip(e,cat) {
+  zipPreviewFiles[cat] = e.target.files[0];
+}
+
+function submitPreviewZip() {
+  store.previewImages(zipPreviewFiles);
+}
+
+function catLabel(cat) {
+  return cat.charAt(0).toUpperCase() + cat.slice(1);
+}
+
+function isAny(obj) {
+  return Object.values(obj).some(v => v);
+}
+
 function onFile(e,i) {
   files[i] = e.target.files[0]
 }
@@ -498,6 +566,9 @@ watch(
 // **Новый watch**: при каждом переключении вкладки обновляем её данные
 watch(selected, (tab) => {
   switch(tab) {
+    case 'preview':
+      store.loadSheetUrls()
+      break
     case 'sheets':
       store.loadSheetUrls()
       break
@@ -534,6 +605,92 @@ watch(selected, (tab) => {
   margin-top: 12vh;
   padding: 2vw;
   color: #fff;
+}
+
+/* ----------------------------
+   Секция Превью (Sheets + ZIP)
+   ---------------------------- */
+.preview-section {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* 3 блока по горизонтали */
+.sheet-preview-block,
+.zip-preview-block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  /* каждая карточка результата */
+  .preview-result {
+    flex: 1 1 30%;
+    background: #252a3b;
+    padding: 1rem;
+    border-radius: 8px;
+    min-width: 200px;
+
+    h4 {
+      margin-top: 0;
+      font-size: 1.1rem;
+      color: #fff;
+    }
+    ul {
+      margin: 0.5rem 0 0;
+      padding-left: 1.2rem;
+      li {
+        margin-bottom: 0.3rem;
+        color: #ddd;
+      }
+    }
+    .error {
+      color: #e94f37;
+      font-weight: bold;
+    }
+  }
+
+  /* для блока загрузки ZIP */
+  .zip-input-block {
+    flex: 1 1 30%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      font-weight: 600;
+      color: #fff;
+    }
+    input[type="file"] {
+      padding: 0.5rem;
+      background: #1e222b;
+      border: 1px solid #444;
+      border-radius: 4px;
+      color: #fff;
+    }
+  }
+
+  /* кнопка «Проверить» */
+  button {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.2s;
+
+    &:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+  }
 }
 
 /* --- Секции CSV/ZIP и Google Sheets --- */
@@ -884,6 +1041,20 @@ watch(selected, (tab) => {
 }
 
 @media (max-width: 600px) {
+  .sheet-preview-block,
+  .zip-preview-block {
+    flex-direction: column;
+
+    .preview-result,
+    .zip-input-block {
+      flex: 1 1 100%;
+    }
+
+    button {
+      width: 100%;
+    }
+  }
+
   /* Google Sheets */
   .sheet-block {
     display: flex;

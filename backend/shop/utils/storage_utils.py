@@ -2,12 +2,13 @@ import io
 import os
 import re
 import zipfile
-from typing import Set, Tuple, List
+from typing import Set, Tuple, List, Dict, Any
 from minio.error import S3Error
 from werkzeug.utils import secure_filename
 from ..core.logging import logger
 from ..extensions import minio_client, BUCKET
 from ..models import Review
+from .product_serializer import model_by_category
 from .db_utils import session_scope
 
 
@@ -161,12 +162,14 @@ def cleanup_review_images() -> int:
     with session_scope() as session:
         existing_ids = {r.id for r in session.query(Review.id).all()}
 
+    # 1) Получение списка объектов из MinIO
     try:
         objects = minio_client.list_objects(BUCKET, prefix="reviews/", recursive=True)
     except Exception as exc:
         logger.error("%s: list_objects failed: %s", context, exc)
         return 0
 
+    # 2) Фильтрация и удаление
     deleted_count = 0
     pattern = re.compile(r"^reviews/(\d+)_(\d+)\.\w+$")
 
@@ -183,3 +186,74 @@ def cleanup_review_images() -> int:
 
     logger.info("%s END removed=%d", context, deleted_count)
     return deleted_count
+
+
+def preview_product_images(folder: str, archive_bytes: bytes) -> Dict[str, Any]:
+    """
+    Проверка ZIP-архива с изображениями категории folder:
+      - invalid_files: неподходящие имена файлов
+      - extra_files: индексы вне диапазона count_images
+      - missing: словарь { color_sku: недостающая_кол-во }
+    """
+    context = "preview_product_images"
+    logger.info("%s START folder=%s size_bytes=%d", context, folder, len(archive_bytes))
+
+    # 0) Получаем ожидаемое count_images из БД
+    Model = model_by_category(folder)
+    if Model is None:
+        logger.error("%s: unknown category %s", context, folder)
+        raise ValueError(f"Unknown category {folder}")
+
+    expected_map: Dict[str, int] = {}
+    with session_scope() as session:
+        for obj in session.query(Model).all():
+            expected_map[obj.color_sku] = getattr(obj, "count_images", 0) or 0
+
+    # 1) Открываем ZIP
+    try:
+        archive = zipfile.ZipFile(io.BytesIO(archive_bytes))
+    except zipfile.BadZipFile as exc:
+        logger.error("%s: bad zip: %s", context, exc)
+        return {"error": "invalid_zip"}
+
+    # 2) Парсим файлы
+    invalid_files: List[str] = []
+    extra_files:   List[str] = []
+    seen_counts: Dict[str, int] = {sku: 0 for sku in expected_map}
+    name_pattern = re.compile(r"^(.+)_(\d+)\.webp$", re.IGNORECASE)
+
+    for info in archive.infolist():
+        if info.is_dir():
+            continue
+        filename = secure_filename(os.path.basename(info.filename))
+        m = name_pattern.match(filename)
+        if not m:
+            invalid_files.append(filename)
+            continue
+
+        sku  = m.group(1)
+        idx  = int(m.group(2))
+        exp  = expected_map.get(sku)
+        if exp is None:
+            invalid_files.append(filename)
+        elif idx < 1 or idx > exp:
+            extra_files.append(filename)
+        else:
+            seen_counts[sku] += 1
+
+    # 3) Вычисляем недостающие
+    missing = {
+        sku: exp - seen_counts.get(sku, 0)
+        for sku, exp in expected_map.items()
+        if exp != seen_counts.get(sku, 0)
+    }
+
+    result = {
+        "invalid_files": invalid_files,
+        "extra_files":   extra_files,
+        "missing":       missing
+    }
+
+    logger.info("%s END invalid=%d extra=%d missing_entries=%d",
+                context, len(invalid_files), len(extra_files), len(missing))
+    return result
