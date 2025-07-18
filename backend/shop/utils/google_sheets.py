@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional, Any, Set
 from zoneinfo import ZoneInfo
 from .db_utils import session_scope
 from .parsers import parse_int, parse_float, normalize_str
@@ -148,77 +148,96 @@ def apply_update(obj, data: Dict[str, str], warn_skus: List[str], context: str) 
 def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, Any]]:
     """
     Превью-валидация CSV-строк для категории category:
-      - проверяет формат variant_sku, gender, category
-      - проверяет непустоту обязательных полей
-      - проверяет числовые поля INT_FIELDS и FLOAT_FIELDS
-    Возвращает список ошибок вида:
-      [{"variant_sku": str, "messages": [str, ...]}, ...]
+      - формат variant_sku, gender (только если не пустое), category
+      - обязательные поля на непустоту (одним сообщением)
+      - int/float поля
+      - согласованность count_images для одинаковых color_sku (вычисляемых как sku_world)
     """
-    context = "preview_rows"
-    logger.debug("%s START category=%s rows=%d", context, category, len(rows))
-
+    logger.debug("preview_rows START category=%s rows=%d", category, len(rows))
     Model = model_by_category(category)
     if Model is None:
-        logger.error("%s: unknown category %s", context, category)
         raise ValueError(f"Unknown category {category}")
 
-    errors: List[Dict[str, Any]] = []
+    # 1) Собираем по строкам ошибки
+    per_row_errors: Dict[str, List[str]] = {}
 
     for row in rows:
         variant = row.get("variant_sku", "").strip()
         entry_errors: List[str] = []
 
-        # 1) Формат SKU
+        # 1.1) Формат SKU
         if not SKU_PATTERN.match(variant):
             entry_errors.append("Неправильный формат variant_sku")
 
-        # 2) Пол
+        # 1.2) Пол — только если не пустое
         gender = row.get("gender", "").strip()
-        if gender not in VALID_GENDERS:
+        if gender and gender not in VALID_GENDERS:
             entry_errors.append(f"Недопустимое значение gender='{gender}'")
 
-        # 3) Категория
+        # 1.3) Категория
         cat_val = row.get("category", "").strip()
         if cat_val not in VALID_CATS:
             entry_errors.append(f"Недопустимая категория='{cat_val}'")
 
-        # 4) Обязательные поля не пусты
+        # 1.4) Обязательные поля не пусты
         data = {k: v.strip() for k, v in row.items() if k != "variant_sku"}
         missing = [fld for fld, val in data.items() if not val and fld not in OPTIONAL_EMPTY]
         if missing:
             entry_errors.append(f"Пустые обязательные поля: {', '.join(missing)}")
 
-        if entry_errors:
-            errors.append({"variant_sku": variant, "messages": entry_errors})
-            continue
+        # 1.5) Int-поля
+        if not entry_errors:
+            for fld in INT_FIELDS:
+                raw = row.get(fld, "").strip()
+                if raw:
+                    val = parse_int(raw)
+                    if val is None or val < 0:
+                        entry_errors.append(f"Неверное целое {fld}='{raw}'")
+                        break
 
-        # 5) Проверка целочисленных полей
-        for fld in INT_FIELDS:
-            raw = row.get(fld, "").strip()
-            if raw:
-                val = parse_int(raw)
-                if val is None or val < 0:
-                    entry_errors.append(f"Неверное целое {fld}='{raw}'")
-                    break
-
-        if entry_errors:
-            errors.append({"variant_sku": variant, "messages": entry_errors})
-            continue
-
-        # 6) Проверка числовых полей с плавающей точкой
-        for fld in FLOAT_FIELDS:
-            raw = row.get(fld, "").strip()
-            if raw:
-                val = parse_float(raw)
-                if val is None or val < 0:
-                    entry_errors.append(f"Неверное число {fld}='{raw}'")
-                    break
+        # 1.6) Float-поля
+        if not entry_errors:
+            for fld in FLOAT_FIELDS:
+                raw = row.get(fld, "").strip()
+                if raw:
+                    val = parse_float(raw)
+                    if val is None or val < 0:
+                        entry_errors.append(f"Неверное число {fld}='{raw}'")
+                        break
 
         if entry_errors:
-            errors.append({"variant_sku": variant, "messages": entry_errors})
-            continue
+            per_row_errors.setdefault(variant, []).extend(entry_errors)
 
-    logger.debug("%s END invalid entries=%d", context, len(errors))
+    # 2) Проверка согласованности count_images по color_sku,
+    #    где color_sku = f"{variant_sku}_{world_sku}"
+    count_map: Dict[str, Set[str]] = {}
+    for row in rows:
+        sku   = row.get("variant_sku", "").strip()
+        world = row.get("world_sku",   "").strip()
+        if not sku or not world:
+            continue
+        cs = f"{sku}_{world}"
+        ci = row.get("count_images", "").strip() or "<пусто>"
+        count_map.setdefault(cs, set()).add(ci)
+
+    for cs, vals in count_map.items():
+        if len(vals) > 1:
+            sorted_vals = sorted(vals)
+            msg = f"Несогласованное значение count_images для color_sku='{cs}': {', '.join(sorted_vals)}"
+            # проставляем всем variant с этим cs
+            for row in rows:
+                sku = row.get("variant_sku", "").strip()
+                world = row.get("world_sku", "").strip()
+                if f"{sku}_{world}" == cs:
+                    per_row_errors.setdefault(sku, []).append(msg)
+
+    # 3) Собираем итоговый список ошибок
+    errors: List[Dict[str, Any]] = [
+        {"variant_sku": sku, "messages": msgs}
+        for sku, msgs in per_row_errors.items()
+    ]
+
+    logger.debug("preview_rows END errors=%d", len(errors))
     return errors
 
 
