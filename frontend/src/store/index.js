@@ -145,6 +145,15 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
   // Auth / Init
   // -------------------------------------------------
+  async function verifyAdminAccess() {
+    try {
+      await api.get(API.admin.getSettings)
+      return true
+    } catch {
+      return false
+    }
+  }
+
   async function saveUserToServer(payload) {
     if (!payload?.id) return
     try {
@@ -704,7 +713,7 @@ export const useStore = defineStore('main', () => {
     isTelegramUserId,
 
     // init/auth
-    initializeTelegramUser, initializeVisitorUser,
+    initializeTelegramUser, initializeVisitorUser, verifyAdminAccess,
 
     // general
     fetchParameters,

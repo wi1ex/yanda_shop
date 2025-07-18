@@ -33,8 +33,8 @@
           <label>{{ catLabel(cat) }}.zip</label>
           <input type="file" :ref="`${cat}Zip`" @change="onPreviewZip($event,cat)" accept=".zip"/>
         </div>
-        <button @click="submitPreviewZip" :disabled="isAny(previewZipLoading)">
-          {{ isAny(previewZipLoading) ? 'Проверяем…' : 'Проверить изображения' }}
+        <button @click="submitPreviewZip" :disabled="isAny(store.previewZipLoading)">
+          {{ isAny(store.previewZipLoading) ? 'Проверяем…' : 'Проверить изображения' }}
         </button>
 
         <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="preview-result">
@@ -299,20 +299,20 @@ const fileInput3       = ref(null)
 const formError        = ref('')
 const formSuccess      = ref('')
 const files            = reactive({})
-const selected         = ref('sheets')
+const selected         = ref('preview')
 const logPage          = ref(1)
 const pageSize         = 10
 const newSetting       = reactive({ key: '', value: '' })
 const tabs             = [
-  { key:'preview',     label:'Проверка'       },
-  { key:'sheets',      label:'Sheets'         },
-  { key:'upload',      label:'ZIP Upload'     },
-  { key:'logs',        label:'Логи'           },
-  { key:'visits',      label:'Посещения'      },
-  { key:'users',       label:'Пользователи'   },
-  { key:'settings',    label:'Параметры'      },
-  { key:'all_reviews', label:'Все отзывы'     },
-  { key:'add_review',  label:'Добавить отзыв' },
+  { key:'preview',     label:'Проверка данных'      },
+  { key:'sheets',      label:'Загрузка таблиц'      },
+  { key:'upload',      label:'Загрузка изображений' },
+  { key:'logs',        label:'Логи сервера'         },
+  { key:'visits',      label:'Статистика посещений' },
+  { key:'users',       label:'Список пользователей' },
+  { key:'settings',    label:'Настройка переменных' },
+  { key:'all_reviews', label:'Список отзывов'       },
+  { key:'add_review',  label:'Добавить отзыв'       },
 ]
 
 const zipPreviewFiles = reactive({ shoes:null, clothing:null, accessories:null });
