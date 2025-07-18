@@ -615,42 +615,47 @@ watch(selected, (tab) => {
 
 .admin-page {
   margin-top: 12vh;
-  padding: 2vw;
-  color: #fff;
+  padding: 0.5rem;
+  color: $white-100;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  overflow-x: hidden;
 }
 
 /* Навигационные табы */
 .tabs {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 .tabs button {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  background: #f0f0f0;
-  border: 1px solid #ccc;
+  width: 100%;
+  padding: 0.75rem;
+  background: $grey-90;
+  border: 1px solid $grey-87;
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.2s;
   font-weight: 500;
+  color: $black-100;
+  min-height: 44px;
 }
 .tabs button:hover {
-  background: #e0e0e0;
+  background: $grey-89;
 }
 .tabs button.active {
-  background: #007bff;
-  color: #fff;
-  border-color: #0056b3;
+  background: $red-active;
+  color: $white-100;
+  border-color: $red-active;
 }
 
 /* Заголовки секций */
 section h2 {
-  font-size: 1.75rem;
-  margin-bottom: 1rem;
-  border-bottom: 2px solid #555;
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 2px solid $grey-30;
   padding-bottom: 0.5rem;
+  color: $white-100;
 }
 
 /* Кнопки общего стиля */
@@ -659,369 +664,264 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.25rem;
-  background: #007bff;
-  color: #fff;
+  padding: 0.75rem;
+  background: $red-active;
+  color: $white-100;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 1rem;
   transition: background 0.2s;
+  min-height: 44px;
+  width: 100%;
 }
 .button:disabled,
 button:disabled {
-  background: #999;
+  background: $grey-30;
   cursor: not-allowed;
 }
 .button:hover:not(:disabled),
 button:hover:not(:disabled) {
-  background: #0056b3;
+  background: darken($red-active, 10%);
 }
 
-/* --- Превью-проверка --- */
+/* Превью-проверка */
 .preview-section {
-  margin-bottom: 2rem;
-}
-
-/* Внешний контейнер комбинированного превью */
-.combined-preview {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: flex-end;
   margin-bottom: 1.5rem;
 }
 
-/* Блок выбора ZIP-файлов */
+.combined-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
 .zip-input-block {
-  flex: 1 1 calc(33% - 1rem);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 .zip-input-block label {
   font-weight: 600;
-  color: #fff;
+  color: $white-100;
 }
 .zip-input-block input[type="file"] {
-  padding: 0.5rem;
-  background: #1e222b;
-  border: 1px solid #444;
+  padding: 0.75rem;
+  background: $black-10;
+  border: 1px solid $grey-30;
   border-radius: 4px;
-  color: #ddd;
+  color: $white-100;
+  width: 100%;
 }
 
-/* Карточки результатов превью */
 .preview-result {
-  flex: 1 1 calc(33% - 1rem);
-  background: #252a3b;
-  padding: 1rem;
+  background: $black-10;
+  padding: 0.75rem;
   border-radius: 6px;
-  min-width: 200px;
 }
 .preview-result h4 {
   margin: 0 0 0.5rem;
-  font-size: 1.1rem;
-  color: #fff;
+  font-size: 1rem;
+  color: $white-100;
 }
 .preview-result p {
   margin: 0.25rem 0;
-  color: #ccc;
+  color: $white-80;
 }
 .preview-result ul {
   margin: 0.5rem 0 0;
-  padding-left: 1.2rem;
+  padding-left: 1rem;
 }
 .preview-result li {
   margin-bottom: 0.3rem;
-  color: #ddd;
+  color: $white-60;
 }
 .preview-result .error {
-  color: #e94f37;
+  color: $red-error;
   font-weight: 600;
-}
-
-/* Блок Google Sheets превью */
-.sheet-preview-block,
-.zip-preview-block {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 2rem;
 }
 
 /* Секции загрузки и импорта */
 .sheets-section,
 .upload-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .sheet-block {
-  background: #2b303e;
-  padding: 1rem;
+  background: $black-10;
+  padding: 0.75rem;
   border-radius: 6px;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 .sheet-block h3 {
   margin-top: 0;
-  font-size: 1.25rem;
-  color: #fff;
+  font-size: 1.1rem;
+  color: $white-100;
 }
 .sheet-input {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #555;
+  padding: 0.75rem;
+  border: 1px solid $grey-30;
   border-radius: 4px;
   margin-bottom: 0.5rem;
-  background: #1e222b;
-  color: #fff;
-}
-.sheet-save,
-.sheet-import {
-  @extend button;
-  margin-right: 0.5rem;
-}
-.upload-result {
-  margin-top: 0.75rem;
-  color: #bada55;
+  background: $black-25;
+  color: $white-100;
 }
 
-/* --- Логи --- */
+/* Логи */
 .logs-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 .logs-table {
   width: 100%;
   border-collapse: collapse;
+  overflow-x: auto;
+  display: block;
 }
 .logs-table th,
 .logs-table td {
-  border: 1px solid #444;
-  padding: 0.75rem;
+  border: 1px solid $grey-30;
+  padding: 0.5rem;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
 }
 .logs-table th {
-  background: #252a3b;
-  color: #fff;
+  background: $black-10;
+  color: $white-100;
 }
 .no-logs {
   text-align: center;
-  padding: 1rem;
+  padding: 0.75rem;
   font-style: italic;
-  color: #bbb;
+  color: $white-40;
 }
 
 .pagination-controls {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
 }
 
-/* --- Статистика посещений --- */
+/* Статистика посещений */
 .visits-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 .date-picker {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
-  align-items: center;
 }
 .date-picker input[type="date"] {
-  padding: 0.5rem;
-  border: 1px solid #555;
+  padding: 0.75rem;
+  border: 1px solid $grey-30;
   border-radius: 4px;
-  background: #1e222b;
-  color: #ddd;
+  background: $black-25;
+  color: $white-100;
+  width: 100%;
 }
-.refresh-button {
-  @extend button;
-  padding: 0.5rem 1rem;
-}
-.loading-visits,
-.loading-logs {
-  color: #bbb;
-  font-style: italic;
-}
-.no-data {
-  color: #bbb;
-  font-style: italic;
-  text-align: center;
-  padding: 1rem;
-}
-
 .chart-wrapper {
   width: 100%;
-  max-width: 800px;
-  margin: 1rem auto;
+  overflow-x: auto;
 }
 .bar-chart {
-  display: flex;
-  align-items: flex-end;
-  height: 300px;
-  border-left: 1px solid #666;
-  border-bottom: 1px solid #666;
-}
-.bar {
-  flex: 1;
-  margin: 0 0.25rem;
-  background: #007bff;
-  border-radius: 4px 4px 0 0;
-  position: relative;
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
+  height: 150px;
+  border-left: 1px solid $grey-30;
+  border-bottom: 1px solid $grey-30;
 }
 .bar-label {
-  position: absolute;
-  bottom: -1.5rem;
-  font-size: 0.75rem;
-  color: #ccc;
+  font-size: 0.6rem;
+  color: $white-60;
 }
 .bar-value {
-  padding: 0.25rem;
-  font-size: 0.75rem;
-  color: #fff;
+  font-size: 0.6rem;
+  color: $white-100;
 }
 
-/* --- Пользователи --- */
+/* Пользователи */
 .users-section table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1rem;
-}
-.users-section th,
-.users-section td {
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  text-align: left;
-  font-size: 0.9rem;
-}
-.no-data {
-  text-align: center;
-  padding: 1rem;
-  color: #bbb;
-  font-style: italic;
+  overflow-x: auto;
+  display: block;
 }
 
-/* --- Настройки --- */
+/* Настройки */
 .settings-section table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1rem;
-}
-.settings-section th,
-.settings-section td {
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-}
-.delete-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  color: #e94f37;
-}
-.btn-save-all {
-  @extend button;
+  overflow-x: auto;
+  display: block;
 }
 .add-setting {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
 }
 .add-setting input {
-  flex: 1;
-  padding: 0.5rem;
-  border: 1px solid #555;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid $grey-30;
   border-radius: 4px;
-  background: #1e222b;
-  color: #ddd;
+  background: $black-25;
+  color: $white-100;
 }
 
-/* --- Отзывы --- */
+/* Отзывы */
 .all-reviews-section li,
 .admin-review {
-  background: #2b303e;
-  padding: 1rem;
+  background: $black-10;
+  padding: 0.75rem;
   border-radius: 6px;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 .review-header {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-.review-date {
-  color: #888;
-  font-size: 0.85rem;
-}
-.user-text,
-.shop-text {
-  margin: 0.25rem 0;
+  flex-direction: column;
 }
 .photos {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  margin: 0.5rem 0;
 }
 .admin-photo {
-  width: 60px;
-  height: 60px;
-  border-radius: 4px;
-  object-fit: cover;
-}
-.delete-btn {
-  @extend button;
-  background: #e94f37;
-}
-.review-link a {
-  color: #007bff;
-  text-decoration: none;
-  font-weight: 500;
+  max-width: 100%;
+  height: auto;
 }
 
-/* --- Добавить отзыв --- */
+/* Добавить отзыв */
 .add-review-section form {
   display: grid;
   gap: 0.75rem;
-  max-width: 400px;
 }
 .add-review-section input,
 .add-review-section textarea {
-  padding: 0.5rem;
-  border: 1px solid #555;
+  padding: 0.75rem;
+  border: 1px solid $grey-30;
   border-radius: 4px;
-  background: #1e222b;
-  color: #ddd;
-}
-.success {
-  color: #4caf50;
-  margin-bottom: 0.5rem;
-}
-.error {
-  color: #e94f37;
-  margin-bottom: 0.5rem;
+  background: $black-25;
+  color: $white-100;
+  width: 100%;
 }
 
-/* --- Мобильная адаптация (max-width: 600px) --- */
+/* Мобильная адаптация */
 @media (max-width: 600px) {
-  .combined-preview,
-  .sheet-preview-block,
-  .zip-preview-block {
-    flex-direction: column;
+  .admin-page {
+    padding: 0.5rem;
   }
-  .zip-input-block,
-  .preview-result,
-  .sheet-block {
-    flex: 1 1 100%;
-  }
-  .button,
-  button {
-    width: 100%;
+  h1 { font-size: 1.25rem; }
+  h2 { font-size: 1.1rem; }
+  h3 { font-size: 1rem; }
+  p, li, td, th { font-size: 0.8rem; }
+  .logs-table,
+  .users-section table,
+  .settings-section table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
   }
 }
 
