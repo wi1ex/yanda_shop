@@ -145,6 +145,57 @@ def apply_update(obj, data: Dict[str, str], warn_skus: List[str], context: str) 
     return updated, warns
 
 
+def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[str]:
+    """
+    Превью-валидация CSV-строк для категории category:
+      - вызывает validate_row для базовой проверки
+      - дополнительно парсит INT_FIELDS и FLOAT_FIELDS
+    Возвращает упорядоченный список уникальных variant_sku с ошибками.
+    """
+    context = "preview_rows"
+    logger.info("%s START category=%s rows=%d", context, category, len(rows))
+
+    # 0) Проверка категории
+    Model = model_by_category(category)
+    if Model is None:
+        logger.error("%s: unknown category %s", context, category)
+        raise ValueError(f"Unknown category {category}")
+
+    warn_skus: List[str] = []
+
+    # 1) Проходим по всем строкам
+    for row in rows:
+        variant, _, err = validate_row(row)
+        if err:
+            warn_skus.append(variant)
+            continue
+
+        # 2) Проверяем целочисленные поля
+        for fld in INT_FIELDS:
+            raw = row.get(fld, "").strip()
+            if not raw:
+                continue
+            val = parse_int(raw)
+            if val is None or val < 0:
+                warn_skus.append(variant)
+                break
+
+        # 3) Проверяем числовые с плавающей точкой
+        for fld in FLOAT_FIELDS:
+            raw = row.get(fld, "").strip()
+            if not raw:
+                continue
+            val = parse_float(raw)
+            if val is None or val < 0:
+                warn_skus.append(variant)
+                break
+
+    # 4) Финальный лог и возврат
+    unique_warns = sorted(set(warn_skus))
+    logger.info("%s END invalid=%d", context, len(unique_warns))
+    return unique_warns
+
+
 def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, int, int, List[str]]:
     """
     Обрабатывает CSV-строки:

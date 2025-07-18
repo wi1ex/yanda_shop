@@ -11,7 +11,7 @@ from ..core.logging import logger
 from ..extensions import redis_client
 from ..models import ChangeLog, AdminSetting, Users, Review
 from ..utils.db_utils import session_scope
-from ..utils.google_sheets import get_sheet_url, process_rows
+from ..utils.google_sheets import get_sheet_url, process_rows, preview_rows
 from ..utils.jwt_utils import admin_required
 from ..utils.route_utils import handle_errors, require_json
 from ..utils.cache_utils import load_delivery_options, load_parameters
@@ -21,6 +21,7 @@ from ..utils.storage_utils import (
     upload_product_images,
     cleanup_review_images,
     upload_review_images,
+    preview_product_images,
 )
 
 admin_api: Blueprint = Blueprint("admin_api", __name__, url_prefix="/api/admin")
@@ -176,6 +177,43 @@ def import_sheet() -> Tuple[Response, int]:
                     "warn_skus": warn_skus}), 201
 
 
+@admin_api.route("/preview_sheet", methods=["POST"])
+@admin_required
+@handle_errors
+@require_json("category")
+def preview_sheet() -> Tuple[Response, int]:
+    """
+    POST /api/admin/preview_sheet { category }
+    Возвращает SKU, не прошедшие валидацию ещё до обновления.
+    """
+    data = request.get_json()
+    category = data["category"].lower()
+    if category not in ("shoes", "clothing", "accessories"):
+        return jsonify({"error": "unknown category"}), 400
+
+    url = get_sheet_url(category)
+    if not url:
+        return jsonify({"error": "sheet url not set"}), 400
+
+    try:
+        r = requests.get(url, timeout=30)
+        r.raise_for_status()
+        csv_text = r.content.decode("utf-8-sig")
+        rows = list(csv.DictReader(io.StringIO(csv_text)))
+    except Exception as e:
+        logger.exception("preview_sheet: fetch CSV failed for %s", category)
+        return jsonify({"error": str(e)}), 500
+
+    warn_skus = preview_rows(category, rows)
+
+    return jsonify({
+        "category": category,
+        "total_rows": len(rows),
+        "invalid_count": len(warn_skus),
+        "warn_skus": warn_skus
+    }), 200
+
+
 @admin_api.route("/upload_images", methods=["POST"])
 @admin_required
 @handle_errors
@@ -232,14 +270,46 @@ def upload_images() -> Tuple[Response, int]:
     return jsonify({"status": "ok", "added": added, "replaced": replaced, "deleted": deleted, "warns": cleanup_warns}), 201
 
 
+@admin_api.route("/preview_images", methods=["POST"])
+@admin_required
+@handle_errors
+def preview_images() -> Tuple[Response, int]:
+    """POST /api/admin/preview_images form-data: file_shoes, file_clothing, file_accessories"""
+    result: Dict[str, Any] = {}
+
+    for folder in ("shoes", "clothing", "accessories"):
+        field = f"file_{folder}"
+        zf = request.files.get(field)
+        if not zf or not zf.filename.lower().endswith(".zip"):
+            logger.warning("preview_images: invalid or missing archive for %s", folder)
+            result[folder] = {"error": "file required and must be .zip"}
+            continue
+
+        archive_bytes = zf.stream.read()
+        report = preview_product_images(folder, archive_bytes)
+
+        invalid_count = len(report.get("invalid_files", []))
+        extra_count   = len(report.get("extra_files", []))
+        missing_count = len(report.get("missing", {}))
+        logger.debug("preview_images: %s preview done invalid=%d extra=%d missing=%d",
+                     folder, invalid_count, extra_count, missing_count)
+
+        result[folder] = report
+
+    logger.info("preview_images: finished")
+    return jsonify(result), 200
+
+
 @admin_api.route("/get_settings", methods=["GET"])
 @admin_required
 @handle_errors
 def get_settings() -> Tuple[Response, int]:
     """GET /api/admin/get_settings"""
     with session_scope() as session:
-        settings = session.query(AdminSetting).order_by(AdminSetting.key).all()
-        data: List[Dict[str, Any]] = [{"key": s.key, "value": s.value} for s in settings]
+        settings_objs = session.query(AdminSetting).order_by(AdminSetting.key).all()
+        data: List[Dict[str, Any]] = [{"key": s.key, "value": s.value} for s in settings_objs]
+
+    logger.info("get_settings: returned %d entries", len(data))
     return jsonify({"settings": data}), 200
 
 

@@ -25,7 +25,9 @@ export const API = {
     getSheetUrls:       '/api/admin/get_sheet_urls',         // GET    - URL Google Sheets
     updateSheetUrl:     '/api/admin/update_sheet_url',       // POST   - сохранить URL таблицы
     importSheet:        '/api/admin/import_sheet',           // POST   - импорт CSV из Sheets
+    previewSheet:       '/api/admin/preview_sheet',          // POST   - проверка CSV из Sheets
     uploadImages:       '/api/admin/upload_images',          // POST   - загрузка ZIP с изображениями
+    previewImages:      '/api/admin/preview_images',         // POST   - проверка ZIP с изображениями
     getSettings:        '/api/admin/get_settings',           // GET    - получить список настроек
     updateSetting:      '/api/admin/update_setting',         // POST   - изменить список настроек
     deleteSetting:      '/api/admin/delete_setting',         // DELETE - удалить параметр настроек
@@ -39,9 +41,9 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
   // State
   // -------------------------------------------------
-  const accessToken        = ref(localStorage.getItem('accessToken') || '')
-  const refreshToken       = ref(localStorage.getItem('refreshToken') || '')
-  const user               = ref({
+  const accessToken         = ref(localStorage.getItem('accessToken') || '')
+  const refreshToken        = ref(localStorage.getItem('refreshToken') || '')
+  const user                = ref({
     id: null,
     first_name: '',
     last_name: '',
@@ -51,62 +53,66 @@ export const useStore = defineStore('main', () => {
   })
 
   // Категории
-  const categoryList       = ref(['Одежда', 'Обувь', 'Аксессуары'])
-  const selectedCategory   = ref('')
+  const categoryList        = ref(['Одежда', 'Обувь', 'Аксессуары'])
+  const selectedCategory    = ref('')
 
   // Сортировка
-  const sortBy             = ref('date')
-  const sortOrder          = ref('desc')
+  const sortBy              = ref('date')
+  const sortOrder           = ref('desc')
 
   // Фильтры
-  const filterPriceMin     = ref(null)
-  const filterPriceMax     = ref(null)
-  const filterColor        = ref('')
-  const filterGender       = ref('')
+  const filterPriceMin      = ref(null)
+  const filterPriceMax      = ref(null)
+  const filterColor         = ref('')
+  const filterGender        = ref('')
 
   // Товары
-  const products           = ref([])
+  const products            = ref([])
 
   // Корзина
-  const cartOrder          = ref([])
-  const cart               = ref({ count: 0, total: 0, items: [] })
-  const cartLoaded         = ref(false)
-  const showCartDrawer     = ref(false)
+  const cartOrder           = ref([])
+  const cart                = ref({ count: 0, total: 0, items: [] })
+  const cartLoaded          = ref(false)
+  const showCartDrawer      = ref(false)
 
   // Избранное
-  const favorites          = ref({ items: [], count: 0 })
-  const favoritesLoaded    = ref(false)
+  const favorites           = ref({ items: [], count: 0 })
+  const favoritesLoaded     = ref(false)
 
   // === AdminPage ===
-  const sheetUrls          = ref({ shoes: '', clothing: '', accessories: '' })
-  const sheetResult        = reactive({ shoes: '', clothing: '', accessories: '' })
-  const sheetSaveLoading   = reactive({ shoes: false, clothing: false, accessories: false })
-  const sheetImportLoading = reactive({ shoes: false, clothing: false, accessories: false })
+  const sheetUrls           = ref({ shoes: '', clothing: '', accessories: '' })
+  const sheetResult         = reactive({ shoes: '', clothing: '', accessories: '' })
+  const sheetSaveLoading    = reactive({ shoes: false, clothing: false, accessories: false })
+  const sheetImportLoading  = reactive({ shoes: false, clothing: false, accessories: false })
+  const previewSheetResult  = reactive({ shoes: null, clothing: null, accessories: null });
+  const previewSheetLoading = reactive({ shoes: false, clothing: false, accessories: false });
 
-  const zipResult          = ref('')
-  const zipLoading         = ref(false)
+  const zipResult           = ref('')
+  const zipLoading          = ref(false)
+  const previewZipResult    = reactive({ shoes:null, clothing:null, accessories:null });
+  const previewZipLoading   = reactive({ shoes:false, clothing:false, accessories:false });
 
-  const logs               = ref([])
-  const logsLoading        = ref(false)
-  const totalLogs          = ref(0)
+  const logs                = ref([])
+  const logsLoading         = ref(false)
+  const totalLogs           = ref(0)
 
-  const visitsData         = ref({ date: '', hours: [] })
-  const visitsLoading      = ref(false)
+  const visitsData          = ref({ date: '', hours: [] })
+  const visitsLoading       = ref(false)
 
   // === ProductPage ===
-  const detailData         = ref(null)
-  const detailLoading      = ref(false)
-  const variants           = ref([])
+  const detailData          = ref(null)
+  const detailLoading       = ref(false)
+  const variants            = ref([])
 
   // === ProfilePage ===
-  const profile            = ref(null)
-  const profileLoading     = ref(false)
-  const profileError       = ref('')
+  const profile             = ref(null)
+  const profileLoading      = ref(false)
+  const profileError        = ref('')
 
-  const parameters         = ref([])
-  const settings           = ref([])
-  const reviews            = ref([])
-  const users              = ref([])
+  const parameters          = ref([])
+  const settings            = ref([])
+  const reviews             = ref([])
+  const users               = ref([])
 
   // -------------------------------------------------
   // Watchers
@@ -580,6 +586,30 @@ export const useStore = defineStore('main', () => {
     }
   }
 
+  async function previewSheet(cat) {
+    previewSheetLoading[cat] = true;
+    previewSheetResult[cat] = null;
+    try {
+      const { data } = await api.post(API.admin.previewSheet, { category: cat });
+      previewSheetResult[cat] = data;
+    } catch (e) {
+      console.error('previewSheet error', e);
+      previewSheetResult[cat] = { error: e.message };
+    } finally {
+      previewSheetLoading[cat] = false;
+    }
+  }
+
+  async function previewAllSheets() {
+    ['shoes','clothing','accessories'].forEach(cat => {
+      previewSheetResult[cat]  = null
+      previewSheetLoading[cat] = false
+    })
+    for (const cat of ['shoes','clothing','accessories']) {
+      await previewSheet(cat);
+    }
+  }
+
   async function loadLogs(limit = 10, offset = 0) {
     logsLoading.value = true
     try {
@@ -624,6 +654,28 @@ export const useStore = defineStore('main', () => {
     }
   }
 
+  async function previewImages(filesMap) {
+    Object.keys(previewZipResult).forEach(cat => {
+      previewZipResult[cat]  = null
+      previewZipLoading[cat] = false
+    })
+    const form = new FormData()
+    Object.entries(filesMap).forEach(([cat, f]) => {
+      form.append(`file_${cat}`, f)
+    })
+    Object.keys(previewZipLoading).forEach(cat => {
+      previewZipLoading[cat] = true
+    })
+    try {
+      const { data } = await api.post(API.admin.previewImages, form)
+      Object.assign(previewZipResult, data)
+    } finally {
+      Object.keys(previewZipLoading).forEach(cat => {
+        previewZipLoading[cat] = false
+      })
+    }
+  }
+
   // -------------------------------------------------
   // Return state & actions
   // -------------------------------------------------
@@ -636,8 +688,9 @@ export const useStore = defineStore('main', () => {
     products,
     cartOrder, cart, cartLoaded, showCartDrawer,
     favorites, favoritesLoaded,
-    sheetUrls, sheetSaveLoading, sheetImportLoading, sheetResult,
-    zipResult, zipLoading,
+    sheetUrls, sheetSaveLoading, sheetImportLoading,
+    sheetResult, previewSheetResult, previewSheetLoading,
+    zipResult, zipLoading, previewZipResult, previewZipLoading,
     logs, logsLoading, totalLogs,
     visitsData, visitsLoading,
     detailData, detailLoading, variants,
@@ -681,7 +734,7 @@ export const useStore = defineStore('main', () => {
     fetchReviews, createReview, deleteReview,
 
     // admin sheets & logs & visits & zip
-    loadSheetUrls, saveSheetUrl, importSheet,
-    loadLogs, loadVisits, uploadZip,
+    loadSheetUrls, saveSheetUrl, importSheet, previewAllSheets,
+    loadLogs, loadVisits, uploadZip, previewImages,
   }
 })
