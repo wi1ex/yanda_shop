@@ -59,12 +59,6 @@ onBeforeUnmount(() => {
   width: 100%;
   background-color: $grey-87;
   font-family: Manrope-Medium;
-
-  /* Запрет выделения текста */
-  -webkit-user-select: none; /* Chrome/Safari */
-  -moz-user-select: none; /* Firefox */
-  -ms-user-select: none; /* IE/Edge */
-  user-select: none; /* Стандартный синтаксис */
 }
 
 @media (max-width: 600px) {
