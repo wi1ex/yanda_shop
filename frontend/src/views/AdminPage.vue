@@ -615,434 +615,676 @@ watch(selected, (tab) => {
 
 .admin-page {
   margin-top: 12vh;
-  padding: 2rem;
-  background: $black-100;
-  color: $white-100;
-  overflow-x: hidden;
+  padding: 2vw;
+  color: #fff;
 }
 
-.tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  button {
-    flex: 1 1 auto;
-    padding: 0.75rem 1rem;
-    background: $grey-90;
-    border: 1px solid $grey-87;
-    border-radius: 4px;
-    color: $black-100;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    &.active {
-      background: $red-active;
-      color: $white-100;
-      border-color: $red-active;
-    }
-  }
-}
-
-section {
-  margin-bottom: 2rem;
-  h2 {
-    font-size: 1.75rem;
-    color: $white-100;
-    margin-bottom: 1rem;
-    border-bottom: 2px solid $grey-30;
-    padding-bottom: 0.5rem;
-  }
-}
-
-/* =========================================
-   Кнопки
-   ========================================= */
-.button,
-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1.25rem;
-  background: $red-active;
-  color: $white-100;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-  &:disabled {
-    background: $grey-30;
-    cursor: not-allowed;
-  }
-}
-
-/* =========================================
-   Превью: combined-preview, sheets, zip
-   ========================================= */
+/* ----------------------------
+   Секция Превью (Sheets + ZIP)
+   ---------------------------- */
 .preview-section {
-  .combined-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    align-items: flex-end;
-    margin-bottom: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
   }
-  .zip-input-block {
-    flex: 1 1 calc(33% - 1rem);
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    label {
-      color: $white-100;
-    }
-    input[type="file"] {
-      padding: 0.5rem;
-      background: $black-25;
-      border: 1px solid $grey-30;
-      border-radius: 4px;
-      color: $white-80;
-    }
+}
+
+/* Обёртка для инпутов + кнопки «Проверить всё» */
+.combined-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: flex-end;
+}
+
+/* Стили для блока выбора ZIP-файла в combined-preview */
+.zip-input-block {
+  flex: 1 1 30%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    font-weight: 600;
+    color: #fff;
   }
+  input[type="file"] {
+    padding: 0.5rem;
+    background: #1e222b;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #fff;
+  }
+}
+
+/* 3 блока по горизонтали */
+.sheet-preview-block,
+.zip-preview-block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  /* каждая карточка результата */
   .preview-result {
-    flex: 1 1 calc(33% - 1rem);
-    background: $black-25;
+    flex: 1 1 30%;
+    background: #252a3b;
     padding: 1rem;
-    border-radius: 6px;
-    min-width: 180px;
+    border-radius: 8px;
+    min-width: 200px;
+
     h4 {
-      margin: 0 0 0.5rem;
+      margin-top: 0;
       font-size: 1.1rem;
-      color: $white-100;
-    }
-    p {
-      margin: 0.25rem 0;
-      color: $white-80;
+      color: #fff;
     }
     ul {
       margin: 0.5rem 0 0;
       padding-left: 1.2rem;
       li {
         margin-bottom: 0.3rem;
-        color: $white-60;
+        color: #ddd;
       }
     }
     .error {
-      color: $red-error;
+      color: #e94f37;
+      font-weight: bold;
     }
   }
+
+  /* кнопка «Проверить» */
+  button {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.2s;
+
+    &:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+  }
+}
+
+/* --- Секции CSV/ZIP и Google Sheets --- */
+.upload-section,
+.sheets-section {
+  margin-bottom: 24px;
+}
+
+.sheet-block {
+  margin-bottom: 20px;
+}
+
+.sheet-input {
+  width: 60%;
+  margin-right: 8px;
+}
+
+.sheet-save,
+.sheet-import {
+  margin-right: 8px;
+}
+
+.upload-result {
+  margin-top: 8px;
+  color: #bada55;
+}
+
+/* --- Секция логов изменений --- */
+.logs-section {
+  margin-bottom: 24px;
+}
+
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.logs-table th,
+.logs-table td {
+  border: 1px solid #444;
+  padding: 8px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.logs-table th {
+  background-color: #252a3b;
+}
+
+.no-logs {
+  text-align: center;
+  padding: 10px;
+  font-style: italic;
+}
+/* Пагинация логов */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+
+.pagination-controls button {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background 0.2s;
+}
+
+.pagination-controls button:disabled {
+  background: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.pagination-controls span {
+  font-size: 0.9em;
+  color: #eee;
+}
+
+/* --- Секция статистики посещений --- */
+.visits-section {
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.date-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.refresh-button {
+  background: #007bff;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.loading-visits,
+.loading-logs {
+  color: #bbb;
+  font-style: italic;
+  margin-top: 10px;
+}
+
+.no-data {
+  color: #bbb;
+  font-style: italic;
+  margin-top: 20px;
+  text-align: center;
+  padding: 12px;
+}
+
+/* Контейнер для «самописного» бар-чарта */
+.chart-wrapper {
+  width: 100%;
+  max-width: 800px;
+  margin: 20px auto;
+}
+
+/* Стили «бар-чарта» */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  height: 300px;
+  border-left: 1px solid #666;
+  border-bottom: 1px solid #666;
+}
+
+.bar {
+  flex: 1;
+  margin: 0 2px;
+  background-color: #2196F3;
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+/* Надпись с числом сверху */
+.bar-value {
+  color: #fff;
+  font-size: 12px;
+  padding: 2px;
+}
+
+.bar-label {
+  position: absolute;
+  bottom: -20px;
+  font-size: 12px;
+  color: #ccc;
+}
+
+/* Навигационные табы */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.tabs button {
+  padding: 8px 12px;
+  background: #eee;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.tabs button.active {
+  background: #333;
+  color: #fff;
+}
+
+/* Секция «Параметры» */
+.settings-section {
+  margin-top: 24px;
+}
+.settings-section table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.settings-section th,
+.settings-section td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+.settings-section button {
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.add-setting {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.add-setting input {
+  padding: 6px;
+  flex: 1 1 200px;
+}
+.add-setting button {
+  padding: 6px 12px;
+}
+.delete-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1em;
+  color: #e94f37;
+  padding: 2px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.settings-section .btn-save-all {
+  margin-top: 16px;
+  padding: 8px 16px;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.settings-section .btn-save-all:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Секция «Все отзывы» */
+.all-reviews-section {
+  margin-top: 24px;
+}
+.all-reviews-section ul {
+  list-style: none;
+  padding: 0;
+}
+.all-reviews-section li {
+  padding: 8px 0;
+  border-bottom: 1px solid #ddd;
+}
+.all-reviews-section button {
+  margin-left: 12px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+/* Секция «Добавить отзыв» */
+.add-review-section {
+  margin-top: 24px;
+}
+.add-review-section form {
+  display: grid;
+  gap: 12px;
+  max-width: 400px;
+}
+.add-review-section input,
+.add-review-section textarea {
+  width: 100%;
+  padding: 6px;
+  box-sizing: border-box;
+}
+.add-review-section button {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.error {
+  color: #e94f37;
+  margin-bottom: 8px;
+}
+.success {
+  color: #4caf50;
+  margin-bottom: 8px;
+}
+
+/* Поля загрузки фотографий */
+.photos-inputs {
+  margin-bottom: 4px;
+}
+.photos-inputs input {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.admin-review {
+  border: 1px solid #ccc;
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+}
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.review-date { color: #888; font-size: 0.9em; }
+.user-text, .shop-text {
+  margin: 4px 0;
+}
+.photos {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+.admin-photo {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.delete-btn {
+  background: #e94f37;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.review-link a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.users-section {
+  margin-top: 24px;
+}
+.users-section table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.users-section th, .users-section td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+@media (max-width: 600px) {
+  .combined-preview {
+    flex-direction: column;
+    align-items: stretch;
+    button { width: 100%; }
+    .zip-input-block { flex: 1 1 auto; }
+  }
+
   .sheet-preview-block,
   .zip-preview-block {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
-}
+    flex-direction: column;
 
-/* =========================================
-   Google Sheets & ZIP upload sections
-   ========================================= */
-.sheets-section,
-.upload-section {
-  .sheet-block {
-    background: $black-25;
-    padding: 1rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    h3 {
-      margin-top: 0;
-      font-size: 1.25rem;
-      color: $white-100;
+    .preview-result {
+      flex: 1 1 100%;
     }
-    input.sheet-input {
+
+    button {
       width: 100%;
-      padding: 0.5rem;
-      margin-bottom: 0.75rem;
-      background: $black-10;
-      border: 1px solid $grey-30;
-      border-radius: 4px;
-      color: $white-100;
-    }
-    button.sheet-save,
-    button.sheet-import {
-      @extend button;
-      margin-right: 0.5rem;
-    }
-    p.upload-result {
-      margin-top: 0.5rem;
-      color: $white-80;
     }
   }
-}
 
-/* =========================================
-   Логи
-   ========================================= */
-.logs-section {
-  h2 { margin-bottom: 1rem; }
-  .loading-logs {
-    color: $white-60;
-    font-style: italic;
-    margin-bottom: 1rem;
-  }
-  table.logs-table {
-    width: 100%;
-    border-collapse: collapse;
-    th, td {
-      border: 1px solid $grey-30;
-      padding: 0.75rem;
-      text-align: center;
-      font-size: 0.9rem;
-      color: $white-100;
-    }
-    th {
-      background: $black-25;
-    }
-    .no-logs {
-      text-align: center;
-      padding: 1rem;
-      font-style: italic;
-      color: $white-60;
-    }
-  }
-  .pagination-controls {
+  /* Google Sheets */
+  .sheet-block {
     display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    button { @extend button; padding: 0.5rem 1rem; }
-    span { color: $white-80; font-size: 0.9rem; }
+    flex-direction: column;
+    gap: 8px;
   }
-}
+  .sheet-input {
+    width: 100% !important;
+    margin-right: 0;
+  }
+  .sheet-save,
+  .sheet-import {
+    width: 100%;
+  }
 
-/* =========================================
-   Статистика посещений / бар-чарт
-   ========================================= */
-.visits-section {
-  .date-picker {
+  /* CSV/ZIP upload */
+  .upload-section form {
     display: flex;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-    label { color: $white-100; }
-    input[type="date"] {
-      padding: 0.5rem;
-      background: $black-10;
-      border: 1px solid $grey-30;
-      border-radius: 4px;
-      color: $white-100;
-    }
-    button.refresh-button {
-      @extend button;
-      padding: 0.5rem 1rem;
-    }
+    flex-direction: column;
+    gap: 8px;
   }
-  .loading-visits {
-    color: $white-60;
-    font-style: italic;
-    margin-bottom: 1rem;
-  }
-  .chart-wrapper {
+  .upload-section input,
+  .upload-section button {
     width: 100%;
-    max-width: 100%;
+  }
+
+  /* Таблица логов */
+  .logs-table {
+    display: block;
+    width: 100%;
     overflow-x: auto;
-    margin-bottom: 1rem;
+  }
+  .logs-table thead,
+  .logs-table tbody,
+  .logs-table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  /* Date-picker */
+  .date-picker {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .date-picker input,
+  .date-picker .refresh-button {
+    width: 100%;
+  }
+
+  /* Бар-чарт */
+  .chart-wrapper {
+    max-width: 100%;
   }
   .bar-chart {
-    display: flex;
-    align-items: flex-end;
-    height: 300px;
-    border-left: 1px solid $grey-30;
-    border-bottom: 1px solid $grey-30;
-    padding-left: 0.5rem;
-    .bar {
-      flex: 1;
-      min-width: 20px;
-      margin: 0 0.25rem;
-      background: $red-active;
-      border-radius: 4px 4px 0 0;
-      display: flex;
-      flex-direction: column-reverse;
-      align-items: center;
-      transition: background 0.2s;
-      .bar-value {
-        padding: 0.25rem;
-        font-size: 0.75rem;
-        color: $white-100;
-      }
-      .bar-label {
-        position: absolute;
-        bottom: -1.25rem;
-        font-size: 0.75rem;
-        color: $white-60;
-      }
-    }
+    height: 200px;
   }
-}
-
-/* =========================================
-   Пользователи, Настройки, Отзывы
-   ========================================= */
-.users-section,
-.settings-section {
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    th, td {
-      border: 1px solid $grey-30;
-      padding: 0.75rem;
-      font-size: 0.9rem;
-      color: $white-100;
-    }
-    thead th { background: $black-25; }
+  .bar {
+    margin: 0 1px;
   }
-}
-.settings-section {
-  .add-setting {
-    display: flex;
-    gap: 0.5rem;
+  .bar-label {
+    font-size: 10px;
+    bottom: -16px;
+  }
+  .bar-value {
+    font-size: 10px;
+  }
+    /* Листы отзывов */
+  .admin-review {
+    padding: 8px;
+    font-size: 14px;
+  }
+  .review-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .photos {
     flex-wrap: wrap;
-    margin-top: 1rem;
-    input {
-      flex: 1;
-      padding: 0.5rem;
-      background: $black-10;
-      border: 1px solid $grey-30;
-      border-radius: 4px;
-      color: $white-100;
-    }
-    button { @extend button; }
+    justify-content: flex-start;
   }
-}
+  .admin-photo {
+    width: 60px;
+    height: 60px;
+  }
 
-.all-reviews-section {
-  ul { list-style: none; padding: 0; }
-  li.admin-review {
-    background: $black-25;
-    padding: 1rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    .review-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-      strong { color: $white-100; }
-      .review-date { font-size: 0.85rem; color: $white-60; }
-    }
-    .user-text,
-    .shop-text {
-      margin: 0.25rem 0;
-      color: $white-80;
-    }
-    .photos {
-      display: flex;
-      gap: 0.5rem;
-      margin: 0.5rem 0;
-      img.admin-photo {
-        width: 60px;
-        height: 60px;
-        object-fit: cover;
-        border-radius: 4px;
-      }
-    }
-    .delete-btn {
-      @extend button;
-      background: $red-error;
-      margin-top: 0.5rem;
-    }
-    .review-link a {
-      color: $red-active;
-      text-decoration: none;
-      margin-left: 0.5rem;
-    }
+  /* Формы и табы */
+  .tabs {
+    flex-wrap: wrap;
+    gap: 4px;
   }
-}
+  .tabs button {
+    flex: 1 1 45%;
+    margin-bottom: 4px;
+  }
 
-.add-review-section {
-  form {
-    display: grid;
-    gap: 0.75rem;
-    max-width: 400px;
-    input, textarea {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid $grey-30;
-      border-radius: 4px;
-      background: $black-10;
-      color: $white-100;
-      font-size: 0.95rem;
-    }
-    button { @extend button; }
+  /* Логи */
+  .logs-table {
+    font-size: 12px;
   }
-  .error {
-    color: $red-error;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
+  .logs-table th, .logs-table td {
+    padding: 4px;
   }
-  .success {
-    color: lighten($red-active, 40%);
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-  }
-}
 
-/* =========================================
-   Мобильная адаптация
-   ========================================= */
-@media (max-width: 600px) {
-  .admin-page {
-    padding: 1rem;
+  .pagination-controls {
+    flex-direction: column;
+    gap: 8px;
   }
-  h1 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
+  .pagination-controls button {
+    width: 100%;
+    padding: 8px 0;
+    font-size: 1em;
   }
-  h2 {
-    font-size: 1.25rem;
+  .pagination-controls span {
+    margin: 0 8px;
   }
-  h3 {
-    font-size: 1.1rem;
-  }
-  p, li, td, th, .bar-value, .bar-label {
-    font-size: 0.8rem !important;
-  }
-  .combined-preview,
-  .sheet-preview-block,
-  .zip-preview-block,
-  .date-picker,
-  .pagination-controls,
-  .add-setting {
-    flex-direction: column !important;
-  }
-  .zip-input-block,
-  .preview-result,
-  .sheet-block,
-  button {
+
+  /* Google Sheets / ZIP */
+  .sheet-input {
     width: 100% !important;
+    margin-bottom: 8px;
   }
-  .chart-wrapper {
-    .bar-chart {
-      height: 200px;
-      .bar {
-        min-width: 16px;
-        margin: 0 0.15rem;
-      }
-      .bar-label {
-        font-size: 0.6rem;
-        bottom: -1rem;
-      }
-      .bar-value {
-        font-size: 0.6rem;
-      }
-    }
+  .sheet-save, .sheet-import, .upload-section button {
+    width: 100%;
   }
-  /* Таблицы */
-  .logs-table,
-  .users-section table,
-  .settings-section table {
+
+  .tabs {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .tabs button {
+    flex: 1 1 45%;
+  }
+
+  .sheet-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sheet-input {
+    width: 100%;
+  }
+  .sheet-save,
+  .sheet-import {
+    width: 100%;
+  }
+
+  .upload-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .upload-section input,
+  .upload-section button {
+    width: 100%;
+  }
+
+  .logs-table {
     display: block;
+    width: 100%;
     overflow-x: auto;
-    white-space: nowrap;
   }
+  .logs-table thead,
+  .logs-table tbody,
+  .logs-table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .chart-wrapper {
+    max-width: 100%;
+  }
+  .bar-chart {
+    height: 200px;
+  }
+  .bar {
+    margin: 0 1px;
+  }
+  .bar-label, .bar-value {
+    font-size: 10px;
+  }
+
+  .users-section table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .admin-review {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .photos {
+    flex-wrap: wrap;
+  }
+  .admin-photo {
+    width: 60px;
+    height: 60px;
+  }
+
 }
+
 </style>
