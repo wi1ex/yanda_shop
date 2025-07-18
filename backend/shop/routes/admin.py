@@ -204,13 +204,13 @@ def preview_sheet() -> Tuple[Response, int]:
         logger.exception("preview_sheet: fetch CSV failed for %s", category)
         return jsonify({"error": str(e)}), 500
 
-    warn_skus = preview_rows(category, rows)
+    errors = preview_rows(category, rows)
 
     return jsonify({
         "category": category,
         "total_rows": len(rows),
-        "invalid_count": len(warn_skus),
-        "warn_skus": warn_skus
+        "invalid_count": len(errors),
+        "errors": errors
     }), 200
 
 
@@ -274,29 +274,30 @@ def upload_images() -> Tuple[Response, int]:
 @admin_required
 @handle_errors
 def preview_images() -> Tuple[Response, int]:
-    """POST /api/admin/preview_images form-data: file_shoes, file_clothing, file_accessories"""
+    """
+    POST /api/admin/preview_images form-data: file_shoes, file_clothing, file_accessories
+    Возвращает для каждой категории результат preview_product_images.
+    Если ни одного файла не передано — 400.
+    """
     result: Dict[str, Any] = {}
+    # Собираем только реально пришедшие файлы
+    provided = {folder: request.files.get(f"file_{folder}") for folder in ("shoes", "clothing", "accessories")}
+    # Если ни одного архива
+    if not any(f for f in provided.values()):
+        return jsonify({"error": "no archive provided"}), 400
 
-    for folder in ("shoes", "clothing", "accessories"):
-        field = f"file_{folder}"
-        zf = request.files.get(field)
+    for folder, zf in provided.items():
         if not zf or not zf.filename.lower().endswith(".zip"):
-            logger.warning("preview_images: invalid or missing archive for %s", folder)
-            result[folder] = {"error": "file required and must be .zip"}
+            # пропущено намеренно, чтобы клиент увидел, что не прислал файл
+            result[folder] = {"skipped": True}
             continue
 
         archive_bytes = zf.stream.read()
         report = preview_product_images(folder, archive_bytes)
-
-        invalid_count = len(report.get("invalid_files", []))
-        extra_count   = len(report.get("extra_files", []))
-        missing_count = len(report.get("missing", {}))
-        logger.debug("preview_images: %s preview done invalid=%d extra=%d missing=%d",
-                     folder, invalid_count, extra_count, missing_count)
-
         result[folder] = report
 
-    logger.info("preview_images: finished")
+    logger.info("preview_images: finished with folders %s",
+                ", ".join(f"{f}={'skipped' if 'skipped' in result[f] else 'ok'}" for f in result))
     return jsonify(result), 200
 
 

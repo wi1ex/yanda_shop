@@ -610,10 +610,6 @@ export const useStore = defineStore('main', () => {
   }
 
   async function previewAllSheets() {
-    ['shoes','clothing','accessories'].forEach(cat => {
-      previewSheetResult[cat]  = null
-      previewSheetLoading[cat] = false
-    })
     for (const cat of ['shoes','clothing','accessories']) {
       await previewSheet(cat);
     }
@@ -665,23 +661,37 @@ export const useStore = defineStore('main', () => {
 
   async function previewImages(filesMap) {
     Object.keys(previewZipResult).forEach(cat => {
-      previewZipResult[cat]  = null
-      previewZipLoading[cat] = false
-    })
-    const form = new FormData()
+      previewZipResult[cat]  = null;
+      previewZipLoading[cat] = false;
+    });
+
+    const hasAny = Object.values(filesMap).some(f => f);
+    if (!hasAny) {
+      Object.keys(previewZipResult).forEach(cat => {
+        previewZipResult[cat] = { error: "no archive selected" };
+      });
+      return;
+    }
+
+    const form = new FormData();
     Object.entries(filesMap).forEach(([cat, f]) => {
-      form.append(`file_${cat}`, f)
-    })
+      if (f) form.append(`file_${cat}`, f);
+    });
     Object.keys(previewZipLoading).forEach(cat => {
-      previewZipLoading[cat] = true
-    })
+      previewZipLoading[cat] = true;
+    });
+
     try {
-      const { data } = await api.post(API.admin.previewImages, form)
-      Object.assign(previewZipResult, data)
+      const { data } = await api.post(API.admin.previewImages, form);
+      Object.assign(previewZipResult, data);
+    } catch (e) {
+      Object.keys(previewZipResult).forEach(cat => {
+        previewZipResult[cat] = { error: e.response?.data?.error || e.message };
+      });
     } finally {
       Object.keys(previewZipLoading).forEach(cat => {
-        previewZipLoading[cat] = false
-      })
+        previewZipLoading[cat] = false;
+      });
     }
   }
 

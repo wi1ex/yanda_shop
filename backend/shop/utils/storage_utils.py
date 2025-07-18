@@ -1,15 +1,18 @@
+import csv
 import io
 import os
 import re
 import zipfile
 from typing import Set, Tuple, List, Dict, Any
+import requests
 from minio.error import S3Error
 from werkzeug.utils import secure_filename
+from .db_utils import session_scope
+from .google_sheets import get_sheet_url
+from .parsers import parse_int
 from ..core.logging import logger
 from ..extensions import minio_client, BUCKET
 from ..models import Review
-from .product_serializer import model_by_category
-from .db_utils import session_scope
 
 
 # Helpers: safe MinIO operations
@@ -191,69 +194,97 @@ def cleanup_review_images() -> int:
 def preview_product_images(folder: str, archive_bytes: bytes) -> Dict[str, Any]:
     """
     Проверка ZIP-архива с изображениями категории folder:
-      - invalid_files: неподходящие имена файлов
-      - extra_files: индексы вне диапазона count_images
-      - missing: словарь { color_sku: недостающая_кол-во }
+      - errors: список {sku_or_filename, messages:[...]}
+      - total_expected: сколько всего изображений должно быть
+      - total_processed: сколько файлов в ZIP обработано
     """
     context = "preview_product_images"
-    logger.info("%s START folder=%s size_bytes=%d", context, folder, len(archive_bytes))
+    logger.debug("%s START folder=%s size_bytes=%d", context, folder, len(archive_bytes))
 
-    # 0) Получаем ожидаемое count_images из БД
-    Model = model_by_category(folder)
-    if Model is None:
-        logger.error("%s: unknown category %s", context, folder)
-        raise ValueError(f"Unknown category {folder}")
+    # 1) Скачиваем и парсим Google Sheet
+    sheet_url = get_sheet_url(folder)
+    if not sheet_url:
+        return {"errors": [{"sku_or_filename": folder, "messages": ["sheet_url_not_set"]}], "total_expected": 0, "total_processed": 0}
+
+    try:
+        resp = requests.get(sheet_url, timeout=20)
+        resp.raise_for_status()
+        csv_text = resp.content.decode("utf-8-sig")
+    except Exception as exc:
+        logger.warning("%s: cannot fetch sheet for %s: %s", context, folder, exc)
+        return {"errors": [{"sku_or_filename": folder, "messages": ["sheet_fetch_failed"]}], "total_expected": 0, "total_processed": 0}
 
     expected_map: Dict[str, int] = {}
-    with session_scope() as session:
-        for obj in session.query(Model).all():
-            expected_map[obj.color_sku] = getattr(obj, "count_images", 0) or 0
+    reader = csv.DictReader(io.StringIO(csv_text))
+    for row in reader:
+        sku = row.get("sku", "").strip()
+        world = row.get("world_sku", "").strip()
+        if not sku or not world:
+            continue
+        key = f"{sku}_{world}"
+        cnt = parse_int(row.get("count_images", "").strip())
+        expected_map[key] = cnt if cnt is not None and cnt >= 0 else 0
 
-    # 1) Открываем ZIP
+    total_expected = sum(expected_map.values())
+
+    # 2) Открываем ZIP
     try:
         archive = zipfile.ZipFile(io.BytesIO(archive_bytes))
     except zipfile.BadZipFile as exc:
-        logger.error("%s: bad zip: %s", context, exc)
-        return {"error": "invalid_zip"}
+        return {"errors": [{"sku_or_filename": folder, "messages": ["invalid_zip"]}], "total_expected": total_expected, "total_processed": 0}
 
-    # 2) Парсим файлы
-    invalid_files: List[str] = []
-    extra_files:   List[str] = []
-    seen_counts: Dict[str, int] = {sku: 0 for sku in expected_map}
+    # 3) Перебор файлов
     name_pattern = re.compile(r"^(.+)_(\d+)\.webp$", re.IGNORECASE)
+    seen_counts: Dict[str, int] = {sku: 0 for sku in expected_map}
+    seen_pairs: set = set()  # для детектирования дубликатов
+    errors: List[Dict[str, Any]] = []
+    total_processed: int = 0
 
     for info in archive.infolist():
         if info.is_dir():
             continue
-        filename = secure_filename(os.path.basename(info.filename))
+
+        filename = secure_filename(info.filename.split("/")[-1])
+        total_processed = locals().get("total_processed", 0) + 1
         m = name_pattern.match(filename)
+
+        msgs: List[str] = []
         if not m:
-            invalid_files.append(filename)
-            continue
-
-        sku  = m.group(1)
-        idx  = int(m.group(2))
-        exp  = expected_map.get(sku)
-        if exp is None:
-            invalid_files.append(filename)
-        elif idx < 1 or idx > exp:
-            extra_files.append(filename)
+            msgs.append("invalid_name_format")
         else:
-            seen_counts[sku] += 1
+            sku, idx_s = m.group(1), m.group(2)
+            idx = int(idx_s)
+            if sku not in expected_map:
+                msgs.append("unknown_sku")
+            else:
+                exp = expected_map[sku]
+                if idx < 1 or idx > exp:
+                    msgs.append("index_out_of_range")
+                else:
+                    pair = (sku, idx)
+                    if pair in seen_pairs:
+                        msgs.append("duplicate_image")
+                    else:
+                        seen_pairs.add(pair)
+                        seen_counts[sku] += 1
 
-    # 3) Вычисляем недостающие
-    missing = {
-        sku: exp - seen_counts.get(sku, 0)
-        for sku, exp in expected_map.items()
-        if exp != seen_counts.get(sku, 0)
+        if msgs:
+            errors.append({"sku_or_filename": filename, "messages": msgs})
+
+    # 4) Добавляем пропажи
+    for sku, exp in expected_map.items():
+        got = seen_counts.get(sku, 0)
+        if got < exp:
+            errors.append({
+                "sku_or_filename": sku,
+                "messages": [f"missing_images({exp - got})"]
+            })
+
+    logger.debug("%s END errors=%d total_expected=%d total_processed=%d",
+                 context, len(errors), total_expected, total_processed)
+
+    return {
+        "errors": errors,
+        "total_expected": total_expected,
+        "total_processed": total_processed
     }
-
-    result = {
-        "invalid_files": invalid_files,
-        "extra_files":   extra_files,
-        "missing":       missing
-    }
-
-    logger.info("%s END invalid=%d extra=%d missing_entries=%d",
-                context, len(invalid_files), len(extra_files), len(missing))
-    return result
