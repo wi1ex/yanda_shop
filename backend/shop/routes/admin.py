@@ -13,6 +13,7 @@ from ..models import ChangeLog, AdminSetting, Users, Review
 from ..utils.db_utils import session_scope
 from ..utils.google_sheets import get_sheet_url, process_rows, preview_rows
 from ..utils.jwt_utils import admin_required
+from ..utils.logging_utils import log_change
 from ..utils.route_utils import handle_errors, require_json
 from ..utils.cache_utils import load_delivery_options, load_parameters
 from ..utils.product_serializer import model_by_category
@@ -118,6 +119,8 @@ def update_sheet_url() -> Tuple[Response, int]:
             setting = session.get(AdminSetting, key)
         setting.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
 
+    log_change(action_type="Обновление URL таблицы", description=f"{category}: {url}")
+
     logger.info("update_sheet_url: updated %s -> %s", category, url)
     return jsonify({"status": "ok"}), 200
 
@@ -149,24 +152,11 @@ def import_sheet() -> Tuple[Response, int]:
         logger.exception("import_sheet: fetch CSV failed for %s", category)
         return jsonify({"error": str(e)}), 500
 
-    with session_scope() as session:
-        added, updated, deleted, warns, warn_skus = process_rows(category, rows)
-        desc = (
-            f"Добавлено: {added}. "
-            f"Изменено: {updated}. "
-            f"Удалено: {deleted}. "
-            f"Ошибки: {warns}. "
-            f"Проблемные SKU: {','.join(warn_skus) if warn_skus else 'нет'}"
-        )
-        session.add(
-            ChangeLog(
-                author_id=int(author_id_raw),
-                author_name=author_name,
-                action_type=f"Успешная загрузка {category}.csv",
-                description=desc,
-                timestamp=datetime.now(ZoneInfo("Europe/Moscow")),
-            )
-        )
+    added, updated, deleted, warns, warn_skus = process_rows(category, rows)
+
+    desc = (f"Добавлено: {added}. Изменено: {updated}. Удалено: {deleted}. Ошибки: {warns}. "
+            f"Проблемные SKU: {','.join(warn_skus) if warn_skus else 'нет'}")
+    log_change(action_type=f"Успешная загрузка {category}.csv", description=desc)
 
     logger.info("import_sheet: %s added=%d updated=%d deleted=%d warns=%d", category, added, updated, deleted, warns)
     return jsonify({"status": "ok",
@@ -205,6 +195,9 @@ def preview_sheet() -> Tuple[Response, int]:
         return jsonify({"error": str(e)}), 500
 
     errors = preview_rows(category, rows)
+
+    description = f"category={category}, total_rows={len(rows)}, invalid_count={len(errors)}"
+    log_change(action_type="Проверка таблицы", description=description)
 
     return jsonify({
         "category": category,
@@ -253,17 +246,9 @@ def upload_images() -> Tuple[Response, int]:
     added, replaced = upload_product_images(folder, archive_bytes)
     logger.debug("upload_images: upload done added=%d replaced=%d", added, replaced)
 
-    desc = f"Добавлено: {added}. Изменено: {replaced}. Удалено: {deleted}. Ошибки при cleanup: {cleanup_warns}"
-    with session_scope() as session:
-        session.add(
-            ChangeLog(
-                author_id=author_id,
-                author_name=author_name,
-                action_type=f"Успешная загрузка {z.filename}",
-                description=desc,
-                timestamp=datetime.now(ZoneInfo("Europe/Moscow")),
-            )
-        )
+    desc = (f"Добавлено: {added}. Изменено: {replaced}. "
+            f"Удалено: {deleted}. Ошибки при cleanup: {cleanup_warns}")
+    log_change(action_type=f"Успешная загрузка {z.filename}", description=desc)
 
     logger.info("upload_images: finished filename=%s added=%d replaced=%d deleted=%d warns=%d",
                 z.filename, added, replaced, deleted, cleanup_warns)
@@ -296,6 +281,12 @@ def preview_images() -> Tuple[Response, int]:
         report = preview_product_images(folder, archive_bytes)
         result[folder] = report
 
+    description = "; ".join(f"{folder}: expected={report.get('total_expected', 0)}, "
+                            f"processed={report.get('total_processed', 0)}, "
+                            f"invalid_count={len(report.get('errors', []))}"
+                            for folder, report in result.items())
+    log_change(action_type="Проверка изображений", description=description)
+
     logger.info("preview_images: finished with folders %s",
                 ", ".join(f"{f}={'skipped' if 'skipped' in result[f] else 'ok'}" for f in result))
     return jsonify(result), 200
@@ -323,18 +314,26 @@ def update_setting() -> Tuple[Response, int]:
     data = request.get_json()
     key = data["key"]
     value = data["value"]
+    new_key = False
+    old_value = str()
 
     with session_scope() as session:
         setting = session.get(AdminSetting, key)
         if setting:
+            old_value = setting.value
             setting.value = value
         else:
+            new_key = True
             session.add(AdminSetting(key=key, value=value))
         session.flush()
 
     # обновить кеш параметров
     load_parameters()
     load_delivery_options()
+
+    action_type = "Создание параметра" if new_key else "Изменение параметра"
+    description = f"{key}: {value}" if new_key else f"{key}: {old_value} -> {value}"
+    log_change(action_type=action_type, description=description)
 
     logger.info("update_setting: %s -> %s", key, value)
     return jsonify({"status": "ok"}), 200
@@ -357,11 +356,14 @@ def delete_setting(key: str) -> Tuple[Response, int]:
         setting = session.get(AdminSetting, key)
         if not setting:
             return jsonify({"error": "not found"}), 404
+        old_value = setting.value
         session.delete(setting)
 
     # обновить кеш публичных параметров
     load_parameters()
     load_delivery_options()
+
+    log_change(action_type="Удаление параметра", description=f"{key}: {old_value}")
 
     logger.info("delete_setting: %s deleted", key)
     return jsonify({"status": "deleted"}), 200
@@ -401,6 +403,8 @@ def create_review() -> Tuple[Response, int]:
         logger.info("create_review: saved review_id=%d photos=%d", review.id, saved)
         review_id = review.id
 
+    log_change(action_type="Создание отзыва", description=f"id={review_id}")
+
     return jsonify({"status": "ok", "message": "Отзыв успешно добавлен", "review_id": review_id}), 201
 
 
@@ -416,6 +420,9 @@ def delete_review(review_id: int) -> Tuple[Response, int]:
         session.delete(rev)
 
     removed = cleanup_review_images()
+
+    log_change(action_type="Удаление отзыва", description=f"id={review_id}")
+
     logger.debug("delete_review: cleanup removed=%d", removed)
     logger.info("delete_review: %d deleted", review_id)
     return jsonify({"status": "deleted"}), 200
@@ -471,14 +478,7 @@ def set_user_role() -> Tuple[Response, int]:
             return jsonify({"error": "user not found"}), 404
         user.role = new_role
         desc = f"Пользователю {user.username} {user.first_name} {user.last_name} назначена роль {new_role}"
-        session.add(
-            ChangeLog(
-                author_id=author_id,
-                author_name=author_name,
-                action_type="Назначение роли",
-                description=desc,
-                timestamp=datetime.now(ZoneInfo("Europe/Moscow")),
-            )
-        )
+
+    log_change(action_type="Назначение роли", description=desc)
 
     return jsonify({"status": "ok"}), 200

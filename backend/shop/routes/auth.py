@@ -17,19 +17,20 @@ auth_bp: Blueprint = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 # Internal helpers
 
-def _make_tokens(user_id: str, role: str) -> Dict[str, str]:
+def _make_tokens(user_id: str, username: str, role: str) -> Dict[str, str]:
     """
     Генерирует пару access/refresh токенов для заданного user_id и роли.
     """
+    claims = {"role": role, "username": username}
     return {
         "access_token": create_access_token(
             identity=user_id,
-            additional_claims={"role": role},
+            additional_claims=claims,
             expires_delta=timedelta(hours=1),
         ),
         "refresh_token": create_refresh_token(
             identity=user_id,
-            additional_claims={"role": role},
+            additional_claims=claims,
             expires_delta=timedelta(days=7),
         ),
     }
@@ -53,7 +54,7 @@ def login() -> Tuple[Response, int]:
         logger.warning("login: authentication failed for username=%r", username)
         return jsonify({"error": "Bad credentials"}), 401
 
-    tokens = _make_tokens(str(user.user_id), user.role)
+    tokens = _make_tokens(str(user.user_id), user.username, user.role)
     logger.info("login: user_id=%s role=%s logged in", user.user_id, user.role)
     return jsonify(tokens), 200
 
