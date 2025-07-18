@@ -25,10 +25,12 @@ const router = createRouter({
 })
 
 // глобальный guard вместо beforeEnter на одном маршруте
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const store = useStore()
-  if (to.name === 'Admin' && !store.accessToken && !store.refreshToken) {
-    return next({ name: 'Home' })
+  if (to.name === 'Admin') {
+    // если нет токенов или server-side проверка провалилась — домой
+    const ok = store.accessToken && store.refreshToken && await store.verifyAdminAccess()
+    if (!ok) return next({ name: 'Home' })
   }
   if (to.name === 'Home') {
     store.selectedCategory = ''
