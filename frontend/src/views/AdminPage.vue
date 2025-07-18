@@ -12,13 +12,21 @@
     <section class="preview-section" v-if="selected==='preview'">
       <h2>Превью: Sheets & Images</h2>
 
+      <div class="combined-preview">
+        <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="zip-input-block">
+          <label>{{ catLabel(cat) }}.zip</label>
+          <input type="file" @change="onPreviewZip($event,cat)" accept=".zip"/>
+        </div>
+
+        <button @click="onPreviewAll"
+                :disabled="isAny(store.previewSheetLoading) || isAny(store.previewZipLoading) || !hasAnyZip"
+                :aria-busy="isAny(store.previewSheetLoading) || isAny(store.previewZipLoading)">
+          {{ (isAny(store.previewSheetLoading)||isAny(store.previewZipLoading)) ? 'Проверяем…' : 'Проверить всё' }}
+        </button>
+      </div>
+
       <!-- 3 Google Sheets -->
       <div class="sheet-preview-block">
-        <button @click="store.previewAllSheets()" :disabled="isAny(store.previewSheetLoading)"
-                :aria-busy="isAny(store.previewSheetLoading)">
-          {{ isAny(store.previewSheetLoading) ? 'Проверяем…' : 'Проверить все таблицы' }}
-        </button>
-
         <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="preview-result">
           <h4>{{ catLabel(cat) }}</h4>
           <div v-if="store.previewSheetLoading[cat]">…</div>
@@ -37,15 +45,6 @@
 
       <!-- 3 ZIP для изображений -->
       <div class="zip-preview-block">
-        <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="zip-input-block">
-          <label>{{ catLabel(cat) }}.zip</label>
-          <input type="file" :ref="`${cat}Zip`" @change="onPreviewZip($event,cat)" accept=".zip"/>
-        </div>
-        <button @click="submitPreviewZip" :disabled="isAny(store.previewZipLoading) || !isAny(zipPreviewFiles)"
-                :aria-busy="isAny(store.previewZipLoading)">
-          {{ isAny(store.previewZipLoading) ? 'Проверяем…' : 'Проверить изображения' }}
-        </button>
-
         <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="preview-result">
           <h4>{{ catLabel(cat) }}</h4>
           <div v-if="store.previewZipLoading[cat]">…</div>
@@ -325,6 +324,10 @@ const tabs             = [
 
 const zipPreviewFiles = reactive({ shoes:null, clothing:null, accessories:null });
 
+const hasAnyZip = computed(() =>
+  Object.values(zipPreviewFiles).some(f=>f)
+);
+
 // Форма добавления отзыва
 const form = reactive({
   client_name:'', client_text1:'', shop_response:'', client_text2:'', link_url:''
@@ -356,12 +359,13 @@ const maxTotal = computed(() => {
 })
 
 // Утилиты
-function onPreviewZip(e,cat) {
-  zipPreviewFiles[cat] = e.target.files[0];
+async function onPreviewAll() {
+  await store.previewEverything(zipPreviewFiles);
+  Object.keys(zipPreviewFiles).forEach(cat => zipPreviewFiles[cat] = null);
 }
 
-function submitPreviewZip() {
-  store.previewImages(zipPreviewFiles);
+function onPreviewZip(e,cat) {
+  zipPreviewFiles[cat] = e.target.files[0];
 }
 
 function catLabel(cat) {
@@ -613,225 +617,246 @@ watch(selected, (tab) => {
   margin-top: 12vh;
   padding: 2vw;
   color: #fff;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* ----------------------------
-   Секция Превью (Sheets + ZIP)
-   ---------------------------- */
+/* Навигационные табы */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.tabs button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-weight: 500;
+}
+.tabs button:hover {
+  background: #e0e0e0;
+}
+.tabs button.active {
+  background: #007bff;
+  color: #fff;
+  border-color: #0056b3;
+}
+
+/* Заголовки секций */
+section h2 {
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #555;
+  padding-bottom: 0.5rem;
+}
+
+/* Кнопки общего стиля */
+.button,
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.25rem;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+.button:disabled,
+button:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+.button:hover:not(:disabled),
+button:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+/* --- Превью-проверка --- */
 .preview-section {
-  margin-top: 2rem;
   margin-bottom: 2rem;
-
-  h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
 }
 
-/* 3 блока по горизонтали */
+/* Внешний контейнер комбинированного превью */
+.combined-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+/* Блок выбора ZIP-файлов */
+.zip-input-block {
+  flex: 1 1 calc(33% - 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.zip-input-block label {
+  font-weight: 600;
+  color: #fff;
+}
+.zip-input-block input[type="file"] {
+  padding: 0.5rem;
+  background: #1e222b;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #ddd;
+}
+
+/* Карточки результатов превью */
+.preview-result {
+  flex: 1 1 calc(33% - 1rem);
+  background: #252a3b;
+  padding: 1rem;
+  border-radius: 6px;
+  min-width: 200px;
+}
+.preview-result h4 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  color: #fff;
+}
+.preview-result p {
+  margin: 0.25rem 0;
+  color: #ccc;
+}
+.preview-result ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+}
+.preview-result li {
+  margin-bottom: 0.3rem;
+  color: #ddd;
+}
+.preview-result .error {
+  color: #e94f37;
+  font-weight: 600;
+}
+
+/* Блок Google Sheets превью */
 .sheet-preview-block,
 .zip-preview-block {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 2rem;
-
-  /* каждая карточка результата */
-  .preview-result {
-    flex: 1 1 30%;
-    background: #252a3b;
-    padding: 1rem;
-    border-radius: 8px;
-    min-width: 200px;
-
-    h4 {
-      margin-top: 0;
-      font-size: 1.1rem;
-      color: #fff;
-    }
-    ul {
-      margin: 0.5rem 0 0;
-      padding-left: 1.2rem;
-      li {
-        margin-bottom: 0.3rem;
-        color: #ddd;
-      }
-    }
-    .error {
-      color: #e94f37;
-      font-weight: bold;
-    }
-  }
-
-  /* для блока загрузки ZIP */
-  .zip-input-block {
-    flex: 1 1 30%;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-
-    label {
-      font-weight: 600;
-      color: #fff;
-    }
-    input[type="file"] {
-      padding: 0.5rem;
-      background: #1e222b;
-      border: 1px solid #444;
-      border-radius: 4px;
-      color: #fff;
-    }
-  }
-
-  /* кнопка «Проверить» */
-  button {
-    background: #007bff;
-    color: #fff;
-    border: none;
-    padding: 0.75rem 1.25rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background 0.2s;
-
-    &:disabled {
-      background: #555;
-      cursor: not-allowed;
-    }
-  }
 }
 
-/* --- Секции CSV/ZIP и Google Sheets --- */
-.upload-section,
-.sheets-section {
-  margin-bottom: 24px;
+/* Секции загрузки и импорта */
+.sheets-section,
+.upload-section {
+  margin-bottom: 2rem;
 }
 
 .sheet-block {
-  margin-bottom: 20px;
+  background: #2b303e;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
 }
-
+.sheet-block h3 {
+  margin-top: 0;
+  font-size: 1.25rem;
+  color: #fff;
+}
 .sheet-input {
-  width: 60%;
-  margin-right: 8px;
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #555;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  background: #1e222b;
+  color: #fff;
 }
-
 .sheet-save,
 .sheet-import {
-  margin-right: 8px;
+  @extend button;
+  margin-right: 0.5rem;
 }
-
 .upload-result {
-  margin-top: 8px;
+  margin-top: 0.75rem;
   color: #bada55;
 }
 
-/* --- Секция логов изменений --- */
+/* --- Логи --- */
 .logs-section {
-  margin-bottom: 24px;
+  margin-bottom: 2rem;
 }
-
 .logs-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
 }
-
 .logs-table th,
 .logs-table td {
   border: 1px solid #444;
-  padding: 8px;
+  padding: 0.75rem;
   text-align: center;
-  font-size: 14px;
+  font-size: 0.9rem;
 }
-
 .logs-table th {
-  background-color: #252a3b;
+  background: #252a3b;
+  color: #fff;
 }
-
 .no-logs {
   text-align: center;
-  padding: 10px;
+  padding: 1rem;
   font-style: italic;
+  color: #bbb;
 }
-/* Пагинация логов */
+
 .pagination-controls {
   display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin: 16px 0;
-  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
 }
 
-.pagination-controls button {
-  background: #007bff;
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9em;
-  transition: background 0.2s;
-}
-
-.pagination-controls button:disabled {
-  background: #ccc;
-  color: #666;
-  cursor: not-allowed;
-}
-
-.pagination-controls span {
-  font-size: 0.9em;
-  color: #eee;
-}
-
-/* --- Секция статистики посещений --- */
+/* --- Статистика посещений --- */
 .visits-section {
-  margin-top: 40px;
-  margin-bottom: 40px;
+  margin-bottom: 2rem;
 }
-
 .date-picker {
   display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
 }
-
+.date-picker input[type="date"] {
+  padding: 0.5rem;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #1e222b;
+  color: #ddd;
+}
 .refresh-button {
-  background: #007bff;
-  color: white;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.3s;
+  @extend button;
+  padding: 0.5rem 1rem;
 }
-
 .loading-visits,
 .loading-logs {
   color: #bbb;
   font-style: italic;
-  margin-top: 10px;
 }
-
 .no-data {
   color: #bbb;
   font-style: italic;
-  margin-top: 20px;
   text-align: center;
-  padding: 12px;
+  padding: 1rem;
 }
 
-/* Контейнер для «самописного» бар-чарта */
 .chart-wrapper {
   width: 100%;
   max-width: 800px;
-  margin: 20px auto;
+  margin: 1rem auto;
 }
-
-/* Стили «бар-чарта» */
 .bar-chart {
   display: flex;
   align-items: flex-end;
@@ -839,433 +864,165 @@ watch(selected, (tab) => {
   border-left: 1px solid #666;
   border-bottom: 1px solid #666;
 }
-
 .bar {
   flex: 1;
-  margin: 0 2px;
-  background-color: #2196F3;
+  margin: 0 0.25rem;
+  background: #007bff;
+  border-radius: 4px 4px 0 0;
   position: relative;
   display: flex;
   flex-direction: column-reverse;
-  justify-content: flex-start;
   align-items: center;
-  transition: background 0.2s;
 }
-
-/* Надпись с числом сверху */
-.bar-value {
-  color: #fff;
-  font-size: 12px;
-  padding: 2px;
-}
-
 .bar-label {
   position: absolute;
-  bottom: -20px;
-  font-size: 12px;
+  bottom: -1.5rem;
+  font-size: 0.75rem;
   color: #ccc;
 }
-
-/* Навигационные табы */
-.tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-.tabs button {
-  padding: 8px 12px;
-  background: #eee;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-.tabs button.active {
-  background: #333;
+.bar-value {
+  padding: 0.25rem;
+  font-size: 0.75rem;
   color: #fff;
 }
 
-/* Секция «Параметры» */
-.settings-section {
-  margin-top: 24px;
+/* --- Пользователи --- */
+.users-section table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
 }
+.users-section th,
+.users-section td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: left;
+  font-size: 0.9rem;
+}
+.no-data {
+  text-align: center;
+  padding: 1rem;
+  color: #bbb;
+  font-style: italic;
+}
+
+/* --- Настройки --- */
 .settings-section table {
   width: 100%;
   border-collapse: collapse;
+  margin-bottom: 1rem;
 }
 .settings-section th,
 .settings-section td {
   border: 1px solid #ccc;
-  padding: 8px;
-  text-align: left;
-}
-.settings-section button {
-  padding: 4px 8px;
-  cursor: pointer;
-}
-.add-setting {
-  margin-top: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-.add-setting input {
-  padding: 6px;
-  flex: 1 1 200px;
-}
-.add-setting button {
-  padding: 6px 12px;
+  padding: 0.5rem;
 }
 .delete-icon {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.1em;
+  font-size: 1rem;
   color: #e94f37;
-  padding: 2px;
-  line-height: 1;
-  transition: color 0.2s;
 }
-.settings-section .btn-save-all {
-  margin-top: 16px;
-  padding: 8px 16px;
-  background: #007bff;
-  color: #fff;
-  border: none;
+.btn-save-all {
+  @extend button;
+}
+.add-setting {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.add-setting input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #555;
   border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.settings-section .btn-save-all:disabled {
-  background: #ccc;
-  cursor: not-allowed;
+  background: #1e222b;
+  color: #ddd;
 }
 
-/* Секция «Все отзывы» */
-.all-reviews-section {
-  margin-top: 24px;
-}
-.all-reviews-section ul {
-  list-style: none;
-  padding: 0;
-}
-.all-reviews-section li {
-  padding: 8px 0;
-  border-bottom: 1px solid #ddd;
-}
-.all-reviews-section button {
-  margin-left: 12px;
-  padding: 2px 6px;
-  cursor: pointer;
-}
-
-/* Секция «Добавить отзыв» */
-.add-review-section {
-  margin-top: 24px;
-}
-.add-review-section form {
-  display: grid;
-  gap: 12px;
-  max-width: 400px;
-}
-.add-review-section input,
-.add-review-section textarea {
-  width: 100%;
-  padding: 6px;
-  box-sizing: border-box;
-}
-.add-review-section button {
-  padding: 8px 12px;
-  cursor: pointer;
-}
-.error {
-  color: #e94f37;
-  margin-bottom: 8px;
-}
-.success {
-  color: #4caf50;
-  margin-bottom: 8px;
-}
-
-/* Поля загрузки фотографий */
-.photos-inputs {
-  margin-bottom: 4px;
-}
-.photos-inputs input {
-  display: block;
-  margin-bottom: 8px;
-}
-
+/* --- Отзывы --- */
+.all-reviews-section li,
 .admin-review {
-  border: 1px solid #ccc;
-  padding: 12px;
-  margin-bottom: 16px;
+  background: #2b303e;
+  padding: 1rem;
   border-radius: 6px;
+  margin-bottom: 1rem;
 }
 .review-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
 }
-.review-date { color: #888; font-size: 0.9em; }
-.user-text, .shop-text {
-  margin: 4px 0;
+.review-date {
+  color: #888;
+  font-size: 0.85rem;
+}
+.user-text,
+.shop-text {
+  margin: 0.25rem 0;
 }
 .photos {
   display: flex;
-  gap: 8px;
-  margin: 8px 0;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
 }
 .admin-photo {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
+  width: 60px;
+  height: 60px;
   border-radius: 4px;
+  object-fit: cover;
 }
 .delete-btn {
+  @extend button;
   background: #e94f37;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  cursor: pointer;
-  border-radius: 4px;
 }
 .review-link a {
   color: #007bff;
   text-decoration: none;
+  font-weight: 500;
 }
 
-.users-section {
-  margin-top: 24px;
+/* --- Добавить отзыв --- */
+.add-review-section form {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 400px;
 }
-.users-section table {
-  width: 100%;
-  border-collapse: collapse;
+.add-review-section input,
+.add-review-section textarea {
+  padding: 0.5rem;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #1e222b;
+  color: #ddd;
 }
-.users-section th, .users-section td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: left;
+.success {
+  color: #4caf50;
+  margin-bottom: 0.5rem;
+}
+.error {
+  color: #e94f37;
+  margin-bottom: 0.5rem;
 }
 
+/* --- Мобильная адаптация (max-width: 600px) --- */
 @media (max-width: 600px) {
+  .combined-preview,
   .sheet-preview-block,
   .zip-preview-block {
     flex-direction: column;
-
-    .preview-result,
-    .zip-input-block {
-      flex: 1 1 100%;
-    }
-
-    button {
-      width: 100%;
-    }
   }
-
-  /* Google Sheets */
+  .zip-input-block,
+  .preview-result,
   .sheet-block {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex: 1 1 100%;
   }
-  .sheet-input {
-    width: 100% !important;
-    margin-right: 0;
-  }
-  .sheet-save,
-  .sheet-import {
+  .button,
+  button {
     width: 100%;
   }
-
-  /* CSV/ZIP upload */
-  .upload-section form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .upload-section input,
-  .upload-section button {
-    width: 100%;
-  }
-
-  /* Таблица логов */
-  .logs-table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-  }
-  .logs-table thead,
-  .logs-table tbody,
-  .logs-table tr {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-  }
-
-  /* Date-picker */
-  .date-picker {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-  .date-picker input,
-  .date-picker .refresh-button {
-    width: 100%;
-  }
-
-  /* Бар-чарт */
-  .chart-wrapper {
-    max-width: 100%;
-  }
-  .bar-chart {
-    height: 200px;
-  }
-  .bar {
-    margin: 0 1px;
-  }
-  .bar-label {
-    font-size: 10px;
-    bottom: -16px;
-  }
-  .bar-value {
-    font-size: 10px;
-  }
-    /* Листы отзывов */
-  .admin-review {
-    padding: 8px;
-    font-size: 14px;
-  }
-  .review-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-  .photos {
-    flex-wrap: wrap;
-    justify-content: flex-start;
-  }
-  .admin-photo {
-    width: 60px;
-    height: 60px;
-  }
-
-  /* Формы и табы */
-  .tabs {
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-  .tabs button {
-    flex: 1 1 45%;
-    margin-bottom: 4px;
-  }
-
-  /* Логи */
-  .logs-table {
-    font-size: 12px;
-  }
-  .logs-table th, .logs-table td {
-    padding: 4px;
-  }
-
-  .pagination-controls {
-    flex-direction: column;
-    gap: 8px;
-  }
-  .pagination-controls button {
-    width: 100%;
-    padding: 8px 0;
-    font-size: 1em;
-  }
-  .pagination-controls span {
-    margin: 0 8px;
-  }
-
-  /* Google Sheets / ZIP */
-  .sheet-input {
-    width: 100% !important;
-    margin-bottom: 8px;
-  }
-  .sheet-save, .sheet-import, .upload-section button {
-    width: 100%;
-  }
-
-  .tabs {
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-  .tabs button {
-    flex: 1 1 45%;
-  }
-
-  .sheet-block {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .sheet-input {
-    width: 100%;
-  }
-  .sheet-save,
-  .sheet-import {
-    width: 100%;
-  }
-
-  .upload-section form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .upload-section input,
-  .upload-section button {
-    width: 100%;
-  }
-
-  .logs-table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-  }
-  .logs-table thead,
-  .logs-table tbody,
-  .logs-table tr {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-  }
-
-  .chart-wrapper {
-    max-width: 100%;
-  }
-  .bar-chart {
-    height: 200px;
-  }
-  .bar {
-    margin: 0 1px;
-  }
-  .bar-label, .bar-value {
-    font-size: 10px;
-  }
-
-  .users-section table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-  }
-
-  .admin-review {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .photos {
-    flex-wrap: wrap;
-  }
-  .admin-photo {
-    width: 60px;
-    height: 60px;
-  }
-
 }
 
 </style>

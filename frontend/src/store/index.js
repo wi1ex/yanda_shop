@@ -695,6 +695,28 @@ export const useStore = defineStore('main', () => {
     }
   }
 
+  async function previewEverything(filesMap) {
+    // запустить оба типа превью параллельно или последовательно, если нужно:
+    // 1) очистить предыдущие результаты
+    Object.keys(previewSheetResult).forEach(cat => previewSheetResult[cat]=null);
+    Object.keys(previewZipResult).forEach(cat  => previewZipResult[cat]  =null);
+
+    // 2) поднять все лоадеры
+    Object.keys(previewSheetLoading).forEach(cat=> previewSheetLoading[cat]=true);
+    Object.keys(previewZipLoading).forEach(cat=> previewZipLoading[cat]=true);
+
+    try {
+      // сначала проверяем Sheets
+      await previewAllSheets();
+      // затем ZIP
+      await previewImages(filesMap);
+    } finally {
+      // в любом случае выключаем все лоадеры
+      Object.keys(previewSheetLoading).forEach(cat=> previewSheetLoading[cat]=false);
+      Object.keys(previewZipLoading).forEach(cat=> previewZipLoading[cat]=false);
+    }
+  }
+
   // -------------------------------------------------
   // Return state & actions
   // -------------------------------------------------
@@ -753,7 +775,7 @@ export const useStore = defineStore('main', () => {
     fetchReviews, createReview, deleteReview,
 
     // admin sheets & logs & visits & zip
-    loadSheetUrls, saveSheetUrl, importSheet, previewAllSheets,
-    loadLogs, loadVisits, uploadZip, previewImages,
+    loadSheetUrls, saveSheetUrl, importSheet,
+    loadLogs, loadVisits, uploadZip, previewEverything,
   }
 })

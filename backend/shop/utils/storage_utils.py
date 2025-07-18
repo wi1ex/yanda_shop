@@ -204,7 +204,7 @@ def preview_product_images(folder: str, archive_bytes: bytes) -> Dict[str, Any]:
     # 1) Скачиваем и парсим Google Sheet
     sheet_url = get_sheet_url(folder)
     if not sheet_url:
-        return {"errors": [{"sku_or_filename": folder, "messages": ["sheet_url_not_set"]}], "total_expected": 0, "total_processed": 0}
+        return {"errors": [{"sku_or_filename": folder, "messages": ["отсутствует sheet_url"]}], "total_expected": 0, "total_processed": 0}
 
     try:
         resp = requests.get(sheet_url, timeout=20)
@@ -212,7 +212,7 @@ def preview_product_images(folder: str, archive_bytes: bytes) -> Dict[str, Any]:
         csv_text = resp.content.decode("utf-8-sig")
     except Exception as exc:
         logger.warning("%s: cannot fetch sheet for %s: %s", context, folder, exc)
-        return {"errors": [{"sku_or_filename": folder, "messages": ["sheet_fetch_failed"]}], "total_expected": 0, "total_processed": 0}
+        return {"errors": [{"sku_or_filename": folder, "messages": ["ошибка чтения таблицы"]}], "total_expected": 0, "total_processed": 0}
 
     expected_map: Dict[str, int] = {}
     reader = csv.DictReader(io.StringIO(csv_text))
@@ -231,7 +231,7 @@ def preview_product_images(folder: str, archive_bytes: bytes) -> Dict[str, Any]:
     try:
         archive = zipfile.ZipFile(io.BytesIO(archive_bytes))
     except zipfile.BadZipFile as exc:
-        return {"errors": [{"sku_or_filename": folder, "messages": ["invalid_zip"]}], "total_expected": total_expected, "total_processed": 0}
+        return {"errors": [{"sku_or_filename": folder, "messages": ["поврежденный архив"]}], "total_expected": total_expected, "total_processed": 0}
 
     # 3) Перебор файлов
     name_pattern = re.compile(r"^(.+)_(\d+)\.webp$", re.IGNORECASE)
@@ -250,20 +250,20 @@ def preview_product_images(folder: str, archive_bytes: bytes) -> Dict[str, Any]:
 
         msgs: List[str] = []
         if not m:
-            msgs.append("invalid_name_format")
+            msgs.append("неверный формат имени файла")
         else:
             sku, idx_s = m.group(1), m.group(2)
             idx = int(idx_s)
             if sku not in expected_map:
-                msgs.append("unknown_sku")
+                msgs.append("не найден соответствующий variant_sku среди товаров")
             else:
                 exp = expected_map[sku]
                 if idx < 1 or idx > exp:
-                    msgs.append("index_out_of_range")
+                    msgs.append("номер файла не находится в пределах необходимого")
                 else:
                     pair = (sku, idx)
                     if pair in seen_pairs:
-                        msgs.append("duplicate_image")
+                        msgs.append("повторяющееся имя файла")
                     else:
                         seen_pairs.add(pair)
                         seen_counts[sku] += 1
@@ -277,7 +277,7 @@ def preview_product_images(folder: str, archive_bytes: bytes) -> Dict[str, Any]:
         if got < exp:
             errors.append({
                 "sku_or_filename": sku,
-                "messages": [f"missing_images({exp - got})"]
+                "messages": [f"не хватает {exp - got} изображений"]
             })
 
     logger.debug("%s END errors=%d total_expected=%d total_processed=%d",
