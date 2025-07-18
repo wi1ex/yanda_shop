@@ -3,6 +3,7 @@ import io
 import os
 import re
 import zipfile
+import difflib
 from typing import Set, Tuple, List, Dict, Any
 import requests
 from minio.error import S3Error
@@ -194,26 +195,25 @@ def cleanup_review_images() -> int:
 def preview_product_images(folder: str, archive_bytes: bytes) -> Dict[str, Any]:
     """
     Проверка ZIP-архива с изображениями категории folder:
-      - errors: список {sku_or_filename, messages:[...]}
-      - total_expected: сколько всего изображений должно быть
-      - total_processed: сколько файлов в ZIP обработано
+      - errors: список словарей {sku_or_filename, messages:[...]}
+      - total_expected: общее число изображений, взятое из Google Sheets
+      - total_processed: число файлов, прочитанных из архива
     """
-    context = "preview_product_images"
-    logger.debug("%s START folder=%s size_bytes=%d", context, folder, len(archive_bytes))
-
-    # 1) Скачиваем и парсим Google Sheet
+    # 1) Получаем CSV из Google Sheets
     sheet_url = get_sheet_url(folder)
     if not sheet_url:
-        return {"errors": [{"sku_or_filename": folder, "messages": ["отсутствует sheet_url"]}], "total_expected": 0, "total_processed": 0}
+        return {"errors": [{"sku_or_filename": folder, "messages": ["отсутствует sheet_url"]}],
+                "total_expected": 0, "total_processed": 0}
 
     try:
         resp = requests.get(sheet_url, timeout=20)
         resp.raise_for_status()
         csv_text = resp.content.decode("utf-8-sig")
-    except Exception as exc:
-        logger.warning("%s: cannot fetch sheet for %s: %s", context, folder, exc)
-        return {"errors": [{"sku_or_filename": folder, "messages": ["ошибка чтения таблицы"]}], "total_expected": 0, "total_processed": 0}
+    except Exception:
+        return {"errors": [{"sku_or_filename": folder, "messages": ["ошибка чтения таблицы"]}],
+                "total_expected": 0, "total_processed": 0}
 
+    # 2) Строим карту ожидаемых изображений
     expected_map: Dict[str, int] = {}
     reader = csv.DictReader(io.StringIO(csv_text))
     for row in reader:
@@ -227,67 +227,94 @@ def preview_product_images(folder: str, archive_bytes: bytes) -> Dict[str, Any]:
 
     total_expected = sum(expected_map.values())
 
-    # 2) Открываем ZIP
+    # 3) Открываем ZIP
     try:
         archive = zipfile.ZipFile(io.BytesIO(archive_bytes))
     except zipfile.BadZipFile:
-        return {"errors": [{"sku_or_filename": folder, "messages": ["поврежденный архив"]}], "total_expected": total_expected, "total_processed": 0}
+        return {"errors": [{"sku_or_filename": folder, "messages": ["поврежденный архив"]}],
+                "total_expected": total_expected, "total_processed": 0}
 
-    # 3) Первичный разбор всех файлов
+    # 4) Подготовка структур
     name_pattern = re.compile(r"^(.+)_(\d+)\.webp$", re.IGNORECASE)
-    bad_format, unknown = [], []
-    by_sku = {sku: [] for sku in expected_map}
-    duplicates = []
-    seen = set()
+    bad_format: List[str] = []
+    unknown: List[str] = []
+    duplicates: List[str] = []
+    typo_errors: List[Dict[str, Any]] = []
+    by_sku: Dict[str, List[int]] = {sku: [] for sku in expected_map}
+    seen_pairs = set()
+    processed_count = 0
 
+    # 5) Проходим по файлам архива
     for info in archive.infolist():
-        if info.is_dir(): continue
+        if info.is_dir():
+            continue
+        processed_count += 1
         fn = secure_filename(os.path.basename(info.filename))
         m = name_pattern.match(fn)
         if not m:
             bad_format.append(fn)
             continue
 
-        sku, idx = m.group(1), int(m.group(2))
-        if sku not in expected_map:
-            unknown.append(fn)
+        sku_raw, idx_s = m.group(1), m.group(2)
+        idx = int(idx_s)
+
+        # Попытаемся найти точный SKU или сделать «автокоррекцию»
+        if sku_raw in expected_map:
+            sku = sku_raw
         else:
-            pair = (sku, idx)
-            if pair in seen:
-                duplicates.append(fn)
+            close = difflib.get_close_matches(sku_raw, expected_map.keys(), n=1, cutoff=0.8)
+            if close:
+                sku = close[0]
+                typo_errors.append({
+                    "sku_or_filename": fn,
+                    "messages": [f"опечатка в SKU, вероятно ожидался «{sku}»"]
+                })
             else:
-                seen.add(pair)
-                by_sku[sku].append(idx)
+                unknown.append(fn)
+                continue
 
-    errors = []
+        pair = (sku, idx)
+        if pair in seen_pairs:
+            duplicates.append(fn)
+        else:
+            seen_pairs.add(pair)
+            by_sku[sku].append(idx)
 
-    # 4) Проверяем по каждому SKU из таблицы
+    # 6) Собираем итоговые ошибки
+    errors: List[Dict[str, Any]] = []
+
+    # Проверяем для каждого SKU: пропуски и номера вне диапазона
     for sku, exp in expected_map.items():
-        found = by_sku.get(sku, [])
-        # лишние индексы
-        for idx in found:
-            if idx < 1 or idx > exp:
+        found = by_sku[sku]
+        for fidx in found:
+            if fidx < 1 or fidx > exp:
                 errors.append({
-                    "sku_or_filename": f"{sku}_{idx}.webp",
+                    "sku_or_filename": f"{sku}_{fidx}.webp",
                     "messages": ["номер файла не в диапазоне"]
                 })
-        # дубли и пропажи
         if len(found) < exp:
             errors.append({
                 "sku_or_filename": sku,
                 "messages": [f"не хватает {exp - len(found)} изображений"]
             })
 
-    # 5) Добавляем файлы, которые не относятся к таблице
+    # Формат имени
     for fn in bad_format:
         errors.append({"sku_or_filename": fn, "messages": ["неверный формат имени"]})
+
+    # Неизвестные файлы
     for fn in unknown:
         errors.append({"sku_or_filename": fn, "messages": ["SKU не найден в таблице"]})
+
+    # Дубликаты
     for fn in duplicates:
         errors.append({"sku_or_filename": fn, "messages": ["дубликат файла"]})
 
+    # Автокоррекция опечаток
+    errors.extend(typo_errors)
+
     return {
         "errors":          errors,
-        "total_expected":  sum(expected_map.values()),
-        "total_processed": len(bad_format) + len(unknown) + sum(len(v) for v in by_sku.values())
+        "total_expected":  total_expected,
+        "total_processed": processed_count
     }
