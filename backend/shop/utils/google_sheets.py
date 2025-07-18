@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 from zoneinfo import ZoneInfo
 from .db_utils import session_scope
 from .parsers import parse_int, parse_float, normalize_str
@@ -145,55 +145,81 @@ def apply_update(obj, data: Dict[str, str], warn_skus: List[str], context: str) 
     return updated, warns
 
 
-def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[str]:
+def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, Any]]:
     """
     Превью-валидация CSV-строк для категории category:
-      - вызывает validate_row для базовой проверки
-      - дополнительно парсит INT_FIELDS и FLOAT_FIELDS
-    Возвращает упорядоченный список уникальных variant_sku с ошибками.
+      - проверяет формат variant_sku, gender, category
+      - проверяет непустоту обязательных полей
+      - проверяет числовые поля INT_FIELDS и FLOAT_FIELDS
+    Возвращает список ошибок вида:
+      [{"variant_sku": str, "messages": [str, ...]}, ...]
     """
     context = "preview_rows"
-    logger.info("%s START category=%s rows=%d", context, category, len(rows))
+    logger.debug("%s START category=%s rows=%d", context, category, len(rows))
 
-    # 0) Проверка категории
     Model = model_by_category(category)
     if Model is None:
         logger.error("%s: unknown category %s", context, category)
         raise ValueError(f"Unknown category {category}")
 
-    warn_skus: List[str] = []
+    errors: List[Dict[str, Any]] = []
 
-    # 1) Проходим по всем строкам
     for row in rows:
-        variant, _, err = validate_row(row)
-        if err:
-            warn_skus.append(variant)
+        variant = row.get("variant_sku", "").strip()
+        entry_errors: List[str] = []
+
+        # 1) Формат SKU
+        if not SKU_PATTERN.match(variant):
+            entry_errors.append("Неправильный формат variant_sku")
+
+        # 2) Пол
+        gender = row.get("gender", "").strip()
+        if gender not in VALID_GENDERS:
+            entry_errors.append(f"Недопустимое значение gender='{gender}'")
+
+        # 3) Категория
+        cat_val = row.get("category", "").strip()
+        if cat_val not in VALID_CATS:
+            entry_errors.append(f"Недопустимая категория='{cat_val}'")
+
+        # 4) Обязательные поля не пусты
+        data = {k: v.strip() for k, v in row.items() if k != "variant_sku"}
+        missing = [fld for fld, val in data.items() if not val and fld not in OPTIONAL_EMPTY]
+        if missing:
+            entry_errors.append(f"Пустые обязательные поля: {', '.join(missing)}")
+
+        if entry_errors:
+            errors.append({"variant_sku": variant, "messages": entry_errors})
             continue
 
-        # 2) Проверяем целочисленные поля
+        # 5) Проверка целочисленных полей
         for fld in INT_FIELDS:
             raw = row.get(fld, "").strip()
-            if not raw:
-                continue
-            val = parse_int(raw)
-            if val is None or val < 0:
-                warn_skus.append(variant)
-                break
+            if raw:
+                val = parse_int(raw)
+                if val is None or val < 0:
+                    entry_errors.append(f"Неверное целое {fld}='{raw}'")
+                    break
 
-        # 3) Проверяем числовые с плавающей точкой
+        if entry_errors:
+            errors.append({"variant_sku": variant, "messages": entry_errors})
+            continue
+
+        # 6) Проверка числовых полей с плавающей точкой
         for fld in FLOAT_FIELDS:
             raw = row.get(fld, "").strip()
-            if not raw:
-                continue
-            val = parse_float(raw)
-            if val is None or val < 0:
-                warn_skus.append(variant)
-                break
+            if raw:
+                val = parse_float(raw)
+                if val is None or val < 0:
+                    entry_errors.append(f"Неверное число {fld}='{raw}'")
+                    break
 
-    # 4) Финальный лог и возврат
-    unique_warns = sorted(set(warn_skus))
-    logger.info("%s END invalid=%d", context, len(unique_warns))
-    return unique_warns
+        if entry_errors:
+            errors.append({"variant_sku": variant, "messages": entry_errors})
+            continue
+
+    logger.debug("%s END invalid entries=%d", context, len(errors))
+    return errors
 
 
 def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, int, int, List[str]]:

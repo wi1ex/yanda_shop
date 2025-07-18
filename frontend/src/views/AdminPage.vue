@@ -14,16 +14,24 @@
 
       <!-- 3 Google Sheets -->
       <div class="sheet-preview-block">
-        <button @click="store.previewAllSheets()" :disabled="isAny(store.previewSheetLoading)">
+        <button @click="store.previewAllSheets()" :disabled="isAny(store.previewSheetLoading)"
+                :aria-busy="isAny(store.previewSheetLoading)">
           {{ isAny(store.previewSheetLoading) ? 'Проверяем…' : 'Проверить все таблицы' }}
         </button>
+
         <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="preview-result">
           <h4>{{ catLabel(cat) }}</h4>
           <div v-if="store.previewSheetLoading[cat]">…</div>
-          <ul v-else-if="store.previewSheetResult[cat]?.warn_skus">
-            <li v-for="sku in store.previewSheetResult[cat].warn_skus" :key="sku">{{ sku }}</li>
-          </ul>
-          <div v-else>Ошибок нет</div>
+          <div v-else-if="store.previewSheetResult[cat]">
+            <p>Всего строк: {{ store.previewSheetResult[cat].total_rows }}</p>
+            <p>Ошибок: {{ store.previewSheetResult[cat].invalid_count }}</p>
+            <ul v-if="store.previewSheetResult[cat].errors?.length">
+              <li v-for="e in store.previewSheetResult[cat].errors" :key="e.variant_sku">
+                <strong>{{ e.variant_sku }}</strong>: {{ e.messages.join('; ') }}
+              </li>
+            </ul>
+            <div v-else>Все в порядке</div>
+          </div>
         </div>
       </div>
 
@@ -33,7 +41,8 @@
           <label>{{ catLabel(cat) }}.zip</label>
           <input type="file" :ref="`${cat}Zip`" @change="onPreviewZip($event,cat)" accept=".zip"/>
         </div>
-        <button @click="submitPreviewZip" :disabled="isAny(store.previewZipLoading)">
+        <button @click="submitPreviewZip" :disabled="isAny(store.previewZipLoading) || !isAny(zipPreviewFiles)"
+                :aria-busy="isAny(store.previewZipLoading)">
           {{ isAny(store.previewZipLoading) ? 'Проверяем…' : 'Проверить изображения' }}
         </button>
 
