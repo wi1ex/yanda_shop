@@ -636,11 +636,10 @@ watch(selected, (tab) => {
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
-    &:hover { background: $grey-89; }
     &.active {
       background: $red-active;
       color: $white-100;
-      border-color: darken($red-active, 10%);
+      border-color: $red-active;
     }
   }
 }
@@ -672,7 +671,6 @@ button {
   font-size: 1rem;
   cursor: pointer;
   transition: background 0.2s;
-  &:hover:not(:disabled) { background: darken($red-active, 10%); }
   &:disabled {
     background: $grey-30;
     cursor: not-allowed;
@@ -867,7 +865,6 @@ button {
       flex-direction: column-reverse;
       align-items: center;
       transition: background 0.2s;
-      &:hover { background: darken($red-active, 10%); }
       .bar-value {
         padding: 0.25rem;
         font-size: 0.75rem;
