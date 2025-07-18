@@ -615,307 +615,431 @@ watch(selected, (tab) => {
 
 .admin-page {
   margin-top: 12vh;
-  padding: 0.5rem;
+  padding: 2rem;
+  background: $black-100;
   color: $white-100;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   overflow-x: hidden;
 }
 
-/* Навигационные табы */
 .tabs {
   display: flex;
-  flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-.tabs button {
-  width: 100%;
-  padding: 0.75rem;
-  background: $grey-90;
-  border: 1px solid $grey-87;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s;
-  font-weight: 500;
-  color: $black-100;
-  min-height: 44px;
-}
-.tabs button:hover {
-  background: $grey-89;
-}
-.tabs button.active {
-  background: $red-active;
-  color: $white-100;
-  border-color: $red-active;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  button {
+    flex: 1 1 auto;
+    padding: 0.75rem 1rem;
+    background: $grey-90;
+    border: 1px solid $grey-87;
+    border-radius: 4px;
+    color: $black-100;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    &:hover { background: $grey-89; }
+    &.active {
+      background: $red-active;
+      color: $white-100;
+      border-color: darken($red-active, 10%);
+    }
+  }
 }
 
-/* Заголовки секций */
-section h2 {
-  font-size: 1.25rem;
-  margin-bottom: 0.75rem;
-  border-bottom: 2px solid $grey-30;
-  padding-bottom: 0.5rem;
-  color: $white-100;
+section {
+  margin-bottom: 2rem;
+  h2 {
+    font-size: 1.75rem;
+    color: $white-100;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid $grey-30;
+    padding-bottom: 0.5rem;
+  }
 }
 
-/* Кнопки общего стиля */
+/* =========================================
+   Кнопки
+   ========================================= */
 .button,
 button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem;
+  padding: 0.75rem 1.25rem;
   background: $red-active;
   color: $white-100;
   border: none;
   border-radius: 4px;
+  font-size: 1rem;
   cursor: pointer;
-  font-size: 1rem;
   transition: background 0.2s;
-  min-height: 44px;
-  width: 100%;
-}
-.button:disabled,
-button:disabled {
-  background: $grey-30;
-  cursor: not-allowed;
-}
-.button:hover:not(:disabled),
-button:hover:not(:disabled) {
-  background: darken($red-active, 10%);
+  &:hover:not(:disabled) { background: darken($red-active, 10%); }
+  &:disabled {
+    background: $grey-30;
+    cursor: not-allowed;
+  }
 }
 
-/* Превью-проверка */
+/* =========================================
+   Превью: combined-preview, sheets, zip
+   ========================================= */
 .preview-section {
-  margin-bottom: 1.5rem;
+  .combined-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+  }
+  .zip-input-block {
+    flex: 1 1 calc(33% - 1rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    label {
+      color: $white-100;
+    }
+    input[type="file"] {
+      padding: 0.5rem;
+      background: $black-25;
+      border: 1px solid $grey-30;
+      border-radius: 4px;
+      color: $white-80;
+    }
+  }
+  .preview-result {
+    flex: 1 1 calc(33% - 1rem);
+    background: $black-25;
+    padding: 1rem;
+    border-radius: 6px;
+    min-width: 180px;
+    h4 {
+      margin: 0 0 0.5rem;
+      font-size: 1.1rem;
+      color: $white-100;
+    }
+    p {
+      margin: 0.25rem 0;
+      color: $white-80;
+    }
+    ul {
+      margin: 0.5rem 0 0;
+      padding-left: 1.2rem;
+      li {
+        margin-bottom: 0.3rem;
+        color: $white-60;
+      }
+    }
+    .error {
+      color: $red-error;
+    }
+  }
+  .sheet-preview-block,
+  .zip-preview-block {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
 }
 
-.combined-preview {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.zip-input-block {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.zip-input-block label {
-  font-weight: 600;
-  color: $white-100;
-}
-.zip-input-block input[type="file"] {
-  padding: 0.75rem;
-  background: $black-10;
-  border: 1px solid $grey-30;
-  border-radius: 4px;
-  color: $white-100;
-  width: 100%;
-}
-
-.preview-result {
-  background: $black-10;
-  padding: 0.75rem;
-  border-radius: 6px;
-}
-.preview-result h4 {
-  margin: 0 0 0.5rem;
-  font-size: 1rem;
-  color: $white-100;
-}
-.preview-result p {
-  margin: 0.25rem 0;
-  color: $white-80;
-}
-.preview-result ul {
-  margin: 0.5rem 0 0;
-  padding-left: 1rem;
-}
-.preview-result li {
-  margin-bottom: 0.3rem;
-  color: $white-60;
-}
-.preview-result .error {
-  color: $red-error;
-  font-weight: 600;
-}
-
-/* Секции загрузки и импорта */
+/* =========================================
+   Google Sheets & ZIP upload sections
+   ========================================= */
 .sheets-section,
 .upload-section {
-  margin-bottom: 1.5rem;
+  .sheet-block {
+    background: $black-25;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    h3 {
+      margin-top: 0;
+      font-size: 1.25rem;
+      color: $white-100;
+    }
+    input.sheet-input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 0.75rem;
+      background: $black-10;
+      border: 1px solid $grey-30;
+      border-radius: 4px;
+      color: $white-100;
+    }
+    button.sheet-save,
+    button.sheet-import {
+      @extend button;
+      margin-right: 0.5rem;
+    }
+    p.upload-result {
+      margin-top: 0.5rem;
+      color: $white-80;
+    }
+  }
 }
 
-.sheet-block {
-  background: $black-10;
-  padding: 0.75rem;
-  border-radius: 6px;
-  margin-bottom: 0.75rem;
-}
-.sheet-block h3 {
-  margin-top: 0;
-  font-size: 1.1rem;
-  color: $white-100;
-}
-.sheet-input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid $grey-30;
-  border-radius: 4px;
-  margin-bottom: 0.5rem;
-  background: $black-25;
-  color: $white-100;
-}
-
-/* Логи */
+/* =========================================
+   Логи
+   ========================================= */
 .logs-section {
-  margin-bottom: 1.5rem;
-}
-.logs-table {
-  width: 100%;
-  border-collapse: collapse;
-  overflow-x: auto;
-  display: block;
-}
-.logs-table th,
-.logs-table td {
-  border: 1px solid $grey-30;
-  padding: 0.5rem;
-  text-align: center;
-  font-size: 0.75rem;
-}
-.logs-table th {
-  background: $black-10;
-  color: $white-100;
-}
-.no-logs {
-  text-align: center;
-  padding: 0.75rem;
-  font-style: italic;
-  color: $white-40;
+  h2 { margin-bottom: 1rem; }
+  .loading-logs {
+    color: $white-60;
+    font-style: italic;
+    margin-bottom: 1rem;
+  }
+  table.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    th, td {
+      border: 1px solid $grey-30;
+      padding: 0.75rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: $white-100;
+    }
+    th {
+      background: $black-25;
+    }
+    .no-logs {
+      text-align: center;
+      padding: 1rem;
+      font-style: italic;
+      color: $white-60;
+    }
+  }
+  .pagination-controls {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    button { @extend button; padding: 0.5rem 1rem; }
+    span { color: $white-80; font-size: 0.9rem; }
+  }
 }
 
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-}
-
-/* Статистика посещений */
+/* =========================================
+   Статистика посещений / бар-чарт
+   ========================================= */
 .visits-section {
-  margin-bottom: 1.5rem;
-}
-.date-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-.date-picker input[type="date"] {
-  padding: 0.75rem;
-  border: 1px solid $grey-30;
-  border-radius: 4px;
-  background: $black-25;
-  color: $white-100;
-  width: 100%;
-}
-.chart-wrapper {
-  width: 100%;
-  overflow-x: auto;
-}
-.bar-chart {
-  height: 150px;
-  border-left: 1px solid $grey-30;
-  border-bottom: 1px solid $grey-30;
-}
-.bar-label {
-  font-size: 0.6rem;
-  color: $white-60;
-}
-.bar-value {
-  font-size: 0.6rem;
-  color: $white-100;
-}
-
-/* Пользователи */
-.users-section table {
-  width: 100%;
-  border-collapse: collapse;
-  overflow-x: auto;
-  display: block;
-}
-
-/* Настройки */
-.settings-section table {
-  width: 100%;
-  border-collapse: collapse;
-  overflow-x: auto;
-  display: block;
-}
-.add-setting {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-}
-.add-setting input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid $grey-30;
-  border-radius: 4px;
-  background: $black-25;
-  color: $white-100;
+  .date-picker {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    label { color: $white-100; }
+    input[type="date"] {
+      padding: 0.5rem;
+      background: $black-10;
+      border: 1px solid $grey-30;
+      border-radius: 4px;
+      color: $white-100;
+    }
+    button.refresh-button {
+      @extend button;
+      padding: 0.5rem 1rem;
+    }
+  }
+  .loading-visits {
+    color: $white-60;
+    font-style: italic;
+    margin-bottom: 1rem;
+  }
+  .chart-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+  }
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    height: 300px;
+    border-left: 1px solid $grey-30;
+    border-bottom: 1px solid $grey-30;
+    padding-left: 0.5rem;
+    .bar {
+      flex: 1;
+      min-width: 20px;
+      margin: 0 0.25rem;
+      background: $red-active;
+      border-radius: 4px 4px 0 0;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      transition: background 0.2s;
+      &:hover { background: darken($red-active, 10%); }
+      .bar-value {
+        padding: 0.25rem;
+        font-size: 0.75rem;
+        color: $white-100;
+      }
+      .bar-label {
+        position: absolute;
+        bottom: -1.25rem;
+        font-size: 0.75rem;
+        color: $white-60;
+      }
+    }
+  }
 }
 
-/* Отзывы */
-.all-reviews-section li,
-.admin-review {
-  background: $black-10;
-  padding: 0.75rem;
-  border-radius: 6px;
-  margin-bottom: 0.75rem;
+/* =========================================
+   Пользователи, Настройки, Отзывы
+   ========================================= */
+.users-section,
+.settings-section {
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    th, td {
+      border: 1px solid $grey-30;
+      padding: 0.75rem;
+      font-size: 0.9rem;
+      color: $white-100;
+    }
+    thead th { background: $black-25; }
+  }
 }
-.review-header {
-  display: flex;
-  flex-direction: column;
-}
-.photos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-.admin-photo {
-  max-width: 100%;
-  height: auto;
-}
-
-/* Добавить отзыв */
-.add-review-section form {
-  display: grid;
-  gap: 0.75rem;
-}
-.add-review-section input,
-.add-review-section textarea {
-  padding: 0.75rem;
-  border: 1px solid $grey-30;
-  border-radius: 4px;
-  background: $black-25;
-  color: $white-100;
-  width: 100%;
+.settings-section {
+  .add-setting {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    input {
+      flex: 1;
+      padding: 0.5rem;
+      background: $black-10;
+      border: 1px solid $grey-30;
+      border-radius: 4px;
+      color: $white-100;
+    }
+    button { @extend button; }
+  }
 }
 
-/* Мобильная адаптация */
+.all-reviews-section {
+  ul { list-style: none; padding: 0; }
+  li.admin-review {
+    background: $black-25;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      strong { color: $white-100; }
+      .review-date { font-size: 0.85rem; color: $white-60; }
+    }
+    .user-text,
+    .shop-text {
+      margin: 0.25rem 0;
+      color: $white-80;
+    }
+    .photos {
+      display: flex;
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+      img.admin-photo {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+      }
+    }
+    .delete-btn {
+      @extend button;
+      background: $red-error;
+      margin-top: 0.5rem;
+    }
+    .review-link a {
+      color: $red-active;
+      text-decoration: none;
+      margin-left: 0.5rem;
+    }
+  }
+}
+
+.add-review-section {
+  form {
+    display: grid;
+    gap: 0.75rem;
+    max-width: 400px;
+    input, textarea {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid $grey-30;
+      border-radius: 4px;
+      background: $black-10;
+      color: $white-100;
+      font-size: 0.95rem;
+    }
+    button { @extend button; }
+  }
+  .error {
+    color: $red-error;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+  .success {
+    color: lighten($red-active, 40%);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* =========================================
+   Мобильная адаптация
+   ========================================= */
 @media (max-width: 600px) {
   .admin-page {
-    padding: 0.5rem;
+    padding: 1rem;
   }
-  h1 { font-size: 1.25rem; }
-  h2 { font-size: 1.1rem; }
-  h3 { font-size: 1rem; }
-  p, li, td, th { font-size: 0.8rem; }
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+  h3 {
+    font-size: 1.1rem;
+  }
+  p, li, td, th, .bar-value, .bar-label {
+    font-size: 0.8rem !important;
+  }
+  .combined-preview,
+  .sheet-preview-block,
+  .zip-preview-block,
+  .date-picker,
+  .pagination-controls,
+  .add-setting {
+    flex-direction: column !important;
+  }
+  .zip-input-block,
+  .preview-result,
+  .sheet-block,
+  button {
+    width: 100% !important;
+  }
+  .chart-wrapper {
+    .bar-chart {
+      height: 200px;
+      .bar {
+        min-width: 16px;
+        margin: 0 0.15rem;
+      }
+      .bar-label {
+        font-size: 0.6rem;
+        bottom: -1rem;
+      }
+      .bar-value {
+        font-size: 0.6rem;
+      }
+    }
+  }
+  /* Таблицы */
   .logs-table,
   .users-section table,
   .settings-section table {
@@ -924,5 +1048,4 @@ button:hover:not(:disabled) {
     white-space: nowrap;
   }
 }
-
 </style>
