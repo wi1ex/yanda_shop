@@ -230,61 +230,64 @@ def preview_product_images(folder: str, archive_bytes: bytes) -> Dict[str, Any]:
     # 2) Открываем ZIP
     try:
         archive = zipfile.ZipFile(io.BytesIO(archive_bytes))
-    except zipfile.BadZipFile as exc:
+    except zipfile.BadZipFile:
         return {"errors": [{"sku_or_filename": folder, "messages": ["поврежденный архив"]}], "total_expected": total_expected, "total_processed": 0}
 
-    # 3) Перебор файлов
+    # 3) Первичный разбор всех файлов
     name_pattern = re.compile(r"^(.+)_(\d+)\.webp$", re.IGNORECASE)
-    seen_counts: Dict[str, int] = {sku: 0 for sku in expected_map}
-    seen_pairs: set = set()  # для детектирования дубликатов
-    errors: List[Dict[str, Any]] = []
-    total_processed: int = 0
+    bad_format, unknown = [], []
+    by_sku = {sku: [] for sku in expected_map}
+    duplicates = []
+    seen = set()
 
     for info in archive.infolist():
-        if info.is_dir():
+        if info.is_dir(): continue
+        fn = secure_filename(os.path.basename(info.filename))
+        m = name_pattern.match(fn)
+        if not m:
+            bad_format.append(fn)
             continue
 
-        filename = secure_filename(info.filename.split("/")[-1])
-        total_processed = locals().get("total_processed", 0) + 1
-        m = name_pattern.match(filename)
-
-        msgs: List[str] = []
-        if not m:
-            msgs.append("неверный формат имени файла")
+        sku, idx = m.group(1), int(m.group(2))
+        if sku not in expected_map:
+            unknown.append(fn)
         else:
-            sku, idx_s = m.group(1), m.group(2)
-            idx = int(idx_s)
-            if sku not in expected_map:
-                msgs.append("не найден соответствующий variant_sku среди товаров")
+            pair = (sku, idx)
+            if pair in seen:
+                duplicates.append(fn)
             else:
-                exp = expected_map[sku]
-                if idx < 1 or idx > exp:
-                    msgs.append("номер файла не находится в пределах необходимого")
-                else:
-                    pair = (sku, idx)
-                    if pair in seen_pairs:
-                        msgs.append("повторяющееся имя файла")
-                    else:
-                        seen_pairs.add(pair)
-                        seen_counts[sku] += 1
+                seen.add(pair)
+                by_sku[sku].append(idx)
 
-        if msgs:
-            errors.append({"sku_or_filename": filename, "messages": msgs})
+    errors = []
 
-    # 4) Добавляем пропажи
+    # 4) Проверяем по каждому SKU из таблицы
     for sku, exp in expected_map.items():
-        got = seen_counts.get(sku, 0)
-        if got < exp:
+        found = by_sku.get(sku, [])
+        # лишние индексы
+        for idx in found:
+            if idx < 1 or idx > exp:
+                errors.append({
+                    "sku_or_filename": f"{sku}_{idx}.webp",
+                    "messages": ["номер файла не в диапазоне"]
+                })
+        # дубли и пропажи
+        if len(found) < exp:
             errors.append({
                 "sku_or_filename": sku,
-                "messages": [f"не хватает {exp - got} изображений"]
+                "messages": [f"не хватает {exp - len(found)} изображений"]
             })
 
-    logger.debug("%s END errors=%d total_expected=%d total_processed=%d",
-                 context, len(errors), total_expected, total_processed)
+    # 5) Добавляем файлы, которые не относятся к таблице
+    for fn in bad_format:
+        errors.append({"sku_or_filename": fn, "messages": ["неверный формат имени"]})
+    for fn in unknown:
+        errors.append({"sku_or_filename": fn, "messages": ["SKU не найден в таблице"]})
+    for fn in duplicates:
+        errors.append({"sku_or_filename": fn, "messages": ["дубликат файла"]})
 
     return {
-        "errors": errors,
-        "total_expected": total_expected,
-        "total_processed": total_processed
+        "errors":          errors,
+        "total_expected":  sum(expected_map.values()),
+        "total_processed": len(bad_format) + len(unknown) + sum(len(v) for v in by_sku.values())
     }
