@@ -52,15 +52,14 @@
           <div v-else-if="store.previewZipResult[cat]">
             <div v-if="store.previewZipResult[cat].error" class="error">{{ store.previewZipResult[cat].error }}</div>
             <div v-else>
-              <p>Неверные имена: {{ store.previewZipResult[cat].invalid_files.join(', ') || 'нет' }}</p>
-              <p>Лишние файлы: {{ store.previewZipResult[cat].extra_files.join(', ') || 'нет' }}</p>
-              <p>Недостающие:</p>
-              <ul>
-                <li v-for="(miss, sku) in store.previewZipResult[cat].missing" :key="sku">
-                  {{ sku }}: не хватает {{ miss }}
+              <ul v-if="store.previewZipResult[cat].errors?.length">
+                <li v-for="err in store.previewZipResult[cat].errors" :key="err.sku_or_filename">
+                  <strong>{{ err.sku_or_filename }}</strong>: {{ err.messages.join('; ') }}
                 </li>
-                <li v-if="!Object.keys(store.previewZipResult[cat].missing).length">нет</li>
               </ul>
+              <div v-else>
+                Нет ошибок
+              </div>
             </div>
           </div>
         </div>
