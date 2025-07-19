@@ -5,8 +5,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any, Dict, Tuple, List
 from flask import Blueprint, jsonify, request, Response
-from flask_jwt_extended import create_access_token, create_refresh_token
 from werkzeug.utils import secure_filename
+from .auth import make_tokens
 from ..core.logging import logger
 from ..core.config import BACKEND_URL
 from ..utils.db_utils import session_scope
@@ -35,22 +35,22 @@ def save_user() -> Tuple[Response, int]:
     """
     data: Dict[str, Any] = request.get_json()
     logger.debug("save_user: payload=%s", data)
-
     raw_id = data["id"]
+    is_tg = False
     # Determine if Telegram user (numeric)
     try:
-        user_id = int(raw_id)
+        int(raw_id)
         is_tg = True
     except (TypeError, ValueError):
         logger.debug("save_user: non-integer id %r, skip Postgres", raw_id)
-        is_tg = False
 
     now = datetime.now(ZoneInfo("Europe/Moscow"))
     if is_tg:
+        user_id    = int(raw_id)
         first_name = data.get("first_name")
-        last_name = data.get("last_name")
-        username = data.get("username")
-        photo_url = data.get("photo_url")
+        last_name  = data.get("last_name")
+        username   = data.get("username")
+        photo_url  = data.get("photo_url")
 
         try:
             with session_scope() as session:
@@ -155,8 +155,7 @@ def get_user_profile() -> Tuple[Response, int]:
             "created_at": u.created_at.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d %H:%M:%S"),
         }
         if u.role == "admin":
-            profile["access_token"]  = create_access_token(identity=str(u.user_id), additional_claims={"role": u.role})
-            profile["refresh_token"] = create_refresh_token(identity=str(u.user_id), additional_claims={"role": u.role})
+            profile["access_token"], profile["refresh_token"] = make_tokens(str(u.user_id), u.username, u.role)
 
     return jsonify(profile), 200
 
