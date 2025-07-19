@@ -1,7 +1,7 @@
 <template>
   <div class="app-container" v-if="store.user">
     <Header/>
-    <CartPage/>
+    <Cart/>
     <router-view/>
     <!-- Footer hidden on admin panel routes -->
     <Footer v-if="!isNoFooterRoute"/>
@@ -14,11 +14,11 @@ import { useRoute } from 'vue-router'
 import { useStore } from '@/store/index.js'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
-import CartPage from '@/views/CartPage.vue'
+import Cart from '@/components/Cart.vue'
 
 const store = useStore()
 const route = useRoute()
-const isNoFooterRoute = computed(() => route.name === 'Admin' || route.name === 'Profile')
+const isNoFooterRoute = computed(() => route.name === 'Admin')
 let prevOverflowCart
 
 // следим за открытием/закрытием корзины/меню
