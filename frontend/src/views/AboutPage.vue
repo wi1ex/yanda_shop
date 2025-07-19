@@ -158,7 +158,7 @@
             <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
                target="_blank" rel="noopener" class="link">TELEGRAM</a>
             <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp"
-               target="_blank" rel="noopener" class="link">WHATSAPP</a>
+               target="_blank" rel="noopener" class="link">WHATSAPP*</a>
             <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram"
                target="_blank" rel="noopener" class="link">INSTAGRAM*</a>
           </div>
