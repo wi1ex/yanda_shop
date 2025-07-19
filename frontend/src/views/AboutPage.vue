@@ -148,14 +148,14 @@
         <p>способ для связи</p>
       </div>
       <p class="community-text">Там мы помогаем с выбором размера, обсуждаем модели, делимся новинками и отвечаем без формальностей. Живой диалог, в котором тебе действительно хотят помочь.</p>
-      <a :href="store.parameters.url_social_telegram" target="_blank" rel="noopener" class="join-button">Присоединиться</a>
+      <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram" target="_blank" rel="noopener" class="join-button">Присоединиться</a>
       <div class="community-images">
         <div class="img-item-div">
           <div class="img-item"><img :src="about_image11" alt=""/></div>
           <div class="img-item">
-            <a :href="`mailto:${store.parameters.url_social_email}`"
+            <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
                rel="noopener" class="link">E-MAIL</a>
-            <a :href="store.parameters.url_social_telegram"
+            <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
                target="_blank" rel="noopener" class="link">TELEGRAM</a>
             <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp"
                target="_blank" rel="noopener" class="link">WHATSAPP</a>

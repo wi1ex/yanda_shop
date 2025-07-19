@@ -196,8 +196,8 @@
           <div class="section-body" :class="{ open: showRefund }">
             <p>Мы принимаем возвраты только в случае бракованного товара или ошибки с нашей стороны.</p>
             <p>Каждый случай рассматривается индивидуально — напишите нам в
-              <a :href="store.parameters.url_social_telegram_user1" target="_blank" rel="noopener">Telegram</a>
-              , и мы найдём решение.</p>
+              <a v-if="store.parameters.url_social_telegram_user1" :href="store.parameters.url_social_telegram_user1"
+                 target="_blank" rel="noopener">Telegram</a>, и мы найдём решение.</p>
           </div>
         </div>
       </div>

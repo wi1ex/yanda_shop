@@ -65,7 +65,7 @@
         <div class="info-note-block">
           <span class="icon">ℹ️</span>
           <p>Для возврата напишите нам письмо на
-            <a :href="`mailto:${store.parameters.url_social_email}`"
+            <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
                rel="noopener" class="link">{{ store.parameters.url_social_email }}</a>
             с темой «Возврат товара по заказу №» и пришлите факт несоответствия размера или модели.
           </p>
