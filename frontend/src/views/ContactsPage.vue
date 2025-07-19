@@ -6,11 +6,15 @@
         <h2 class="card-title">Вопросы по заказам</h2>
         <p class="card-item">
           <span>Телеграм:</span>
-          <a href="https://t.me/damzhem" class="link" target="_blank">@damzhem</a>
+          <a :href="store.parameters.url_social_telegram_user1" target="_blank" rel="noopener" class="link">
+            @{{ store.parameters.url_social_telegram_user1.slice(url.lastIndexOf('/') + 1) }}
+          </a>
         </p>
         <p class="card-item">
           <span>E-mail:</span>
-          <a href="mailto:mail@mail.ru" class="link">mail@mail.ru</a>
+          <a :href="`mailto:${store.parameters.url_social_email}`" rel="noopener" class="link">
+            {{ store.parameters.url_social_email }}
+          </a>
         </p>
         <p class="card-note">
           Подпишитесь на наш телеграм-канал, там вся самая свежая информация о товарах и акциях
@@ -20,7 +24,9 @@
         <h2 class="card-title">Остальные вопросы</h2>
         <p class="card-item">
           <span>Телеграм:</span>
-          <a href="https://t.me/yaaarche" class="link" target="_blank">@yaaarche</a>
+          <a :href="store.parameters.url_social_telegram_user2" target="_blank" rel="noopener" class="link">
+            @{{ store.parameters.url_social_telegram_user2.slice(url.lastIndexOf('/') + 1) }}
+          </a>
         </p>
       </div>
     </div>
@@ -28,8 +34,9 @@
 </template>
 
 <script setup>
-// В этом компоненте не используется reactive data, поэтому скрипт пока пуст.
-// При необходимости можно подключить store: const store = useStore()
+import { useStore } from '@/store/index.js'
+
+const store = useStore()
 </script>
 
 <style lang="scss">

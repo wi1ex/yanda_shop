@@ -10,7 +10,7 @@ from ..models import AdminSetting
 # Client Options Cache
 def load_parameters() -> None:
     """
-    Загружает все faq_question_*, faq_answer_*, url_social_* и info_* из БД в Redis.
+    Загружает все faq_question_*, faq_answer_*, url_social_* из БД в Redis.
     Вызывать при старте и после изменений в админке.
     """
     context = "load_parameters"

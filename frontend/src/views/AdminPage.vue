@@ -402,9 +402,7 @@ function isDateField(col) {
 }
 
 function formatDate(val) {
-  return val
-    ? new Date(val).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' })
-    : '—'
+  return val ? new Date(val).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' }) : '—'
 }
 
 // Отправка нового отзыва

@@ -64,8 +64,9 @@
       <div class="info-card">
         <div class="info-note-block">
           <span class="icon">ℹ️</span>
-          <p>
-            Для возврата напишите нам письмо на <a href="mailto:mail@mail.ru" class="link">mail@mail.ru</a>
+          <p>Для возврата напишите нам письмо на
+            <a :href="`mailto:${store.parameters.url_social_email}`"
+               rel="noopener" class="link">{{ store.parameters.url_social_email }}</a>
             с темой «Возврат товара по заказу №» и пришлите факт несоответствия размера или модели.
           </p>
           <p>Мы обработаем запрос в течении 2-х часов и вернемся с дальнейшими шагами.</p>
@@ -105,8 +106,9 @@
 </template>
 
 <script setup>
-// Скрипт не используется, весь контент статичен.
-// При необходимости можно подтянуть параметры из store.
+import { useStore } from '@/store/index.js'
+
+const store = useStore()
 </script>
 
 <style lang="scss">

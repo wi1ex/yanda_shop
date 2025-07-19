@@ -155,16 +155,16 @@
           </div>
           <div class="section-body" :class="{ open: showSize }">
             <p class="char-row" v-if="store.detailData.category === 'Обувь'">
-              <p>Глубина:</p>{{ store.detailData.depth_mm }} мм
+              <p v-if="store.detailData.depth_mm">Глубина: {{ store.detailData.depth_mm }} мм</p>
             </p>
             <p class="char-row" v-else-if="store.detailData.category === 'Одежда'">
-              <p>Плечи:</p>{{ store.detailData.chest_cm }} см
-              <p>Высота:</p>{{ store.detailData.height_cm }} см
+              <p v-if="store.detailData.chest_cm">Плечи: {{ store.detailData.chest_cm }} см</p>
+              <p v-if="store.detailData.height_cm">Высота: {{ store.detailData.height_cm }} см</p>
             </p>
             <p class="char-row" v-else-if="store.detailData.category === 'Аксессуары'">
-              <p>Ширина:</p>{{ store.detailData.width_cm }} см
-              <p>Высота:</p>{{ store.detailData.height_cm }} см
-              <p>Глубина:</p>{{ store.detailData.depth_cm }} см
+              <p v-if="store.detailData.width_cm">Ширина: {{ store.detailData.width_cm }} см</p>
+              <p v-if="store.detailData.height_cm">Высота: {{ store.detailData.height_cm }} см</p>
+              <p v-if="store.detailData.depth_cm">Глубина:{{ store.detailData.depth_cm }} см</p>
             </p>
           </div>
         </div>
@@ -177,11 +177,12 @@
             <img :src="showDelivery ? icon_arrow_up : icon_arrow_down" alt="" />
           </div>
           <div class="section-body" :class="{ open: showDelivery }">
-            <p>Выкуп и доставка товара занимают от 14 до 25 дней.<br>
-              Все заказы тщательно упаковываются и передаются в  курьерскую службу.<br>
-              Вы всегда можете отследить статус доставки в <a href="/profile">личном кабинете</a>.<br><br>
-              Оплата производится полностью заранее после подтверждения заказа.<br>
-              Мы фиксируем цену, подтверждаем покупки и дальше занимаемся всем сами.</p>
+            <p>Выкуп и доставка товара занимают от 14 до 25 дней.</p>
+            <p>Все заказы тщательно упаковываются и передаются в курьерскую службу.</p>
+            <p>Вы всегда можете отследить статус доставки в <a href="/profile">личном кабинете</a>.</p>
+            <br>
+            <p>Оплата производится полностью заранее после подтверждения заказа.</p>
+            <p>Мы фиксируем цену, подтверждаем покупки и дальше занимаемся всем сами.</p>
           </div>
         </div>
 
@@ -192,11 +193,11 @@
             <span>Возврат</span>
             <img :src="showRefund ? icon_arrow_up : icon_arrow_down" alt="" />
           </div>
-          <div class="section-body" :class="{ open: showRefund }">target="_blank" rel="noopener"
-            <p>Мы принимаем возвраты только в случае бракованного товара или ошибки с нашей стороны.<br>
-              Каждый случай рассматривается индивидуально — напишите нам в
-              <a v-if="store.parameters.url_social_telegram_user1" :href="store.parameters.url_social_telegram_user1"
-                 target="_blank" rel="noopener" class="footer-link">Telegram</a>, и мы найдём решение.</p>
+          <div class="section-body" :class="{ open: showRefund }">
+            <p>Мы принимаем возвраты только в случае бракованного товара или ошибки с нашей стороны.</p>
+            <p>Каждый случай рассматривается индивидуально — напишите нам в
+              <a :href="store.parameters.url_social_telegram_user1" target="_blank" rel="noopener">Telegram</a>
+              , и мы найдём решение.</p>
           </div>
         </div>
       </div>

@@ -48,19 +48,20 @@
           <div v-if="isAdmin" @click="goToPage('Admin')" class="dropdown-link">Админ-панель</div>
         </div>
         <div class="dropdown-menu-bottom">
-          <p class="dropdown-menu-symb">*</p>
           <div class="dropdown-menu-urls">
-            <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram" target="_blank" rel="noopener">
+            <a :href="`mailto:${store.parameters.url_social_email}`" rel="noopener">
+              <img :src="icon_logo_mail" alt="Mail" />
+            </a>
+            <a :href="store.parameters.url_social_telegram" target="_blank" rel="noopener">
               <img :src="icon_logo_telegram" alt="Telegram" />
             </a>
             <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp" target="_blank" rel="noopener">
               <img :src="icon_logo_whatsapp" alt="WhatsApp" />
-            </a>
-            <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`" rel="noopener">
-              <img :src="icon_logo_mail" alt="Mail" />
+              <p class="dropdown-menu-symb">*</p>
             </a>
             <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram" target="_blank" rel="noopener">
               <img :src="icon_logo_instagram" alt="Instagram" />
+              <p class="dropdown-menu-symb">*</p>
             </a>
           </div>
           <div class="dropdown-menu-text">*принадлежит компании Meta, признанной экстремистской и запрещенной на территории РФ</div>
@@ -268,11 +269,6 @@ watch(
     align-items: center;
     margin-bottom: 6px;
     gap: 4px;
-    .dropdown-menu-symb {
-      position: relative;
-      top: 38px;
-      left: 100px;
-    }
     .dropdown-menu-urls {
       display: flex;
       justify-content: center;
@@ -285,6 +281,11 @@ watch(
           width: 30px;
           height: 30px;
           object-fit: cover;
+        }
+        .dropdown-menu-symb {
+          position: relative;
+          top: 38px;
+          left: 100px;
         }
       }
     }
