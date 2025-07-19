@@ -6,13 +6,15 @@
         <h2 class="card-title">Вопросы по заказам</h2>
         <p class="card-item">
           <span>Телеграм:</span>
-          <a :href="store.parameters.url_social_telegram_user1" target="_blank" rel="noopener" class="link">
+          <a v-if="store.parameters.url_social_telegram_user1"
+             :href="store.parameters.url_social_telegram_user1" target="_blank" rel="noopener" class="link">
             @{{ store.parameters.url_social_telegram_user1.slice(url.lastIndexOf('/') + 1) }}
           </a>
         </p>
         <p class="card-item">
           <span>E-mail:</span>
-          <a :href="`mailto:${store.parameters.url_social_email}`" rel="noopener" class="link">
+          <a v-if="store.parameters.url_social_email"
+             :href="`mailto:${store.parameters.url_social_email}`" rel="noopener" class="link">
             {{ store.parameters.url_social_email }}
           </a>
         </p>
@@ -24,7 +26,7 @@
         <h2 class="card-title">Остальные вопросы</h2>
         <p class="card-item">
           <span>Телеграм:</span>
-          <a :href="store.parameters.url_social_telegram_user2" target="_blank" rel="noopener" class="link">
+          <a v-if="store.parameters.url_social_telegram_user2" :href="store.parameters.url_social_telegram_user2" target="_blank" rel="noopener" class="link">
             @{{ store.parameters.url_social_telegram_user2.slice(url.lastIndexOf('/') + 1) }}
           </a>
         </p>

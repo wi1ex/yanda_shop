@@ -49,10 +49,10 @@
         </div>
         <div class="dropdown-menu-bottom">
           <div class="dropdown-menu-urls">
-            <a :href="`mailto:${store.parameters.url_social_email}`" rel="noopener">
+            <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`" rel="noopener">
               <img :src="icon_logo_mail" alt="Mail" />
             </a>
-            <a :href="store.parameters.url_social_telegram" target="_blank" rel="noopener">
+            <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram" target="_blank" rel="noopener">
               <img :src="icon_logo_telegram" alt="Telegram" />
             </a>
             <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp" target="_blank" rel="noopener">
@@ -277,15 +277,19 @@ watch(
       a {
         width: 30px;
         height: 30px;
+        text-decoration: none;
         img {
           width: 30px;
           height: 30px;
           object-fit: cover;
         }
         .dropdown-menu-symb {
+          display: flex;
           position: relative;
-          top: 38px;
-          left: 100px;
+          margin: 0;
+          top: -38px;
+          left: 27px;
+          cursor: default;
         }
       }
     }
