@@ -20,18 +20,18 @@
         <!-- Колонка “Информация” -->
         <nav class="footer-nav" style="left: 49.8vw">
           <a href="#" class="footer-link" @click.prevent="goToPage('About')">О нас</a>
-          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Доставка и оплата</a>
-          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Возврат</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Delivery')">Доставка и оплата</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Contacts')">Контакты для связи</a>
         </nav>
 
         <!-- Колонка “Соцсети” -->
         <nav class="footer-nav" style="left: 81.5vw">
+          <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
+             rel="noopener" class="footer-link">E-mail</a>
           <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
              target="_blank" rel="noopener" class="footer-link">Telegram</a>
           <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp"
-             target="_blank" rel="noopener" class="footer-link">WhatsApp</a>
-          <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
-             rel="noopener" class="footer-link">Mail</a>
+             target="_blank" rel="noopener" class="footer-link">WhatsApp*</a>
           <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram"
              target="_blank" rel="noopener" class="footer-link">Instagram*</a>
           <p class="footer-link-text">*принадлежит компании Meta, признанной экстремистской и запрещенной на территории РФ</p>
@@ -61,18 +61,18 @@
         <!-- Колонка “Информация” -->
         <nav class="footer-nav">
           <a href="#" class="footer-link" @click.prevent="goToPage('About')">О нас</a>
-          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Доставка и оплата</a>
-          <a href="#" class="footer-link" @click.prevent="goToPage('Home')">Возврат</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Delivery')">Доставка и оплата</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Contacts')">Контакты для связи</a>
         </nav>
 
         <!-- Колонка “Соцсети” -->
         <nav class="footer-nav">
+          <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
+             rel="noopener" class="footer-link">E-mail</a>
           <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
              target="_blank" rel="noopener" class="footer-link">Telegram</a>
           <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp"
-             target="_blank" rel="noopener" class="footer-link">WhatsApp</a>
-          <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
-             rel="noopener" class="footer-link">Mail</a>
+             target="_blank" rel="noopener" class="footer-link">WhatsApp*</a>
           <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram"
              target="_blank" rel="noopener" class="footer-link">Instagram*</a>
           <p class="footer-link-text">*принадлежит компании Meta, признанной экстремистской и запрещенной на территории РФ</p>
