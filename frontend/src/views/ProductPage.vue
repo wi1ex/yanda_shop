@@ -177,7 +177,11 @@
             <img :src="showDelivery ? icon_arrow_up : icon_arrow_down" alt="" />
           </div>
           <div class="section-body" :class="{ open: showDelivery }">
-            <p>{{ store.parameters.info_delivery_short }}</p>
+            <p>Выкуп и доставка товара занимают от 14 до 25 дней.<br>
+              Все заказы тщательно упаковываются и передаются в  курьерскую службу.<br>
+              Вы всегда можете отследить статус доставки в <a href="/profile">личном кабинете</a>.<br><br>
+              Оплата производится полностью заранее после подтверждения заказа.<br>
+              Мы фиксируем цену, подтверждаем покупки и дальше занимаемся всем сами.</p>
           </div>
         </div>
 
@@ -188,8 +192,11 @@
             <span>Возврат</span>
             <img :src="showRefund ? icon_arrow_up : icon_arrow_down" alt="" />
           </div>
-          <div class="section-body" :class="{ open: showRefund }">
-            <p>{{ store.parameters.info_refund_short }}</p>
+          <div class="section-body" :class="{ open: showRefund }">target="_blank" rel="noopener"
+            <p>Мы принимаем возвраты только в случае бракованного товара или ошибки с нашей стороны.<br>
+              Каждый случай рассматривается индивидуально — напишите нам в
+              <a v-if="store.parameters.url_social_telegram_user1" :href="store.parameters.url_social_telegram_user1"
+                 target="_blank" rel="noopener" class="footer-link">Telegram</a>, и мы найдём решение.</p>
           </div>
         </div>
       </div>
@@ -815,9 +822,6 @@ onMounted(init)
             }
           }
         }
-        p {
-          margin: 0;
-        }
         .section-header {
           display: flex;
           align-items: center;
@@ -841,10 +845,15 @@ onMounted(init)
             max-height: 800px;
             opacity: 1;
           }
+          p {
+            margin: 0;
+            a {
+              color: $red-active;
+            }
+          }
           .char-row {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column;
           }
         }
         &.open {
