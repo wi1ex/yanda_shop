@@ -22,7 +22,6 @@ def load_parameters() -> None:
                     AdminSetting.key.like("faq_question_%"),
                     AdminSetting.key.like("faq_answer_%"),
                     AdminSetting.key.like("url_social_%"),
-                    AdminSetting.key.like("info_%"),
                 )
             ).all()
             payload = {s.key: s.value or "" for s in settings}
