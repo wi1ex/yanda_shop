@@ -26,9 +26,9 @@
 
         <!-- Колонка “Соцсети” -->
         <nav class="footer-nav" style="left: 81.5vw">
-          <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
+          <a :href="`mailto:${store.parameters.url_social_email}`"
              rel="noopener" class="footer-link">E-mail</a>
-          <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
+          <a :href="store.parameters.url_social_telegram"
              target="_blank" rel="noopener" class="footer-link">Telegram</a>
           <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp"
              target="_blank" rel="noopener" class="footer-link">WhatsApp*</a>
@@ -67,9 +67,9 @@
 
         <!-- Колонка “Соцсети” -->
         <nav class="footer-nav">
-          <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
+          <a :href="`mailto:${store.parameters.url_social_email}`"
              rel="noopener" class="footer-link">E-mail</a>
-          <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
+          <a :href="store.parameters.url_social_telegram"
              target="_blank" rel="noopener" class="footer-link">Telegram</a>
           <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp"
              target="_blank" rel="noopener" class="footer-link">WhatsApp*</a>
