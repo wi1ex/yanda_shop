@@ -8,7 +8,7 @@
           <span>Телеграм:</span>
           <a v-if="store.parameters.url_social_telegram_user1"
              :href="store.parameters.url_social_telegram_user1" target="_blank" rel="noopener" class="link">
-            @{{ store.parameters.url_social_telegram_user1.slice(url.lastIndexOf('/') + 1) }}
+            @{{ store.parameters.url_social_telegram_user1.split('/').pop() }}
           </a>
         </p>
         <p class="card-item">
@@ -27,7 +27,7 @@
         <p class="card-item">
           <span>Телеграм:</span>
           <a v-if="store.parameters.url_social_telegram_user2" :href="store.parameters.url_social_telegram_user2" target="_blank" rel="noopener" class="link">
-            @{{ store.parameters.url_social_telegram_user2.slice(url.lastIndexOf('/') + 1) }}
+            @{{ store.parameters.url_social_telegram_user2.split('/').pop() }}
           </a>
         </p>
       </div>
