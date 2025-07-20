@@ -1,17 +1,20 @@
 <template>
   <div class="delivery-page">
+    <div class="line-vert"></div>
     <h1 class="section-title">Доставка и оплата</h1>
-
+    <div class="line-hor"></div>
     <!-- Доставка и оплата -->
     <div class="info-row">
       <!-- Доставка -->
       <div class="info-card">
         <h2 class="card-title">Доставка</h2>
         <p class="info-text">
-          Доставка по РФ осуществляется через Яндекс.Доставку или СДЭК. При выборе способа доставки
-          необходимо указать желаемый способ доставки и адрес: удобного для ПВЗ. В Москве и ближайшем
-          Подмосковье есть возможность доставки курьером, если необходимо привезти сразу домой. В этом
-          случае необходимо указать полный адрес в соответствующем выборе доставки.
+          Доставка по РФ осуществляется через Яндекс.Доставку или СДЭК.
+          <p class="info-text small">
+            При выборе способа доставки необходимо указать желаемый способ доставки и адрес: удобного для ПВЗ.
+            В Москве и ближайшем Подмосковье есть возможность доставки курьером, если необходимо привезти сразу домой.
+            В этом случае необходимо указать полный адрес в соответствующем выборе доставки.
+          </p>
         </p>
         <ul class="list">
           <li>Доставка курьером в пределах МКАД — до 800 ₽.</li>
@@ -103,6 +106,7 @@
       </div>
     </div>
   </div>
+  <div class="line-hor"></div>
 </template>
 
 <script setup>
@@ -112,117 +116,130 @@ const store = useStore()
 </script>
 
 <style lang="scss">
-.delivery-page {
+
+
+.line-vert {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 0.5px);
+  width: 1px;
+  height: 100%;
+  background-color: $white-100;
+  z-index: 10;
+}
+.line-hor {
   width: 100%;
-  padding: 80px 32px;
-  background-color: $grey-95;
-  color: $black-100;
-  box-sizing: border-box;
+  height: 1px;
+  background-color: $white-100;
+  z-index: 100;
+}
+.delivery-page {
   display: flex;
   flex-direction: column;
   align-items: center;
   .section-title {
-    margin-bottom: 40px;
-    font-family: Bounded-500;
+    margin: 96px 0 40px;
+    font-family: Bounded-350;
     font-size: 32px;
     line-height: 90%;
-    letter-spacing: -0.72px;
-    text-align: center;
+    letter-spacing: -2.24px;
+    z-index: 20;
   }
   .info-row {
     display: flex;
-    gap: 32px;
-    width: 100%;
-    max-width: 1200px;
-    margin-bottom: 48px;
-    flex-wrap: wrap;
+    z-index: 20;
     .info-card {
-      flex: 1;
-      min-width: 300px;
-      background-color: $white-100;
-      border-radius: 8px;
+      display: flex;
       padding: 32px;
-      box-sizing: border-box;
+      width: 100%;
+      border-radius: 4px;
+      background-color: $white-100;
       .card-title {
-        margin: 0 0 24px;
-        font-family: Bounded-500;
-        font-size: 28px;
-        line-height: 110%;
-        letter-spacing: -0.6px;
+        margin: 0;
+        font-family: Bounded-250;
+        font-size: 24px;
+        line-height: 80%;
+        letter-spacing: -1.2px;
       }
       .info-text {
-        font-size: 16px;
-        line-height: 140%;
-        letter-spacing: -0.4px;
-        margin-bottom: 16px;
+        margin: 0;
+        font-family: Bounded-400;
+        font-size: 14px;
+        line-height: 80%;
+        letter-spacing: -0.7px;
         &.small {
-          font-size: 14px;
-          color: $black-60;
+          font-size: 15px;
+          color: $black-40;
+          line-height: 110%;
+          letter-spacing: -0.6px;
         }
       }
       .list {
-        margin: 16px 0;
-        padding-left: 20px;
-        color: $black-100;
+        margin: 0;
         li {
-          margin-bottom: 8px;
+          font-size: 15px;
+          line-height: 110%;
+          letter-spacing: -0.6px;
         }
       }
       .info-note {
-        margin-top: 16px;
-        font-size: 14px;
-        color: $black-60;
-        background-color: $white-10;
-        padding: 12px;
+        background-color: $grey-95;
         border-radius: 4px;
+        font-size: 15px;
+        line-height: 110%;
+        letter-spacing: -0.6px;
       }
       .info-warning {
-        margin-top: 16px;
+        color: $red-active;
         font-size: 14px;
-        color: $red-error;
+        line-height: 100%;
+        letter-spacing: -0.56px;
       }
       .payment-box {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: $grey-90;
+        background-color: $grey-95;
         border-radius: 4px;
         padding: 16px;
         margin-bottom: 16px;
+        font-family: Bounded-300;
+        font-size: 14px;
+        line-height: 80%;
+        letter-spacing: -0.7px;
         .icon {
-          font-size: 24px;
+          font-size: 28px;
         }
       }
       .info-note-block {
         display: flex;
-        gap: 16px;
+        flex-direction: column;
         align-items: flex-start;
-        background-color: $white-10;
-        padding: 16px;
+        background-color: $grey-95;
         border-radius: 4px;
         .icon {
           font-size: 20px;
           color: $red-active;
         }
         p {
-          margin: 0 0 8px;
-          font-size: 14px;
-          line-height: 140%;
+          font-size: 16px;
+          line-height: 110%;
+          letter-spacing: -0.64px;
           a.link {
             color: $red-active;
-            text-decoration: underline;
+            text-decoration: none;
           }
         }
       }
     }
   }
   .timeline-title {
-    margin: 40px 0 24px;
-    font-family: Bounded-500;
-    font-size: 28px;
-    line-height: 110%;
-    letter-spacing: -0.6px;
-    text-align: center;
+    margin: 96px 0 40px;
+    font-family: Bounded-400;
+    font-size: 24px;
+    line-height: 90%;
+    letter-spacing: -0.72px;
+    z-index: 20;
   }
   .timeline-grid {
     display: grid;
@@ -230,6 +247,7 @@ const store = useStore()
     gap: 16px;
     width: 100%;
     max-width: 1200px;
+    z-index: 20;
     .timeline-card {
       background-color: $white-100;
       border-radius: 8px;
@@ -242,31 +260,33 @@ const store = useStore()
       &.highlight {
         background-color: $black-100;
         color: $white-100;
-        padding: 32px 16px;
         .highlight-text {
-          font-size: 16px;
-          line-height: 110%;
-          letter-spacing: -0.4px;
-          margin-bottom: 8px;
+          font-family: Bounded-250;
+          font-size: 24px;
+          line-height: 80%;
+          letter-spacing: -1.2px;
         }
         .highlight-period {
-          font-family: Bounded-500;
-          font-size: 24px;
-          line-height: 110%;
-          letter-spacing: -0.6px;
           color: $red-active;
+          font-family: Bounded-400;
+          font-size: 24px;
+          line-height: 90%;
+          letter-spacing: -0.72px;
         }
       }
       .card-period {
-        margin: 0 0 8px;
-        font-family: Bounded-500;
-        font-size: 20px;
+        margin: 0;
+        font-family: Bounded-250;
+        font-size: 24px;
+        line-height: 80%;
+        letter-spacing: -1.2px;
       }
       .card-desc {
         margin: 0;
-        font-size: 14px;
-        color: $black-60;
-        line-height: 140%;
+        color: $grey-20;
+        font-size: 16px;
+        line-height: 110%;
+        letter-spacing: -0.64px;
       }
     }
   }
@@ -274,25 +294,8 @@ const store = useStore()
 
 @media (max-width: 768px) {
   .delivery-page {
-    padding: 48px 16px;
-    .section-title {
-      font-size: 24px;
-      margin-bottom: 24px;
-    }
     .info-row {
       flex-direction: column;
-      gap: 16px;
-      .info-card {
-        padding: 16px;
-        .card-title {
-          font-size: 24px;
-          margin-bottom: 16px;
-        }
-      }
-    }
-    .timeline-title {
-      font-size: 24px;
-      margin: 24px 0 16px;
     }
     .timeline-grid {
       grid-template-columns: 1fr;
