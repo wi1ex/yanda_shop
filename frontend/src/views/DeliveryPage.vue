@@ -54,7 +54,7 @@
       <!-- Возврат -->
       <div class="info-card">
         <h2 class="card-title">Возврат</h2>
-        <p class="info-text">
+        <p class="info-text default">
           Возврат товара возможен, только если вы получили не тот артикул, который заказывали изначально.
           При получении товара проверьте модель товара и размер, чтобы убедиться в правильности доставки.
         </p>
@@ -63,7 +63,7 @@
           <li>Убедитесь в отсутствии видимых механических повреждений товара (не распространяется на упаковку)</li>
         </ul>
         <div class="info-note-block">
-          <span class="icon">ℹ️</span>
+          <img :src="icon_info" alt=""/>
           <p>Для возврата напиши нам письмо на
             <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
                rel="noopener" class="link">{{ store.parameters.url_social_email }}</a>
@@ -111,7 +111,6 @@ import { useStore } from '@/store/index.js'
 import icon_info from '@/assets/images/info.svg'
 import icon_card from '@/assets/images/card.svg'
 import icon_ruble from '@/assets/images/ruble.svg'
-import about_image18 from "@/assets/images/about_image18.svg";
 
 const store = useStore()
 </script>
@@ -170,7 +169,15 @@ const store = useStore()
         font-size: 14px;
         line-height: 110%;
         letter-spacing: -0.7px;
+        &.default {
+          font-family: Manrope-Medium;
+          font-size: 15px;
+          color: $black-100;
+          line-height: 110%;
+          letter-spacing: -0.6px;
+        }
         &.small {
+          font-family: Manrope-Medium;
           font-size: 15px;
           color: $black-40;
           line-height: 110%;
@@ -185,9 +192,14 @@ const store = useStore()
           line-height: 110%;
           letter-spacing: -0.6px;
         }
+        li::marker {
+          color: $red-active;
+          font-size: 6px;
+        }
       }
       .info-note-div {
         display: flex;
+        margin: 0;
         padding: 20px 10px;
         gap: 8px;
         background-color: $grey-95;
@@ -197,14 +209,14 @@ const store = useStore()
           height: 20px;
         }
         .info-note {
-          margin: 40px 0 0;
+          margin: 0;
           font-size: 15px;
           line-height: 110%;
           letter-spacing: -0.6px;
         }
       }
       .info-warning {
-        margin: 0;
+        margin: 40px 0 0;
         color: $red-active;
         font-size: 14px;
         line-height: 100%;
