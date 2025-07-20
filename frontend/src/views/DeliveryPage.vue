@@ -77,31 +77,59 @@
     </div>
 
     <!-- Сколько ждать доставку? -->
-    <h2 class="timeline-title">Сколько ждать доставку?</h2>
-    <div class="timeline-grid">
-      <div class="timeline-card highlight">
-        <p class="highlight-text">Рекомендуем закладывать срок</p>
-        <p class="highlight-period">~3 недели</p>
+    <div class="timeline-div">
+      <h2 class="timeline-title">Сколько ждать доставку?</h2>
+      <div class="timeline-grid">
+        <div class="timeline-card highlight">
+          <p class="highlight-text">Рекомендуем закладывать срок</p>
+          <p class="highlight-period">~3 недели</p>
+        </div>
+        <div class="timeline-card">
+          <h3 class="card-period">1 день</h3>
+          <p class="card-desc">Выкуп с площадки</p>
+        </div>
+        <div class="timeline-card">
+          <h3 class="card-period">2 - 3 дня</h3>
+          <p class="card-desc">Доставка до нашего склада </p>
+        </div>
+        <div class="timeline-card">
+          <h3 class="card-period">2 - 5 дней</h3>
+          <p class="card-desc">Формирование заказов в один груз</p>
+        </div>
+        <div class="timeline-card">
+          <h3 class="card-period">10 - 14 дней</h3>
+          <p class="card-desc">Доставка до склада в Москве</p>
+        </div>
+        <div class="timeline-card">
+          <h3 class="card-period">2 - 3 дня</h3>
+          <p class="card-desc">Удобная для вас доставка по Москве и другим регионам</p>
+        </div>
       </div>
-      <div class="timeline-card">
-        <h3 class="card-period">1 день</h3>
-        <p class="card-desc">Выкуп с площадки</p>
-      </div>
-      <div class="timeline-card">
-        <h3 class="card-period">2 - 3 дня</h3>
-        <p class="card-desc">Доставка до нашего склада </p>
-      </div>
-      <div class="timeline-card">
-        <h3 class="card-period">2 - 5 дней</h3>
-        <p class="card-desc">Формирование заказов в один груз</p>
-      </div>
-      <div class="timeline-card">
-        <h3 class="card-period">10 - 14 дней</h3>
-        <p class="card-desc">Доставка до склада в Москве</p>
-      </div>
-      <div class="timeline-card">
-        <h3 class="card-period">2 - 3 дня</h3>
-        <p class="card-desc">Удобная для вас доставка по Москве и другим регионам</p>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq">
+      <h2 class="faq-title">FAQ</h2>
+      <p class="faq-subtitle">
+        Здесь ты найдёшь ответы на самые популярные вопросы о заказах, доставке, оплате и возврате. Мы собрали всю важную информацию, чтобы сделать
+        твои покупки максимально простыми и прозрачными.
+      </p>
+
+      <div class="faq-list">
+        <div v-for="item in faqItems" :key="item.id" class="faq-item" @click="toggleFaq(item.id)">
+          <div class="faq-number">{{ String(item.id).padStart(2, '0') }}</div>
+          <div class="faq-header">
+            <div class="faq-question">{{ item.question }}</div>
+            <div class="faq-toggle-icon" :class="{ open: openedFaq === item.id }">
+              <img :src="openedFaq === item.id ? icon_minus_red : icon_faq_plus" alt="toggle" class="faq-icon"/>
+            </div>
+          </div>
+          <transition name="faq-slide">
+            <div v-if="openedFaq === item.id" class="faq-answer">
+              {{ item.answer }}
+            </div>
+          </transition>
+        </div>
       </div>
     </div>
   </div>
@@ -113,8 +141,35 @@ import { useStore } from '@/store/index.js'
 import icon_info from '@/assets/images/info.svg'
 import icon_card from '@/assets/images/card.svg'
 import icon_ruble from '@/assets/images/ruble.svg'
+import icon_minus_red from "@/assets/images/minus_red.svg";
+import icon_faq_plus from "@/assets/images/faq_plus.svg";
 
 const store = useStore()
+const openedFaq = ref(null);
+
+const faqItems = computed(() => {
+  const items = []
+  const allKeys = Object.keys(store.parameters)
+  const faqNumbers = [ ...new Set(allKeys
+      .filter(key => key.startsWith('faq_delivery_question_') || key.startsWith('faq_delivery_answer_'))
+      .map(key => parseInt(key.replace(/\D+/g, '')))
+    )
+  ]
+  faqNumbers.sort((a, b) => a - b).forEach(num => {
+    items.push({
+      id: num,
+      question: store.parameters[`faq_delivery_question_${num}`] || `Вопрос ${num}`,
+      answer: store.parameters[`faq_delivery_answer_${num}`] || 'Ответ не найден',
+    })
+  })
+  return items
+});
+
+// закрывает все пункты кроме переданного
+function toggleFaq(id) {
+  openedFaq.value = openedFaq.value === id ? null : id;
+}
+
 </script>
 
 <style lang="scss">
@@ -274,67 +329,172 @@ const store = useStore()
       }
     }
   }
-  .timeline-title {
-    margin: 96px 0 40px;
-    text-align: center;
-    font-family: Bounded;
-    font-weight: 500;
-    font-size: 24px;
-    line-height: 90%;
-    letter-spacing: -0.72px;
+  .timeline-div {
+    display: flex;
     z-index: 20;
-  }
-  .timeline-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 10px;
-    width: 100%;
-    z-index: 20;
-    .timeline-card {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 20px;
-      height: 110px;
-      background-color: $white-100;
-      border-radius: 4px;
-      &.highlight {
-        background-color: $black-100;
-        color: $white-100;
-        .highlight-text {
+    .timeline-title {
+      margin: 96px 0 40px;
+      text-align: center;
+      width: 75%;
+      font-family: Bounded;
+      font-weight: 500;
+      font-size: 24px;
+      line-height: 90%;
+      letter-spacing: -0.72px;
+    }
+    .timeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px;
+      width: 100%;
+      .timeline-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 20px;
+        height: 110px;
+        background-color: $white-100;
+        border-radius: 4px;
+        &.highlight {
+          background-color: $black-100;
+          color: $white-100;
+          .highlight-text {
+            margin: 0;
+            width: 75%;
+            font-family: Bounded;
+            font-weight: 250;
+            font-size: 24px;
+            line-height: 80%;
+            letter-spacing: -1.2px;
+          }
+          .highlight-period {
+            margin: 0 0 20px;
+            color: $red-active;
+            font-family: Bounded;
+            font-weight: 500;
+            font-size: 24px;
+            line-height: 90%;
+            letter-spacing: -0.72px;
+          }
+        }
+        .card-period {
           margin: 0;
-          width: 75%;
           font-family: Bounded;
           font-weight: 250;
           font-size: 24px;
           line-height: 80%;
           letter-spacing: -1.2px;
         }
-        .highlight-period {
-          margin: 0 0 20px;
-          color: $red-active;
-          font-family: Bounded;
-          font-weight: 500;
-          font-size: 24px;
-          line-height: 90%;
-          letter-spacing: -0.72px;
+        .card-desc {
+          margin: 0;
+          color: $grey-20;
+          font-size: 16px;
+          line-height: 110%;
+          letter-spacing: -0.64px;
         }
       }
-      .card-period {
-        margin: 0;
-        font-family: Bounded;
-        font-weight: 250;
-        font-size: 24px;
-        line-height: 80%;
-        letter-spacing: -1.2px;
+    }
+  }
+  .faq {
+    padding: 48px 16px;
+    background-color: $grey-95;
+    text-align: center;
+
+    &-title {
+      margin-bottom: 40px;
+      font-family: Bounded;
+      font-weight: 500;
+      font-size: 32px;
+      line-height: 80%;
+      letter-spacing: -0.96px;
+    }
+    &-subtitle {
+      max-width: 600px;
+      margin: 0 auto 32px;
+      font-size: 16px;
+      line-height: 110%;
+      letter-spacing: -0.64px;
+    }
+    &-list {
+      display: flex;
+      flex-direction: column;
+      margin: 0 auto;
+      max-width: 800px;
+      gap: 4px;
+      border-radius: 4px;
+    }
+    &-item {
+      background-color: $white-100;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    &-header {
+      display: flex;
+      align-items: center;
+      padding: 18px 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    &-number {
+      @include flex-e-c;
+      margin-right: 16px;
+      width: 32px;
+      height: 32px;
+      background-color: $black-100;
+      color: $white-100;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 16px;
+      line-height: 100%;
+      letter-spacing: -0.64px;
+    }
+    &-question {
+      text-align: center;
+      flex-grow: 1;
+      font-family: Bounded;
+      font-weight: 350;
+      font-size: 20px;
+      line-height: 80%;
+      letter-spacing: -0.8px;
+      color: $black-100;
+    }
+    &-toggle-icon {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      margin-left: 16px;
+      transition: color 0.5s ease-in-out;
+      .faq-icon {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
       }
-      .card-desc {
-        margin: 0;
-        color: $grey-20;
-        font-size: 16px;
-        line-height: 110%;
-        letter-spacing: -0.64px;
-      }
+    }
+    &-answer {
+      padding: 24px 48px;
+      text-align: center;
+      font-size: 16px;
+      line-height: 110%;
+      letter-spacing: -0.64px;
+      color: $black-100;
+    }
+
+    /* плавное «slide down» */
+    .faq-slide-enter-active,
+    .faq-slide-leave-active {
+      transition: all 0.5s ease-in-out;
+    }
+    .faq-slide-enter-from,
+    .faq-slide-leave-to {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+    }
+    .faq-slide-enter-to,
+    .faq-slide-leave-from {
+      max-height: 200px;
+      opacity: 1;
     }
   }
 }
@@ -344,8 +504,40 @@ const store = useStore()
     .info-row {
       flex-direction: column;
     }
-    .timeline-grid {
-      grid-template-columns: 1fr;
+    .timeline-div {
+      .timeline-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .faq {
+      padding: 32px 10px;
+      &-title {
+        font-size: 24px;
+        line-height: 90%;
+        letter-spacing: -0.72px;
+      }
+      &-subtitle {
+        margin-bottom: 24px;
+        font-size: 15px;
+        line-height: 110%;
+        letter-spacing: -0.6px;
+      }
+      &-header {
+        padding: 16px 10px;
+      }
+      &-number {
+        width: 24px;
+        height: 24px;
+      }
+      &-question {
+        font-size: 16px;
+        text-align: left;
+      }
+      &-answer {
+        padding: 16px 10px;
+        font-size: 15px;
+        text-align: left;
+      }
     }
   }
 }

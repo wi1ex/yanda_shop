@@ -10,7 +10,7 @@ from ..models import AdminSetting
 # Client Options Cache
 def load_parameters() -> None:
     """
-    Загружает все faq_question_*, faq_answer_*, url_social_* из БД в Redis.
+    Загружает все faq_*, url_* из БД в Redis.
     Вызывать при старте и после изменений в админке.
     """
     context = "load_parameters"
@@ -19,9 +19,8 @@ def load_parameters() -> None:
         with session_scope() as session:
             settings = session.query(AdminSetting).filter(
                 or_(
-                    AdminSetting.key.like("faq_question_%"),
-                    AdminSetting.key.like("faq_answer_%"),
-                    AdminSetting.key.like("url_social_%"),
+                    AdminSetting.key.like("faq_%"),
+                    AdminSetting.key.like("url_%"),
                 )
             ).all()
             payload = {s.key: s.value or "" for s in settings}
