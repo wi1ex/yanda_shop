@@ -4,14 +4,14 @@
     <div class="contacts-cards">
       <div class="card">
         <h2 class="card-title">Вопросы по заказам</h2>
-        <p class="card-item">
-          <span>Телеграм:</span>
-          <a v-if="store.parameters.url_social_telegram_user1"
-             :href="store.parameters.url_social_telegram_user1" target="_blank" rel="noopener" class="link">
-            @{{ store.parameters.url_social_telegram_user1.split('/').pop() }}
-          </a>
-        </p>
         <div class="card-div">
+          <p class="card-item">
+            <span>Телеграм:</span>
+            <a v-if="store.parameters.url_social_telegram_user1"
+               :href="store.parameters.url_social_telegram_user1" target="_blank" rel="noopener" class="link">
+              @{{ store.parameters.url_social_telegram_user1.split('/').pop() }}
+            </a>
+          </p>
           <p class="card-item">
             <span>E-mail:</span>
             <a v-if="store.parameters.url_social_email"
@@ -19,13 +19,13 @@
               {{ store.parameters.url_social_email }}
             </a>
           </p>
-          <p class="card-note">
-            Подпишитесь на
-            <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
-               target="_blank" rel="noopener" class="black-link">наш телеграм-канал</a>
-            , там вся самая свежая информация о товарах и акциях
-          </p>
         </div>
+        <p class="card-note">
+          Подпишитесь на
+          <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
+             target="_blank" rel="noopener" class="black-link">наш телеграм-канал</a>
+          , там вся самая свежая информация о товарах и акциях
+        </p>
       </div>
       <div class="card">
         <h2 class="card-title">Остальные вопросы</h2>
@@ -87,6 +87,7 @@ const store = useStore()
         gap: 8px;
         .card-item {
           display: flex;
+          align-items: center;
           margin: 0;
           span {
             margin-right: 4px;
