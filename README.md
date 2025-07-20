@@ -110,21 +110,23 @@
 
 ### /api/admin
 
-| Endpoint                  | Method | Description                             |
-|---------------------------| ------ |-----------------------------------------|
-| `/admin/set_user_role`    | GET    | Установить пользователю роль            |
-| `/admin/get_daily_visits` | GET    | Статистика посещений по часам (Redis)   |
-| `/admin/get_logs`         | GET    | Логи изменений (Postgres)               |
-| `/admin/get_sheet_urls`   | GET    | Текущие Google Sheets URL по категориям |
-| `/admin/update_sheet_url` | POST   | Обновление URL Google Sheets            |
-| `/admin/import_sheet`     | POST   | Импорт данных из таблицы Google Sheets  |
-| `/admin/upload_images`    | POST   | ZIP архив с фото в MinIO                |
-| `/admin/get_settings`     | GET    | Список настроек                         |
-| `/admin/update_setting`   | POST   | Изменение настроек                      |
-| `/admin/delete_setting`   | DELETE | Удаление настроек                       |
-| `/admin/create_review`    | POST   | Создание отзыва                         |
-| `/admin/delete_review`    | DELETE | Удаление отзыва                         |
-| `/admin/list_users`       | GET    | Список пользователей                    |
+| Endpoint                  | Method | Description                              |
+|---------------------------| ------ |------------------------------------------|
+| `/admin/set_user_role`    | GET    | Установить пользователю роль             |
+| `/admin/get_daily_visits` | GET    | Статистика посещений по часам (Redis)    |
+| `/admin/get_logs`         | GET    | Логи изменений (Postgres)                |
+| `/admin/get_sheet_urls`   | GET    | Текущие Google Sheets URL по категориям  |
+| `/admin/update_sheet_url` | POST   | Обновление URL Google Sheets             |
+| `/admin/import_sheet`     | POST   | Импорт данных из таблицы Google Sheets   |
+| `/admin/preview_sheet`    | POST   | Проверка данных из таблицы Google Sheets |
+| `/admin/upload_images`    | POST   | Загрузка ZIP-архива с фото в MinIO       |
+| `/admin/preview_images`   | POST   | Проверка ZIP-архива с фото в MinIO       |
+| `/admin/get_settings`     | GET    | Список настроек                          |
+| `/admin/update_setting`   | POST   | Изменение настроек                       |
+| `/admin/delete_setting`   | DELETE | Удаление настроек                        |
+| `/admin/create_review`    | POST   | Создание отзыва                          |
+| `/admin/delete_review`    | DELETE | Удаление отзыва                          |
+| `/admin/list_users`       | GET    | Список пользователей                     |
 
 ---
 
