@@ -312,7 +312,7 @@ onMounted(() => {
     .logo-title {
       color: $black-100;
       font-family: Bounded;
-      font-weight: 500;
+      font-weight: 400;
       font-size: 64px;
       line-height: 90%;
       letter-spacing: -5.12px;
@@ -370,7 +370,7 @@ onMounted(() => {
         display: block;
         color: $black-100;
         font-family: Bounded;
-        font-weight: 500;
+        font-weight: 350;
         font-size: 14px;
         line-height: 90%;
         letter-spacing: -0.84px;

@@ -565,7 +565,7 @@ onMounted(init)
           margin: 12px 0 8px;
           color: $black-100;
           font-family: Bounded;
-          font-weight: 350;
+          font-weight: 250;
           font-size: 20px;
           line-height: 80%;
           letter-spacing: -1px;
@@ -718,7 +718,7 @@ onMounted(init)
           .price {
             color: $grey-20;
             font-family: Bounded;
-            font-weight: 350;
+            font-weight: 250;
             font-size: 16px;
             line-height: 80%;
             letter-spacing: -0.8px;

@@ -436,7 +436,7 @@ function goToCatalog() {
   }
   .summary-total {
     font-family: Bounded;
-    font-weight: 400;
+    font-weight: 375;
     font-size: 16px;
     letter-spacing: -0.8px;
   }
