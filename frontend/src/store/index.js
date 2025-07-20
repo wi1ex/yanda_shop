@@ -537,10 +537,8 @@ export const useStore = defineStore('main', () => {
 
   async function updateUserRole(userId, role) {
     await api.post(API.admin.setUserRole, {
-      user_id:     userId,
-      role:        role,
-      author_id:   user.value.id,
-      author_name: user.value.username
+      user_id: userId,
+      role:    role,
     })
     await fetchUsers()
   }
@@ -573,9 +571,7 @@ export const useStore = defineStore('main', () => {
     sheetResult[cat] = ''
     try {
       const { data } = await api.post(API.admin.importSheet, {
-        category:    cat,
-        author_id:   user.value.id,
-        author_name: user.value.username
+        category: cat,
       })
       if (data.status === 'ok') {
         // Форматируем warn_skus
@@ -646,8 +642,6 @@ export const useStore = defineStore('main', () => {
     zipResult.value = ''
     const form = new FormData()
     form.append('file', file)
-    form.append('author_id', user.value.id)
-    form.append('author_name', user.value.username)
     try {
       const { data } = await api.post(API.admin.uploadImages, form)
       zipResult.value = `Добавлено: ${data.added}. Обновлено: ${data.replaced}. Удалено: ${data.deleted}. Ошибки: ${data.warns}.`

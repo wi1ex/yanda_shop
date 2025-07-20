@@ -128,12 +128,10 @@ def update_sheet_url() -> Tuple[Response, int]:
 @admin_api.route("/import_sheet", methods=["POST"])
 @admin_required
 @handle_errors
-@require_json("author_id", "author_name", "category")
+@require_json("category")
 def import_sheet() -> Tuple[Response, int]:
-    """POST /api/admin/import_sheet {author_id, author_name, category}"""
+    """POST /api/admin/import_sheet {category}"""
     data = request.get_json()
-    author_id_raw = data["author_id"]
-    author_name = data["author_name"].strip()
     category = data["category"].lower()
 
     if category not in ("shoes", "clothing", "accessories"):
@@ -211,20 +209,7 @@ def preview_sheet() -> Tuple[Response, int]:
 @admin_required
 @handle_errors
 def upload_images() -> Tuple[Response, int]:
-    """POST /api/admin/upload_images form-data: author_id, author_name, file(.zip)"""
-    form = request.form
-    if "author_id" not in form or not form["author_id"].strip():
-        return jsonify({"error": "author_id required"}), 400
-
-    try:
-        author_id = int(form["author_id"].strip())
-    except ValueError:
-        return jsonify({"error": "invalid author_id"}), 400
-
-    author_name = form.get("author_name", "").strip()
-    if not author_name:
-        return jsonify({"error": "author_name required"}), 400
-
+    """POST /api/admin/upload_images form-data: file(.zip)"""
     z = request.files.get("file")
     if not z or not z.filename.lower().endswith(".zip"):
         return jsonify({"error": "file required and must be .zip"}), 400
@@ -456,20 +441,14 @@ def list_users() -> Tuple[Response, int]:
 @admin_api.route("/set_user_role", methods=["POST"])
 @admin_required
 @handle_errors
-@require_json("author_id", "author_name", "user_id", "role")
+@require_json("user_id", "role")
 def set_user_role() -> Tuple[Response, int]:
     """POST /api/admin/set_user_role {author_id, author_name, user_id, role}"""
     data = request.get_json()
-    try:
-        author_id = int(data["author_id"])
-    except (ValueError, TypeError):
-        return jsonify({"error": "invalid author_id"}), 400
-
-    author_name = data["author_name"].strip()
     user_id = data["user_id"]
     new_role = data["role"]
 
-    if not author_name or new_role not in ("admin", "customer"):
+    if new_role not in ("admin", "customer"):
         return jsonify({"error": "invalid input"}), 400
 
     with session_scope() as session:

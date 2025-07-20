@@ -11,28 +11,32 @@
             @{{ store.parameters.url_social_telegram_user1.split('/').pop() }}
           </a>
         </p>
-        <p class="card-item">
-          <span>E-mail:</span>
-          <a v-if="store.parameters.url_social_email"
-             :href="`mailto:${store.parameters.url_social_email}`" rel="noopener" class="link">
-            {{ store.parameters.url_social_email }}
-          </a>
-        </p>
-        <p class="card-note">
-          Подпишитесь на
-          <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
-             target="_blank" rel="noopener" class="black-link">наш телеграм-канал</a>
-          , там вся самая свежая информация о товарах и акциях
-        </p>
+        <div class="card-div">
+          <p class="card-item">
+            <span>E-mail:</span>
+            <a v-if="store.parameters.url_social_email"
+               :href="`mailto:${store.parameters.url_social_email}`" rel="noopener" class="link">
+              {{ store.parameters.url_social_email }}
+            </a>
+          </p>
+          <p class="card-note">
+            Подпишитесь на
+            <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
+               target="_blank" rel="noopener" class="black-link">наш телеграм-канал</a>
+            , там вся самая свежая информация о товарах и акциях
+          </p>
+        </div>
       </div>
       <div class="card">
         <h2 class="card-title">Остальные вопросы</h2>
-        <p class="card-item">
-          <span>Телеграм:</span>
-          <a v-if="store.parameters.url_social_telegram_user2" :href="store.parameters.url_social_telegram_user2" target="_blank" rel="noopener" class="link">
-            @{{ store.parameters.url_social_telegram_user2.split('/').pop() }}
-          </a>
-        </p>
+        <div class="card-div">
+          <p class="card-item">
+            <span>Телеграм:</span>
+            <a v-if="store.parameters.url_social_telegram_user2" :href="store.parameters.url_social_telegram_user2" target="_blank" rel="noopener" class="link">
+              @{{ store.parameters.url_social_telegram_user2.split('/').pop() }}
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -63,6 +67,7 @@ const store = useStore()
     width: 100%;
     .card {
       display: flex;
+      flex-direction: column;
       margin-top: 10px;
       padding: 20px 10px;
       gap: 40px;
@@ -106,6 +111,7 @@ const store = useStore()
         line-height: 100%;
         letter-spacing: -0.56px;
         .black-link {
+          color: inherit;
           text-decoration: underline;
         }
       }
