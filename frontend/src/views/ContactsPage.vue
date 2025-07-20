@@ -2,10 +2,10 @@
   <div class="contacts-page">
     <div class="line-vert"></div>
     <h1 class="section-title">Контакты для связи</h1>
+    <div class="line-hor"></div>
     <div class="contacts-cards">
       <div class="card">
         <h2 class="card-title">Вопросы по заказам</h2>
-        <div class="line-hor"></div>
         <div class="card-div">
           <p class="card-item">
             <span>Телеграм:</span>
@@ -73,7 +73,6 @@ const store = useStore()
   display: flex;
   flex-direction: column;
   align-items: center;
-  z-index: 20;
   .section-title {
     margin: 120px 0 64px;
     color: $black-100;
@@ -81,11 +80,13 @@ const store = useStore()
     font-size: 64px;
     line-height: 90%;
     letter-spacing: -5.12px;
+    z-index: 20;
   }
   .contacts-cards {
     display: flex;
     margin-bottom: 200px;
     gap: 20px;
+    z-index: 20;
     .card {
       display: flex;
       flex-direction: column;
