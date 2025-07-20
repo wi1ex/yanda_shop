@@ -19,7 +19,10 @@
           </a>
         </p>
         <p class="card-note">
-          Подпишитесь на наш телеграм-канал, там вся самая свежая информация о товарах и акциях
+          Подпишитесь на
+          <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
+             target="_blank" rel="noopener" class="black-link">наш телеграм-канал</a>
+          , там вся самая свежая информация о товарах и акциях
         </p>
       </div>
       <div class="card">
@@ -43,61 +46,68 @@ const store = useStore()
 
 <style lang="scss">
 .contacts-page {
-  width: 100%;
-  padding: 80px 32px;
-  background-color: $grey-95;
-  color: $black-100;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
   .section-title {
-    margin-bottom: 40px;
-    font-family: Bounded-500;
-    font-size: 32px;
+    margin: 96px 0 40px;
+    color: $black-100;
+    font-family: Bounded-400;
+    font-size: 64px;
     line-height: 90%;
-    letter-spacing: -0.72px;
-    text-align: center;
+    letter-spacing: -5.12px;
   }
   .contacts-cards {
     display: flex;
-    gap: 32px;
     width: 100%;
-    max-width: 1200px;
     .card {
-      flex: 1;
-      min-width: 300px;
+      display: flex;
+      margin-top: 10px;
+      padding: 20px 10px;
+      gap: 40px;
       background-color: $white-100;
-      border-radius: 8px;
-      padding: 32px;
-      box-sizing: border-box;
+      border-radius: 4px;
       .card-title {
-        margin: 0 0 24px;
-        font-family: Bounded-500;
-        font-size: 28px;
-        line-height: 110%;
-        letter-spacing: -0.6px;
+        margin: 0;
         color: $black-100;
+        font-family: Bounded-250;
+        font-size: 32px;
+        line-height: 80%;
+        letter-spacing: -1.6px;
       }
-      .card-item {
-        margin: 8px 0;
-        font-size: 16px;
-        line-height: 110%;
-        letter-spacing: -0.64px;
-        span {
-          margin-right: 8px;
-          color: $black-60;
+      .card-div {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        .card-item {
+          display: flex;
+          margin: 0;
+          span {
+            margin-right: 4px;
+            color: $grey-20;
+            font-size: 16px;
+            line-height: 110%;
+            letter-spacing: -0.64px;
+          }
+          .link {
+            color: $red-active;
+            font-family: Bounded-350;
+            font-size: 16px;
+            line-height: 80%;
+            letter-spacing: -0.8px;
+            text-decoration: none;
+          }
         }
       }
-      .link {
-        color: $red-active;
-        text-decoration: underline;
-      }
       .card-note {
-        margin-top: 24px;
+        color: $grey-20;
         font-size: 14px;
-        line-height: 120%;
-        color: $black-60;
+        line-height: 100%;
+        letter-spacing: -0.56px;
+        .black-link {
+          text-decoration: underline;
+        }
       }
     }
   }
@@ -105,19 +115,30 @@ const store = useStore()
 
 @media (max-width: 768px) {
   .contacts-page {
-    padding: 48px 16px;
     .section-title {
-      font-size: 24px;
-      margin-bottom: 24px;
+      font-size: 32px;
+      letter-spacing: -2.24px;
     }
     .contacts-cards {
       flex-direction: column;
-      gap: 16px;
       .card {
-        padding: 16px;
+        gap: 24px;
         .card-title {
           font-size: 24px;
-          margin-bottom: 16px;
+          letter-spacing: -1.2px;
+        }
+        .card-div {
+          gap: 8px;
+          .card-item {
+            span {
+              font-size: 15px;
+              letter-spacing: -0.6px;
+            }
+            .link {
+              font-size: 14px;
+              letter-spacing: -0.7px;
+            }
+          }
         }
       }
     }
