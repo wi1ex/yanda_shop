@@ -137,6 +137,7 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
 import { useStore } from '@/store/index.js'
 import icon_info from '@/assets/images/info.svg'
 import icon_card from '@/assets/images/card.svg'
