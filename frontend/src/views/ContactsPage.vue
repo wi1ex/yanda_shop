@@ -76,7 +76,8 @@ const store = useStore()
   .section-title {
     margin: 120px 0 64px;
     color: $black-100;
-    font-family: Bounded-350;
+    font-family: Bounded;
+    font-weight: 500;
     font-size: 64px;
     line-height: 90%;
     letter-spacing: -5.12px;
@@ -99,7 +100,8 @@ const store = useStore()
       .card-title {
         margin: 0;
         color: $black-100;
-        font-family: Bounded-250;
+        font-family: Bounded;
+        font-weight: 350;
         font-size: 32px;
         line-height: 80%;
         letter-spacing: -1.6px;
@@ -120,7 +122,8 @@ const store = useStore()
           }
           .link {
             color: $red-active;
-            font-family: Bounded-350;
+            font-family: Bounded;
+            font-weight: 500;
             font-size: 16px;
             line-height: 100%;
             letter-spacing: -0.8px;

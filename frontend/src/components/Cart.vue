@@ -154,7 +154,8 @@ function goToCatalog() {
 .cart-header h2 {
   margin: 0;
   font-size: 32px;
-  font-family: Bounded-250;
+  font-family: Bounded;
+  font-weight: 250;
   line-height: 80%;
   letter-spacing: -1.6px;
 }
@@ -358,7 +359,8 @@ function goToCatalog() {
 }
 .summary-total {
   font-size: 20px;
-  font-family: Bounded-250;
+  font-family: Bounded;
+  font-weight: 250;
   color: $black-100;
   margin: 18px 0 4px;
   line-height: 80%;
@@ -433,7 +435,8 @@ function goToCatalog() {
     letter-spacing: -0.64px;
   }
   .summary-total {
-    font-family: Bounded-350;
+    font-family: Bounded;
+    font-weight: 400;
     font-size: 16px;
     letter-spacing: -0.8px;
   }

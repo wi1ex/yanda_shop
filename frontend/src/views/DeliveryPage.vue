@@ -67,9 +67,9 @@
           <p>Для возврата напиши нам письмо на
             <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
                rel="noopener" class="link">{{ store.parameters.url_social_email }}</a>
-            с темой «Возврат товара по заказу №» и пришли факт несовпадения размера или модели.
+            с темой «Возврат товара по заказу №» и пришли факт несовпадения размера или модели.<br><br>
+            Мы обработаем запрос в в течении 2-х часов и вернемся с дальнейшими шагами.
           </p>
-          <p>Мы обработаем запрос в в течении 2-х часов и вернемся с дальнейшими шагами. </p>
         </div>
       </div>
     </div>
@@ -139,7 +139,9 @@ const store = useStore()
   align-items: center;
   .section-title {
     margin: 96px 0 40px;
-    font-family: Bounded-350;
+    text-align: center;
+    font-family: Bounded;
+    font-weight: 500;
     font-size: 32px;
     line-height: 90%;
     letter-spacing: -2.24px;
@@ -158,14 +160,16 @@ const store = useStore()
       background-color: $white-100;
       .card-title {
         margin: 0 0 40px;
-        font-family: Bounded-250;
+        font-family: Bounded;
+        font-weight: 350;
         font-size: 24px;
         line-height: 80%;
         letter-spacing: -1.2px;
       }
       .info-text {
         margin: 0;
-        font-family: Bounded-400;
+        font-family: Bounded;
+        font-weight: 500;
         font-size: 14px;
         line-height: 110%;
         letter-spacing: -0.7px;
@@ -194,7 +198,7 @@ const store = useStore()
         }
         li::marker {
           color: $red-active;
-          font-size: 6px;
+          font-size: 18px;
         }
       }
       .info-note-div {
@@ -231,7 +235,8 @@ const store = useStore()
         gap: 44px;
         background-color: $grey-95;
         border-radius: 4px;
-        font-family: Bounded-300;
+        font-family: Bounded;
+        font-weight: 400;
         font-size: 14px;
         line-height: 80%;
         letter-spacing: -0.7px;
@@ -249,9 +254,9 @@ const store = useStore()
         align-items: flex-start;
         background-color: $grey-95;
         border-radius: 4px;
-        .icon {
-          font-size: 20px;
-          color: $red-active;
+        img {
+          width: 20px;
+          height: 20px;
         }
         p {
           font-size: 16px;
@@ -267,7 +272,9 @@ const store = useStore()
   }
   .timeline-title {
     margin: 96px 0 40px;
-    font-family: Bounded-400;
+    text-align: center;
+    font-family: Bounded;
+    font-weight: 500;
     font-size: 24px;
     line-height: 90%;
     letter-spacing: -0.72px;
@@ -276,31 +283,33 @@ const store = useStore()
   .timeline-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px;
+    gap: 10px;
     width: 100%;
-    max-width: 1200px;
     z-index: 20;
     .timeline-card {
-      background-color: $white-100;
-      border-radius: 8px;
-      padding: 16px;
-      box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      text-align: center;
+      justify-content: space-between;
+      padding: 20px;
+      height: 110px;
+      background-color: $white-100;
+      border-radius: 4px;
       &.highlight {
         background-color: $black-100;
         color: $white-100;
         .highlight-text {
-          font-family: Bounded-250;
+          width: 75%;
+          font-family: Bounded;
+          font-weight: 350;
           font-size: 24px;
           line-height: 80%;
           letter-spacing: -1.2px;
         }
         .highlight-period {
+          margin: 0 0 20px;
           color: $red-active;
-          font-family: Bounded-400;
+          font-family: Bounded;
+          font-weight: 500;
           font-size: 24px;
           line-height: 90%;
           letter-spacing: -0.72px;
@@ -308,7 +317,8 @@ const store = useStore()
       }
       .card-period {
         margin: 0;
-        font-family: Bounded-250;
+        font-family: Bounded;
+        font-weight: 250;
         font-size: 24px;
         line-height: 80%;
         letter-spacing: -1.2px;

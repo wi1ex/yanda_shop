@@ -252,7 +252,8 @@ watch(
       display: flex;
       padding: 16px 8px;
       color: $grey-20;
-      font-family: Bounded-350;
+      font-family: Bounded;
+      font-weight: 400;
       font-size: 16px;
       line-height: 80%;
       letter-spacing: -0.8px;

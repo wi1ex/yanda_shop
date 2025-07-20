@@ -647,7 +647,6 @@ watch(selected, (tab) => {
   gap: 0.5rem;
 
   label {
-    font-weight: 600;
     color: #fff;
   }
   input[type="file"] {
@@ -690,7 +689,6 @@ watch(selected, (tab) => {
     }
     .error {
       color: #e94f37;
-      font-weight: bold;
     }
   }
 

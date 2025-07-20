@@ -158,7 +158,8 @@ onMounted(async () => {
     z-index: 20;
     .logo-title {
       color: $black-100;
-      font-family: Bounded-400;
+      font-family: Bounded;
+      font-weight: 500;
       font-size: 64px;
       line-height: 90%;
       letter-spacing: -5.12px;
