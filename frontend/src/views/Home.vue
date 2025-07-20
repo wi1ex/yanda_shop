@@ -460,7 +460,6 @@ function toggleFaq(id) {
   display: flex;
   justify-content: space-between;
   cursor: pointer;
-  font-weight: bold;
 }
 .principle-text {
   margin: 8px 0 16px;
@@ -516,7 +515,6 @@ function toggleFaq(id) {
   margin: 4px 0;
 }
 .brand {
-  font-weight: 600;
 }
 .name  {
   font-size: 14px;
@@ -544,7 +542,6 @@ function toggleFaq(id) {
 .or-sep {
   text-align: center;
   margin: 12px 0;
-  font-weight: bold;
 }
 .btn-submit {
   padding: 8px;
@@ -625,7 +622,6 @@ function toggleFaq(id) {
 }
 .client-name {
   color: #E94F37;
-  font-weight: 600;
   margin-right: 8px;
 }
 .review-date {
@@ -641,7 +637,8 @@ function toggleFaq(id) {
 
   &-title {
     margin-bottom: 40px;
-    font-family: Bounded-500;
+    font-family: Bounded;
+    font-weight: 500;
     font-size: 32px;
     line-height: 80%;
     letter-spacing: -0.96px;
@@ -689,7 +686,8 @@ function toggleFaq(id) {
   &-question {
     text-align: center;
     flex-grow: 1;
-    font-family: Bounded-250;
+    font-family: Bounded;
+    font-weight: 350;
     font-size: 20px;
     line-height: 80%;
     letter-spacing: -0.8px;
