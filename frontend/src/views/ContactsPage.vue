@@ -1,9 +1,11 @@
 <template>
   <div class="contacts-page">
+    <div class="line-vert"></div>
     <h1 class="section-title">Контакты для связи</h1>
     <div class="contacts-cards">
       <div class="card">
         <h2 class="card-title">Вопросы по заказам</h2>
+        <div class="line-hor"></div>
         <div class="card-div">
           <p class="card-item">
             <span>Телеграм:</span>
@@ -40,6 +42,7 @@
       </div>
     </div>
   </div>
+  <div class="line-hor"></div>
 </template>
 
 <script setup>
@@ -49,27 +52,46 @@ const store = useStore()
 </script>
 
 <style lang="scss">
+
+
+.line-vert {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 0.5px);
+  width: 1px;
+  height: 100%;
+  background-color: $white-100;
+  z-index: 10;
+}
+.line-hor {
+  width: 100%;
+  height: 1px;
+  background-color: $white-100;
+  z-index: 100;
+}
 .contacts-page {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
+  z-index: 20;
   .section-title {
-    margin: 96px 0 40px;
+    margin: 120px 0 64px;
     color: $black-100;
-    font-family: Bounded-400;
+    font-family: Bounded-350;
     font-size: 64px;
     line-height: 90%;
     letter-spacing: -5.12px;
   }
   .contacts-cards {
     display: flex;
-    width: 100%;
+    margin-bottom: 200px;
+    gap: 20px;
     .card {
       display: flex;
       flex-direction: column;
       margin-top: 10px;
       padding: 20px 10px;
+      width: 599px;
       gap: 40px;
       background-color: $white-100;
       border-radius: 4px;
@@ -87,7 +109,6 @@ const store = useStore()
         gap: 8px;
         .card-item {
           display: flex;
-          align-items: center;
           margin: 0;
           span {
             margin-right: 4px;
@@ -100,13 +121,14 @@ const store = useStore()
             color: $red-active;
             font-family: Bounded-350;
             font-size: 16px;
-            line-height: 80%;
+            line-height: 100%;
             letter-spacing: -0.8px;
             text-decoration: none;
           }
         }
       }
       .card-note {
+        margin: 0;
         color: $grey-20;
         font-size: 14px;
         line-height: 100%;
@@ -123,12 +145,16 @@ const store = useStore()
 @media (max-width: 768px) {
   .contacts-page {
     .section-title {
+      margin: 96px 0 40px;
       font-size: 32px;
       letter-spacing: -2.24px;
     }
     .contacts-cards {
       flex-direction: column;
+      margin-bottom: 96px;
+      gap: 0;
       .card {
+        width: 100%;
         gap: 24px;
         .card-title {
           font-size: 24px;
