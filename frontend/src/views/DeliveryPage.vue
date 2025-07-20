@@ -332,6 +332,8 @@ function toggleFaq(id) {
   }
   .timeline-div {
     display: flex;
+    flex-direction: column;
+    align-items: center;
     z-index: 20;
     .timeline-title {
       margin: 96px 0 40px;
@@ -398,11 +400,10 @@ function toggleFaq(id) {
   }
   .faq {
     padding: 48px 16px;
-    background-color: $grey-95;
     text-align: center;
-
+    z-index: 20;
     &-title {
-      margin-bottom: 40px;
+      margin: 64px 0 40px;
       font-family: Bounded;
       font-weight: 500;
       font-size: 32px;
@@ -410,6 +411,7 @@ function toggleFaq(id) {
       letter-spacing: -0.96px;
     }
     &-subtitle {
+      text-align: left;
       max-width: 600px;
       margin: 0 auto 32px;
       font-size: 16px;
@@ -419,7 +421,7 @@ function toggleFaq(id) {
     &-list {
       display: flex;
       flex-direction: column;
-      margin: 0 auto;
+      margin: 0 0 64px;
       max-width: 800px;
       gap: 4px;
       border-radius: 4px;
@@ -438,13 +440,11 @@ function toggleFaq(id) {
     }
     &-number {
       @include flex-e-c;
-      margin-right: 16px;
       width: 32px;
       height: 32px;
       background-color: $black-100;
       color: $white-100;
       border-radius: 4px;
-      text-align: center;
       font-size: 16px;
       line-height: 100%;
       letter-spacing: -0.64px;
@@ -480,8 +480,6 @@ function toggleFaq(id) {
       letter-spacing: -0.64px;
       color: $black-100;
     }
-
-    /* плавное «slide down» */
     .faq-slide-enter-active,
     .faq-slide-leave-active {
       transition: all 0.5s ease-in-out;
