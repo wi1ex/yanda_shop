@@ -3,7 +3,6 @@
     <div class="line-vert"></div>
     <h1 class="section-title">Доставка и оплата</h1>
     <div class="line-hor"></div>
-    <!-- Доставка и оплата -->
     <div class="info-row">
       <!-- Доставка -->
       <div class="info-card">
@@ -20,8 +19,11 @@
           <li>Доставка курьером в пределах МКАД —  до 800 ₽</li>
           <li>Доставка курьером за МКАД — до 1 500 ₽</li>
         </ul>
-        <p class="info-note">
-          Стоимость доставки может измениться в зависимости от тарифов выбранных служб доставки и времени оформления.
+        <p class="info-note-div">
+          <img :src="icon_info" alt=""/>
+          <p class="info-note">
+            Стоимость доставки может измениться в зависимости от тарифов выбранных служб доставки и времени оформления.
+          </p>
         </p>
         <p class="info-warning">
           Внимание: любая доставка в день получения товара в Москве оплачивается отдельно.
@@ -31,27 +33,25 @@
       <!-- Способы оплаты -->
       <div class="info-card">
         <h2 class="card-title">Способы оплаты</h2>
-        <div class="payment-box">
+        <div class="payment-box" style="margin-bottom: 24px;">
           <span>Оплата товара и доставки</span>
-          <span class="icon">₽</span>
+          <img :src="icon_ruble" alt=""/>
+          <p class="info-text small">
+            Мы работаем по 100% предоплате. Это гарантирует для вас закрепление курса юаня и возможность покупки товара по той стоимости, которую вы увидели на сайте.
+            Также вы сразу оплачиваете доставку до ПВЗ или домой, чтобы после у вас не было скрытых и дополнительных платежей.
+          </p>
         </div>
-        <p class="info-text small">
-          Мы работаем по 100% предоплате. Это гарантирует для вас закрепление курса юаня и возможность покупки товара по той стоимости, которую вы увидели на сайте.
-          Также вы сразу оплачиваете доставку до ПВЗ или домой, чтобы после у вас не было скрытых и дополнительных платежей.
-        </p>
         <div class="payment-box">
           <span>Способы оплаты</span>
-          <span class="icon">💳</span>
+          <img :src="icon_card" alt=""/>
+          <p class="info-text small">
+            Посла оформления заказа с вами свяжется менеджер и уточнит реквизиты, по которым необходимо произвести оплату.
+            Оплата может осуществляться с помощью переводов и СБП.
+          </p>
         </div>
-        <p class="info-text small">
-          Посла оформления заказа с вами свяжется менеджер и уточнит реквизиты, по которым необходимо произвести оплату.
-          Оплата может осуществляться с помощью переводов и СБП.
-        </p>
       </div>
-    </div>
 
-    <!-- Возврат -->
-    <div class="info-row">
+      <!-- Возврат -->
       <div class="info-card">
         <h2 class="card-title">Возврат</h2>
         <p class="info-text">
@@ -62,8 +62,6 @@
           <li>Проверьте комплектность посылки</li>
           <li>Убедитесь в отсутствии видимых механических повреждений товара (не распространяется на упаковку)</li>
         </ul>
-      </div>
-      <div class="info-card">
         <div class="info-note-block">
           <span class="icon">ℹ️</span>
           <p>Для возврата напиши нам письмо на
@@ -110,6 +108,10 @@
 
 <script setup>
 import { useStore } from '@/store/index.js'
+import icon_info from '@/assets/images/info.svg'
+import icon_card from '@/assets/images/card.svg'
+import icon_ruble from '@/assets/images/ruble.svg'
+import about_image18 from "@/assets/images/about_image18.svg";
 
 const store = useStore()
 </script>
@@ -150,13 +152,13 @@ const store = useStore()
     .info-card {
       display: flex;
       flex-direction: column;
-      margin-top: 10px;
+      margin: 10px 0;
       padding: 20px 10px;
       width: calc(100% - 20px);
       border-radius: 4px;
       background-color: $white-100;
       .card-title {
-        margin: 0 0 24px;
+        margin: 0 0 40px;
         font-family: Bounded-250;
         font-size: 24px;
         line-height: 80%;
@@ -166,7 +168,7 @@ const store = useStore()
         margin: 0;
         font-family: Bounded-400;
         font-size: 14px;
-        line-height: 80%;
+        line-height: 110%;
         letter-spacing: -0.7px;
         &.small {
           font-size: 15px;
@@ -177,20 +179,32 @@ const store = useStore()
       }
       .list {
         margin: 0;
+        padding: 24px 18px;
         li {
           font-size: 15px;
           line-height: 110%;
           letter-spacing: -0.6px;
         }
       }
-      .info-note {
+      .info-note-div {
+        display: flex;
+        padding: 20px 10px;
+        gap: 8px;
         background-color: $grey-95;
         border-radius: 4px;
-        font-size: 15px;
-        line-height: 110%;
-        letter-spacing: -0.6px;
+        img {
+          width: 20px;
+          height: 20px;
+        }
+        .info-note {
+          margin: 40px 0 0;
+          font-size: 15px;
+          line-height: 110%;
+          letter-spacing: -0.6px;
+        }
       }
       .info-warning {
+        margin: 0;
         color: $red-active;
         font-size: 14px;
         line-height: 100%;
@@ -198,18 +212,23 @@ const store = useStore()
       }
       .payment-box {
         display: flex;
+        position: relative;
+        flex-direction: column;
         justify-content: space-between;
-        align-items: center;
+        padding: 20px 10px;
+        gap: 44px;
         background-color: $grey-95;
         border-radius: 4px;
-        padding: 16px;
-        margin-bottom: 16px;
         font-family: Bounded-300;
         font-size: 14px;
         line-height: 80%;
         letter-spacing: -0.7px;
-        .icon {
-          font-size: 28px;
+        img {
+          position: absolute;
+          top: 20px;
+          right: 10px;
+          width: 32px;
+          height: 32px;
         }
       }
       .info-note-block {
