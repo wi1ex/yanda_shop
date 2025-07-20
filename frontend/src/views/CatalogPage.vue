@@ -53,7 +53,7 @@
               <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
             </label>
             <label :class="{ active: store.filterGender === 'F' }">
-              <input type="radio" v-model="store.filterGender" value="W" /> Женщинам
+              <input type="radio" v-model="store.filterGender" value="F" /> Женщинам
             </label>
           </div>
           <button @click="handleClearFilters" class="btn-clear">Сбросить</button>
@@ -94,7 +94,7 @@
                 <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
               </label>
               <label :class="{ active: store.filterGender === 'F' }">
-                <input type="radio" v-model="store.filterGender" value="W" /> Женщинам
+                <input type="radio" v-model="store.filterGender" value="F" /> Женщинам
               </label>
               </div>
               <button @click="handleClearFilters" class="btn-clear">Сбросить</button>
@@ -130,8 +130,8 @@
 
 <script setup>
 import { ref, onMounted, watch, computed, nextTick } from 'vue'
-import { useStore } from '@/store/index.js'
 import { useRoute, useRouter } from 'vue-router'
+import { useStore } from '@/store/index.js'
 import category_shoes from '@/assets/images/category_shoes.png'
 import category_clothing from '@/assets/images/category_clothing.png'
 import category_accessories from '@/assets/images/category_accessories.png'
