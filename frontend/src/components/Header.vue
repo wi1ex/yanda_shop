@@ -290,6 +290,7 @@ watch(
           margin: 0;
           top: -38px;
           left: 27px;
+          color: $black-100;
           cursor: default;
         }
       }
