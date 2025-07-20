@@ -155,7 +155,7 @@ const store = useStore()
       margin-bottom: 96px;
       gap: 0;
       .card {
-        width: 100%;
+        width: calc(100% - 20px);
         gap: 24px;
         .card-title {
           font-size: 24px;
