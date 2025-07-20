@@ -338,7 +338,7 @@ const store = useStore()
 .section-title {
   margin: 40px;
   font-family: Bounded;
-  font-weight: 400;
+  font-weight: 500;
   text-align: center;
   font-size: 32px;
   line-height: 90%;
@@ -360,7 +360,7 @@ const store = useStore()
   color: $grey-20;
   font-size: 20px;
   font-family: Bounded;
-  font-weight: 400;
+  font-weight: 300;
   line-height: 110%;
   letter-spacing: -1px;
 }
@@ -454,7 +454,7 @@ const store = useStore()
 .philosophy-text {
   margin: 0;
   font-family: Bounded;
-  font-weight: 400;
+  font-weight: 300;
   font-size: 20px;
   line-height: 90%;
   letter-spacing: -1px;
@@ -513,7 +513,7 @@ const store = useStore()
   display: flex;
   margin: 0;
   font-family: Bounded;
-  font-weight: 400;
+  font-weight: 300;
   font-size: 28px;
   line-height: 90%;
   letter-spacing: -1.4px;
@@ -544,7 +544,7 @@ const store = useStore()
   margin: 0;
   color: $grey-20;
   font-family: Bounded;
-  font-weight: 500;
+  font-weight: 400;
   font-size: 32px;
   line-height: 90%;
   letter-spacing: -1.92px;

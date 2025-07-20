@@ -67,7 +67,9 @@
           <p>Для возврата напиши нам письмо на
             <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
                rel="noopener" class="link">{{ store.parameters.url_social_email }}</a>
-            с темой «Возврат товара по заказу №» и пришли факт несовпадения размера или модели.<br><br>
+            с темой
+            <span class="link">«Возврат товара по заказу №»</span>
+            и пришли факт несовпадения размера или модели.<br><br>
             Мы обработаем запрос в в течении 2-х часов и вернемся с дальнейшими шагами.
           </p>
         </div>
@@ -141,7 +143,7 @@ const store = useStore()
     margin: 96px 0 40px;
     text-align: center;
     font-family: Bounded;
-    font-weight: 500;
+    font-weight: 400;
     font-size: 32px;
     line-height: 90%;
     letter-spacing: -2.24px;
@@ -161,7 +163,7 @@ const store = useStore()
       .card-title {
         margin: 0 0 40px;
         font-family: Bounded;
-        font-weight: 350;
+        font-weight: 250;
         font-size: 24px;
         line-height: 80%;
         letter-spacing: -1.2px;
@@ -169,7 +171,7 @@ const store = useStore()
       .info-text {
         margin: 0;
         font-family: Bounded;
-        font-weight: 500;
+        font-weight: 350;
         font-size: 14px;
         line-height: 110%;
         letter-spacing: -0.7px;
@@ -236,7 +238,7 @@ const store = useStore()
         background-color: $grey-95;
         border-radius: 4px;
         font-family: Bounded;
-        font-weight: 400;
+        font-weight: 350;
         font-size: 14px;
         line-height: 80%;
         letter-spacing: -0.7px;
@@ -250,8 +252,9 @@ const store = useStore()
       }
       .info-note-block {
         display: flex;
-        flex-direction: column;
         align-items: flex-start;
+        padding: 20px 10px;
+        gap: 8px;
         background-color: $grey-95;
         border-radius: 4px;
         img {
@@ -259,10 +262,11 @@ const store = useStore()
           height: 20px;
         }
         p {
+          margin: 0;
           font-size: 16px;
           line-height: 110%;
           letter-spacing: -0.64px;
-          a.link {
+          .link {
             color: $red-active;
             text-decoration: none;
           }
@@ -298,9 +302,10 @@ const store = useStore()
         background-color: $black-100;
         color: $white-100;
         .highlight-text {
+          margin: 0;
           width: 75%;
           font-family: Bounded;
-          font-weight: 350;
+          font-weight: 250;
           font-size: 24px;
           line-height: 80%;
           letter-spacing: -1.2px;

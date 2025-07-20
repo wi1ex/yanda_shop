@@ -77,7 +77,7 @@ const store = useStore()
     margin: 120px 0 64px;
     color: $black-100;
     font-family: Bounded;
-    font-weight: 500;
+    font-weight: 400;
     font-size: 64px;
     line-height: 90%;
     letter-spacing: -5.12px;
@@ -101,7 +101,7 @@ const store = useStore()
         margin: 0;
         color: $black-100;
         font-family: Bounded;
-        font-weight: 350;
+        font-weight: 250;
         font-size: 32px;
         line-height: 80%;
         letter-spacing: -1.6px;
@@ -123,7 +123,7 @@ const store = useStore()
           .link {
             color: $red-active;
             font-family: Bounded;
-            font-weight: 500;
+            font-weight: 350;
             font-size: 16px;
             line-height: 100%;
             letter-spacing: -0.8px;
