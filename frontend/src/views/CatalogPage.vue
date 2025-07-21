@@ -35,6 +35,7 @@
             <!-- Список текущих 2-х подкатегорий -->
             <button v-for="sub in visibleSubcats" :key="sub" @click="store.pickSubcat(sub)"
                     :class="['cat-btn', { active: store.selectedSubcat === sub }]">
+<!--              <img :src="subcategoryImages[sub]" :alt="sub"/>-->
               <span>{{ sub }}</span>
             </button>
           </div>
@@ -133,6 +134,18 @@ const perPage = 24
 const mobileFiltersOpen = ref(false)
 const productsLoading = ref(false)
 
+const categoryImages = {
+  'Одежда': category_clothing,
+  'Обувь': category_shoes,
+  'Аксессуары': category_accessories,
+}
+
+// const subcategoryImages = {
+//   'Блуза':       subcat_blouse,
+//   'Джинсы':      subcat_jeans,
+//   // … остальные подкатегории …
+// }
+
 const visibleSubcats = computed(() => {
   const all = store.subcatListMap[store.selectedCategory] || []
   const page = store.currentSubcatPage
@@ -162,13 +175,6 @@ const headerTitle = computed(() => {
 const paged = computed(() =>
   store.displayedProducts.slice(0, page.value * perPage)
 )
-
-// Маппим заголовок категории на нужную картинку
-const categoryImages = {
-  'Одежда': category_clothing,
-  'Обувь': category_shoes,
-  'Аксессуары': category_accessories,
-}
 
 const sortOption = computed({
   get() { return `${store.sortBy}_${store.sortOrder}` },
