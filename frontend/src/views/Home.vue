@@ -69,7 +69,6 @@
     <section class="bestsellers" v-if="bests.length">
       <h2>Бестселлеры</h2>
       <div class="best-slider">
-        <button @click="prevBest" aria-label="Назад">←</button>
         <div class="best-item" v-for="p in visibleBests" :key="p.variant_sku" @click="goToProduct(p)">
           <button class="fav-btn" @click.stop="toggleFav(p)">
             {{ store.isFavorite(p.color_sku) ? '❤️' : '♡' }}
@@ -79,7 +78,10 @@
           <p class="name">{{ p.name }}</p>
           <p class="price">от {{ p.price }} ₽</p>
         </div>
-        <button @click="nextBest" aria-label="Вперёд">→</button>
+        <div class="best-slider-div">
+          <button @click="prevBest" aria-label="Назад">←</button>
+          <button @click="nextBest" aria-label="Вперёд">→</button>
+        </div>
       </div>
       <div @click="goToCatalogSales" class="btn-catalog">
         Смотреть все
@@ -359,7 +361,7 @@ function toggleFaq(id) {
       position: relative;
     }
     .image-placeholder {
-      background-color: #ffc;
+      background-color: $grey-30;
       height: 300px;
       display: flex;
       align-items: center;
@@ -376,9 +378,9 @@ function toggleFaq(id) {
       .hero-controls {
         button {
           margin-right: 8px;
-          background-color: rgba(0, 0, 0, 0.5);
+          background-color: $black-40;
           border: none;
-          color: #fff;
+          color: $white-100;
           padding: 8px;
         }
       }
@@ -386,8 +388,8 @@ function toggleFaq(id) {
         display: inline-block;
         margin-top: 12px;
         padding: 8px 16px;
-        background-color: #000;
-        color: #fff;
+        background-color: $black-100;
+        color: $white-100;
         border-radius: 4px;
         text-decoration: none;
       }
@@ -395,8 +397,8 @@ function toggleFaq(id) {
     .marquee {
       overflow: hidden;
       white-space: nowrap;
-      background-color: #000;
-      color: #fff;
+      background-color: $black-100;
+      color: $white-100;
       .marquee-content {
         display: inline-block;
         padding-left: 100%;
@@ -418,13 +420,13 @@ function toggleFaq(id) {
       margin-bottom: 16px;
     }
     .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      display: flex;
+      flex-direction: column;
       gap: 16px;
       .step {
         text-align: center;
         .icon-placeholder {
-          background-color: #ffc;
+          background-color: $grey-30;
           width: 60px;
           height: 60px;
           margin: 0 auto 8px;
@@ -436,7 +438,6 @@ function toggleFaq(id) {
   /* CATEGORIES */
   .categories {
     padding: 24px 16px;
-    background-color: #f8f8f8;
     h2 {
       text-align: center;
       margin-bottom: 16px;
@@ -463,8 +464,8 @@ function toggleFaq(id) {
           display: inline-block;
           margin-top: 12px;
           padding: 8px 16px;
-          background-color: #000;
-          color: #fff;
+          background-color: $black-100;
+          color: $white-100;
           border-radius: 4px;
           text-decoration: none;
         }
@@ -476,6 +477,7 @@ function toggleFaq(id) {
   .principles {
     padding: 24px 16px;
     .principle-div {
+      background-color: $grey-30;
       color: $white-100;
       font-size: 16px;
       line-height: 110%;
@@ -491,7 +493,7 @@ function toggleFaq(id) {
         .principle-icon {
           margin-left: auto;
           font-size: 24px;
-          color: #E94F37;
+          color: $red-active;
         }
       }
       .principle-text {
@@ -505,54 +507,55 @@ function toggleFaq(id) {
   /* BESTSELLERS */
   .bestsellers {
     padding: 24px 16px;
-    background-color: #f8f8f8;
     text-align: center;
     h2 {
       margin-bottom: 16px;
     }
     .best-slider {
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 8px;
-    }
-    .best-item {
-      position: relative;
-      cursor: pointer;
-      width: 100%;
-      margin: 0 auto 16px;
-      .fav-btn {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        background: transparent;
-        border: none;
-        font-size: 18px;
-      }
-      .product-image {
+      .best-item {
+        position: relative;
+        cursor: pointer;
         width: 100%;
-        height: 100px;
-        object-fit: cover;
-        margin-bottom: 8px;
+        margin: 0 auto 16px;
+        .fav-btn {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          background: transparent;
+          border: none;
+          font-size: 18px;
+        }
+        .product-image {
+          width: 100%;
+          height: 100px;
+          object-fit: cover;
+          margin-bottom: 8px;
+        }
+        .brand, .name, .price {
+          margin: 4px 0;
+        }
+        .name {
+          font-size: 14px;
+        }
+        .price {
+          font-size: 14px;
+          color: $grey-20;
+        }
       }
-      .brand, .name, .price {
-        margin: 4px 0;
-      }
-      .name {
-        font-size: 14px;
-      }
-      .price {
-        font-size: 14px;
-        color: #333;
+      .best-slider-div {
+        display: flex;
       }
     }
     .btn-catalog {
       display: inline-block;
       margin-top: 12px;
       padding: 8px 16px;
-      background-color: #000;
-      color: #fff;
+      background-color: $black-100;
+      color: $white-100;
       border-radius: 4px;
       text-decoration: none;
     }
@@ -578,8 +581,8 @@ function toggleFaq(id) {
       }
       .btn-submit {
         padding: 8px;
-        background-color: #000;
-        color: #fff;
+        background-color: $black-100;
+        color: $white-100;
         border: none;
         border-radius: 4px;
       }
