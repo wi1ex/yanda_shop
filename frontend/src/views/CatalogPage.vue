@@ -37,6 +37,8 @@
                     :class="['cat-btn', { active: store.selectedSubcat === sub }]">
               <span>{{ sub }}</span>
             </button>
+          </div>
+          <div class="header-cats-div">
             <!-- Кнопки листания -->
             <button v-if="canPrev"  class="cat-btn nav-btn" @click="store.prevSubcatPage()">‹</button>
             <button v-if="canNext"  class="cat-btn nav-btn" @click="store.nextSubcatPage()">›</button>
@@ -195,12 +197,19 @@ function handleClearFilters() {
 
 function onCategoryClick(cat) {
   page.value = 1
-  if (store.selectedCategory === cat) {
-    // повторный клик сбрасывает
-    store.backToCats()
-  } else {
+  if (!store.showSubcats) {
+    // если мы в режиме корней, то переключаемся в подкатегории
     store.selectedCategory = cat
     store.openSubcats()
+  } else if (store.selectedCategory !== cat) {
+    // если уже в подкатегориях, но кликнули по другому корню — перейти в его подкатегории
+    store.selectedCategory = cat
+    store.currentSubcatPage = 0
+    store.selectedSubcat = ''
+    store.filterSubcat = ''
+  } else {
+    // если кликнули на тот же корень повторно — возврат к корням
+    store.backToCats()
   }
 }
 
