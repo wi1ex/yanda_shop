@@ -14,52 +14,34 @@
         <sup class="logo-count">{{ totalItems }}</sup>
       </div>
 
-      <!-- Селект сортировки (вёрстка web) -->
-      <div class="header-sort desktop-only">
-        <span>Сортировка:</span>
-        <select v-model="sortOption">
-          <option value="date_desc">Новинки</option>
-          <option value="sales_desc">Бестселлеры</option>
-          <option value="price_asc">Цена ↑</option>
-          <option value="price_desc">Цена ↓</option>
-        </select>
-      </div>
-
       <!-- Навигация по категориям под логотипом -->
       <nav class="header-cats">
-        <button v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)"
-                :class="['cat-btn', { active: store.selectedCategory === cat }]">
-          <img :src="categoryImages[cat]" :alt="cat" />
-          <span>{{ cat }}</span>
-        </button>
+        <!-- 1) Корневые категории -->
+        <template v-if="!store.showSubcats">
+          <button v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)"
+                  :class="['cat-btn', { active: store.selectedCategory === cat }]">
+            <img :src="categoryImages[cat]" :alt="cat"/>
+            <span>{{ cat }}</span>
+          </button>
+        </template>
+
+        <!-- 2) Подкатегории -->
+        <template v-else>
+          <!-- Кнопка «назад» -->
+          <button class="cat-btn back-btn" @click="store.backToCats()">← Назад</button>
+          <!-- Список текущих 2-х подкатегорий -->
+          <button v-for="sub in visibleSubcats" :key="sub" @click="store.pickSubcat(sub)"
+                  :class="['cat-btn', { active: store.selectedSubcat === sub }]">
+            <span>{{ sub }}</span>
+          </button>
+          <!-- Кнопки листания -->
+          <button v-if="canPrev"  class="cat-btn nav-btn" @click="store.prevSubcatPage()">‹</button>
+          <button v-if="canNext"  class="cat-btn nav-btn" @click="store.nextSubcatPage()">›</button>
+        </template>
       </nav>
     </header>
 
     <div class="catalog-body">
-      <!-- Фильтры слева (desktop) -->
-      <aside class="sidebar desktop-only">
-        <div class="filters-panel">
-          <input type="number" v-model.number="store.filterPriceMin" placeholder="Мин. цена" />
-          <input type="number" v-model.number="store.filterPriceMax" placeholder="Макс. цена" />
-          <select v-model="store.filterColor">
-            <option value="">Все цвета</option>
-            <option v-for="color in distinctColors" :key="color" :value="color">{{ color }}</option>
-          </select>
-          <div class="gender-filter">
-            <label :class="{ active: store.filterGender === '' }">
-              <input type="radio" v-model="store.filterGender" value="" /> Все
-            </label>
-            <label :class="{ active: store.filterGender === 'M' }">
-              <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
-            </label>
-            <label :class="{ active: store.filterGender === 'F' }">
-              <input type="radio" v-model="store.filterGender" value="F" /> Женщинам
-            </label>
-          </div>
-          <button @click="handleClearFilters" class="btn-clear">Сбросить</button>
-        </div>
-      </aside>
-
       <!-- Основная колонка -->
       <main class="main-content">
         <!-- Мобильные контролы -->
@@ -145,6 +127,21 @@ const perPage = 24
 const mobileFiltersOpen = ref(false)
 const productsLoading = ref(false)
 
+const visibleSubcats = computed(() => {
+  const all = store.subcatListMap[store.selectedCategory] || []
+  const page = store.currentSubcatPage
+  return all.slice(page * 2, page * 2 + 2)
+})
+
+const canPrev = computed(() =>
+  store.currentSubcatPage > 0
+)
+
+const canNext = computed(() => {
+  const all = store.subcatListMap[store.selectedCategory] || []
+  return (store.currentSubcatPage + 1) * 2 < all.length
+})
+
 // 1) Количество отфильтрованных товаров
 const totalItems = computed(() => store.displayedProducts.length)
 
@@ -194,8 +191,13 @@ function handleClearFilters() {
 
 function onCategoryClick(cat) {
   page.value = 1
-  store.selectedCategory = (store.selectedCategory === cat ? '' : cat);
-  loadCategory(store.selectedCategory);
+  if (store.selectedCategory === cat) {
+    // повторный клик сбрасывает
+    store.backToCats()
+  } else {
+    store.selectedCategory = cat
+    store.openSubcats()
+  }
 }
 
 function goToProductDetail(group) {
@@ -272,14 +274,6 @@ onMounted(() => {
 
 <style scoped lang="scss">
 
-/* === Visibility Helpers === */
-.desktop-only {
-  display: block !important;
-}
-.mobile-only  {
-  display: none  !important;
-}
-
 .catalog {
   padding: 2vw 4vw;
   background: #DEDEDE;
@@ -347,20 +341,17 @@ onMounted(() => {
     grid-column: 2;
     grid-row: 2;
     display: flex;
-    gap: 32px;
-    justify-content: center;
-
+    gap: 16px;
+    align-items: center;
     .cat-btn {
       background: #FFF;
       border-radius: 12px;
       padding: 16px;
       text-align: center;
       transition: box-shadow .2s;
-
       &.active {
         box-shadow: 0 0 0 2px #FF3B30;
       }
-
       img {
         width: 64px; height: 64px;
         object-fit: contain;
@@ -374,6 +365,23 @@ onMounted(() => {
         font-size: 14px;
         line-height: 90%;
         letter-spacing: -0.84px;
+      }
+    }
+    .back-btn {
+      background: none;
+      font-size: 16px;
+      color: $black-100;
+      padding: 16px;
+      border-radius: 12px;
+      &:hover { background: #F0F0F0; }
+    }
+    .nav-btn {
+      font-size: 24px;
+      padding: 16px;
+      border-radius: 12px;
+      background: #FFF;
+      &:hover {
+        background: #F0F0F0;
       }
     }
   }
@@ -601,13 +609,6 @@ onMounted(() => {
 
 /* === MEDIA (<600px) === */
 @media (max-width: 600px) {
-  .desktop-only {
-    display: none  !important;
-  }
-  .mobile-only  {
-    display: flex  !important;
-  }
-
   .catalog-body {
     grid-template-columns: 1fr;
   }
@@ -646,11 +647,6 @@ onMounted(() => {
     }
     .header-cats   {
       grid-row: 3;
-      justify-content: space-around;
-      gap: 16px;
-    }
-    .header-sort   {
-      display: none;
     }
   }
 
