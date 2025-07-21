@@ -56,6 +56,39 @@ export const useStore = defineStore('main', () => {
   const categoryList        = ref(['Одежда', 'Обувь', 'Аксессуары'])
   const selectedCategory    = ref('')
 
+  // Подкатегории
+  const showSubcats         = ref(false)
+  const selectedSubcat      = ref('')
+  const currentSubcatPage   = ref(0)
+
+  // Списки подкатегорий
+  const subcatListGeneral = {
+    'Одежда':    ['Блуза','Бомбер','Брюки','Верхняя одежда','Джемпер','Джинсы','Жилетка','Кардиган',
+                  'Купальник','Лонгслив','Майка','Нижнее белье','Пиджак','Платье','Поло','Пуховик',
+                  'Рубашка','Свитер','Свитшот','Спорт. костюм','Футболка','Худи','Шорты','Юбка'],
+    'Обувь':     ['Балетки','Босоножки','Ботильоны','Казаки','Кеды','Кроссовки','Мокасины','Мюли',
+                  'Резиновая обувь','Сабо','Сандалии','Сапоги','Слипоны','Топсайдеры','Туфли',
+                  'Шлепки','Эспадрильи'],
+    'Аксессуары':['Головные уборы','Очки','Платки','Ремни','Рюкзаки','Сумки','Украшения','Часы','Шарфы']
+  }
+  const subcatListMale = {
+    'Одежда':    ['Бомбер','Брюки','Верхняя одежда','Джемпер','Джинсы','Жилетка','Кардиган','Лонгслив',
+                  'Майка','Нижнее белье','Пиджак','Плав. шорты','Поло','Пуховик','Рубашка','Свитер',
+                  'Свитшот','Спорт. костюм','Футболка','Худи','Шорты'],
+    'Обувь':     ['Кеды','Кроссовки','Мокасины','Мюли','Сабо','Сандалии','Сапоги','Слипоны','Топсайдеры',
+                  'Туфли','Шлепки','Эспадрильи'],
+    'Аксессуары':['Головные уборы','Очки','Ремни','Рюкзаки','Сумки','Шарфы','Украшения','Часы']
+  }
+  const subcatListFemale = {
+    'Одежда':    ['Блуза','Бомбер','Брюки','Верхняя одежда','Джемпер','Джинсы','Жилетка','Кардиган',
+                  'Купальник','Лонгслив','Майка','Нижнее белье','Пиджак','Платье','Поло','Пуховик',
+                  'Рубашка','Свитер','Свитшот','Спорт. костюм','Футболка','Худи','Шорты','Юбка'],
+    'Обувь':     ['Балетки','Босоножки','Ботильоны','Казаки','Кеды','Кроссовки','Мокасины','Мюли',
+                  'Резиновая обувь','Сабо','Сандалии','Сапоги','Слипоны','Топсайдеры','Туфли',
+                  'Шлепки','Эспадрильи'],
+    'Аксессуары':['Головные уборы','Очки','Платки','Ремни','Рюкзаки','Сумки','Украшения','Часы','Шарфы']
+  }
+
   // Сортировка
   const sortBy              = ref('date')
   const sortOrder           = ref('desc')
@@ -125,6 +158,13 @@ export const useStore = defineStore('main', () => {
       cartLoaded.value = true
       favoritesLoaded.value = true
     }
+  })
+
+  watch(() => filterGender.value, () => {
+    showSubcats.value      = false
+    selectedSubcat.value   = ''
+    currentSubcatPage.value = 0
+    // при необходимости: selectedCategory.value = ''
   })
 
   // -------------------------------------------------
@@ -357,6 +397,12 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
   // Utils: grouping & computed
   // -------------------------------------------------
+  const subcatListMap = computed(() => {
+    if (filterGender.value === 'M') return subcatListMale
+    if (filterGender.value === 'F') return subcatListFemale
+    return subcatListGeneral
+  })
+
   const colorGroups = computed(() => {
     const map = {}
     products.value.forEach(p => {
@@ -419,6 +465,45 @@ export const useStore = defineStore('main', () => {
     }
     return Object.values(map)
   })
+
+  // Открыть подкатегории для данной категории
+  function openSubcats() {
+    selectedSubcat.value = ''
+    currentSubcatPage.value = 0
+    showSubcats.value = true
+  }
+
+  // Вернуться к выбору корневых категорий
+  function backToCats() {
+    showSubcats.value = false
+    selectedSubcat.value = ''
+    selectedCategory.value = '';
+    // Очистить фильтр подкатегории
+  }
+
+  // Выбор подкатегории
+  function pickSubcat(subcat) {
+    selectedSubcat.value = subcat
+    // Применяем скрытный фильтр
+    filterBySubcat(subcat)
+    showSubcats.value = false;
+  }
+
+  // Листание «страниц» подкатегорий
+  function nextSubcatPage() {
+    currentSubcatPage.value++
+  }
+  function prevSubcatPage() {
+    currentSubcatPage.value--
+  }
+
+  // Фильтрация товаров по подкатегории
+  function filterBySubcat(subcat) {
+    // Например, просто ставим selectedCategory=подкатегория
+    // и перезагружаем товары
+    selectedCategory.value = subcat
+    fetchProducts(subcat)
+  }
 
   function changeCategory(cat) {
     selectedCategory.value = cat
@@ -718,6 +803,7 @@ export const useStore = defineStore('main', () => {
     // state
     accessToken, refreshToken, user,
     categoryList, selectedCategory,
+    showSubcats, currentSubcatPage, selectedSubcat, subcatListMap,
     sortBy, sortOrder,
     filterPriceMin, filterPriceMax, filterColor, filterGender,
     products,
@@ -756,7 +842,7 @@ export const useStore = defineStore('main', () => {
 
 
     // filters/sorting
-    changeCategory,
+    changeCategory, openSubcats, backToCats, pickSubcat, nextSubcatPage, prevSubcatPage,
 
     // cart helpers
     addToCart, increaseQuantity, decreaseQuantity,
