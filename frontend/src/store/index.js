@@ -373,11 +373,10 @@ export const useStore = defineStore('main', () => {
   const subcatListMap = computed(() => {
     // Инициализируем пустые наборы для трёх корней
     const map = {
-      'Одежда':    new Set(),
-      'Обувь':     new Set(),
-      'Аксессуары':new Set()
+      'Одежда':     new Set(),
+      'Обувь':      new Set(),
+      'Аксессуары': new Set()
     };
-
     // Пробегаемся по всем товарам, фильтруя по полу (если надо)
     products.value.forEach(p => {
       // Если стоит фильтр пола — пропускаем неподходящие
@@ -390,7 +389,6 @@ export const useStore = defineStore('main', () => {
       // Собираем подкатегорию (должно быть поле p.subcategory с реальным названием)
       map[p.category].add(p.subcategory);
     });
-
     // Преобразуем Set → Array для каждой категории
     const result = {};
     Object.entries(map).forEach(([cat, set]) => {
@@ -482,21 +480,22 @@ export const useStore = defineStore('main', () => {
 
   // Выбор подкатегории
   function pickSubcat(subcat) {
-    selectedSubcat.value = subcat
-    filterBySubcat(subcat)
+    if (selectedSubcat.value === subcat) {
+      selectedSubcat.value = ''
+      filterSubcat.value = ''
+    } else {
+      selectedSubcat.value = subcat
+      filterSubcat.value = subcat
+    }
   }
 
   // Листание «страниц» подкатегорий
   function nextSubcatPage() {
     currentSubcatPage.value++
   }
+
   function prevSubcatPage() {
     currentSubcatPage.value--
-  }
-
-  // Фильтрация товаров по подкатегории
-  function filterBySubcat(subcat) {
-    filterSubcat.value = subcat
   }
 
   function changeCategory(cat) {
