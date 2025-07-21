@@ -36,7 +36,10 @@
     <section class="categories">
       <h2>Категории</h2>
       <div class="cat-slider">
-        <button @click="prevCat" aria-label="Назад">←</button>
+        <div class="cat-slider-div">
+          <button @click="prevCat" aria-label="Назад">←</button>
+          <button @click="nextCat" aria-label="Вперёд">→</button>
+        </div>
         <div class="cat-slide">
           <!-- вставить картинку категории -->
           <div class="image-placeholder">Изображение {{ categorySlides[currentCat].title }}</div>
@@ -44,12 +47,15 @@
           <p>{{ categorySlides[currentCat].desc }}</p>
           <div @click="goToCatalog(categorySlides[currentCat].title)" class="btn-catalog">Каталог</div>
         </div>
-        <button @click="nextCat" aria-label="Вперёд">→</button>
       </div>
     </section>
 
     <!-- PRINCIPLES -->
     <section class="principles">
+      <div class="principle-div">
+        В YANDA.SHOP мы делаем ставку на оригинальность, честность и индивидуальный подход.<br><br>
+        Наши принципы просты: только популярные бренды, прозрачные условия и забота о вашем выборе. Здесь ценят  стиль, время и доверие.
+      </div>
       <div v-for="block in origBlocks" :key="block.title" class="principle">
         <h3 class="principle-header">
           {{ block.title }}
@@ -227,10 +233,10 @@ function nextCat() {
 
 // Principles
 const origBlocks = [
-  { title: 'Только оригиналы',      text: 'Работаем напрямую с официальными магазинами. Никаких подделок, никаких посредников.' },
-  { title: 'Честные цены',          text: 'Прямая закупка без посредников. Цены на 20–45% ниже, чем в розницах.' },
-  { title: 'Индивидуальный подход', text: 'Не нашел нужную модель? Пришли фото — мы найдём и доставим.' },
-  { title: 'Прозрачность и уверенность', text: 'Открытые условия на каждом этапе без сюрпризов.' },
+  { title: 'Только оригиналы',           text: 'Работаем напрямую с официальными магазинами. Никаких подделок, никаких посредников.' },
+  { title: 'Честные цены',               text: 'Прямая закупка без посредников. Цены на 20-45% ниже, чем в розничных магазинах — без переплат и комиссий.' },
+  { title: 'Индивидуальный подход',      text: 'Не нашел нужную модель? Присылай фото — найдем и доставим именно то, что тебе нужно.' },
+  { title: 'Прозрачность и уверенность', text: 'Простые и открытые условия на каждом этапе. Ты точно знаешь, что покупаешь, и получаешь только актуальные, аутентичные коллекции — никаких сюрпризов.' },
 ]
 
 // Bestsellers
@@ -437,27 +443,31 @@ function toggleFaq(id) {
     }
     .cat-slider {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 8px;
-    }
-    .cat-slide {
-      text-align: center;
-      .image-placeholder {
-        height: 120px;
-        margin-bottom: 8px;
+      .cat-slider-div {
+        display: flex;
       }
-      h3 {
-        margin-bottom: 8px;
-      }
-      .btn-catalog {
-        display: inline-block;
-        margin-top: 12px;
-        padding: 8px 16px;
-        background-color: #000;
-        color: #fff;
-        border-radius: 4px;
-        text-decoration: none;
+      .cat-slide {
+        text-align: center;
+        .image-placeholder {
+          height: 120px;
+          margin-bottom: 8px;
+        }
+        h3 {
+          margin-bottom: 8px;
+        }
+        .btn-catalog {
+          display: inline-block;
+          margin-top: 12px;
+          padding: 8px 16px;
+          background-color: #000;
+          color: #fff;
+          border-radius: 4px;
+          text-decoration: none;
+        }
       }
     }
   }
@@ -465,6 +475,12 @@ function toggleFaq(id) {
   /* PRINCIPLES */
   .principles {
     padding: 24px 16px;
+    .principle-div {
+      color: $white-100;
+      font-size: 16px;
+      line-height: 110%;
+      letter-spacing: -0.64px;
+    }
     .principle {
       margin-bottom: 12px;
       .principle-header {
@@ -496,14 +512,16 @@ function toggleFaq(id) {
     }
     .best-slider {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 8px;
     }
     .best-item {
       position: relative;
-      width: 150px;
       cursor: pointer;
+      width: 100%;
+      margin: 0 auto 16px;
       .fav-btn {
         position: absolute;
         top: 8px;
@@ -550,6 +568,7 @@ function toggleFaq(id) {
     form {
       display: flex;
       flex-direction: column;
+      padding: 0 16px;
       gap: 8px;
       max-width: 320px;
       margin: 0 auto;
@@ -649,6 +668,13 @@ function toggleFaq(id) {
                 line-height: 100%;
                 letter-spacing: -0.64px;
               }
+            }
+            a {
+              text-decoration: none;
+              color: inherit;
+              font-size: 16px;
+              line-height: 100%;
+              letter-spacing: -0.64px;
             }
           }
         }
@@ -774,77 +800,6 @@ function toggleFaq(id) {
 
   /* RESPONSIVE */
   @media (max-width: 600px) {
-    .hero {
-      padding: 0 8px;
-      .image-placeholder {
-        height: 200px;
-      }
-      .hero-text {
-        top: 15%;
-        left: 5%;
-        h1 {
-          font-size: 18px;
-        }
-        .hero-controls {
-          position: absolute;
-          bottom: 8px;
-          left: 5%;
-        }
-        .btn-catalog {
-          display: block;
-          margin: 12px auto 0;
-          padding: 6px 12px;
-          font-size: 14px;
-        }
-      }
-      .marquee-content {
-        font-size: 12px;
-      }
-    }
-    .how-it-works {
-      .steps {
-        gap: 12px;
-      }
-    }
-    .categories {
-      .cat-slider {
-        flex-direction: column;
-        gap: 12px;
-        button {
-          width: 100%;
-        }
-      }
-    }
-    .principles {
-      padding: 16px 8px;
-      .principle {
-        .principle-header {
-          font-size: 14px;
-        }
-      }
-    }
-    .bestsellers {
-      .best-slider {
-        flex-direction: column;
-      }
-      .best-item {
-        width: 100%;
-        max-width: 250px;
-        margin: 0 auto 16px;
-      }
-    }
-
-    .request-form {
-      form {
-        padding: 0 16px;
-        input, .btn-submit {
-          width: 100%;
-        }
-      }
-      .or-sep {
-        text-align: center;
-      }
-    }
     .faq {
       padding: 32px 10px;
       &-title {
