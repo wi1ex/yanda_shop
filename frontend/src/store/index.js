@@ -98,6 +98,7 @@ export const useStore = defineStore('main', () => {
   const filterPriceMax      = ref(null)
   const filterColor         = ref('')
   const filterGender        = ref('')
+  const filterSubcat        = ref('')
 
   // Товары
   const products            = ref([])
@@ -439,6 +440,9 @@ export const useStore = defineStore('main', () => {
     if (filterPriceMax.value != null) {
       list = list.filter(g => g.variants.some(v => v.price <= filterPriceMax.value))
     }
+    if (filterSubcat.value) {
+      list = list.filter(g => g.variants.some(v => v.subcategory === filterSubcat.value))
+    }
 
     list.forEach(g => {
       g.totalSales = g.variants.reduce((sum, v) => sum + (v.count_sales||0), 0)
@@ -477,8 +481,8 @@ export const useStore = defineStore('main', () => {
   function backToCats() {
     showSubcats.value = false
     selectedSubcat.value = ''
-    selectedCategory.value = '';
-    // Очистить фильтр подкатегории
+    filterSubcat.value = ''
+    currentSubcatPage.value = 0
   }
 
   // Выбор подкатегории
@@ -499,10 +503,7 @@ export const useStore = defineStore('main', () => {
 
   // Фильтрация товаров по подкатегории
   function filterBySubcat(subcat) {
-    // Например, просто ставим selectedCategory=подкатегория
-    // и перезагружаем товары
-    selectedCategory.value = subcat
-    fetchProducts(subcat)
+    filterSubcat.value = subcat
   }
 
   function changeCategory(cat) {
@@ -805,7 +806,7 @@ export const useStore = defineStore('main', () => {
     categoryList, selectedCategory,
     showSubcats, currentSubcatPage, selectedSubcat, subcatListMap,
     sortBy, sortOrder,
-    filterPriceMin, filterPriceMax, filterColor, filterGender,
+    filterPriceMin, filterPriceMax, filterColor, filterGender, filterSubcat,
     products,
     cartOrder, cart, cartLoaded, showCartDrawer,
     favorites, favoritesLoaded,

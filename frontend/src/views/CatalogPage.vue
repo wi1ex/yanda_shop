@@ -17,27 +17,31 @@
       <!-- Навигация по категориям под логотипом -->
       <nav class="header-cats">
         <!-- 1) Корневые категории -->
-        <template v-if="!store.showSubcats">
-          <button v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)"
-                  :class="['cat-btn', { active: store.selectedCategory === cat }]">
-            <img :src="categoryImages[cat]" :alt="cat"/>
-            <span>{{ cat }}</span>
-          </button>
-        </template>
+        <div v-if="!store.showSubcats" class="header-cats-template">
+          <div class="header-cats-div">
+            <button v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)"
+                    :class="['cat-btn', { active: store.selectedCategory === cat }]">
+              <img :src="categoryImages[cat]" :alt="cat"/>
+              <span>{{ cat }}</span>
+            </button>
+          </div>
+        </div>
 
         <!-- 2) Подкатегории -->
-        <template v-else>
-          <!-- Кнопка «назад» -->
-          <button class="cat-btn back-btn" @click="store.backToCats()">← Назад</button>
-          <!-- Список текущих 2-х подкатегорий -->
-          <button v-for="sub in visibleSubcats" :key="sub" @click="store.pickSubcat(sub)"
-                  :class="['cat-btn', { active: store.selectedSubcat === sub }]">
-            <span>{{ sub }}</span>
-          </button>
-          <!-- Кнопки листания -->
-          <button v-if="canPrev"  class="cat-btn nav-btn" @click="store.prevSubcatPage()">‹</button>
-          <button v-if="canNext"  class="cat-btn nav-btn" @click="store.nextSubcatPage()">›</button>
-        </template>
+        <div v-else class="header-cats-template">
+          <div class="header-cats-div">
+            <!-- Кнопка «назад» -->
+            <button class="cat-btn back-btn" @click="store.backToCats()">← Назад</button>
+            <!-- Список текущих 2-х подкатегорий -->
+            <button v-for="sub in visibleSubcats" :key="sub" @click="store.pickSubcat(sub)"
+                    :class="['cat-btn', { active: store.selectedSubcat === sub }]">
+              <span>{{ sub }}</span>
+            </button>
+            <!-- Кнопки листания -->
+            <button v-if="canPrev"  class="cat-btn nav-btn" @click="store.prevSubcatPage()">‹</button>
+            <button v-if="canNext"  class="cat-btn nav-btn" @click="store.nextSubcatPage()">›</button>
+          </div>
+        </div>
       </nav>
     </header>
 
@@ -343,45 +347,52 @@ onMounted(() => {
     display: flex;
     gap: 16px;
     align-items: center;
-    .cat-btn {
-      background: #FFF;
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      transition: box-shadow .2s;
-      &.active {
-        box-shadow: 0 0 0 2px #FF3B30;
-      }
-      img {
-        width: 64px; height: 64px;
-        object-fit: contain;
-        margin-bottom: 8px;
-      }
-      span {
-        display: block;
-        color: $black-100;
-        font-family: Bounded;
-        font-weight: 350;
-        font-size: 14px;
-        line-height: 90%;
-        letter-spacing: -0.84px;
-      }
-    }
-    .back-btn {
-      background: none;
-      font-size: 16px;
-      color: $black-100;
-      padding: 16px;
-      border-radius: 12px;
-      &:hover { background: #F0F0F0; }
-    }
-    .nav-btn {
-      font-size: 24px;
-      padding: 16px;
-      border-radius: 12px;
-      background: #FFF;
-      &:hover {
-        background: #F0F0F0;
+    .header-cats-template {
+      display: flex;
+      flex-direction: column;
+      .header-cats-div {
+        display: flex;
+        .cat-btn {
+          background: #FFF;
+          border-radius: 12px;
+          padding: 16px;
+          text-align: center;
+          transition: box-shadow .2s;
+          &.active {
+            box-shadow: 0 0 0 2px #FF3B30;
+          }
+          img {
+            width: 64px; height: 64px;
+            object-fit: contain;
+            margin-bottom: 8px;
+          }
+          span {
+            display: block;
+            color: $black-100;
+            font-family: Bounded;
+            font-weight: 350;
+            font-size: 14px;
+            line-height: 90%;
+            letter-spacing: -0.84px;
+          }
+        }
+        .back-btn {
+          background: none;
+          font-size: 16px;
+          color: $black-100;
+          padding: 16px;
+          border-radius: 12px;
+          &:hover { background: #F0F0F0; }
+        }
+        .nav-btn {
+          font-size: 24px;
+          padding: 16px;
+          border-radius: 12px;
+          background: #FFF;
+          &:hover {
+            background: #F0F0F0;
+          }
+        }
       }
     }
   }
