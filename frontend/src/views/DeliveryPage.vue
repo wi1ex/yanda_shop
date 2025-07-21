@@ -429,13 +429,13 @@ function toggleFaq(id) {
     &-item {
       background-color: $white-100;
       border-radius: 4px;
+      cursor: pointer;
       overflow: hidden;
     }
     &-header {
       display: flex;
       align-items: center;
       padding: 18px 10px;
-      cursor: pointer;
       user-select: none;
     }
     &-number {
