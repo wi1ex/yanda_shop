@@ -102,7 +102,6 @@
         Отзывов пока нет.
       </div>
       <div v-else class="carousel">
-        <button @click="prev" aria-label="Назад">←</button>
         <div class="slide">
           <div class="review">
             <p class="user-text">{{ current.client_text1 }}</p>
@@ -117,11 +116,20 @@
                 <span class="client-name">{{ current.client_name }}</span>
                 <span class="review-date">{{ new Date(current.created_at).toLocaleDateString('ru-RU', { month:'2-digit', year:'numeric' }) }}</span>
               </div>
-              <a :href="current.link_url" target="_blank">→</a>
+              <a :href="current.link_url" target="_blank">
+                Смотреть →
+              </a>
             </div>
           </div>
         </div>
-        <button @click="next" aria-label="Вперёд">→</button>
+        <div class="carousel-div">
+          <button @click="prev" aria-label="Назад">
+            ←
+          </button>
+          <button @click="next" aria-label="Вперёд">
+            →
+          </button>
+        </div>
       </div>
     </section>
 
@@ -336,7 +344,6 @@ function toggleFaq(id) {
 <style scoped lang="scss">
 
 .home {
-  color: #000;
   /* HERO */
   .hero {
     position: relative;
@@ -562,74 +569,104 @@ function toggleFaq(id) {
 
   /* TESTIMONIALS */
   .testimonials {
-    background-color: #f7f7f7;
-    padding: 24px;
-    border-radius: 12px;
+    padding: 32px 0;
+    h2 {
+      margin: 64px 0 40px;
+      text-align: center;
+      font-family: Bounded;
+      font-weight: 500;
+      font-size: 24px;
+      line-height: 90%;
+      letter-spacing: -0.72px;
+    }
     .no-reviews {
       font-style: italic;
     }
     .carousel {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 8px;
       .slide {
-        width: 300px;
-      }
-    }
-    .review {
-      background-color: #f5f5f5;
-      padding: 16px;
-      border-radius: 8px;
-      .user-text, .shop-text {
-        padding: 12px;
-        border-radius: 8px;
-        display: inline-block;
-        max-width: 100%;
-        margin: 8px 0;
-      }
-      .user-text {
-        background-color: #000;
-        color: #fff;
-      }
-      .shop-text {
-        background-color: #fff;
-        color: #000;
-      }
-      .photos {
-        margin: 8px 0;
-        img {
-          width: 120px;
-          height: auto;
-          margin-right: 8px;
+        display: flex;
+        background-color: $grey-90;
+        .review {
+          display: flex;
+          flex-direction: column;
+          padding: 20px;
+          gap: 20px;
           border-radius: 4px;
+          .user-text, .shop-text {
+            margin: 0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 16px;
+            line-height: 110%;
+            letter-spacing: -0.64px;
+          }
+          .user-text {
+            background-color: $black-100;
+            color: $white-100;
+          }
+          .shop-text {
+            background-color: $white-100;
+            color: $black-100;
+          }
+          .photos {
+            img {
+              width: 155px;
+              height: auto;
+              margin-right: 10px;
+              border-radius: 4px;
+            }
+          }
+          .meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            .review-header {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              .avatar {
+                width: 56px;
+                height: 56px;
+                border-radius: 56px;
+                object-fit: cover;
+              }
+              .client-name {
+                color: $red-active;
+                font-family: Manrope-SemiBold;
+                font-size: 16px;
+                line-height: 100%;
+                letter-spacing: -0.64px;
+              }
+              .review-date {
+                color: $black-100;
+                font-family: Manrope-SemiBold;
+                font-size: 16px;
+                line-height: 100%;
+                letter-spacing: -0.64px;
+              }
+            }
+          }
         }
       }
-      .meta {
+      .carousel-div {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        margin-top: 12px;
-        .review-header {
+        gap: 10px;
+        button {
           display: flex;
+          justify-content: center;
           align-items: center;
-          margin-bottom: 12px;
-          .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 12px;
-            border: 2px solid #ddd;
-          }
-          .client-name {
-            color: #E94F37;
-            margin-right: 8px;
-          }
-          .review-date {
-            color: #888;
-            font-size: 14px;
-          }
+          padding: 8px 12px;
+          width: 30px;
+          height: 30px;
+          border: none;
+          background-color: $white-100;
+          cursor: pointer;
         }
       }
     }
@@ -668,12 +705,12 @@ function toggleFaq(id) {
       background-color: $white-100;
       border-radius: 4px;
       overflow: hidden;
+      cursor: pointer;
     }
     &-header {
       display: flex;
       align-items: center;
       padding: 18px 10px;
-      cursor: pointer;
       user-select: none;
     }
     &-number {
