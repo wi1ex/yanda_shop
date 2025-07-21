@@ -61,12 +61,4 @@ onBeforeUnmount(() => {
   font-family: Manrope-Medium;
 }
 
-@media (max-width: 600px) {
-  .app-container {
-    .fake-header {
-      height: 66px;
-    }
-  }
-}
-
 </style>
