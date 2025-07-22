@@ -122,9 +122,9 @@
       <div v-if="!store.reviews.length" class="no-reviews">
         Отзывов пока нет.
       </div>
-      <div v-else class="carousel">
+      <div v-else class="carousel" ref="carousel" :style="{ height: carouselHeight + 'px' }">
         <transition name="slide" mode="out-in">
-          <div class="slide" :key="current.created_at">
+          <div class="slide" :key="idx">
             <div class="review">
               <p class="user-text">{{ current.client_text1 }}</p>
               <div class="photos">
@@ -187,7 +187,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 
@@ -203,9 +203,11 @@ import icon_favorites_black from "@/assets/images/favorites_black.svg";
 const store = useStore()
 const router = useRouter()
 
-const idx = ref(0)
 const heroIndex = ref(0)
 const openedFaq = ref(null);
+const idx = ref(0)
+const carousel = ref(null)
+const carouselHeight = ref(0)
 const current = computed(() => store.reviews[idx.value] || {})
 
 function prev() {
@@ -216,6 +218,14 @@ function prev() {
 function next() {
   if (!store.reviews.length) return
   idx.value = (idx.value + 1) % store.reviews.length
+}
+
+function updateCarouselHeight() {
+  if (!carousel.value) return
+  const slideEl = carousel.value.querySelector('.slide')
+  if (slideEl) {
+    carouselHeight.value = slideEl.offsetHeight
+  }
 }
 
 // Hero
@@ -371,6 +381,12 @@ function toggleFaq(id) {
 function formatPrice(val) {
   return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
+
+watch(idx, () => {
+  nextTick(updateCarouselHeight)
+})
+
+onMounted(updateCarouselHeight)
 
 </script>
 
@@ -809,6 +825,7 @@ function formatPrice(val) {
       position: relative;
       gap: 32px;
       overflow: hidden;
+      transition: height 0.25s ease-in-out;
       .slide {
         display: flex;
         position: absolute;
@@ -922,12 +939,12 @@ function formatPrice(val) {
         transition: transform 0.25s ease-in-out;
       }
       .slide-enter-to {
-        transform: translateX(0%);
+        transform: translateX(0);
       }
 
       /* Выход */
       .slide-leave-from {
-        transform: translateX(0%);
+        transform: translateX(0);
       }
       .slide-leave-active {
         transition: transform 0.25s ease-in-out;
