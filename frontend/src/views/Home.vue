@@ -119,31 +119,33 @@
     <!-- TESTIMONIALS -->
     <section class="testimonials">
       <h2>Твой стиль, твои отзывы</h2>
-      <div v-if="store.reviews.length === 0" class="no-reviews">
+      <div v-if="!store.reviews.length" class="no-reviews">
         Отзывов пока нет.
       </div>
-      <div v-else class="carousel">
-        <div class="slide">
-          <div class="review">
-            <p class="user-text">{{ current.client_text1 }}</p>
-            <div class="photos">
-              <img v-for="url in current.photo_urls" :key="url" :src="url" alt="photo"/>
-            </div>
-            <p class="shop-text">{{ current.shop_response }}</p>
-            <p v-if="current.client_text2?.trim()" class="user-text">{{ current.client_text2 }}</p>
-            <div class="meta">
-              <div class="review-header">
-                <img class="avatar" :src="icon_default_avatar_white" alt="аватар"/>
-                <span class="client-name">{{ current.client_name }},</span>
-                <span class="review-date">{{ new Date(current.created_at).toLocaleDateString('ru-RU', { month:'2-digit', year:'numeric' }) }}</span>
+      <transition v-else class="carousel">
+        <transition name="slide" mode="out-in">
+          <div class="slide" :key="current.created_at">
+            <div class="review">
+              <p class="user-text">{{ current.client_text1 }}</p>
+              <div class="photos">
+                <img v-for="url in current.photo_urls" :key="url" :src="url" alt="photo"/>
               </div>
-              <a :href="current.link_url" target="_blank">
-                Смотреть
-                <img :src="icon_arrow_black" alt="Arrow" style="transform: rotate(180deg)"/>
-              </a>
+              <p class="shop-text">{{ current.shop_response }}</p>
+              <p v-if="current.client_text2?.trim()" class="user-text">{{ current.client_text2 }}</p>
+              <div class="meta">
+                <div class="review-header">
+                  <img class="avatar" :src="icon_default_avatar_white" alt="аватар"/>
+                  <span class="client-name">{{ current.client_name }},</span>
+                  <span class="review-date">{{ new Date(current.created_at).toLocaleDateString('ru-RU', { month:'2-digit', year:'numeric' }) }}</span>
+                </div>
+                <a :href="current.link_url" target="_blank">
+                  Смотреть
+                  <img :src="icon_arrow_black" alt="Arrow" style="transform: rotate(180deg)"/>
+                </a>
+              </div>
             </div>
           </div>
-        </div>
+        </transition>
         <div class="carousel-div">
           <button @click="prev" aria-label="Назад">
             <img :src="icon_arrow_red" alt="Arrow"/>
@@ -804,9 +806,15 @@ function formatPrice(val) {
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      position: relative;
       gap: 32px;
+      overflow: hidden;
       .slide {
         display: flex;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
         background-color: $grey-90;
         .review {
           display: flex;
@@ -906,6 +914,26 @@ function formatPrice(val) {
             object-fit: cover;
           }
         }
+      }
+      .slide-enter-from {
+        transform: translateX(100%);
+      }
+      .slide-enter-active {
+        transition: transform 0.25s ease-in-out;
+      }
+      .slide-enter-to {
+        transform: translateX(0%);
+      }
+
+      /* Выход */
+      .slide-leave-from {
+        transform: translateX(0%);
+      }
+      .slide-leave-active {
+        transition: transform 0.25s ease-in-out;
+      }
+      .slide-leave-to {
+        transform: translateX(-100%);
       }
     }
   }
