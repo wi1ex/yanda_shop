@@ -231,17 +231,17 @@ const heroIndex = ref(0)
 const openedFaq = ref(null);
 const idx = ref(0)
 const offsetPercent = computed(() =>
-  (idx.value - (store.reviews.length - 1) / 2) * (100 / store.reviews.length)
+  ((store.reviews.length - 1) / 2 - idx.value) * (100 / store.reviews.length)
 )
 
 function prev() {
   if (!store.reviews.length) return
-  idx.value = (idx.value + store.reviews.length - 1) % store.reviews.length
+  idx.value = (idx.value + 1) % store.reviews.length
 }
 
 function next() {
   if (!store.reviews.length) return
-  idx.value = (idx.value + 1) % store.reviews.length
+  idx.value = (idx.value + store.reviews.length - 1) % store.reviews.length
 }
 
 // Hero
