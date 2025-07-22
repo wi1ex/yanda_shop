@@ -48,7 +48,7 @@
           <div class="image-placeholder">Изображение {{ categorySlides[currentCat].title }}</div>
           <h3>{{ categorySlides[currentCat].title }}</h3>
           <p>{{ categorySlides[currentCat].desc }}</p>
-          <div @click="goToCatalog(categorySlides[currentCat].title)" class="btn-catalog">Каталог</div>
+          <button class="btn-catalog" @click="goToCatalog(categorySlides[currentCat].title)">Каталог</button>
         </div>
       </div>
     </section>
@@ -72,8 +72,8 @@
     <section class="bestsellers" v-if="bests.length">
       <h2>Бестселлеры</h2>
       <div class="best-slider">
-        <div class="best-items">
-          <div class="best-item" v-for="p in visibleBests" :key="p.variant_sku" @click="goToProduct(p)">
+        <div class="best-items" :style="{ transform: `translateX(-${bestIndex * 100}%)` }">
+          <div class="best-item" v-for="p in bests" :key="p.variant_sku" @click="goToProduct(p)">
             <button class="fav-btn" @click.stop="toggleFav(p)">
               <img :src="store.isFavorite(p.color_sku) ? icon_favorites_black : icon_favorites_grey" alt="" />
             </button>
@@ -91,14 +91,12 @@
           <button @click="prevBest" aria-label="Назад" :disabled="bestIndex === 0">
             <img :src="bestIndex === 0 ? icon_arrow_grey : icon_arrow_red" alt="Arrow"/>
           </button>
-          <button @click="nextBest" aria-label="Вперёд">
-            <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
+          <button @click="nextBest" aria-label="Вперёд" :disabled="bestIndex === maxPage">
+            <img :src="bestIndex === maxPage ? icon_arrow_grey : icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
           </button>
         </div>
       </div>
-      <div @click="goToCatalogSales" class="btn-catalog">
-        Смотреть все
-      </div>
+      <button class="btn-catalog" @click="goToCatalogSales">Смотреть все</button>
     </section>
 
     <!-- REQUEST FORM -->
@@ -263,10 +261,6 @@ const origBlocks = [
 ]
 
 // Bestsellers
-const perSlide  = 2
-const bestIndex = ref(0)
-
-// 1) Группируем по color_sku, суммируем count_sales, берём «представительный» вариант и сортируем
 const bests = computed(() => {
   // сгруппировать
   const groups = {}
@@ -289,19 +283,15 @@ const bests = computed(() => {
   )
 })
 
-// 2) Товары для текущей «страницы»
-const visibleBests = computed(() => {
-  const start = bestIndex.value * perSlide
-  return bests.value.slice(start, start + perSlide)
-})
+const maxPage = computed(() => Math.ceil(bests.value.length / 2) - 1)
+const bestIndex = ref(0)
 
 function prevBest() {
   if (bestIndex.value > 0) bestIndex.value--
 }
 
 function nextBest() {
-  const maxPage = Math.ceil(bests.value.length / perSlide) - 1
-  if (bestIndex.value < maxPage) bestIndex.value++
+  if (bestIndex.value < maxPage.value) bestIndex.value++
 }
 
 // 3) Переход на страницу товара
@@ -560,6 +550,7 @@ function formatPrice(val) {
       margin-top: 24px;
       padding: 0 24px;
       height: 56px;
+      border: none;
       background-color: $grey-20;
       color: $white-100;
       border-radius: 4px;
@@ -628,13 +619,16 @@ function formatPrice(val) {
       align-items: center;
       justify-content: center;
       gap: 8px;
+      overflow: hidden;
       .best-items {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-auto-flow: column;
+        grid-auto-columns: 50%;
         margin-top: 40px;
-        transition: filter 0.25s ease-in-out;
+        transition: all 0.25s ease-in-out;
         .best-item {
           display: flex;
+          box-sizing: border-box;
           flex-direction: column;
           position: relative;
           min-width: 0;
@@ -738,6 +732,7 @@ function formatPrice(val) {
       margin-top: 32px;
       padding: 0 24px;
       height: 56px;
+      border: none;
       background-color: $grey-20;
       color: $white-100;
       border-radius: 4px;
@@ -754,7 +749,7 @@ function formatPrice(val) {
     display: flex;
     flex-direction: column;
     margin-top: 96px;
-    padding: 24px 16px;
+    padding: 84px 16px;
     background-color: $grey-30;
     h2 {
       margin: 0;
@@ -913,6 +908,8 @@ function formatPrice(val) {
     .carousel-div {
       display: flex;
       align-items: center;
+      justify-content: center;
+      margin-top: 32px;
       gap: 10px;
       button {
         display: flex;
