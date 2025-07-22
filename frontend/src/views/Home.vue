@@ -122,7 +122,7 @@
       <div v-if="!store.reviews.length" class="no-reviews">
         Отзывов пока нет.
       </div>
-      <div v-else class="carousel" ref="carousel" :style="{ height: carouselHeight + 'px' }">
+      <div v-else class="carousel" ref="carousel" :style="{ height: carouselHeight ? carouselHeight + 'px' : 'auto' }">
         <transition name="slide" mode="out-in">
           <div class="slide" :key="idx">
             <div class="review">
@@ -386,7 +386,9 @@ watch(idx, () => {
   nextTick(updateCarouselHeight)
 })
 
-onMounted(updateCarouselHeight)
+onMounted(() => {
+  nextTick(updateCarouselHeight)
+})
 
 </script>
 
