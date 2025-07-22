@@ -122,7 +122,7 @@
       <div v-if="!store.reviews.length" class="no-reviews">
         Отзывов пока нет.
       </div>
-      <div v-else class="carousel" ref="carousel" :style="{ height: carouselHeight ? carouselHeight + 'px' : 'auto' }">
+      <div v-else class="carousel">
         <transition name="slide" mode="out-in">
           <div class="slide" :key="idx">
             <div class="review">
@@ -146,14 +146,14 @@
             </div>
           </div>
         </transition>
-        <div class="carousel-div">
-          <button @click="prev" aria-label="Назад">
-            <img :src="icon_arrow_red" alt="Arrow"/>
-          </button>
-          <button @click="next" aria-label="Вперёд">
-            <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
-          </button>
-        </div>
+      </div>
+      <div class="carousel-div">
+        <button @click="prev" aria-label="Назад">
+          <img :src="icon_arrow_red" alt="Arrow"/>
+        </button>
+        <button @click="next" aria-label="Вперёд">
+          <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
+        </button>
       </div>
     </section>
 
@@ -187,7 +187,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 
@@ -206,8 +206,6 @@ const router = useRouter()
 const heroIndex = ref(0)
 const openedFaq = ref(null);
 const idx = ref(0)
-const carousel = ref(null)
-const carouselHeight = ref(0)
 const current = computed(() => store.reviews[idx.value] || {})
 
 function prev() {
@@ -218,14 +216,6 @@ function prev() {
 function next() {
   if (!store.reviews.length) return
   idx.value = (idx.value + 1) % store.reviews.length
-}
-
-function updateCarouselHeight() {
-  if (!carousel.value) return
-  const slideEl = carousel.value.querySelector('.slide')
-  if (slideEl) {
-    carouselHeight.value = slideEl.offsetHeight
-  }
 }
 
 // Hero
@@ -381,14 +371,6 @@ function toggleFaq(id) {
 function formatPrice(val) {
   return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
-
-watch(idx, () => {
-  nextTick(updateCarouselHeight)
-})
-
-onMounted(() => {
-  nextTick(updateCarouselHeight)
-})
 
 </script>
 
@@ -830,9 +812,6 @@ onMounted(() => {
       transition: height 0.25s ease-in-out;
       .slide {
         display: flex;
-        position: absolute;
-        top: 0;
-        left: 0;
         width: 100%;
         background-color: $grey-90;
         .review {
@@ -912,28 +891,6 @@ onMounted(() => {
           }
         }
       }
-      .carousel-div {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        button {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 8px 12px;
-          width: 30px;
-          height: 30px;
-          border: none;
-          background-color: $white-100;
-          border-radius: 100%;
-          cursor: pointer;
-          img {
-            width: 16px;
-            height: 16px;
-            object-fit: cover;
-          }
-        }
-      }
       .slide-enter-from {
         transform: translateX(100%);
       }
@@ -943,8 +900,6 @@ onMounted(() => {
       .slide-enter-to {
         transform: translateX(0);
       }
-
-      /* Выход */
       .slide-leave-from {
         transform: translateX(0);
       }
@@ -953,6 +908,28 @@ onMounted(() => {
       }
       .slide-leave-to {
         transform: translateX(-100%);
+      }
+    }
+    .carousel-div {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 8px 12px;
+        width: 30px;
+        height: 30px;
+        border: none;
+        background-color: $white-100;
+        border-radius: 100%;
+        cursor: pointer;
+        img {
+          width: 16px;
+          height: 16px;
+          object-fit: cover;
+        }
       }
     }
   }
