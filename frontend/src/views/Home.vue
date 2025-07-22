@@ -231,7 +231,7 @@ const heroIndex = ref(0)
 const openedFaq = ref(null);
 const idx = ref(0)
 const offsetPercent = computed(() =>
-  (idx.value - (reviewsCount.value - 1) / 2) * (100 / reviewsCount.value)
+  (idx.value - (store.reviews.length - 1) / 2) * (100 / store.reviews.length)
 )
 
 function prev() {
