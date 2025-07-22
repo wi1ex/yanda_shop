@@ -54,24 +54,23 @@
           <div class="image-placeholder">Изображение {{ categorySlides[currentCat].title }}</div>
           <h3>{{ categorySlides[currentCat].title }}</h3>
           <p>{{ categorySlides[currentCat].desc }}</p>
-          <button class="btn-catalog" @click="goToCatalog(categorySlides[currentCat].title)">Каталог</button>
         </div>
+        <button class="btn-catalog" @click="goToCatalog(categorySlides[currentCat].title)">Каталог</button>
       </div>
     </section>
 
     <!-- PRINCIPLES -->
     <section class="principles">
       <div class="principle-div">
-        В YANDA.SHOP мы делаем ставку на оригинальность, честность и индивидуальный подход.<br><br>
-        Наши принципы просты: только популярные бренды, прозрачные условия и забота о вашем выборе. Здесь ценят  стиль, время и доверие.
+        <p class="principle-text">В YANDA.SHOP мы делаем ставку на оригинальность, честность и индивидуальный подход.<br><br>
+          Наши принципы просты: только популярные бренды, прозрачные условия и забота о вашем выборе. Здесь ценят  стиль, время и доверие.</p>
       </div>
       <div v-for="block in origBlocks" :key="block.title" class="principle">
-        <h3 class="principle-header">
-          {{ block.title }}
-          <span class="principle-icon">+</span>
-        </h3>
+        <div class="principle-header">
+          <h3>{{ block.title }}</h3>
+          <img :src="block.img" alt="block img" />
+        </div>
         <p class="principle-text">{{ block.text }}</p>
-        <div class="line-hor"></div>
       </div>
     </section>
 
@@ -197,6 +196,10 @@ import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 
 import icon_default_avatar_white from '@/assets/images/default_avatar_white.svg'
+import icon_plus_1 from '@/assets/images/plus_1.svg'
+import icon_plus_2 from '@/assets/images/plus_2.svg'
+import icon_plus_3 from '@/assets/images/plus_3.svg'
+import icon_plus_4 from '@/assets/images/plus_4.svg'
 import icon_faq_plus from '@/assets/images/faq_plus.svg'
 import icon_minus_red from '@/assets/images/minus_red.svg'
 import icon_arrow_red from '@/assets/images/arrow_red.svg'
@@ -261,10 +264,10 @@ function nextCat() {
 
 // Principles
 const origBlocks = [
-  { title: 'Только оригиналы',           text: 'Работаем напрямую с официальными магазинами. Никаких подделок, никаких посредников.' },
-  { title: 'Честные цены',               text: 'Прямая закупка без посредников. Цены на 20-45% ниже, чем в розничных магазинах — без переплат и комиссий.' },
-  { title: 'Индивидуальный подход',      text: 'Не нашел нужную модель? Присылай фото — найдем и доставим именно то, что тебе нужно.' },
-  { title: 'Прозрачность и уверенность', text: 'Простые и открытые условия на каждом этапе. Ты точно знаешь, что покупаешь, и получаешь только актуальные, аутентичные коллекции — никаких сюрпризов.' },
+  { img: icon_plus_1, title: 'Только оригиналы',           text: 'Работаем напрямую с официальными магазинами. Никаких подделок, никаких посредников.' },
+  { img: icon_plus_2, title: 'Честные цены',               text: 'Прямая закупка без посредников. Цены на 20-45% ниже, чем в розничных магазинах — без переплат и комиссий.' },
+  { img: icon_plus_3, title: 'Индивидуальный подход',      text: 'Не нашел нужную модель? Присылай фото — найдем и доставим именно то, что тебе нужно.' },
+  { img: icon_plus_4, title: 'Прозрачность и уверенность', text: 'Простые и открытые условия на каждом этапе. Ты точно знаешь, что покупаешь, и получаешь только актуальные, аутентичные коллекции — никаких сюрпризов.' },
 ]
 
 // Bestsellers
@@ -284,8 +287,8 @@ const bests = computed(() => {
   })
   // сортируем по сумме продаж ↓, при равных — по цене ↓
   const sorted = arr.sort((a, b) => (b.totalSales - a.totalSales) || (b.price - a.price))
-  // оставляем только топ-50
-  return sorted.slice(0, 50)
+  // оставляем только топ-24
+  return sorted.slice(0, 24)
 })
 
 const maxPage = computed(() => Math.ceil(bests.value.length / 2) - 1)
@@ -389,9 +392,12 @@ function formatPrice(val) {
 .home {
   /* HERO */
   .hero {
+    display: flex;
+    flex-direction: column;
     position: relative;
     overflow: hidden;
     padding: 0;
+    z-index: 20;
     &-slide {
       position: relative;
     }
@@ -411,23 +417,26 @@ function formatPrice(val) {
         line-height: 90%;
         letter-spacing: -1.28px;
       }
-      .hero-controls {
-        button {
-          margin-right: 8px;
-          background-color: $black-40;
-          border: none;
-          color: $white-100;
-          padding: 8px;
+      .controls-div {
+        display: flex;
+        .hero-controls {
+          button {
+            margin-right: 8px;
+            background-color: $black-40;
+            border: none;
+            color: $white-100;
+            padding: 8px;
+          }
         }
-      }
-      .btn-catalog {
-        display: inline-block;
-        margin-top: 12px;
-        padding: 8px 16px;
-        background-color: $black-100;
-        color: $white-100;
-        border-radius: 4px;
-        text-decoration: none;
+        .btn-catalog {
+          display: flex;
+          margin-top: 12px;
+          padding: 8px 16px;
+          background-color: $black-100;
+          color: $white-100;
+          border-radius: 4px;
+          text-decoration: none;
+        }
       }
     }
     .marquee {
@@ -452,6 +461,8 @@ function formatPrice(val) {
   .how-it-works {
     display: flex;
     flex-direction: column;
+    position: relative;
+    z-index: 20;
     h2 {
       margin: 96px 0 40px;
       text-align: center;
@@ -503,6 +514,8 @@ function formatPrice(val) {
   .categories {
     display: flex;
     flex-direction: column;
+    position: relative;
+    z-index: 20;
     h2 {
       margin: 96px 0 40px;
       text-align: center;
@@ -518,15 +531,20 @@ function formatPrice(val) {
       align-items: center;
       justify-content: center;
       gap: 8px;
+      border-radius: 4px;
+      background-color: $grey-95;
       .cat-slider-div {
         display: flex;
+        align-items: center;
         padding: 0 10px;
+        width: calc(100% - 20px);
+        gap: 10px;
         button {
           display: flex;
           justify-content: center;
           align-items: center;
           padding: 8px 12px;
-          width: calc((100% - 30px)/2);
+          width: 100%;
           height: 30px;
           border: none;
           background-color: $white-100;
@@ -540,9 +558,13 @@ function formatPrice(val) {
         }
       }
       .cat-slide {
+        display: flex;
+        flex-direction: column;
         padding: 0 10px;
+        gap: 8px;
         text-align: center;
         .image-placeholder {
+          margin-bottom: 8px;
           width: 100%;
           height: auto;
         }
@@ -569,6 +591,7 @@ function formatPrice(val) {
       justify-content: center;
       margin-top: 24px;
       padding: 0 24px;
+      width: 100%;
       height: 56px;
       border: none;
       background-color: $grey-20;
@@ -586,29 +609,43 @@ function formatPrice(val) {
   .principles {
     display: flex;
     flex-direction: column;
+    position: relative;
     margin-top: 96px;
+    z-index: 20;
     .principle-div {
+      display: flex;
+      padding: 20px 10px;
       background-color: $grey-30;
-      color: $white-100;
-      font-size: 16px;
-      line-height: 110%;
-      letter-spacing: -0.64px;
+      .principle-text {
+        margin: 0;
+        color: $white-100;
+        font-size: 16px;
+        line-height: 110%;
+        letter-spacing: -0.64px;
+      }
     }
     .principle {
       display: flex;
       flex-direction: column;
+      padding: 24px 10px;
+      background-color: $grey-87;
+      border-bottom: 1px solid $white-100;
       .principle-header {
         display: flex;
         align-items: center;
-        margin: 0;
-        font-family: Bounded;
-        font-size: 26px;
-        font-weight: 250;
-        line-height: 90%;
-        letter-spacing: -1.56px;
-        .principle-icon {
-          font-size: 30px;
-          color: $red-active;
+        justify-content: space-between;
+        margin: 0 0 40px;
+        h3 {
+          font-family: Bounded;
+          font-size: 26px;
+          font-weight: 250;
+          line-height: 90%;
+          letter-spacing: -1.56px;
+        }
+        img {
+          width: 30px;
+          height: 30px;
+          object-fit: cover;
         }
       }
       .principle-text {
@@ -624,6 +661,7 @@ function formatPrice(val) {
   .bestsellers {
     display: flex;
     flex-direction: column;
+    position: relative;
     h2 {
       margin: 96px 0 0;
       text-align: center;
@@ -632,6 +670,7 @@ function formatPrice(val) {
       font-size: 24px;
       line-height: 90%;
       letter-spacing: -0.72px;
+      z-index: 20;
     }
     .best-slider {
       display: flex;
@@ -751,6 +790,7 @@ function formatPrice(val) {
       justify-content: center;
       margin-top: 32px;
       padding: 0 24px;
+      width: 100%;
       height: 56px;
       border: none;
       background-color: $grey-20;
@@ -761,6 +801,7 @@ function formatPrice(val) {
       letter-spacing: -0.64px;
       text-decoration: none;
       cursor: pointer;
+      z-index: 20;
     }
   }
 
@@ -768,9 +809,11 @@ function formatPrice(val) {
   .request-form {
     display: flex;
     flex-direction: column;
+    position: relative;
     margin-top: 96px;
     padding: 84px 16px;
     background-color: $grey-30;
+    z-index: 20;
     h2 {
       margin: 0;
       text-align: center;
@@ -803,7 +846,11 @@ function formatPrice(val) {
 
   /* TESTIMONIALS */
   .testimonials {
+    display: flex;
+    flex-direction: column;
+    position: relative;
     padding: 32px 0;
+    z-index: 20;
     h2 {
       margin: 64px 0 40px;
       text-align: center;
@@ -953,6 +1000,9 @@ function formatPrice(val) {
 
   /* FAQ */
   .faq {
+    display: flex;
+    flex-direction: column;
+    position: relative;
     padding: 48px 16px;
     text-align: center;
     z-index: 20;
