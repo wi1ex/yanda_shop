@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-
+    <div class="line-vert"></div>
     <!-- HERO -->
     <section class="hero">
       <div class="hero-slide">
@@ -8,11 +8,15 @@
         <div class="image-placeholder">Изображение героя</div>
         <div class="hero-text">
           <h1>Оригинальные бренды<br>и ничего лишнего</h1>
-          <div class="hero-controls">
-            <button @click="prevHero" aria-label="Назад">←</button>
-            <button @click="nextHero" aria-label="Вперёд">→</button>
+          <div class="line-hor"></div>
+          <div class="controls-div">
+            <div class="line-hor"></div>
+            <div class="hero-controls">
+              <button @click="prevHero" aria-label="Назад">←</button>
+              <button @click="nextHero" aria-label="Вперёд">→</button>
+            </div>
+            <div @click="goToCatalog('')" class="btn-catalog">В каталог →</div>
           </div>
-          <div @click="goToCatalog('')" class="btn-catalog">В каталог →</div>
         </div>
       </div>
       <div class="marquee">
@@ -26,11 +30,13 @@
       <p>Выбирай нужные тебе товары - мы проверим их оригинальность, купим напрямую в официальных магазинах
         и доставим тебе без переплат и подделок. Все просто, прозрачно и быстро.</p>
       <div class="steps">
+        <div class="line-hor"></div>
         <div v-for="step in workSteps" :key="step.step" class="step">
           <div class="icon-placeholder">Иконка {{ step.step }}</div>
           <p class="text-step">ШАГ {{ step.step }}</p>
           <p class="text-title">{{ step.title }}</p>
           <p class="text-description">{{ step.text }}</p>
+          <div class="line-hor"></div>
         </div>
       </div>
     </section>
@@ -65,6 +71,7 @@
           <span class="principle-icon">+</span>
         </h3>
         <p class="principle-text">{{ block.text }}</p>
+        <div class="line-hor"></div>
       </div>
     </section>
 
@@ -180,8 +187,8 @@
         </div>
       </div>
     </section>
-
   </div>
+  <div class="line-hor"></div>
 </template>
 
 <script setup>
@@ -265,9 +272,7 @@ const bests = computed(() => {
   // сгруппировать
   const groups = {}
   store.products.forEach(p => {
-    if (!groups[p.color_sku]) {
-      groups[p.color_sku] = { variants: [], totalSales: 0 }
-    }
+    if (!groups[p.color_sku]) groups[p.color_sku] = { variants: [], totalSales: 0 }
     groups[p.color_sku].variants.push(p)
     groups[p.color_sku].totalSales += p.count_sales || 0
   })
@@ -278,9 +283,9 @@ const bests = computed(() => {
     return { ...rep, totalSales }
   })
   // сортируем по сумме продаж ↓, при равных — по цене ↓
-  return arr.sort((a, b) =>
-    (b.totalSales - a.totalSales) || (b.price - a.price)
-  )
+  const sorted = arr.sort((a, b) => (b.totalSales - a.totalSales) || (b.price - a.price))
+  // оставляем только топ-50
+  return sorted.slice(0, 50)
 })
 
 const maxPage = computed(() => Math.ceil(bests.value.length / 2) - 1)
@@ -366,6 +371,21 @@ function formatPrice(val) {
 
 <style scoped lang="scss">
 
+.line-vert {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 0.5px);
+  width: 1px;
+  height: 100%;
+  background-color: $white-100;
+  z-index: 10;
+}
+.line-hor {
+  width: 100%;
+  height: 1px;
+  background-color: $white-100;
+  z-index: 100;
+}
 .home {
   /* HERO */
   .hero {
