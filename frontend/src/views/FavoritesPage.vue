@@ -7,7 +7,7 @@
     </div>
 
     <button class="back-button" @click="goBack">
-      <img :src="icon_arrow_back" alt="arrow back" />
+      <img :src="icon_arrow_grey" alt="arrow back" />
       Назад
     </button>
 
@@ -45,7 +45,7 @@
 import { onMounted, computed, ref, nextTick } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
-import icon_arrow_back from '@/assets/images/arrow_back.svg'
+import icon_arrow_grey from '@/assets/images/arrow_grey.svg'
 import icon_favorites_black from '@/assets/images/favorites_black.svg'
 
 const store = useStore()
