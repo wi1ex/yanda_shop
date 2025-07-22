@@ -32,9 +32,13 @@
       <div class="steps">
         <div class="line-hor"></div>
         <div v-for="step in workBlocks" :key="step.step" class="step">
-          <img :src="step.img" alt="block img" />
-          <p class="text-step">ШАГ {{ step.step }}</p>
-          <p class="text-title">{{ step.title }}</p>
+          <div class="step-div-up">
+            <div class="step-div">
+              <p class="text-step">ШАГ {{ step.step }}</p>
+              <img :src="step.img" alt="block img" />
+            </div>
+            <p class="text-title">{{ step.title }}</p>
+          </div>
           <p class="text-description">{{ step.text }}</p>
           <div class="line-hor"></div>
         </div>
@@ -453,8 +457,13 @@ function formatPrice(val) {
       color: $white-100;
       .marquee-content {
         display: inline-block;
-        padding-left: 100%;
+        padding: 20px 0 20px 100%;
         animation: marquee 10s linear infinite;
+        font-family: Bounded;
+        font-size: 18px;
+        font-weight: 250;
+        line-height: 100%;
+        letter-spacing: -0.9px;
       }
     }
   }
@@ -480,6 +489,8 @@ function formatPrice(val) {
       letter-spacing: -0.72px;
     }
     p {
+      margin: 0;
+      padding: 0 10px;
       font-size: 15px;
       line-height: 110%;
       letter-spacing: -0.6px;
@@ -490,25 +501,43 @@ function formatPrice(val) {
       .step {
         display: flex;
         flex-direction: column;
-        img {
-          width: 60px;
-          height: 60px;
-          object-fit: cover;
-        }
-        .text-step {
-          font-family: Manrope-SemiBold;
-          font-size: 16px;
-          line-height: 80%;
-          letter-spacing: -0.64px;
-        }
-        .text-title {
-          font-family: Bounded;
-          font-size: 26px;
-          font-weight: 250;
-          line-height: 90%;
-          letter-spacing: -1.56px;
+        justify-content: space-between;
+        background-color: $grey-90;
+        .step-div-up {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          .step-div {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            .text-step {
+              margin: 0;
+              padding: 0;
+              font-family: Manrope-SemiBold;
+              font-size: 16px;
+              line-height: 80%;
+              letter-spacing: -0.64px;
+            }
+            img {
+              width: 60px;
+              height: 60px;
+              object-fit: cover;
+            }
+          }
+          .text-title {
+            margin: 0;
+            padding: 0;
+            font-family: Bounded;
+            font-size: 26px;
+            font-weight: 250;
+            line-height: 90%;
+            letter-spacing: -1.56px;
+          }
         }
         .text-description {
+          margin: 0;
+          padding: 0;
           font-size: 16px;
           line-height: 110%;
           letter-spacing: -0.64px;
@@ -537,7 +566,7 @@ function formatPrice(val) {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 24px 10px 0;
+      padding: 24px 0 0;
       gap: 24px;
       border-radius: 4px;
       background-color: $grey-95;
@@ -622,6 +651,7 @@ function formatPrice(val) {
     .principle-div {
       display: flex;
       padding: 20px 10px;
+      height: 280px;
       background-color: $grey-30;
       .principle-text {
         margin: 0;
