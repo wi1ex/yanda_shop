@@ -134,14 +134,15 @@
       <div v-if="!store.reviews.length" class="no-reviews">
         Отзывов пока нет.
       </div>
-      <div v-else class="carousel" ref="carousel" :style="{ height: carouselHeight + 'px' }">
+      <div v-else class="carousel" ref="carousel">
         <div class="review-items" :style="{width: `${store.reviews.length * 100}%`,
-                                           transform: `translateX(${offsetPercent}% )`}">
+                                           transform: `translateX(${offsetPercent}% )`,
+                                           height: carouselHeight + 'px'}">
           <div class="slide" v-for="(rev, i) in store.reviews" :key="i" :style="{ flex: `0 0 ${100 / store.reviews.length}%` }">
             <div class="review">
               <p class="user-text">{{ rev.client_text1 }}</p>
               <div class="photos">
-                <img v-for="url in rev.photo_urls" :key="url" :src="url" alt="photo"/>
+                <img v-for="url in rev.photo_urls" :key="url" :src="url" alt="photo" @load="updateCarouselHeight"/>
               </div>
               <p class="shop-text">{{ rev.shop_response }}</p>
               <p v-if="rev.client_text2?.trim()" class="user-text">{{ rev.client_text2 }}</p>
@@ -200,7 +201,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 
@@ -402,8 +403,6 @@ function formatPrice(val) {
 }
 
 watch(idx, updateCarouselHeight)
-
-onMounted(updateCarouselHeight)
 
 </script>
 
