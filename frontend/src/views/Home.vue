@@ -56,7 +56,7 @@
             <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
           </button>
         </div>
-        <div class="cat-items" :style="{ transform: `translateX(-${catIdx * 100}%)` }">
+        <div class="cat-items" :style="{ transform: `translateX(calc(-${catIdx * 100}%) + 10px)` }">
           <div class="cat-slide" v-for="block in catBlocks" :key="block.title">
             <img :src="block.img" alt="" />
             <h3>{{ block.title }}</h3>
@@ -608,7 +608,8 @@ function formatPrice(val) {
       .cat-items {
         display: grid;
         grid-auto-flow: column;
-        grid-auto-columns: 100%;
+        grid-auto-columns: calc(100% - 20px);
+        gap: 20px;
         transition: transform 0.25s ease-in-out;
         .cat-slide {
           display: flex;
@@ -670,13 +671,13 @@ function formatPrice(val) {
       padding: 20px 10px;
       height: 280px;
       background-image: url('@/assets/images/principle.png');
-      background-size: cover;
-      background-position: center;
+      background-size: 125% auto;
+      background-position: top;
       background-repeat: no-repeat;
       .principle-text {
         margin: 0;
         width: 50%;
-        color: $white-100;
+        color: $grey-95;
         font-size: 16px;
         line-height: 110%;
         letter-spacing: -0.64px;
