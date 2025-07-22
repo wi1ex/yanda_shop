@@ -56,11 +56,12 @@
             <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
           </button>
         </div>
-        <div class="cat-slide">
-          <!-- вставить картинку категории -->
-          <img :src="catBlocks[catIdx].img" alt="block img" />
-          <h3>{{ catBlocks[catIdx].title }}</h3>
-          <p>{{ catBlocks[catIdx].desc }}</p>
+        <div class="cat-items" :style="{ transform: `translateX(-${catIdx * 100}%)` }">
+          <div class="cat-slide" v-for="block in catBlocks" :key="block.title">
+            <img :src="block.img" alt="" />
+            <h3>{{ block.title }}</h3>
+            <p>{{ block.desc }}</p>
+          </div>
         </div>
         <button class="btn-catalog" @click="goToCatalog(catBlocks[catIdx].title)">Каталог</button>
       </div>
@@ -574,10 +575,12 @@ function formatPrice(val) {
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      position: relative;
       padding: 24px 0 0;
       gap: 24px;
       border-radius: 4px;
       background-color: $grey-95;
+      overflow: hidden;
       .cat-slider-div {
         display: flex;
         align-items: center;
@@ -602,31 +605,37 @@ function formatPrice(val) {
           }
         }
       }
-      .cat-slide {
-        display: flex;
-        flex-direction: column;
-        padding: 0 10px;
-        gap: 8px;
-        text-align: center;
-        img {
-          margin-bottom: 8px;
-          width: 100%;
-          height: auto;
-        }
-        h3 {
-          margin: 0;
-          font-family: Bounded;
-          font-size: 24px;
-          font-weight: 250;
-          line-height: 80%;
-          letter-spacing: -1.2px;
-        }
-        p {
-          margin: 0;
-          color: $black-60;
-          font-size: 15px;
-          line-height: 110%;
-          letter-spacing: -0.6px;
+      .cat-items {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 100%;
+        transition: transform 0.25s ease-in-out;
+        .cat-slide {
+          display: flex;
+          flex-direction: column;
+          padding: 0 10px;
+          gap: 8px;
+          text-align: center;
+          img {
+            margin-bottom: 8px;
+            width: 100%;
+            height: auto;
+          }
+          h3 {
+            margin: 0;
+            font-family: Bounded;
+            font-size: 24px;
+            font-weight: 250;
+            line-height: 80%;
+            letter-spacing: -1.2px;
+          }
+          p {
+            margin: 0;
+            color: $black-60;
+            font-size: 15px;
+            line-height: 110%;
+            letter-spacing: -0.6px;
+          }
         }
       }
     }
@@ -660,7 +669,7 @@ function formatPrice(val) {
       display: flex;
       padding: 20px 10px;
       height: 280px;
-      background-image: url('/assets/images/principle.png');
+      background-image: url('@/assets/images/principle.png');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
