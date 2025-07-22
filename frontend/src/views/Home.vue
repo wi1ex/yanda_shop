@@ -23,11 +23,14 @@
     <!-- HOW IT WORKS -->
     <section class="how-it-works">
       <h2>Как мы работаем</h2>
+      <p>Выбирай нужные тебе товары - мы проверим их оригинальность, купим напрямую в официальных магазинах
+        и доставим тебе без переплат и подделок. Все просто, прозрачно и быстро.</p>
       <div class="steps">
         <div v-for="step in workSteps" :key="step.step" class="step">
           <div class="icon-placeholder">Иконка {{ step.step }}</div>
-          <h3>Шаг {{ step.step }}: {{ step.title }}</h3>
-          <p>{{ step.text }}</p>
+          <p class="text-step">ШАГ {{ step.step }}</p>
+          <p class="text-title">{{ step.title }}</p>
+          <p class="text-description">{{ step.text }}</p>
         </div>
       </div>
     </section>
@@ -69,18 +72,24 @@
     <section class="bestsellers" v-if="bests.length">
       <h2>Бестселлеры</h2>
       <div class="best-slider">
-        <div class="best-item" v-for="p in visibleBests" :key="p.variant_sku" @click="goToProduct(p)">
-          <button class="fav-btn" @click.stop="toggleFav(p)">
-            {{ store.isFavorite(p.color_sku) ? '❤️' : '♡' }}
-          </button>
-          <img :src="p.image" alt="" class="product-image" />
-          <p class="brand">{{ p.brand }}</p>
-          <p class="name">{{ p.name }}</p>
-          <p class="price">от {{ p.price }} ₽</p>
+        <div class="best-items">
+          <div class="best-item" v-for="p in visibleBests" :key="p.variant_sku" @click="goToProduct(p)">
+            <button class="fav-btn" @click.stop="toggleFav(p)">
+              {{ store.isFavorite(p.color_sku) ? '❤️' : '♡' }}
+            </button>
+            <img :src="p.image" alt="" class="product-image" />
+            <p class="brand">{{ p.brand }}</p>
+            <p class="name">{{ p.name }}</p>
+            <p class="price">от {{ p.price }} ₽</p>
+          </div>
         </div>
         <div class="best-slider-div">
-          <button @click="prevBest" aria-label="Назад">←</button>
-          <button @click="nextBest" aria-label="Вперёд">→</button>
+          <button @click="prevBest" aria-label="Назад" :disabled="bestIndex === 0">
+            <img :src="bestIndex === 0 ? icon_arrow_grey : icon_arrow_red" alt="Arrow"/>
+          </button>
+          <button @click="nextBest" aria-label="Вперёд">
+            <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
+          </button>
         </div>
       </div>
       <div @click="goToCatalogSales" class="btn-catalog">
@@ -125,17 +134,18 @@
                 <span class="review-date">{{ new Date(current.created_at).toLocaleDateString('ru-RU', { month:'2-digit', year:'numeric' }) }}</span>
               </div>
               <a :href="current.link_url" target="_blank">
-                Смотреть →
+                Смотреть
+                <img :src="icon_arrow_black" alt="Arrow"/>
               </a>
             </div>
           </div>
         </div>
         <div class="carousel-div">
           <button @click="prev" aria-label="Назад">
-            ←
+            <img :src="icon_arrow_red" alt="Arrow"/>
           </button>
           <button @click="next" aria-label="Вперёд">
-            →
+            <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
           </button>
         </div>
       </div>
@@ -178,6 +188,9 @@ import { useRouter } from 'vue-router'
 import icon_default_avatar_white from '@/assets/images/default_avatar_white.svg'
 import icon_faq_plus from '@/assets/images/faq_plus.svg'
 import icon_minus_red from '@/assets/images/minus_red.svg'
+import icon_arrow_red from '@/assets/images/arrow_red.svg'
+import icon_arrow_grey from '@/assets/images/arrow_grey.svg'
+import icon_arrow_black from '@/assets/images/arrow_black.svg'
 
 const store = useStore()
 const router = useRouter()
@@ -372,8 +385,9 @@ function toggleFaq(id) {
       top: 20%;
       left: 10%;
       h1 {
-        font-size: 24px;
-        margin-bottom: 16px;
+        font-size: 32px;
+        line-height: 90%;
+        letter-spacing: -1.28px;
       }
       .hero-controls {
         button {
@@ -414,22 +428,49 @@ function toggleFaq(id) {
 
   /* HOW IT WORKS */
   .how-it-works {
-    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
     h2 {
+      margin: 96px 0 40px;
       text-align: center;
-      margin-bottom: 16px;
+      font-family: Bounded;
+      font-weight: 500;
+      font-size: 24px;
+      line-height: 90%;
+      letter-spacing: -0.72px;
+    }
+    p {
+      font-size: 15px;
+      line-height: 110%;
+      letter-spacing: -0.6px;
     }
     .steps {
       display: flex;
       flex-direction: column;
-      gap: 16px;
       .step {
-        text-align: center;
+        display: flex;
         .icon-placeholder {
-          background-color: $grey-30;
           width: 60px;
           height: 60px;
-          margin: 0 auto 8px;
+          object-fit: cover;
+        }
+        .text-step {
+          font-family: Manrope-SemiBold;
+          font-size: 16px;
+          line-height: 80%;
+          letter-spacing: -0.64px;
+        }
+        .text-title {
+          font-family: Bounded;
+          font-size: 26px;
+          font-weight: 250;
+          line-height: 90%;
+          letter-spacing: -1.56px;
+        }
+        .text-description {
+          font-size: 16px;
+          line-height: 110%;
+          letter-spacing: -0.64px;
         }
       }
     }
@@ -439,8 +480,13 @@ function toggleFaq(id) {
   .categories {
     padding: 24px 16px;
     h2 {
+      margin: 96px 0 40px;
       text-align: center;
-      margin-bottom: 16px;
+      font-family: Bounded;
+      font-weight: 500;
+      font-size: 24px;
+      line-height: 90%;
+      letter-spacing: -0.72px;
     }
     .cat-slider {
       display: flex;
@@ -450,23 +496,41 @@ function toggleFaq(id) {
       gap: 8px;
       .cat-slider-div {
         display: flex;
+        padding: 0 10px;
       }
       .cat-slide {
+        padding: 0 10px;
         text-align: center;
         .image-placeholder {
-          height: 120px;
-          margin-bottom: 8px;
+          width: 100%;
+          height: auto;
         }
         h3 {
-          margin-bottom: 8px;
+          margin: 0;
+          font-family: Bounded;
+          font-size: 24px;
+          font-weight: 250;
+          line-height: 80%;
+          letter-spacing: -1.2px;
+        }
+        p {
+          margin: 0;
+          font-size: 15px;
+          line-height: 110%;
+          letter-spacing: -0.6px;
         }
         .btn-catalog {
-          display: inline-block;
-          margin-top: 12px;
-          padding: 8px 16px;
+          display: flex;
+          margin-top: 24px;
+          padding: 0 24px;
+          width: 100%;
+          height: 56px;
           background-color: $black-100;
           color: $white-100;
           border-radius: 4px;
+          font-size: 16px;
+          line-height: 100%;
+          letter-spacing: -0.64px;
           text-decoration: none;
         }
       }
@@ -475,7 +539,8 @@ function toggleFaq(id) {
 
   /* PRINCIPLES */
   .principles {
-    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
     .principle-div {
       background-color: $grey-30;
       color: $white-100;
@@ -484,89 +549,140 @@ function toggleFaq(id) {
       letter-spacing: -0.64px;
     }
     .principle {
-      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
       .principle-header {
         display: flex;
         align-items: center;
-        font-size: 18px;
-        font-weight: 500;
+        margin: 0;
+        font-family: Bounded;
+        font-size: 26px;
+        font-weight: 250;
+        line-height: 90%;
+        letter-spacing: -1.56px;
         .principle-icon {
-          margin-left: auto;
-          font-size: 24px;
+          font-size: 30px;
           color: $red-active;
         }
       }
       .principle-text {
-        margin: 8px 0 16px;
+        margin: 0;
         font-size: 16px;
-        line-height: 1.5;
+        line-height: 110%;
+        letter-spacing: -0.64px;
       }
     }
   }
 
   /* BESTSELLERS */
   .bestsellers {
-    padding: 24px 16px;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
     h2 {
-      margin-bottom: 16px;
+      margin: 96px 0 0;
+      text-align: center;
+      font-family: Bounded;
+      font-weight: 500;
+      font-size: 24px;
+      line-height: 90%;
+      letter-spacing: -0.72px;
     }
     .best-slider {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 8px;
       .best-item {
-        position: relative;
-        cursor: pointer;
-        width: 100%;
-        margin: 0 auto 16px;
-        .fav-btn {
-          position: absolute;
-          top: 8px;
-          right: 8px;
-          background: transparent;
-          border: none;
-          font-size: 18px;
-        }
-        .product-image {
+        display: flex;
+        .best-item {
+          position: relative;
+          cursor: pointer;
           width: 100%;
-          height: 100px;
-          object-fit: cover;
-          margin-bottom: 8px;
-        }
-        .brand, .name, .price {
-          margin: 4px 0;
-        }
-        .name {
-          font-size: 14px;
-        }
-        .price {
-          font-size: 14px;
-          color: $grey-20;
+          margin: 0 auto 16px;
+          .fav-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: transparent;
+            border: none;
+            font-size: 18px;
+          }
+          .product-image {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            margin-bottom: 8px;
+          }
+          .brand, .name, .price {
+            margin: 4px 0;
+          }
+          .name {
+            font-size: 14px;
+          }
+          .price {
+            font-size: 14px;
+            color: $grey-20;
+          }
         }
       }
       .best-slider-div {
         display: flex;
+        align-items: center;
+        gap: 10px;
+        button {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 8px 12px;
+          width: calc((100% - 30px)/2);
+          height: 30px;
+          border: none;
+          background-color: $white-100;
+          border-radius: 64px;
+          cursor: pointer;
+          img {
+            width: 24px;
+            height: 24px;
+            object-fit: cover;
+          }
+        }
+        button[disabled] {
+          cursor: default;
+        }
       }
     }
     .btn-catalog {
-      display: inline-block;
-      margin-top: 12px;
-      padding: 8px 16px;
+      display: flex;
+      margin-top: 32px;
+      padding: 0 24px;
+      width: 100%;
+      height: 56px;
       background-color: $black-100;
       color: $white-100;
       border-radius: 4px;
+      font-size: 16px;
+      line-height: 100%;
+      letter-spacing: -0.64px;
       text-decoration: none;
     }
   }
 
   /* REQUEST FORM */
   .request-form {
+    display: flex;
+    flex-direction: column;
+    margin-top: 96px;
     padding: 24px 16px;
+    background-color: $grey-30;
     h2 {
+      margin: 0;
       text-align: center;
-      margin-bottom: 8px;
+      font-family: Bounded;
+      font-weight: 500;
+      font-size: 24px;
+      line-height: 90%;
+      letter-spacing: -0.72px;
     }
     form {
       display: flex;
@@ -609,7 +725,7 @@ function toggleFaq(id) {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 32px;
       .slide {
         display: flex;
         background-color: $grey-90;
@@ -678,6 +794,11 @@ function toggleFaq(id) {
               font-size: 16px;
               line-height: 100%;
               letter-spacing: -0.64px;
+              img {
+                width: 24px;
+                height: 24px;
+                object-fit: cover;
+              }
             }
           }
         }
@@ -695,7 +816,13 @@ function toggleFaq(id) {
           height: 30px;
           border: none;
           background-color: $white-100;
+          border-radius: 100%;
           cursor: pointer;
+          img {
+            width: 24px;
+            height: 24px;
+            object-fit: cover;
+          }
         }
       }
     }

@@ -16,7 +16,7 @@
         <!-- Шапка: назад -->
         <div v-if="store.detailData" class="top-row">
           <button class="back-button" @click="goBack">
-            <img :src="icon_arrow_back" alt="arrow back" />
+            <img :src="icon_arrow_grey" alt="arrow back" />
             Назад
           </button>
         </div>
@@ -210,7 +210,7 @@
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/store/index.js'
-import icon_arrow_back from "@/assets/images/arrow_back.svg";
+import icon_arrow_grey from "@/assets/images/arrow_grey.svg";
 import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
 import icon_favorites_black from "@/assets/images/favorites_black.svg";
 import icon_minus_grey from '@/assets/images/minus_grey.svg'
