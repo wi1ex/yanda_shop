@@ -122,7 +122,7 @@
       <div v-if="!store.reviews.length" class="no-reviews">
         Отзывов пока нет.
       </div>
-      <transition v-else class="carousel">
+      <div v-else class="carousel">
         <transition name="slide" mode="out-in">
           <div class="slide" :key="current.created_at">
             <div class="review">
