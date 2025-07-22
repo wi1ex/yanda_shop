@@ -367,6 +367,10 @@ function toggleFaq(id) {
   openedFaq.value = openedFaq.value === id ? null : id;
 }
 
+function formatPrice(val) {
+  return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
 </script>
 
 <style scoped lang="scss">
