@@ -56,7 +56,7 @@
             <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
           </button>
         </div>
-        <div class="cat-items" :style="{ transform: `translateX(calc(-${catIdx * 100}%) + 10px)` }">
+        <div class="cat-items" :style="{ transform: `translateX(calc(-${catIdx * 100}% + 10px))` }">
           <div class="cat-slide" v-for="block in catBlocks" :key="block.title">
             <img :src="block.img" alt="" />
             <h3>{{ block.title }}</h3>
@@ -135,29 +135,29 @@
         Отзывов пока нет.
       </div>
       <div v-else class="carousel">
-        <transition name="slide" mode="out-in">
-          <div class="slide" :key="idx">
+        <div class="review-items" :style="{ transform: `translateX(-${idx * 100}%)` }">
+          <div class="slide" v-for="(rev, i) in store.reviews" :key="i">
             <div class="review">
-              <p class="user-text">{{ current.client_text1 }}</p>
+              <p class="user-text">{{ rev.client_text1 }}</p>
               <div class="photos">
-                <img v-for="url in current.photo_urls" :key="url" :src="url" alt="photo"/>
+                <img v-for="url in rev.photo_urls" :key="url" :src="url" alt="photo"/>
               </div>
-              <p class="shop-text">{{ current.shop_response }}</p>
-              <p v-if="current.client_text2?.trim()" class="user-text">{{ current.client_text2 }}</p>
+              <p class="shop-text">{{ rev.shop_response }}</p>
+              <p v-if="rev.client_text2?.trim()" class="user-text">{{ rev.client_text2 }}</p>
               <div class="meta">
                 <div class="review-header">
                   <img class="avatar" :src="icon_default_avatar_white" alt="аватар"/>
-                  <span class="client-name">{{ current.client_name }},</span>
-                  <span class="review-date">{{ new Date(current.created_at).toLocaleDateString('ru-RU', { month:'2-digit', year:'numeric' }) }}</span>
+                  <span class="client-name">{{ rev.client_name }},</span>
+                  <span class="review-date">{{ new Date(rev.created_at).toLocaleDateString('ru-RU', { month:'2-digit', year:'numeric' }) }}</span>
                 </div>
-                <a :href="current.link_url" target="_blank">
+                <a :href="rev.link_url" target="_blank">
                   Смотреть
                   <img :src="icon_arrow_black" alt="Arrow" style="transform: rotate(180deg)"/>
                 </a>
               </div>
             </div>
           </div>
-        </transition>
+        </div>
       </div>
       <div class="carousel-div">
         <button @click="prev" aria-label="Назад">
@@ -229,7 +229,6 @@ const router = useRouter()
 const heroIndex = ref(0)
 const openedFaq = ref(null);
 const idx = ref(0)
-const current = computed(() => store.reviews[idx.value] || {})
 
 function prev() {
   if (!store.reviews.length) return
@@ -933,104 +932,92 @@ function formatPrice(val) {
       gap: 32px;
       overflow: hidden;
       transition: height 0.25s ease-in-out;
-      .slide {
-        display: flex;
-        width: 100%;
-        background-color: $grey-90;
-        .review {
+      .review-items {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 100%;
+        transition: transform 0.25s ease-in-out;
+        .slide {
           display: flex;
-          flex-direction: column;
-          padding: 20px;
-          gap: 20px;
-          border-radius: 4px;
-          .user-text, .shop-text {
-            margin: 0;
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 16px;
-            line-height: 110%;
-            letter-spacing: -0.64px;
-          }
-          .user-text {
-            background-color: $black-100;
-            color: $white-100;
-          }
-          .shop-text {
-            background-color: $white-100;
-            color: $black-100;
-          }
-          .photos {
-            img {
-              width: 155px;
-              height: auto;
-              margin-right: 10px;
-              border-radius: 4px;
-            }
-          }
-          .meta {
+          width: 100%;
+          background-color: $grey-90;
+          .review {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            .review-header {
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              .avatar {
-                width: 56px;
-                height: 56px;
-                border-radius: 56px;
-                object-fit: cover;
-              }
-              .client-name {
-                color: $red-active;
-                font-family: Manrope-SemiBold;
-                font-size: 16px;
-                line-height: 100%;
-                letter-spacing: -0.64px;
-              }
-              .review-date {
-                color: $black-100;
-                font-family: Manrope-SemiBold;
-                font-size: 16px;
-                line-height: 100%;
-                letter-spacing: -0.64px;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+            border-radius: 4px;
+            .user-text, .shop-text {
+              margin: 0;
+              padding: 8px;
+              border-radius: 4px;
+              font-size: 16px;
+              line-height: 110%;
+              letter-spacing: -0.64px;
+            }
+            .user-text {
+              background-color: $black-100;
+              color: $white-100;
+            }
+            .shop-text {
+              background-color: $white-100;
+              color: $black-100;
+            }
+            .photos {
+              img {
+                width: 155px;
+                height: auto;
+                margin-right: 10px;
+                border-radius: 4px;
               }
             }
-            a {
+            .meta {
               display: flex;
               align-items: center;
-              gap: 4px;
-              text-decoration: none;
-              color: inherit;
-              font-size: 16px;
-              line-height: 100%;
-              letter-spacing: -0.64px;
-              img {
-                width: 24px;
-                height: 24px;
-                object-fit: cover;
+              justify-content: space-between;
+              .review-header {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                .avatar {
+                  width: 56px;
+                  height: 56px;
+                  border-radius: 56px;
+                  object-fit: cover;
+                }
+                .client-name {
+                  color: $red-active;
+                  font-family: Manrope-SemiBold;
+                  font-size: 16px;
+                  line-height: 100%;
+                  letter-spacing: -0.64px;
+                }
+                .review-date {
+                  color: $black-100;
+                  font-family: Manrope-SemiBold;
+                  font-size: 16px;
+                  line-height: 100%;
+                  letter-spacing: -0.64px;
+                }
+              }
+              a {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                text-decoration: none;
+                color: inherit;
+                font-size: 16px;
+                line-height: 100%;
+                letter-spacing: -0.64px;
+                img {
+                  width: 24px;
+                  height: 24px;
+                  object-fit: cover;
+                }
               }
             }
           }
         }
-      }
-      .slide-enter-from {
-        transform: translateX(100%);
-      }
-      .slide-enter-active {
-        transition: transform 0.25s ease-in-out;
-      }
-      .slide-enter-to {
-        transform: translateX(0);
-      }
-      .slide-leave-from {
-        transform: translateX(0);
-      }
-      .slide-leave-active {
-        transition: transform 0.25s ease-in-out;
-      }
-      .slide-leave-to {
-        transform: translateX(-100%);
       }
     }
     .carousel-div {
