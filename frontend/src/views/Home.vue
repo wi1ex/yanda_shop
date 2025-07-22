@@ -75,7 +75,6 @@
         <div class="best-items">
           <div class="best-item" v-for="p in visibleBests" :key="p.variant_sku" @click="goToProduct(p)">
             <button class="fav-btn" @click.stop="toggleFav(p)">
-              {{ store.isFavorite(p.color_sku) ? '❤️' : '♡' }}
               <img :src="store.isFavorite(p.color_sku) ? icon_favorites_black : icon_favorites_grey" alt="" />
             </button>
             <div class="product-image">
@@ -460,6 +459,7 @@ function formatPrice(val) {
       flex-direction: column;
       .step {
         display: flex;
+        flex-direction: column;
         .icon-placeholder {
           width: 60px;
           height: 60px;
@@ -489,7 +489,8 @@ function formatPrice(val) {
 
   /* CATEGORIES */
   .categories {
-    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
     h2 {
       margin: 96px 0 40px;
       text-align: center;
@@ -543,25 +544,28 @@ function formatPrice(val) {
         }
         p {
           margin: 0;
+          color: $black-60;
           font-size: 15px;
           line-height: 110%;
           letter-spacing: -0.6px;
         }
-        .btn-catalog {
-          display: flex;
-          margin-top: 24px;
-          padding: 0 24px;
-          width: 100%;
-          height: 56px;
-          background-color: $black-100;
-          color: $white-100;
-          border-radius: 4px;
-          font-size: 16px;
-          line-height: 100%;
-          letter-spacing: -0.64px;
-          text-decoration: none;
-        }
       }
+    }
+    .btn-catalog {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 24px;
+      padding: 0 24px;
+      height: 56px;
+      background-color: $grey-20;
+      color: $white-100;
+      border-radius: 4px;
+      font-size: 16px;
+      line-height: 100%;
+      letter-spacing: -0.64px;
+      text-decoration: none;
+      cursor: pointer;
     }
   }
 
@@ -569,6 +573,7 @@ function formatPrice(val) {
   .principles {
     display: flex;
     flex-direction: column;
+    margin-top: 96px;
     .principle-div {
       background-color: $grey-30;
       color: $white-100;
@@ -696,13 +701,15 @@ function formatPrice(val) {
       .best-slider-div {
         display: flex;
         align-items: center;
+        padding: 0 10px;
+        width: calc(100% - 20px);
         gap: 10px;
         button {
           display: flex;
           justify-content: center;
           align-items: center;
           padding: 8px 12px;
-          width: calc((100% - 30px)/2);
+          width: 100%;
           height: 30px;
           border: none;
           background-color: $white-100;
@@ -716,22 +723,27 @@ function formatPrice(val) {
         }
         button[disabled] {
           cursor: default;
+          img {
+            opacity: 0.4;
+          }
         }
       }
     }
     .btn-catalog {
       display: flex;
+      align-items: center;
+      justify-content: center;
       margin-top: 32px;
       padding: 0 24px;
-      width: 100%;
       height: 56px;
-      background-color: $black-100;
+      background-color: $grey-20;
       color: $white-100;
       border-radius: 4px;
       font-size: 16px;
       line-height: 100%;
       letter-spacing: -0.64px;
       text-decoration: none;
+      cursor: pointer;
     }
   }
 
@@ -865,8 +877,8 @@ function formatPrice(val) {
               line-height: 100%;
               letter-spacing: -0.64px;
               img {
-                width: 16px;
-                height: 16px;
+                width: 24px;
+                height: 24px;
                 object-fit: cover;
               }
             }
@@ -889,8 +901,8 @@ function formatPrice(val) {
           border-radius: 100%;
           cursor: pointer;
           img {
-            width: 24px;
-            height: 24px;
+            width: 16px;
+            height: 16px;
             object-fit: cover;
           }
         }
