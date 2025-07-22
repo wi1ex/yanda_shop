@@ -136,7 +136,7 @@
       </div>
       <div v-else class="carousel">
         <div class="review-items" :style="{width: `${store.reviews.length * 100}%`,
-                                           transform: `translateX(-${idx * (100 / store.reviews.length)}%)`}">
+                                           transform: `translateX(${offsetPercent}% )`}">
           <div class="slide" v-for="(rev, i) in store.reviews" :key="i" :style="{ flex: `0 0 ${100 / store.reviews.length}%` }">
             <div class="review">
               <p class="user-text">{{ rev.client_text1 }}</p>
@@ -230,6 +230,9 @@ const router = useRouter()
 const heroIndex = ref(0)
 const openedFaq = ref(null);
 const idx = ref(0)
+const offsetPercent = computed(() =>
+  (idx.value - (reviewsCount.value - 1) / 2) * (100 / reviewsCount.value)
+)
 
 function prev() {
   if (!store.reviews.length) return
