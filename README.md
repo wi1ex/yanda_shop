@@ -343,52 +343,47 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      BACKEND_URL: ${{ secrets.BACKEND_URL }}
+      # etc.
 
     steps:
-      # 1) Забираем код
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2) Пишем SSH-ключ и known_hosts в runner
-      - name: Configure SSH key and known_hosts
+      - name: Write SSH key and known_hosts
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}"  > ~/.ssh/deploy_key
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-
-          echo "${{ secrets.SSH_KNOWN_HOSTS }}"   > ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
         shell: bash
 
-      # 3) Подключаемся по SSH и выполняем деплой-скрипт
-      - name: Deploy on server
+      - name: Create .env from Secrets
+        run: |
+          cat > .env <<EOF
+          BACKEND_URL=${BACKEND_URL}
+          # etc.
+          EOF
+        shell: bash
+
+      - name: Copy .env to server
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=yes \
+            ./.env \
+            "${{ secrets.SERVER_USER }}"@"${{ secrets.SERVER_HOST }}":/root/app/yanda_shop/.env
+        shell: bash
+
+      - name: Deploy via SSH
         run: |
           ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=yes \
               -l "${{ secrets.SERVER_USER }}" \
               "${{ secrets.SERVER_HOST }}" << 'EOF'
             set -euo pipefail
-            cd /root/app/yanda_shop
-
-            # 1. Синхронизируем код
-            git fetch --all
-            git reset --hard origin/main
-
-            # 2. Останавливаем контейнеры и чистим образы
-            docker-compose down
-            docker builder prune --filter "until=72h" --force
-            docker image prune   --filter "until=72h" --force
-
-            # 3. (Опционально) обновляем SSL
-            certbot renew --noninteractive --standalone --agree-tos
-
-            # 4. Сборка и поднятие новых контейнеров
-            docker-compose build --no-cache
-            docker-compose up -d
-
-            # 5. Миграции и финальная проверка
-            docker-compose run --rm backend flask db upgrade
-            docker-compose ps
+            # all scripts..
           EOF
         shell: bash
 ```
