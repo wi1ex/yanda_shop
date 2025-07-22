@@ -249,8 +249,8 @@ function next() {
 
 function updateCarouselHeight() {
   nextTick(() => {
-    const slides = carousel.value?.querySelectorAll('.slide') || []
-    const current = slides[idx.value]
+    const reviews = carousel.value?.querySelectorAll('.review') || []
+    const current = reviews[idx.value]
     if (current) {
       carouselHeight.value = current.offsetHeight
     }
