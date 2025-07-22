@@ -76,11 +76,16 @@
           <div class="best-item" v-for="p in visibleBests" :key="p.variant_sku" @click="goToProduct(p)">
             <button class="fav-btn" @click.stop="toggleFav(p)">
               {{ store.isFavorite(p.color_sku) ? '❤️' : '♡' }}
+              <img :src="store.isFavorite(p.color_sku) ? icon_favorites_black : icon_favorites_grey" alt="" />
             </button>
-            <img :src="p.image" alt="" class="product-image" />
-            <p class="brand">{{ p.brand }}</p>
-            <p class="name">{{ p.name }}</p>
-            <p class="price">от {{ p.price }} ₽</p>
+            <div class="product-image">
+              <img :src="p.image" alt="product" />
+            </div>
+            <div class="product-info">
+              <p class="product-brand">{{ p.brand }}</p>
+              <p class="product-name">{{ p.name }}</p>
+              <p class="product-price">от {{ formatPrice(p.price) }} ₽</p>
+            </div>
           </div>
         </div>
         <div class="best-slider-div">
@@ -130,12 +135,12 @@
             <div class="meta">
               <div class="review-header">
                 <img class="avatar" :src="icon_default_avatar_white" alt="аватар"/>
-                <span class="client-name">{{ current.client_name }}</span>
+                <span class="client-name">{{ current.client_name }},</span>
                 <span class="review-date">{{ new Date(current.created_at).toLocaleDateString('ru-RU', { month:'2-digit', year:'numeric' }) }}</span>
               </div>
               <a :href="current.link_url" target="_blank">
                 Смотреть
-                <img :src="icon_arrow_black" alt="Arrow"/>
+                <img :src="icon_arrow_black" alt="Arrow" style="transform: rotate(180deg)"/>
               </a>
             </div>
           </div>
@@ -191,6 +196,8 @@ import icon_minus_red from '@/assets/images/minus_red.svg'
 import icon_arrow_red from '@/assets/images/arrow_red.svg'
 import icon_arrow_grey from '@/assets/images/arrow_grey.svg'
 import icon_arrow_black from '@/assets/images/arrow_black.svg'
+import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
+import icon_favorites_black from "@/assets/images/favorites_black.svg";
 
 const store = useStore()
 const router = useRouter()
@@ -497,6 +504,23 @@ function toggleFaq(id) {
       .cat-slider-div {
         display: flex;
         padding: 0 10px;
+        button {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 8px 12px;
+          width: calc((100% - 30px)/2);
+          height: 30px;
+          border: none;
+          background-color: $white-100;
+          border-radius: 64px;
+          cursor: pointer;
+          img {
+            width: 16px;
+            height: 16px;
+            object-fit: cover;
+          }
+        }
       }
       .cat-slide {
         padding: 0 10px;
@@ -593,36 +617,75 @@ function toggleFaq(id) {
       align-items: center;
       justify-content: center;
       gap: 8px;
-      .best-item {
-        display: flex;
+      .best-items {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        margin-top: 40px;
+        transition: filter 0.25s ease-in-out;
         .best-item {
+          display: flex;
+          flex-direction: column;
           position: relative;
+          min-width: 0;
+          background-color: $grey-89;
           cursor: pointer;
-          width: 100%;
-          margin: 0 auto 16px;
+          transition: transform 0.25s ease-in-out;
           .fav-btn {
+            display: flex;
             position: absolute;
-            top: 8px;
-            right: 8px;
-            background: transparent;
+            padding: 0;
+            top: 10px;
+            right: 10px;
+            background: none;
             border: none;
-            font-size: 18px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            img {
+              width: 24px;
+              height: 24px;
+              object-fit: cover;
+            }
           }
           .product-image {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-            margin-bottom: 8px;
+            display: flex;
+            padding: 40px 24px;
+            height: 100%;
+            img {
+              width: 100%;
+              object-fit: cover;
+            }
           }
-          .brand, .name, .price {
-            margin: 4px 0;
-          }
-          .name {
-            font-size: 14px;
-          }
-          .price {
-            font-size: 14px;
-            color: $grey-20;
+          .product-info {
+            display: flex;
+            flex-direction: column;
+            padding: 10px 10px 16px;
+            background-color: $grey-87;
+            .product-brand {
+              margin: 0;
+              font-size: 12px;
+              line-height: 100%;
+              letter-spacing: -0.48px;
+              color: $black-60;
+            }
+            .product-name {
+              margin: 4px 0 12px;
+              font-family: Manrope-SemiBold;
+              font-size: 15px;
+              line-height: 100%;
+              letter-spacing: -0.6px;
+              color: $black-100;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+            .product-price {
+              margin: 0;
+              font-size: 15px;
+              line-height: 80%;
+              letter-spacing: -0.6px;
+              color: $grey-20;
+            }
           }
         }
       }
@@ -642,8 +705,8 @@ function toggleFaq(id) {
           border-radius: 64px;
           cursor: pointer;
           img {
-            width: 24px;
-            height: 24px;
+            width: 16px;
+            height: 16px;
             object-fit: cover;
           }
         }
@@ -789,14 +852,17 @@ function toggleFaq(id) {
               }
             }
             a {
+              display: flex;
+              align-items: center;
+              gap: 4px;
               text-decoration: none;
               color: inherit;
               font-size: 16px;
               line-height: 100%;
               letter-spacing: -0.64px;
               img {
-                width: 24px;
-                height: 24px;
+                width: 16px;
+                height: 16px;
                 object-fit: cover;
               }
             }
