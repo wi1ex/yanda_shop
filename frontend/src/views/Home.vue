@@ -29,8 +29,8 @@
       <h2>Как мы работаем</h2>
       <p>Выбирай нужные тебе товары - мы проверим их оригинальность, купим напрямую в официальных магазинах
         и доставим тебе без переплат и подделок. Все просто, прозрачно и быстро.</p>
+      <div class="line-hor"></div>
       <div class="steps">
-        <div class="line-hor"></div>
         <div v-for="step in workBlocks" :key="step.step" class="step">
           <div class="step-div-up">
             <div class="step-div">
@@ -40,7 +40,6 @@
             <p class="text-title">{{ step.title }}</p>
           </div>
           <p class="text-description">{{ step.text }}</p>
-          <div class="line-hor"></div>
         </div>
       </div>
     </section>
@@ -50,8 +49,12 @@
       <h2>Категории</h2>
       <div class="cat-slider">
         <div class="cat-slider-div">
-          <button @click="prevCat" aria-label="Назад">←</button>
-          <button @click="nextCat" aria-label="Вперёд">→</button>
+          <button @click="prevCat" aria-label="Назад">
+            <img :src="icon_arrow_red" alt="Arrow"/>
+          </button>
+          <button @click="nextCat" aria-label="Вперёд">
+            <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
+          </button>
         </div>
         <div class="cat-slide">
           <!-- вставить картинку категории -->
@@ -424,6 +427,7 @@ function formatPrice(val) {
       top: 20%;
       left: 10%;
       h1 {
+        color: $white-100;
         font-size: 32px;
         line-height: 90%;
         letter-spacing: -1.28px;
@@ -489,7 +493,7 @@ function formatPrice(val) {
       letter-spacing: -0.72px;
     }
     p {
-      margin: 0;
+      margin: 0 0 24px;
       padding: 0 10px;
       font-size: 15px;
       line-height: 110%;
@@ -502,6 +506,9 @@ function formatPrice(val) {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        padding: 10px;
+        height: 280px;
+        border-bottom: 1px solid $white-100;
         background-color: $grey-90;
         .step-div-up {
           display: flex;
@@ -528,6 +535,7 @@ function formatPrice(val) {
           .text-title {
             margin: 0;
             padding: 0;
+            width: 50%;
             font-family: Bounded;
             font-size: 26px;
             font-weight: 250;
@@ -652,7 +660,10 @@ function formatPrice(val) {
       display: flex;
       padding: 20px 10px;
       height: 280px;
-      background-color: $grey-30;
+      background-image: url('/assets/images/principle.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
       .principle-text {
         margin: 0;
         width: 50%;
