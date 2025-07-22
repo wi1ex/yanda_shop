@@ -56,7 +56,7 @@
             <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
           </button>
         </div>
-        <div class="cat-items" :style="{ transform: `translateX(calc(-${catIdx * 100}% + 10px))` }">
+        <div class="cat-items" :style="{ transform: `translateX(calc(-${catIdx * 100}% + ${catIdx * 40}px + 30px))` }">
           <div class="cat-slide" v-for="block in catBlocks" :key="block.title">
             <img :src="block.img" alt="" />
             <h3>{{ block.title }}</h3>
@@ -607,7 +607,7 @@ function formatPrice(val) {
       .cat-items {
         display: grid;
         grid-auto-flow: column;
-        grid-auto-columns: calc(100% - 20px);
+        grid-auto-columns: calc(100% - 60px);
         gap: 20px;
         transition: transform 0.25s ease-in-out;
         .cat-slide {
@@ -929,17 +929,15 @@ function formatPrice(val) {
       align-items: center;
       justify-content: center;
       position: relative;
+      width: 100%;
       gap: 32px;
       overflow: hidden;
-      transition: height 0.25s ease-in-out;
       .review-items {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: 100%;
+        display: flex;
         transition: transform 0.25s ease-in-out;
         .slide {
-          display: flex;
-          width: 100%;
+          flex: 0 0 100%;
+          box-sizing: border-box;
           background-color: $grey-90;
           .review {
             display: flex;
