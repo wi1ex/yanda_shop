@@ -134,7 +134,7 @@
       <div v-if="!store.reviews.length" class="no-reviews">
         Отзывов пока нет.
       </div>
-      <div v-else class="carousel">
+      <div v-else class="carousel" ref="carousel" :style="{ height: carouselHeight + 'px' }">
         <div class="review-items" :style="{width: `${store.reviews.length * 100}%`,
                                            transform: `translateX(${offsetPercent}% )`}">
           <div class="slide" v-for="(rev, i) in store.reviews" :key="i" :style="{ flex: `0 0 ${100 / store.reviews.length}%` }">
@@ -200,7 +200,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 
@@ -230,18 +230,31 @@ const router = useRouter()
 const heroIndex = ref(0)
 const openedFaq = ref(null);
 const idx = ref(0)
+const carousel = ref(null)
+const carouselHeight = ref(0)
+
 const offsetPercent = computed(() =>
   ((store.reviews.length - 1) / 2 - idx.value) * (100 / store.reviews.length)
 )
 
 function prev() {
   if (!store.reviews.length) return
-  idx.value = (idx.value + 1) % store.reviews.length
+  idx.value = (idx.value + store.reviews.length - 1) % store.reviews.length
 }
 
 function next() {
   if (!store.reviews.length) return
-  idx.value = (idx.value + store.reviews.length - 1) % store.reviews.length
+  idx.value = (idx.value + 1) % store.reviews.length
+}
+
+function updateCarouselHeight() {
+  nextTick(() => {
+    const slides = carousel.value?.querySelectorAll('.slide') || []
+    const current = slides[idx.value]
+    if (current) {
+      carouselHeight.value = current.offsetHeight
+    }
+  })
 }
 
 // Hero
@@ -387,6 +400,10 @@ function toggleFaq(id) {
 function formatPrice(val) {
   return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
+
+watch(idx, updateCarouselHeight)
+
+onMounted(updateCarouselHeight)
 
 </script>
 
@@ -936,6 +953,7 @@ function formatPrice(val) {
       width: 100%;
       gap: 32px;
       overflow: hidden;
+      transition: height 0.25s ease-in-out;
       .review-items {
         display: flex;
         transition: transform 0.25s ease-in-out;
