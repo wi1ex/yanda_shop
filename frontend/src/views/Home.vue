@@ -31,8 +31,8 @@
         и доставим тебе без переплат и подделок. Все просто, прозрачно и быстро.</p>
       <div class="steps">
         <div class="line-hor"></div>
-        <div v-for="step in workSteps" :key="step.step" class="step">
-          <div class="icon-placeholder">Иконка {{ step.step }}</div>
+        <div v-for="step in workBlocks" :key="step.step" class="step">
+          <img :src="step.img" alt="block img" />
           <p class="text-step">ШАГ {{ step.step }}</p>
           <p class="text-title">{{ step.title }}</p>
           <p class="text-description">{{ step.text }}</p>
@@ -51,19 +51,19 @@
         </div>
         <div class="cat-slide">
           <!-- вставить картинку категории -->
-          <div class="image-placeholder">Изображение {{ categorySlides[currentCat].title }}</div>
-          <h3>{{ categorySlides[currentCat].title }}</h3>
-          <p>{{ categorySlides[currentCat].desc }}</p>
+          <img :src="catBlocks[catIdx].img" alt="block img" />
+          <h3>{{ catBlocks[catIdx].title }}</h3>
+          <p>{{ catBlocks[catIdx].desc }}</p>
         </div>
-        <button class="btn-catalog" @click="goToCatalog(categorySlides[currentCat].title)">Каталог</button>
+        <button class="btn-catalog" @click="goToCatalog(catBlocks[catIdx].title)">Каталог</button>
       </div>
     </section>
 
     <!-- PRINCIPLES -->
     <section class="principles">
       <div class="principle-div">
-        <p class="principle-text">В YANDA.SHOP мы делаем ставку на оригинальность, честность и индивидуальный подход.<br><br>
-          Наши принципы просты: только популярные бренды, прозрачные условия и забота о вашем выборе. Здесь ценят  стиль, время и доверие.</p>
+        <p class="principle-text">В YANDA.SHOP мы<br>делаем ставку на<br>оригинальность,<br>честность<br>и индивидуальный<br>подход.<br><br>
+          Наши принципы просты:<br>только популярные<br>бренды, прозрачные<br>условия и забота о<br>вашем выборе. Здесь<br>ценят стиль, время и<br>доверие.</p>
       </div>
       <div v-for="block in origBlocks" :key="block.title" class="principle">
         <div class="principle-header">
@@ -196,6 +196,13 @@ import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 
 import icon_default_avatar_white from '@/assets/images/default_avatar_white.svg'
+import icon_work_1 from '@/assets/images/work_1.svg'
+import icon_work_2 from '@/assets/images/work_2.svg'
+import icon_work_3 from '@/assets/images/work_3.svg'
+import icon_work_4 from '@/assets/images/work_4.svg'
+import icon_cat_1 from '@/assets/images/cat_1.png'
+import icon_cat_2 from '@/assets/images/cat_2.png'
+import icon_cat_3 from '@/assets/images/cat_3.png'
 import icon_plus_1 from '@/assets/images/plus_1.svg'
 import icon_plus_2 from '@/assets/images/plus_2.svg'
 import icon_plus_3 from '@/assets/images/plus_3.svg'
@@ -238,28 +245,28 @@ function nextHero() {
 }
 
 // How it works
-const workSteps = [
-  { step: 1, title: 'Ты выбираешь',             text: 'Найди товар в каталоге или пришли нам фотографию желаемой модели.' },
-  { step: 2, title: 'Мы проверяем на оригинал', text: 'Мы проверяем наличие, подлинность и цену в официальных источниках.' },
-  { step: 3, title: 'Покупаем напрямую',        text: 'Мы заказываем товары в официальных магазинах без посредников и наценок.' },
-  { step: 4, title: 'Доставляем тебе',          text: 'Мы организуем доставку в твой город быстро и безопасно.' },
+const workBlocks = [
+  { step: 1, img: icon_work_1, title: 'Ты выбираешь',             text: 'Найди товар в каталоге или пришли нам фотографию желаемой модели.' },
+  { step: 2, img: icon_work_2, title: 'Мы проверяем на оригинал', text: 'Мы проверяем наличие, подлинность и цену в официальных источниках.' },
+  { step: 3, img: icon_work_3, title: 'Покупаем напрямую',        text: 'Мы заказываем товары в официальных магазинах без посредников и наценок.' },
+  { step: 4, img: icon_work_4, title: 'Доставляем тебе',          text: 'Мы организуем доставку в твой город быстро и безопасно.' },
 ]
 
 // Categories
-const currentCat = ref(0)
+const catIdx = ref(0)
 
-const categorySlides = [
-  { title: 'Аксессуары', desc: 'Сумки, ремни и игрушки от Max Mara, Coach, Pop Mart и других официальных брендов.' },
-  { title: 'Одежда',     desc: 'Только оригинальные вещи от Nike, Adidas, Supreme и т.д.' },
-  { title: 'Обувь',      desc: 'Хиты от New Balance, Jacquemus и других.' },
+const catBlocks = [
+  { img: icon_cat_1, title: 'Аксессуары', desc: 'Сумки, ремни и игрушки от Max Mara, Coach, Pop Mart и других официальных брендов.' },
+  { img: icon_cat_2, title: 'Обувь',      desc: 'Кроссовки, лоферы и сапоги от New Balance, Clarks, Nike и других официальных брендов.' },
+  { img: icon_cat_3, title: 'Одежда',     desc: 'Базовая и акцентная одежда от Jacquemus, Fear of God и других официальных брендов.' },
 ]
 
 function prevCat() {
-  currentCat.value = (currentCat.value + categorySlides.length - 1) % categorySlides.length
+  catIdx.value = (catIdx.value + catBlocks.length - 1) % catBlocks.length
 }
 
 function nextCat() {
-  currentCat.value = (currentCat.value + 1) % categorySlides.length
+  catIdx.value = (catIdx.value + 1) % catBlocks.length
 }
 
 // Principles
@@ -483,7 +490,7 @@ function formatPrice(val) {
       .step {
         display: flex;
         flex-direction: column;
-        .icon-placeholder {
+        img {
           width: 60px;
           height: 60px;
           object-fit: cover;
@@ -530,7 +537,8 @@ function formatPrice(val) {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      padding: 24px 10px 0;
+      gap: 24px;
       border-radius: 4px;
       background-color: $grey-95;
       .cat-slider-div {
@@ -563,7 +571,7 @@ function formatPrice(val) {
         padding: 0 10px;
         gap: 8px;
         text-align: center;
-        .image-placeholder {
+        img {
           margin-bottom: 8px;
           width: 100%;
           height: auto;
@@ -589,7 +597,6 @@ function formatPrice(val) {
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-top: 24px;
       padding: 0 24px;
       width: 100%;
       height: 56px;
@@ -618,6 +625,7 @@ function formatPrice(val) {
       background-color: $grey-30;
       .principle-text {
         margin: 0;
+        width: 50%;
         color: $white-100;
         font-size: 16px;
         line-height: 110%;
@@ -632,10 +640,12 @@ function formatPrice(val) {
       border-bottom: 1px solid $white-100;
       .principle-header {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         margin: 0 0 40px;
         h3 {
+          margin: 0;
+          width: 210px;
           font-family: Bounded;
           font-size: 26px;
           font-weight: 250;
