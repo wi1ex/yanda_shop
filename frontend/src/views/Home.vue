@@ -15,7 +15,7 @@
               <button @click="prevHero" aria-label="Назад">←</button>
               <button @click="nextHero" aria-label="Вперёд">→</button>
             </div>
-            <div @click="goToCatalog('')" class="btn-catalog">В каталог →</div>
+            <button class="btn-catalog" @click="goToCatalog('')">В каталог →</button>
           </div>
         </div>
       </div>
@@ -115,15 +115,15 @@
 
     <!-- REQUEST FORM -->
     <section class="request-form">
-      <h2>Не нашел что хотел?</h2>
-      <p>Загрузите изображение или добавьте артикул товара, и мы выкупим его из официального магазина.</p>
       <form @submit.prevent="onSubmitRequest">
+        <h2>Не нашел что хотел?</h2>
+        <p>Загрузите изображение или добавьте артикул товара, и мы выкупим его из официального магазина.</p>
         <input type="text" v-model="request.name" placeholder="Имя" required/>
         <input type="email" v-model="request.email" placeholder="Почта" required/>
-        <input type="text" v-model="request.sku" placeholder="Артикул товара" />
-        <div class="or-sep">или</div>
-        <input type="file" @change="onFileChange" />
-        <label><input type="checkbox" v-model="request.agree"/> Я согласен на обработку персональных данных</label>
+        <input type="text" v-model="request.sku" placeholder="Артикул товара"/>
+        <p>или</p>
+        <input type="file" @change="onFileChange"/>
+        <label><input type="checkbox" v-model="request.agree"/>Я согласен на обработку персональных данных</label>
         <button type="submit" class="btn-submit">Отправить запрос</button>
       </form>
     </section>
@@ -470,7 +470,6 @@ watch(idx, updateCarouselHeight)
           background-color: $black-100;
           color: $white-100;
           border-radius: 4px;
-          text-decoration: none;
         }
       }
     }
@@ -673,8 +672,6 @@ watch(idx, updateCarouselHeight)
       font-size: 16px;
       line-height: 100%;
       letter-spacing: -0.64px;
-      text-decoration: none;
-      cursor: pointer;
     }
   }
 
@@ -879,8 +876,6 @@ watch(idx, updateCarouselHeight)
       font-size: 16px;
       line-height: 100%;
       letter-spacing: -0.64px;
-      text-decoration: none;
-      cursor: pointer;
       z-index: 20;
     }
   }
@@ -894,32 +889,40 @@ watch(idx, updateCarouselHeight)
     padding: 84px 16px;
     background-color: $grey-30;
     z-index: 20;
-    h2 {
-      margin: 0;
-      text-align: center;
-      font-family: Bounded;
-      font-weight: 500;
-      font-size: 24px;
-      line-height: 90%;
-      letter-spacing: -0.72px;
-    }
     form {
       display: flex;
       flex-direction: column;
-      padding: 0 16px;
-      gap: 8px;
-      max-width: 320px;
+      padding: 24px 10px;
       margin: 0 auto;
-      .or-sep {
+      h2 {
+        margin: 0;
         text-align: center;
-        margin: 12px 0;
+        font-family: Bounded;
+        font-weight: 500;
+        font-size: 24px;
+        line-height: 90%;
+        letter-spacing: -0.72px;
+      }
+      p {
+        font-size: 15px;
+        line-height: 110%;
+        letter-spacing: -0.6px;
       }
       .btn-submit {
-        padding: 8px;
-        background-color: $black-100;
-        color: $white-100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 24px;
+        padding: 0 24px;
+        width: 100%;
+        height: 56px;
         border: none;
+        background-color: $white-80;
+        color: $black-100;
         border-radius: 4px;
+        font-size: 16px;
+        line-height: 100%;
+        letter-spacing: -0.64px;
       }
     }
   }
@@ -1083,7 +1086,6 @@ watch(idx, updateCarouselHeight)
     }
     &-subtitle {
       text-align: left;
-      max-width: 600px;
       margin: 0 auto 32px;
       font-size: 16px;
       line-height: 110%;
@@ -1093,7 +1095,6 @@ watch(idx, updateCarouselHeight)
       display: flex;
       flex-direction: column;
       margin: 0 0 64px;
-      max-width: 800px;
       gap: 4px;
       border-radius: 4px;
     }
