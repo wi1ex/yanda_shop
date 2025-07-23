@@ -13,6 +13,7 @@ from ..utils.db_utils import session_scope
 from ..models import Users, ChangeLog, Review, RequestItem
 from ..extensions import redis_client, minio_client, BUCKET
 from ..utils.route_utils import handle_errors, require_args, require_json
+from ..utils.storage_utils import upload_request_file
 
 general_api: Blueprint = Blueprint("general_api", __name__, url_prefix="/api/general")
 
@@ -240,6 +241,7 @@ def create_request() -> Tuple[Response, int]:
 
         if file:
             upload_request_file(req.id, file)
+        req_id = req.id
 
-    logger.info("create_request: id=%d name=%s", req.id, name)
+    logger.info("create_request: id=%d name=%s", req_id, name)
     return jsonify({"status": "ok"}), 201
