@@ -192,6 +192,44 @@ def cleanup_review_images() -> int:
     return deleted_count
 
 
+# Request images: upload and cleanup
+def upload_request_file(request_id: int, file) -> None:
+    """
+    Загружает один файл заявки в MinIO под префиксом requests/{request_id}_{filename}.
+    """
+    context = "upload_request_file"
+    filename = secure_filename(os.path.basename(file.filename))
+    key = f"requests/{request_id}_{filename}"
+    try:
+        # length=-1 и part_size как в других
+        minio_client.put_object(BUCKET, key, file.stream, length=-1, part_size=10 * 1024 * 1024)
+        logger.info("%s: uploaded %s", context, key)
+    except Exception as exc:
+        logger.exception("%s: failed to upload %s", context, key, exc_info=exc)
+
+
+def cleanup_request_files(request_id: int) -> int:
+    """
+    Удаляет все объекты в MinIO с префиксом requests/{request_id}_*.
+    Возвращает число удалённых объектов.
+    """
+    context = "cleanup_request_files"
+    prefix = f"requests/{request_id}_"
+    removed = 0
+    try:
+        for obj in minio_client.list_objects(BUCKET, prefix=prefix, recursive=True):
+            try:
+                minio_client.remove_object(BUCKET, obj.object_name)
+                removed += 1
+                logger.debug("%s: removed %s", context, obj.object_name)
+            except Exception:
+                logger.warning("%s: could not remove %s", context, obj.object_name)
+    except Exception as exc:
+        logger.error("%s: list_objects failed for %s: %s", context, prefix, exc)
+    logger.info("%s: total removed=%d", context, removed)
+    return removed
+
+
 def preview_product_images(folder: str, archive_bytes: bytes) -> Dict[str, Any]:
     """
     Проверка ZIP-архива с изображениями категории folder:

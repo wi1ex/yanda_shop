@@ -60,6 +60,16 @@ class Review(db.Model):
     created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
+class RequestItem(db.Model):
+    __tablename__  = 'requests'
+    id             = db.Column(db.Integer, primary_key=True)
+    name           = db.Column(db.String(100), nullable=False)
+    email          = db.Column(db.String(100), nullable=False)
+    sku            = db.Column(db.String(100), nullable=True)
+    has_file       = db.Column(db.Boolean, default=False, nullable=False)
+    created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
 class BaseProduct(db.Model):
     __abstract__   = True
     id             = db.Column(db.Integer, primary_key=True)

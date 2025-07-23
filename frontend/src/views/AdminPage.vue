@@ -283,6 +283,25 @@
       </form>
     </section>
 
+    <!-- Все заявки -->
+    <section class="requests-section" v-if="selected === 'requests'">
+      <h2>Заявки клиентов</h2>
+      <ul v-if="store.requests.length" class="requests-list">
+        <li v-for="r in store.requests" :key="r.id" class="request-item">
+          <div class="request-header">
+            <strong>#{{ r.id }}</strong>
+            <span>{{ r.name }}</span>
+            <span>{{ r.email || '—' }}</span>
+            <span class="date">{{ new Date(r.created_at).toLocaleString() }}</span>
+          </div>
+          <p>Артикул: {{ r.sku || '—' }}</p>
+          <a v-if="r.file_url" :href="r.file_url" target="_blank">Файл</a>
+          <button @click="onDeleteRequest(r.id)">Удалить</button>
+        </li>
+      </ul>
+      <p v-else>Заявок пока нет.</p>
+    </section>
+
   </div>
 </template>
 
@@ -320,6 +339,7 @@ const tabs             = [
   { key:'settings',    label:'Настройка переменных' },
   { key:'all_reviews', label:'Список отзывов'       },
   { key:'add_review',  label:'Добавить отзыв'       },
+  { key:'requests',    label:'Заявки клиентов'      },
 ]
 
 const zipPreviewFiles = reactive({ shoes:null, clothing:null, accessories:null });
@@ -460,8 +480,14 @@ function submitZip() {
   })
 }
 
+// Функция удаления отзыва
 function deleteReview(id) {
   if (confirm(`Удалить отзыв #${id}?`)) store.deleteReview(id)
+}
+
+// Функция удаления заявки
+function onDeleteRequest(id) {
+  if (confirm(`Удалить заявку #${id}?`)) store.deleteRequest(id)
 }
 
 // Сохраняем все изменённые параметры подряд
@@ -542,6 +568,7 @@ onMounted(() => {
   store.fetchSettings()
   store.fetchReviews()
   store.fetchUsers()
+  store.fetchRequests()
 })
 
 // Когда store.settings обновляются — заполняем localSettings и снимаем снимок
@@ -603,6 +630,9 @@ watch(selected, (tab) => {
       break
     case 'add_review':
       // ничего не грузим
+      break
+    case 'requests':
+      store.fetchRequests()
       break
   }
 })
@@ -1056,6 +1086,42 @@ watch(selected, (tab) => {
   padding: 8px;
   text-align: left;
 }
+
+.requests-section {
+  margin-top: 2rem;
+  .requests-list {
+    list-style: none;
+    padding: 0;
+    .request-item {
+      background: #252a3b;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      .request-header {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        .date { margin-left: auto; color: #aaa; }
+      }
+      p { margin: 0.5rem 0; color: #ddd; }
+      a {
+        color: #4caf50;
+        text-decoration: none;
+        margin-right: 1rem;
+      }
+      button {
+        background: #e94f37;
+        color: #fff;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+    }
+  }
+}
+
 
 @media (max-width: 600px) {
   .combined-preview {

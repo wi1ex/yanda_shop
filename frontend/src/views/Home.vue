@@ -121,7 +121,7 @@
           <p style="margin-bottom: 24px;">Загрузите изображение или добавьте артикул товара, и мы выкупим его из официального магазина.</p>
 
           <input class="input-field" type="text" v-model="request.name" placeholder="Имя *" required/>
-          <input class="input-field" type="email" v-model="request.email" placeholder="Почта"/>
+          <input class="input-field" type="email" v-model="request.email" placeholder="Почта *" required/>
           <input class="input-field" type="text" v-model="request.sku" placeholder="Артикул товара"/>
 
           <p>или</p>
@@ -397,7 +397,32 @@ function onFileChange(e) {
 }
 
 function onSubmitRequest() {
-  alert('Запрос отправлен!')
+  if (!request.value.agree) {
+    alert("Нужно согласиться с обработкой данных")
+    return
+  }
+  const file = request.value.file
+  if (file && file.size > 10 * 1024 * 1024) {
+    alert("Файл не должен быть больше 10 МБ")
+    return
+  }
+
+  const fd = new FormData()
+  fd.append("name",  request.value.name)
+  fd.append("email", request.value.email)
+  fd.append("sku",   request.value.sku)
+  if (file) fd.append("file", file)
+
+  store.createRequest(fd)
+    .then(() => {
+      alert("Запрос успешно отправлен")
+      // сброс формы
+      request.value = { name:'', email:'', sku:'', file:null, agree:false }
+      uploadedFileName.value = ''
+    })
+    .catch(err => {
+      alert(err.response?.data?.error || err.message)
+    })
 }
 
 // FAQ
@@ -929,7 +954,7 @@ watch(idx, updateCarouselHeight)
         flex-direction: column;
         padding: 24px 10px;
         border-radius: 4px;
-        background-color: $black-60;
+        background-color: $black-70;
         backdrop-filter: blur(10px);
         h2 {
           margin: 0 0 16px;
@@ -981,6 +1006,7 @@ watch(idx, updateCarouselHeight)
             .file-div-button {
               display: flex;
               align-items: center;
+              width: calc(100% - 62px);
               gap: 8px;
               img {
                 width: 24px;
@@ -988,7 +1014,7 @@ watch(idx, updateCarouselHeight)
                 object-fit: cover;
               }
               .file-text {
-                width: 75%;
+                width: calc(100% - 40px);
                 color: $white-60;
                 font-family: Bounded;
                 font-size: 18px;

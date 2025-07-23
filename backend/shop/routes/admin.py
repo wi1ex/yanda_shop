@@ -438,6 +438,53 @@ def list_users() -> Tuple[Response, int]:
     return jsonify({"users": users_list}), 200
 
 
+@admin_api.route("/list_requests", methods=["GET"])
+@admin_required
+@handle_errors
+def list_requests() -> Tuple[Response, int]:
+    """
+    GET /api/admin/list_requests
+    Возвращает все заявки.
+    """
+    data = []
+    with session_scope() as session:
+        items = session.query(RequestItem).order_by(RequestItem.created_at.desc()).all()
+        for r in items:
+            file_url = None
+            if r.has_file:
+                prefix = f"requests/{r.id}_"
+                objs = minio_client.list_objects(BUCKET, prefix=prefix, recursive=True)
+                for obj in objs:
+                    file_url = f"{BACKEND_URL}/{BUCKET}/{obj.object_name}"
+                    break
+            data.append({
+                "id":         r.id,
+                "name":       r.name,
+                "email":      r.email,
+                "sku":        r.sku,
+                "file_url":   file_url,
+                "created_at": r.created_at.isoformat()
+            })
+    return jsonify({"requests": data}), 200
+
+
+@admin_api.route("/delete_request/<int:request_id>", methods=["DELETE"])
+@admin_required
+@handle_errors
+def delete_request(request_id: int) -> Tuple[Response, int]:
+    """
+    DELETE /api/admin/delete_request/<request_id>
+    Удаляет заявку и её файл.
+    """
+    with session_scope() as session:
+        r = session.get(RequestItem, request_id)
+        if not r:
+            return jsonify({"error": "not found"}), 404
+        session.delete(r)
+    cleanup_request_files(request_id)
+    return jsonify({"status": "deleted"}), 200
+
+
 @admin_api.route("/set_user_role", methods=["POST"])
 @admin_required
 @handle_errors

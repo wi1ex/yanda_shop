@@ -90,12 +90,13 @@
 ### /api/general
 
 | Endpoint                    | Method | Description                             |
-| --------------------------- | ------ | --------------------------------------- |
+| --------------------------- | ------ |-----------------------------------------|
 | `/general/`                 | GET    | Health check                            |
 | `/general/save_user`        | POST   | Сохранение инфо о пользователе Telegram |
 | `/general/get_user_profile` | GET    | Профиль пользователя                    |
 | `/general/get_parameters`   | GET    | Общие параметры                         |
 | `/general/list_reviews`     | GET    | Список отзывов                          |
+| `/general/create_request`   | POST   | Заявка на поиск товара                  |
 
 ### /api/product
 
@@ -126,6 +127,8 @@
 | `/admin/delete_setting`   | DELETE | Удаление настроек                        |
 | `/admin/create_review`    | POST   | Создание отзыва                          |
 | `/admin/delete_review`    | DELETE | Удаление отзыва                          |
+| `/admin/list_requests`    | GET    | Список заявок на поиск товара            |
+| `/admin/delete_request`   | DELETE | Удаление заявки на поиск товара          |
 | `/admin/list_users`       | GET    | Список пользователей                     |
 
 ---
