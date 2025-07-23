@@ -8,7 +8,8 @@ import requests
 from flask import Blueprint, jsonify, request, Response
 from sqlalchemy import func
 from ..core.logging import logger
-from ..extensions import redis_client
+from ..core.config import BACKEND_URL
+from ..extensions import redis_client, minio_client, BUCKET
 from ..models import ChangeLog, AdminSetting, Users, Review, RequestItem
 from ..utils.db_utils import session_scope
 from ..utils.google_sheets import get_sheet_url, process_rows, preview_rows
@@ -23,6 +24,7 @@ from ..utils.storage_utils import (
     cleanup_review_images,
     upload_review_images,
     preview_product_images,
+    cleanup_request_files,
 )
 
 admin_api: Blueprint = Blueprint("admin_api", __name__, url_prefix="/api/admin")
@@ -452,8 +454,7 @@ def list_requests() -> Tuple[Response, int]:
         for r in items:
             file_url = None
             if r.has_file:
-                prefix = f"requests/{r.id}_"
-                objs = minio_client.list_objects(BUCKET, prefix=prefix, recursive=True)
+                objs = minio_client.list_objects(BUCKET, prefix=f"requests/{r.id}_", recursive=True)
                 for obj in objs:
                     file_url = f"{BACKEND_URL}/{BUCKET}/{obj.object_name}"
                     break
