@@ -10,7 +10,7 @@ from .auth import make_tokens
 from ..core.logging import logger
 from ..core.config import BACKEND_URL
 from ..utils.db_utils import session_scope
-from ..models import Users, ChangeLog, Review
+from ..models import Users, ChangeLog, Review, RequestItem
 from ..extensions import redis_client, minio_client, BUCKET
 from ..utils.route_utils import handle_errors, require_args, require_json
 
@@ -208,7 +208,7 @@ def list_reviews() -> Tuple[Response, int]:
 def create_request() -> Tuple[Response, int]:
     """
     POST /api/general/create_request
-    Form-data: name*, email, sku, file?
+    Form-data: name*, email*, sku, file?
     """
     ip = request.remote_addr or "anon"
     key = f"rate:create_request:{ip}"
@@ -221,11 +221,10 @@ def create_request() -> Tuple[Response, int]:
     email = request.form.get("email", "").strip()
     sku   = request.form.get("sku", "").strip()
 
-    if not name:
-        return jsonify({"error": "Поле «Имя» обязательно"}), 400
+    if not name or not email:
+        return jsonify({"error": "Поля «Имя» и «Почта» обязательны"}), 400
 
     file = request.files.get("file")
-    # проверка размера: Werkzeug FileStorage.size нет, читаем content_length
     if file and request.content_length and request.content_length > 10 * 1024 * 1024:
         return jsonify({"error": "Файл не должен превышать 10 МБ"}), 400
 
