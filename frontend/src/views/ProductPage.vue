@@ -54,7 +54,7 @@
             <label>Размер</label>
             <div class="options-list">
               <button v-for="opt in sizeOptions" :key="opt" class="option-btn" @click="selectVariantByOpt('size', opt)"
-                      :class="{ active: String(opt) === String(store.detailData.size_label) }">
+                      :class="{ active: isSizeActive(opt) }">
                 {{ opt }}
               </button>
             </div>
@@ -232,6 +232,19 @@ const showDelivery = ref(false)
 const showRefund = ref(false)
 const variantLoading = ref(false)
 
+function isSizeActive(opt) {
+  const a = String(opt).trim()
+  const b = String(store.detailData?.size_label || '').trim()
+  const numericRe = /^\d+(\.\d+)?$/
+  const aIsNum = numericRe.test(a)
+  const bIsNum = numericRe.test(b)
+
+  if (aIsNum && bIsNum) {
+    return parseFloat(a) === parseFloat(b)
+  }
+  return a === b
+}
+
 function formatPrice(val) {
   return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
@@ -309,7 +322,19 @@ function selectVariantByOpt(type, opt) {
   if (type === 'size') {
     // ищем вариант с точно таким же size_label (строкой)
     const currentColor = store.detailData?.color
-    const variant = store.variants.find(v => String(v.size_label) === opt && v.color === currentColor)
+    const numericRe = /^\d+(\.\d+)?$/
+    const candidate = String(opt).trim()
+    const variant = store.variants.find(v => {
+      if (v.color !== currentColor) return false
+      const raw = String(v.size_label).trim()
+      const rawIsNum = numericRe.test(raw)
+      const optIsNum = numericRe.test(candidate)
+      if (rawIsNum && optIsNum) {
+        return parseFloat(raw) === parseFloat(candidate)
+      } else {
+        return raw === candidate
+      }
+    })
     if (variant && variant.variant_sku !== store.detailData.variant_sku) {
       router.replace({
         name: 'ProductDetail',
