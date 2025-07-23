@@ -19,7 +19,7 @@
         <!-- 1) Корневые категории -->
         <div v-if="!store.showSubcats" class="header-cats-template">
           <div class="header-cats-div">
-            <button v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)"
+            <button type="button" v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)"
                     :class="['cat-btn', { active: store.selectedCategory === cat }]">
               <img :src="categoryImages[cat]" :alt="cat"/>
               <span>{{ cat }}</span>
@@ -31,9 +31,9 @@
         <div v-else class="header-cats-template">
           <div class="header-cats-div">
             <!-- Кнопка «назад» -->
-            <button class="cat-btn back-btn" @click="store.backToCats()">← Назад</button>
+            <button type="button" class="cat-btn back-btn" @click="store.backToCats()">← Назад</button>
             <!-- Список текущих 2-х подкатегорий -->
-            <button v-for="sub in visibleSubcats" :key="sub" @click="store.pickSubcat(sub)"
+            <button type="button" v-for="sub in visibleSubcats" :key="sub" @click="store.pickSubcat(sub)"
                     :class="['cat-btn', { active: store.selectedSubcat === sub }]">
 <!--              <img :src="subcategoryImages[sub]" :alt="sub"/>-->
               <span>{{ sub }}</span>
@@ -41,8 +41,8 @@
           </div>
           <div class="header-cats-div">
             <!-- Кнопки листания -->
-            <button v-if="canPrev"  class="cat-btn nav-btn" @click="store.prevSubcatPage()">‹</button>
-            <button v-if="canNext"  class="cat-btn nav-btn" @click="store.nextSubcatPage()">›</button>
+            <button type="button" v-if="canPrev" class="cat-btn nav-btn" @click="store.prevSubcatPage()">‹</button>
+            <button type="button" v-if="canNext" class="cat-btn nav-btn" @click="store.nextSubcatPage()">›</button>
           </div>
         </div>
       </nav>
@@ -63,7 +63,7 @@
             </select>
           </div>
 
-          <button @click="mobileFiltersOpen = !mobileFiltersOpen">
+          <button type="button" @click="mobileFiltersOpen = !mobileFiltersOpen">
             Фильтры <i :class="['arrow', mobileFiltersOpen ? 'up' : 'down']"/>
           </button>
 
@@ -86,7 +86,7 @@
                 <input type="radio" v-model="store.filterGender" value="F" /> Женщинам
               </label>
               </div>
-              <button @click="handleClearFilters" class="btn-clear">Сбросить</button>
+              <button type="button" @click="handleClearFilters" class="btn-clear">Сбросить</button>
             </div>
           </transition>
         </div>
@@ -102,13 +102,13 @@
                 <p class="price">от {{ group.minPrice }} ₽</p>
               </div>
             </div>
-            <button class="fav" v-if="!store.isFavorite(group.color_sku)" @click.stop="store.addToFavorites(group.color_sku)">♡</button>
-            <button class="fav active" v-else @click.stop="store.removeFromFavorites(group.color_sku)">♥</button>
+            <button type="button" class="fav" v-if="!store.isFavorite(group.color_sku)" @click.stop="store.addToFavorites(group.color_sku)">♡</button>
+            <button type="button" class="fav active" v-else @click.stop="store.removeFromFavorites(group.color_sku)">♥</button>
           </article>
         </div>
 
         <div class="load-more-container">
-          <button v-if="paged.length < store.displayedProducts.length" @click="loadMore" class="btn-load-more">
+          <button type="button" v-if="paged.length < store.displayedProducts.length" @click="loadMore" class="btn-load-more">
             Ещё
           </button>
         </div>

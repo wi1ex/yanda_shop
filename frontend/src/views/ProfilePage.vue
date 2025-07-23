@@ -5,7 +5,7 @@
     <!-- Если мы решили редиректить или показывать сообщение гостю, можно добавить тут отдельный блок -->
     <div v-if="!store.isTelegramUserId(store.user?.id)" class="not-tg-message">
       <p>Профиль доступен только авторизованным через Telegram пользователям.</p>
-      <button @click="goToPage('Home')">Вернуться на главную</button>
+      <button type="button" @click="goToPage('Home')">Вернуться на главную</button>
     </div>
 
     <!-- Если идёт загрузка профиля (и это telegram-пользователь) -->

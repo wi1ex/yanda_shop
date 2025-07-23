@@ -3,19 +3,19 @@
     <div class="line-vert"></div>
     <!-- HERO -->
     <section class="hero">
-      <div class="hero-slide">
-        <!-- вставить фон из макета -->
-        <div class="image-placeholder">Изображение героя</div>
-        <div class="hero-text">
-          <h1>Оригинальные бренды<br>и ничего лишнего</h1>
-          <div class="line-hor"></div>
-          <div class="controls-div">
-            <div class="line-hor"></div>
-            <div class="hero-controls">
-              <button @click="prevHero" aria-label="Назад">←</button>
-              <button @click="nextHero" aria-label="Вперёд">→</button>
+      <div class="hero-slide" :style="{ backgroundImage: `url(${ heroSlides[heroIndex].image })` }">
+        <div class="overlay"></div>
+        <div class="hero-content">
+          <h1 class="hero-title">Оригинальные бренды<br>и ничего лишнего</h1>
+          <div class="hero-controls">
+            <div class="slide-counter">
+              {{ String(heroIndex + 1).padStart(2, '0') }}/{{ String(heroSlides.length).padStart(2, '0') }}
             </div>
-            <button class="btn-catalog" @click="goToCatalog('')">В каталог →</button>
+            <div class="arrows">
+              <button type="button" class="arrow-btn" @click="prevHero" aria-label="Назад">←</button>
+              <button type="button" class="arrow-btn" @click="nextHero" aria-label="Вперёд">→</button>
+            </div>
+            <button type="button" class="btn-catalog" @click="goToCatalog('')">В каталог →</button>
           </div>
         </div>
       </div>
@@ -49,10 +49,10 @@
       <h2>Категории</h2>
       <div class="cat-slider">
         <div class="cat-slider-div">
-          <button @click="prevCat" aria-label="Назад">
+          <button type="button" @click="prevCat" aria-label="Назад">
             <img :src="icon_arrow_red" alt="Arrow"/>
           </button>
-          <button @click="nextCat" aria-label="Вперёд">
+          <button type="button" @click="nextCat" aria-label="Вперёд">
             <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
           </button>
         </div>
@@ -63,7 +63,7 @@
             <p>{{ block.desc }}</p>
           </div>
         </div>
-        <button class="btn-catalog" @click="goToCatalog(catBlocks[catIdx].title)">Каталог</button>
+        <button type="button" class="btn-catalog" @click="goToCatalog(catBlocks[catIdx].title)">Каталог</button>
       </div>
     </section>
 
@@ -88,7 +88,7 @@
       <div class="best-slider">
         <div class="best-items" :style="{ transform: `translateX(-${bestIndex * 100}%)` }">
           <div class="best-item" v-for="p in bests" :key="p.variant_sku" @click="goToProduct(p)">
-            <button class="fav-btn" @click.stop="toggleFav(p)">
+            <button type="button" class="fav-btn" @click.stop="toggleFav(p)">
               <img :src="store.isFavorite(p.color_sku) ? icon_favorites_black : icon_favorites_grey" alt="" />
             </button>
             <div class="product-image">
@@ -102,15 +102,15 @@
           </div>
         </div>
         <div class="best-slider-div">
-          <button @click="prevBest" aria-label="Назад" :disabled="bestIndex === 0">
+          <button type="button" @click="prevBest" aria-label="Назад" :disabled="bestIndex === 0">
             <img :src="bestIndex === 0 ? icon_arrow_grey : icon_arrow_red" alt="Arrow"/>
           </button>
-          <button @click="nextBest" aria-label="Вперёд" :disabled="bestIndex === maxPage">
+          <button type="button" @click="nextBest" aria-label="Вперёд" :disabled="bestIndex === maxPage">
             <img :src="bestIndex === maxPage ? icon_arrow_grey : icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
           </button>
         </div>
       </div>
-      <button class="btn-catalog" @click="goToCatalogSales">Смотреть все</button>
+      <button type="button" class="btn-catalog" @click="goToCatalogSales">Смотреть все</button>
     </section>
 
     <!-- REQUEST FORM -->
@@ -180,10 +180,10 @@
         </div>
       </div>
       <div class="carousel-div">
-        <button @click="prev" aria-label="Назад">
+        <button type="button" @click="prev" aria-label="Назад">
           <img :src="icon_arrow_red" alt="Arrow"/>
         </button>
-        <button @click="next" aria-label="Вперёд">
+        <button type="button" @click="next" aria-label="Вперёд">
           <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
         </button>
       </div>
@@ -219,7 +219,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 
@@ -279,14 +279,33 @@ function updateCarouselHeight() {
 }
 
 // Hero
-const runningText = 'Puma //_Future_Vintage_Capsule • sale'
+const heroSlides = [
+  {
+    image: require('@/assets/images/hero1.png'),
+    title: require('@/assets/images/hero1_text.svg'),
+  },
+  {
+    image: require('@/assets/images/hero2.png'),
+    title: require('@/assets/images/hero2_text.svg'),
+  },
+  {
+    image: require('@/assets/images/hero3.png'),
+    title: require('@/assets/images/hero3_text.svg'),
+  },
+  {
+    image: require('@/assets/images/hero4.png'),
+    title: require('@/assets/images/hero4_text.svg'),
+  }
+]
+
+const runningText = 'Puma //_Future_Vintage_Capsule     • sale'
 
 function prevHero() {
-  heroIndex.value = (heroIndex.value + 1) % 1
+  heroIndex.value = (heroIndex.value - 1 + heroSlides.length) % heroSlides.length
 }
 
 function nextHero() {
-  heroIndex.value = (heroIndex.value + 1) % 1
+  heroIndex.value = (heroIndex.value + 1) % heroSlides.length
 }
 
 // How it works
@@ -455,6 +474,18 @@ function formatPrice(val) {
 
 watch(idx, updateCarouselHeight)
 
+let intervalId = null
+onMounted(() => {
+  // каждую 5-ю секунду переключаем слайд
+  intervalId = setInterval(() => {
+    nextHero()
+  }, 5_000)
+})
+
+onBeforeUnmount(() => {
+  clearInterval(intervalId)
+})
+
 </script>
 
 <style scoped lang="scss">
@@ -477,75 +508,102 @@ watch(idx, updateCarouselHeight)
 .home {
   /* HERO */
   .hero {
-    display: flex;
-    flex-direction: column;
     position: relative;
+    height: 80vh;
     overflow: hidden;
-    padding: 0;
-    z-index: 20;
-    &-slide {
+    .hero-slide {
       position: relative;
-    }
-    .image-placeholder {
-      background-color: $grey-30;
-      height: 300px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .hero-text {
-      position: absolute;
-      top: 20%;
-      left: 10%;
-      h1 {
-        color: $white-100;
-        font-size: 32px;
-        line-height: 90%;
-        letter-spacing: -1.28px;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      transition: background-image 0.5s ease-in-out;
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.4); // полупрозрачный чёрный
       }
-      .controls-div {
+    }
+    .hero-content {
+      position: absolute;
+      top: 25%;
+      left: 10%;
+      z-index: 2;
+      color: #fff;
+      max-width: 400px;
+      .hero-title {
+        font-family: Bounded;
+        font-weight: 500;
+        font-size: 3rem;
+        line-height: 1;
+        margin: 0 0 1rem;
+        .hero-subtitle {
+          font-weight: 300;
+          display: block;
+        }
+      }
+      .hero-controls {
         display: flex;
-        .hero-controls {
-          button {
-            margin-right: 8px;
-            background-color: $black-40;
-            border: none;
-            color: $white-100;
-            padding: 8px;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 2rem;
+        .slide-counter {
+          background: #000;
+          padding: 0.5rem 1rem;
+          font-size: 1.25rem;
+          font-family: Bounded;
+          border-radius: 4px;
+        }
+        .arrows {
+          display: flex;
+          gap: 0.5rem;
+          .arrow-btn {
+            background: none;
+            border: 2px solid #fff;
+            color: #fff;
+            font-size: 1.5rem;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+            &:hover { background: rgba(255,255,255,0.2); }
           }
         }
         .btn-catalog {
-          display: flex;
-          margin-top: 12px;
-          padding: 8px 16px;
-          background-color: $black-100;
-          color: $white-100;
+          background: #fff;
+          color: #000;
+          padding: 0.75rem 1.5rem;
+          border: none;
           border-radius: 4px;
           cursor: pointer;
+          font-size: 1rem;
+          font-family: Bounded;
+          transition: background 0.2s;
+          &:hover { background: #eee; }
         }
       }
     }
     .marquee {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: #000;
       overflow: hidden;
-      white-space: nowrap;
-      background-color: $black-100;
-      color: $white-100;
       .marquee-content {
         display: inline-block;
-        padding: 20px 0 20px 100%;
-        animation: marquee 10s linear infinite;
-        font-family: Bounded;
-        font-size: 18px;
-        font-weight: 250;
-        line-height: 100%;
-        letter-spacing: -0.9px;
+        padding: 1rem 0;
+        color: #fff;
+        animation: marquee 12s linear infinite;
       }
     }
-  }
-
-  @keyframes marquee {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-100%); }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-100%); }
+    }
   }
 
   /* HOW IT WORKS */
