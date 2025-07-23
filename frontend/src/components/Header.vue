@@ -9,7 +9,7 @@
 
     <!-- Кнопка меню -->
     <div class="menu">
-      <button class="menu-btn" @click="toggleMenu()">
+      <button type="button" class="menu-btn" @click="toggleMenu()">
         Меню
         <img :src="icon_menu_grey" alt="Меню" />
       </button>
@@ -27,7 +27,7 @@
           {{ store.favorites.count < 10 ? store.favorites.count : "9+" }}
         </span>
       </div>
-      <button @click="store.openCartDrawer()" class="icon-btn" title="Корзина">
+      <button type="button" @click="store.openCartDrawer()" class="icon-btn" title="Корзина">
         <img :src="icon_cart" alt="Корзина" />
         <span v-if="store.cart.count" class="badge badge-cart">
           {{ store.cart.count < 10 ? store.cart.count : "9+"}}
@@ -39,7 +39,7 @@
     <transition name="fade">
       <nav v-if="menuOpen" class="dropdown-menu">
         <div class="dropdown-menu-top">
-          <button class="dropdown-menu-btn" @click="toggleMenu()">
+          <button type="button" class="dropdown-menu-btn" @click="toggleMenu()">
             Меню
             <img :src="icon_close" alt="Меню" />
           </button>

@@ -6,7 +6,7 @@
       <sup class="logo-count">{{ favoriteProducts.length }}</sup>
     </div>
 
-    <button class="back-button" @click="goBack">
+    <button type="button" class="back-button" @click="goBack">
       <img :src="icon_arrow_grey" alt="arrow back" />
       Назад
     </button>
@@ -15,7 +15,7 @@
 
     <div v-if="favoriteProducts.length === 0" class="empty-cart">
       Ты еще не добавлял товары в избранное.
-      <button class="action-button" @click="goToCatalog">
+      <button type="button" class="action-button" @click="goToCatalog">
         Перейти в каталог
       </button>
     </div>

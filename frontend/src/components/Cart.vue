@@ -6,14 +6,14 @@
         <div class="cart-header">
           <h2 v-if="store.cart.items.length === 0">Корзина</h2>
           <h2 v-else>Корзина [ {{ store.cart.count }} ]</h2>
-          <button class="close-btn" @click="store.closeCartDrawer()">
+          <button type="button" class="close-btn" @click="store.closeCartDrawer()">
             <img :src="icon_close" alt="Закрыть" />
           </button>
         </div>
 
         <div v-if="store.cart.items.length === 0" class="empty-cart">
           В корзине пока что ничего нет...
-          <button class="action-button" @click="goToCatalog">
+          <button type="button" class="action-button" @click="goToCatalog">
             Перейти в каталог
           </button>
         </div>
@@ -31,11 +31,11 @@
               </div>
 
               <div class="item-quantity-controls">
-                <button class="qty-btn" @click="store.decreaseQuantity(item)">
+                <button type="button" class="qty-btn" @click="store.decreaseQuantity(item)">
                   <img :src="icon_minus_grey" alt="Минус" />
                 </button>
                 <span class="qty">{{ item.quantity }}</span>
-                <button class="qty-btn" @click="store.increaseQuantity(item)">
+                <button type="button" class="qty-btn" @click="store.increaseQuantity(item)">
                   <img :src="icon_plus_grey" alt="Плюс" />
                 </button>
               </div>
@@ -49,7 +49,7 @@
                   Доставка:
                   <span class="item-info-value">{{ item.delivery_option?.label || '—' }}</span>
                 </p>
-                <button class="remove-btn" @click="removeItem(item)">
+                <button type="button" class="remove-btn" @click="removeItem(item)">
                   <span class="remove-text">Удалить</span>
                   <img :src="icon_trash" alt="Удалить" class="remove-icon" />
                 </button>
@@ -67,10 +67,10 @@
         </div>
 
         <div class="cart-action" v-if="store.cart.items.length">
-          <button v-if="store.isTelegramUserId(store.user?.id)" class="action-button" @click="store.checkout">
+          <button type="button" v-if="store.isTelegramUserId(store.user?.id)" class="action-button" @click="store.checkout">
             Оформить заказ
           </button>
-          <button v-else class="action-button" @click="onRegister">
+          <button type="button" v-else class="action-button" @click="onRegister">
             Зарегистрироваться
           </button>
         </div>

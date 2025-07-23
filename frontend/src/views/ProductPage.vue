@@ -15,7 +15,7 @@
       <div class="detail-card" :class="{ blurred: store.detailLoading || variantLoading }">
         <!-- Шапка: назад -->
         <div v-if="store.detailData" class="top-row">
-          <button class="back-button" @click="goBack">
+          <button type="button" class="back-button" @click="goBack">
             <img :src="icon_arrow_grey" alt="arrow back" />
             Назад
           </button>
@@ -53,7 +53,7 @@
           <div class="option">
             <label>Размер</label>
             <div class="options-list">
-              <button v-for="opt in sizeOptions" :key="opt" class="option-btn" @click="selectVariantByOpt('size', opt)"
+              <button type="button" v-for="opt in sizeOptions" :key="opt" class="option-btn" @click="selectVariantByOpt('size', opt)"
                       :class="{ active: isSizeActive(opt) }">
                 {{ opt }}
               </button>
@@ -64,7 +64,7 @@
           <div class="option">
             <label>Цвет</label>
             <div class="options-list">
-              <button  v-for="opt in colorOptions" :key="opt" class="option-btn-color" :title="opt"
+              <button type="button" v-for="opt in colorOptions" :key="opt" class="option-btn-color" :title="opt"
                        :class="{ active: opt === store.detailData.color }" @click="selectVariantByOpt('color', opt)">
                 <img :src="getImageForColor(opt)" alt="" class="color-thumb"/>
               </button>
@@ -75,7 +75,7 @@
           <div class="option">
             <label>Доставка</label>
             <div class="options-list">
-              <button v-for="(opt, idx) in visibleDeliveryOptions" :key="idx" class="option-btn-delivery"
+              <button type="button" v-for="(opt, idx) in visibleDeliveryOptions" :key="idx" class="option-btn-delivery"
                       :class="{ active: idx === selectedDeliveryIndex }" @click="selectedDeliveryIndex = idx">
                 <span>{{ opt.label }}</span>
                 <span class="delivery-price">{{ formatPrice(Math.round(store.detailData.price * opt.multiplier)) }} ₽</span>
@@ -93,30 +93,30 @@
         <!-- В корзину -->
         <div class="quantity-controls">
           <div v-if="currentQuantity > 0" class="quantity-div">
-            <button class="quantity-buttons" @click="store.decreaseQuantity(cartItem)">
+            <button type="button" class="quantity-buttons" @click="store.decreaseQuantity(cartItem)">
               <img :src="icon_minus_grey" alt="" />
             </button>
             <span class="quantity">{{ currentQuantity }} в корзине</span>
-            <button class="quantity-buttons" @click="store.increaseQuantity(cartItem)">
+            <button type="button" class="quantity-buttons" @click="store.increaseQuantity(cartItem)">
               <img :src="icon_plus_red" alt="" />
             </button>
           </div>
-          <button v-if="currentQuantity > 0" type="button" class="cart-button" @click="store.openCartDrawer()">
+          <button type="button" v-if="currentQuantity > 0" class="cart-button" @click="store.openCartDrawer()">
             Оформить заказ
           </button>
-          <button v-if="currentQuantity == 0" type="button" class="cart-button" @click="handleAddToCart">
+          <button type="button" v-if="currentQuantity == 0" class="cart-button" @click="handleAddToCart">
             Добавить в корзину
           </button>
         </div>
 
         <!-- В избранное -->
         <div v-if="store.detailData" class="fav-block">
-          <button v-if="!store.isFavorite(store.detailData.color_sku)" type="button" class="fav-button"
+          <button type="button" v-if="!store.isFavorite(store.detailData.color_sku)" class="fav-button"
                   @click="store.addToFavorites(store.detailData.color_sku)">
             Добавить в избранное
             <img :src="icon_favorites_grey" alt="" />
           </button>
-          <button v-else type="button" class="fav-button" @click="store.removeFromFavorites(store.detailData.color_sku)">
+          <button type="button" v-else class="fav-button" @click="store.removeFromFavorites(store.detailData.color_sku)">
             Товар в избранном
             <img :src="icon_favorites_black" alt="" />
           </button>
