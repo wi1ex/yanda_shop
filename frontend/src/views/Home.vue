@@ -119,12 +119,23 @@
         <div class="request-div">
           <h2>Не нашел что хотел?</h2>
           <p>Загрузите изображение или добавьте артикул товара, и мы выкупим его из официального магазина.</p>
-          <input type="text" v-model="request.name" placeholder="Имя" required/>
-          <input type="email" v-model="request.email" placeholder="Почта" required/>
-          <input type="text" v-model="request.sku" placeholder="Артикул товара"/>
+
+          <input class="input-field" type="text" v-model="request.name" placeholder="Имя *" required/>
+          <input class="input-field" type="email" v-model="request.email" placeholder="Почта"/>
+          <input class="input-field" type="text" v-model="request.sku" placeholder="Артикул товара"/>
+
           <p>или</p>
-          <input type="file" @change="onFileChange"/>
-          <label><input type="checkbox" v-model="request.agree"/>Я согласен на обработку персональных данных</label>
+
+          <label class="file-upload">
+            <input type="file" @change="onFileChange" hidden />
+            <span>📎 Приложи файл</span>
+            <span class="file-size">макс. 10 MB</span>
+          </label>
+
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="request.agree"/>
+            <span>Я согласен на <u>обработку персональных данных</u></span>
+          </label>
         </div>
         <button type="submit" class="btn-submit">Отправить запрос</button>
       </form>
@@ -890,8 +901,8 @@ watch(idx, updateCarouselHeight)
     margin-top: 96px;
     padding: 203px 10px 40px;
     background-image: url('@/assets/images/request-form.png');
-    background-size: 125% auto;
-    background-position: top;
+    background-size: cover;
+    background-position: center;
     background-repeat: no-repeat;
     z-index: 20;
     form {
@@ -901,6 +912,7 @@ watch(idx, updateCarouselHeight)
         display: flex;
         flex-direction: column;
         padding: 24px 10px;
+        gap: 16px;
         border-radius: 4px;
         background-color: $black-60;
         backdrop-filter: blur(10px);
@@ -922,12 +934,61 @@ watch(idx, updateCarouselHeight)
           line-height: 110%;
           letter-spacing: -0.6px;
         }
+        .input-field {
+          padding: 16px;
+          border: none;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+          background-color: transparent;
+          color: $white-100;
+          font-size: 16px;
+          outline: none;
+          &::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+          }
+        }
+        .file-upload {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          border-radius: 4px;
+          background-color: transparent;
+          color: $white-100;
+          font-size: 16px;
+          cursor: pointer;
+          span:first-child {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .file-size {
+            font-size: 14px;
+            opacity: 0.6;
+          }
+        }
+        .checkbox-label {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 14px;
+          color: rgba(255, 255, 255, 0.8);
+          input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: $white-100;
+            border-radius: 2px;
+          }
+          u {
+            cursor: pointer;
+            text-decoration: underline;
+          }
+        }
       }
       .btn-submit {
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-top: 24px;
         padding: 0 24px;
         width: 100%;
         height: 56px;
