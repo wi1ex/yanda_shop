@@ -5,7 +5,8 @@
     <section class="hero">
       <div class="hero-slide" :style="{ backgroundImage: `url(${ heroSlides[heroIndex].image })` }">
         <div class="hero-content">
-          <h1 class="hero-title">Оригинальные бренды<br>и ничего лишнего</h1>
+          <h1 class="hero-text">Оригинальные бренды<br>и ничего лишнего</h1>
+          <img class="hero-title" :src="heroSlides[heroIndex].title" alt="Название" />
           <div class="hero-controls">
             <div class="slide-div">
               <div class="slide-counter">
@@ -21,7 +22,10 @@
                 </button>
               </div>
             </div>
-            <button type="button" class="btn-catalog" @click="goToCatalog('')">В каталог →</button>
+            <button type="button" class="btn-catalog" @click="goToCatalog('')">
+              В каталог
+              <img :src="icon_arrow_white" alt="Arrow"/>
+            </button>
           </div>
         </div>
       </div>
@@ -246,6 +250,7 @@ import icon_minus_red from '@/assets/images/minus_red.svg'
 import icon_arrow_red from '@/assets/images/arrow_red.svg'
 import icon_arrow_grey from '@/assets/images/arrow_grey.svg'
 import icon_arrow_black from '@/assets/images/arrow_black.svg'
+import icon_arrow_white from '@/assets/images/arrow_white.svg'
 import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
 import icon_favorites_black from "@/assets/images/favorites_black.svg";
 import icon_paper_clip from "@/assets/images/paper_clip.svg";
@@ -257,6 +262,7 @@ import icon_hero1 from "@/assets/images/hero1.png";
 import icon_hero2 from "@/assets/images/hero2.png";
 import icon_hero3 from "@/assets/images/hero3.png";
 import icon_hero4 from "@/assets/images/hero4.png";
+import about_text_logo from "@/assets/images/about_text_logo.svg";
 
 
 const store = useStore()
@@ -529,12 +535,17 @@ onBeforeUnmount(() => {
       width: 100%;
       height: calc(100% - 108px);
       color: $white-100;
-      .hero-title {
+      .hero-text {
         margin: 0;
-        padding: 16px 10px;
+        padding: 16px 10px 8px;
+        border-bottom: 1px solid $white-100;
         font-size: 32px;
         line-height: 90%;
         letter-spacing: -1.28px;
+      }
+      .hero-title {
+        width: 100%;
+        mix-blend-mode: exclusion;
       }
       .hero-controls {
         display: flex;
@@ -544,6 +555,7 @@ onBeforeUnmount(() => {
         bottom: 0;
         width: 100%;
         height: 150px;
+        border-top: 1px solid $white-100;
         .slide-div {
           display: flex;
           flex-direction: column;
@@ -587,15 +599,27 @@ onBeforeUnmount(() => {
           }
         }
         .btn-catalog {
-          width: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          width: calc(50% - 1px);
           height: 100%;
+          gap: 8px;
           border: none;
+          border-left: 1px solid $white-100;
           background: $black-25;
           backdrop-filter: blur(8px);
+          color: $white-100;
           font-size: 16px;
           line-height: 100%;
           letter-spacing: -0.64px;
           cursor: pointer;
+          img {
+            width: 24px;
+            height: 24px;
+            object-fit: cover;
+          }
         }
       }
     }
