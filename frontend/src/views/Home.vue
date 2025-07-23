@@ -131,7 +131,7 @@
             <div class="file-div">
               <div class="file-div-button">
                 <img :src="icon_paper_clip" alt="paper clip" />
-                <span>Приложи файл</span>
+                <span class="file-text">{{ uploadedFileName || 'Приложи файл' }}</span>
               </div>
               <span class="file-size">макс. 10 MB</span>
             </div>
@@ -252,6 +252,7 @@ const openedFaq = ref(null);
 const idx = ref(0)
 const carousel = ref(null)
 const carouselHeight = ref(0)
+const uploadedFileName = ref('')
 
 const offsetPercent = computed(() =>
   ((store.reviews.length - 1) / 2 - idx.value) * (100 / store.reviews.length)
@@ -386,7 +387,13 @@ function toggleFav(p) {
 const request = ref({ name:'', email:'', sku:'', file:null, agree:false })
 
 function onFileChange(e) {
-  request.value.file = e.target.files[0]
+  const file = e.target.files[0];
+  if (file) {
+    request.value.file = file
+    uploadedFileName.value = file.name;
+  } else {
+    uploadedFileName.value = '';
+  }
 }
 
 function onSubmitRequest() {
@@ -954,7 +961,7 @@ watch(idx, updateCarouselHeight)
           line-height: 100%;
           letter-spacing: -0.6px;
           &::placeholder {
-            color: rgba(255, 255, 255, 0.6);
+            color: $white-40;
           }
         }
         .file-upload {
@@ -966,33 +973,35 @@ watch(idx, updateCarouselHeight)
           border-radius: 4px;
           background-color: transparent;
           cursor: pointer;
-          color: $white-60;
-          font-family: Bounded;
-          font-size: 18px;
-          font-weight: 250;
-          line-height: 100%;
-          letter-spacing: -0.9px;
           .file-div {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
+            width: 100%;
             .file-div-button {
               display: flex;
               align-items: center;
-              cursor: pointer;
+              gap: 8px;
               img {
                 width: 24px;
                 height: 24px;
                 object-fit: cover;
               }
               .file-text {
-                font-size: 12px;
+                width: 75%;
+                color: $white-60;
+                font-family: Bounded;
+                font-size: 18px;
+                font-weight: 250;
                 line-height: 100%;
-                letter-spacing: -0.48px;
+                letter-spacing: -0.9px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
               }
             }
             .file-size {
+              color: $white-40;
               font-size: 12px;
               line-height: 100%;
               letter-spacing: -0.48px;
@@ -1014,7 +1023,7 @@ watch(idx, updateCarouselHeight)
             margin: 0;
             width: 20px;
             height: 20px;
-            border: 1px solid $white-60;
+            border: 1px solid $white-40;
             background-color: transparent;
             border-radius: 2px;
             cursor: pointer;
@@ -1023,8 +1032,8 @@ watch(idx, updateCarouselHeight)
           input[type="checkbox"]:checked::after {
             content: "";
             position: absolute;
-            top: 2px;
-            left: 4px;
+            top: 0;
+            left: 5px;
             width: 6px;
             height: 10px;
             border: solid $white-100;
