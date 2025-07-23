@@ -201,3 +201,46 @@ def list_reviews() -> Tuple[Response, int]:
             })
 
     return jsonify({"reviews": data}), 200
+
+
+@general_api.route("/create_request", methods=["POST"])
+@handle_errors
+def create_request() -> Tuple[Response, int]:
+    """
+    POST /api/general/create_request
+    Form-data: name*, email, sku, file?
+    """
+    ip = request.remote_addr or "anon"
+    key = f"rate:create_request:{ip}"
+    if redis_client.get(key):
+        return jsonify({"error": "Подождите 10 секунд перед новым запросом"}), 429
+    # ставим TTL 10 сек
+    redis_client.set(key, "1", ex=10)
+
+    name  = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip()
+    sku   = request.form.get("sku", "").strip()
+
+    if not name:
+        return jsonify({"error": "Поле «Имя» обязательно"}), 400
+
+    file = request.files.get("file")
+    # проверка размера: Werkzeug FileStorage.size нет, читаем content_length
+    if file and request.content_length and request.content_length > 10 * 1024 * 1024:
+        return jsonify({"error": "Файл не должен превышать 10 МБ"}), 400
+
+    with session_scope() as session:
+        req = RequestItem(
+            name=name,
+            email=email or None,
+            sku=sku or None,
+            has_file=bool(file)
+        )
+        session.add(req)
+        session.flush()
+
+        if file:
+            upload_request_file(req.id, file)
+
+    logger.info("create_request: id=%d name=%s", req.id, name)
+    return jsonify({"status": "ok"}), 201

@@ -9,6 +9,7 @@ export const API = {
     getUserProfile:     '/api/general/get_user_profile',     // GET    - получить профиль
     getParameters:      '/api/general/get_parameters',       // GET    - получить публичные настройки
     listReviews:        '/api/general/list_reviews',         // GET    - получить список отзывов
+    createRequest:      '/api/general/create_request',       // POST   - отправить заявку на поиск товара
   },
   product: {
     listProducts:       '/api/product/list_products',        // GET    - список товаров (фильтр по категории)
@@ -33,6 +34,8 @@ export const API = {
     deleteSetting:      '/api/admin/delete_setting',         // DELETE - удалить параметр настроек
     createReview:       '/api/admin/create_review',          // POST   - загрузить новый отзыв
     deleteReview:       '/api/admin/delete_review',          // DELETE - удалить отзыв
+    listRequests:       '/api/admin/list_requests',          // GET    - получить список заявок на поиск товара
+    deleteRequest:      '/api/admin/delete_request',         // DELETE - удалить заявку на поиск товара
     listUsers:          '/api/admin/list_users',             // GET    - получить список пользователей
   }
 }
@@ -104,6 +107,8 @@ export const useStore = defineStore('main', () => {
 
   const visitsData          = ref({ date: '', hours: [] })
   const visitsLoading       = ref(false)
+
+  const requests            = ref([])
 
   // === ProductPage ===
   const detailData          = ref(null)
@@ -789,6 +794,21 @@ export const useStore = defineStore('main', () => {
     }
   }
 
+  async function fetchRequests() {
+    const { data } = await api.get(API.admin.listRequests)
+    requests.value = data.requests
+  }
+
+  async function createRequest(formData) {
+    // formData — instance of FormData с полями name, email, sku, agree, file?
+    await api.post(API.general.createRequest, formData)
+  }
+
+  async function deleteRequest(id) {
+    await api.delete(`${API.admin.deleteRequest}/${id}`)
+    await fetchRequests()
+  }
+
   // -------------------------------------------------
   // Return state & actions
   // -------------------------------------------------
@@ -805,7 +825,7 @@ export const useStore = defineStore('main', () => {
     sheetUrls, sheetSaveLoading, sheetImportLoading,
     sheetResult, previewSheetResult, previewSheetLoading,
     zipResult, zipLoading, previewZipResult, previewZipLoading,
-    logs, logsLoading, totalLogs,
+    logs, logsLoading, totalLogs, requests,
     visitsData, visitsLoading,
     detailData, detailLoading, variants,
     profile, profileLoading, profileError,
@@ -846,6 +866,7 @@ export const useStore = defineStore('main', () => {
 
     // admin reviews
     fetchReviews, createReview, deleteReview,
+    fetchRequests, createRequest, deleteRequest,
 
     // admin sheets & logs & visits & zip
     loadSheetUrls, saveSheetUrl, importSheet,
