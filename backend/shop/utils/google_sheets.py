@@ -2,6 +2,8 @@ import re
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional, Any, Set
 from zoneinfo import ZoneInfo
+from psycopg2.errors import StringDataRightTruncation
+from sqlalchemy.exc import DataError
 from .db_utils import session_scope
 from .parsers import parse_int, parse_float, normalize_str
 from .product_serializer import model_by_category
@@ -147,185 +149,204 @@ def apply_update(obj, data: Dict[str, str], warn_skus: List[str], context: str) 
 
 def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, Any]]:
     """
-    Превью-валидация CSV-строк для категории category:
-      - формат variant_sku, gender (только если не пустое), category
-      - обязательные поля на непустоту
-      - int/float поля
-      - согласованность count_images для одинаковых color_sku
-      - длины строковых полей не превышают max_length из модели
-      - отсутствие дубликатов variant_sku внутри пакета
+    Превью-валидация CSV-строк:
+      • базовая валидация SKU, gender, category и обязательных полей
+      • нормализация строк через normalize_str
+      • проверка int/float
+      • проверка реальных ограничений длины из модели (включая Text vs String(N))
+      • проверка производного color_sku
+      • дубли variant_sku внутри файла
+      • согласованность count_images
     """
     logger.debug("preview_rows START category=%s rows=%d", category, len(rows))
     Model = model_by_category(category)
     if Model is None:
         raise ValueError(f"Unknown category {category}")
 
-    # 0) Вычисляем ограничения по длине из SQLAlchemy-модели
-    #    (String(N) → max_length=N, Text → None (неограниченно))
-    FIELD_MAX_LENGTHS: Dict[str, Optional[int]] = {}
-    for col in Model.__table__.columns:
-        if hasattr(col.type, "length") and col.type.length:
-            FIELD_MAX_LENGTHS[col.name] = col.type.length
-        else:
-            FIELD_MAX_LENGTHS[col.name] = None
-
-    # 1) Собираем по строкам ошибки
+    # 0) собираем реальные ограничения по длине из модели
+    FIELD_MAX: Dict[str, Optional[int]] = {col.name: getattr(col.type, "length", None) for col in Model.__table__.columns}
     per_row_errors: Dict[str, List[str]] = {}
-    seen_variants: Set[str] = set()
+    seen: Set[str] = set()
 
-    for idx, row in enumerate(rows, start=1):
-        variant = row.get("variant_sku", "").strip()
-        entry_errors: List[str] = []
+    for idx, raw in enumerate(rows, start=1):
+        sku_variant = raw.get("variant_sku", "").strip()
+        errs: List[str] = []
 
-        # 1.0) Дубликаты variant_sku в пределах текущего импорта
-        if variant in seen_variants:
-            entry_errors.append(f"Дублирование variant_sku='{variant}' в файле (строка {idx})")
-        else:
-            seen_variants.add(variant)
-
-        # 1.1) Формат SKU
-        if not SKU_PATTERN.match(variant):
-            entry_errors.append("Неправильный формат variant_sku")
-
-        # 1.2) Пол — только если не пустое
-        gender = row.get("gender", "").strip()
-        if gender and gender not in VALID_GENDERS:
-            entry_errors.append(f"Недопустимое значение gender='{gender}'")
-
-        # 1.3) Категория
-        cat_val = row.get("category", "").strip()
-        if cat_val not in VALID_CATS:
-            entry_errors.append(f"Недопустимая категория='{cat_val}'")
-
-        # 1.4) Обязательные поля не пусты
-        data = {k: v.strip() for k, v in row.items() if k != "variant_sku"}
-        missing = [fld for fld, val in data.items() if not val and fld not in OPTIONAL_EMPTY]
+        # -- БАЗОВАЯ ВАЛИДАЦИЯ + очистка полей ------------------
+        # SKU
+        if not SKU_PATTERN.match(sku_variant):
+            errs.append("Неправильный формат variant_sku")
+        # gender
+        gen = raw.get("gender", "").strip()
+        if gen and gen not in VALID_GENDERS:
+            errs.append(f"Недопустимый gender='{gen}'")
+        # category
+        cat = raw.get("category", "").strip()
+        if cat not in VALID_CATS:
+            errs.append(f"Недопустимый category='{cat}'")
+        # обязательные поля
+        data_stripped = {k: v.strip() for k, v in raw.items() if k != "variant_sku"}
+        missing = [f for f, v in data_stripped.items() if not v and f not in OPTIONAL_EMPTY]
         if missing:
-            entry_errors.append(f"Пустые обязательные поля: {', '.join(missing)}")
-
-        # 1.5) Int-поля
-        if not entry_errors:
-            for fld in INT_FIELDS:
-                raw = row.get(fld, "").strip()
-                if raw:
-                    val = parse_int(raw)
-                    if val is None or val < 0:
-                        entry_errors.append(f"Неверное целое {fld}='{raw}'")
-                        break
-
-        # 1.6) Float-поля
-        if not entry_errors:
-            for fld in FLOAT_FIELDS:
-                raw = row.get(fld, "").strip()
-                if raw:
-                    val = parse_float(raw)
-                    if val is None or val < 0:
-                        entry_errors.append(f"Неверное число {fld}='{raw}'")
-                        break
-
-        # 1.7) Проверка длин строковых полей
-        for fld, max_len in FIELD_MAX_LENGTHS.items():
-            if max_len is None:
-                continue  # TEXT или другой неограниченный тип
-            raw = row.get(fld, "")
-            if raw is None:
-                continue
-            length = len(raw)
-            if length > max_len:
-                entry_errors.append(f"Поле '{fld}' слишком длинное ({length} > {max_len})")
-
-        if entry_errors:
-            per_row_errors.setdefault(variant or f"<строка {idx}>", []).extend(entry_errors)
-
-    # 2) Проверка согласованности count_images по color_sku, где color_sku = f"{variant_sku}_{world_sku}"
-    count_map: Dict[str, Set[str]] = {}
-    for row in rows:
-        sku   = row.get("variant_sku", "").strip()
-        world = row.get("world_sku",   "").strip()
-        if not sku or not world:
+            errs.append(f"Пустые обязательные поля: {', '.join(missing)}")
+        # stop if базовая провалилась
+        if errs:
+            per_row_errors.setdefault(sku_variant or f"<строка{idx}>", []).extend(errs)
             continue
-        cs = f"{sku}_{world}"
-        ci = row.get("count_images", "").strip() or "<пусто>"
-        count_map.setdefault(cs, set()).add(ci)
 
-    for cs, vals in count_map.items():
+        # -- НОРМАЛИЗАЦИЯ + проверка чисел ---------------------
+        clean: Dict[str, Any] = {}
+        for f, s in data_stripped.items():
+            if f in INT_FIELDS:
+                ival = parse_int(s)
+                if ival is None or ival < 0:
+                    errs.append(f"Неверное целое {f}='{s}'")
+                    break
+                clean[f] = ival
+            elif f in FLOAT_FIELDS:
+                fval = parse_float(s)
+                if fval is None or fval < 0:
+                    errs.append(f"Неверное число {f}='{s}'")
+                    break
+                clean[f] = fval
+            else:
+                clean[f] = normalize_str(s)
+        if errs:
+            per_row_errors.setdefault(sku_variant, []).extend(errs)
+            continue
+
+        # -- ПРОВЕРКА ДЛИНЫ ВСЕХ ПОЛЕЙ -------------------------
+        for field, limit in FIELD_MAX.items():
+            if limit is None:
+                continue
+            # берём либо нормализованное, либо из raw
+            orig = raw.get(field, "")
+            val = clean.get(field, normalize_str(orig))
+            if len(val) > limit:
+                errs.append(f"Поле '{field}' слишком длинное ({len(val)} > {limit})")
+
+        # -- ПРОВЕРКА color_sku (производное) ------------------
+        sku_norm   = normalize_str(raw.get("sku", ""))
+        world_norm = normalize_str(raw.get("world_sku", ""))
+        derived_cs = f"{sku_norm}_{world_norm}"
+        max_cs = FIELD_MAX.get("color_sku")
+        if max_cs and len(derived_cs) > max_cs:
+            errs.append(f"Сгенерированный color_sku '{derived_cs}' слишком длинный ({len(derived_cs)} > {max_cs})")
+
+        # -- ДУБЛИ variant_sku В ФАЙЛЕ ------------------------
+        if sku_variant in seen:
+            errs.append(f"Дублирование variant_sku в файле (строка {idx})")
+        seen.add(sku_variant)
+        if errs:
+            per_row_errors.setdefault(sku_variant, []).extend(errs)
+
+    # -- СОГЛАСОВАННОСТЬ count_images ------------------------
+    cm: Dict[str, Set[str]] = {}
+    for raw in rows:
+        v, w = raw.get("variant_sku", "").strip(), raw.get("world_sku", "").strip()
+        if not v or not w: continue
+        key = f"{v}_{w}"
+        ci = raw.get("count_images", "").strip() or "<пусто>"
+        cm.setdefault(key, set()).add(ci)
+
+    for key, vals in cm.items():
         if len(vals) > 1:
-            sorted_vals = sorted(vals)
-            msg = f"Несогласованное значение count_images для color_sku='{cs}': {', '.join(sorted_vals)}"
-            # проставляем всем variant с этим cs
-            for row in rows:
-                sku = row.get("variant_sku", "").strip()
-                world = row.get("world_sku", "").strip()
-                if f"{sku}_{world}" == cs:
-                    per_row_errors.setdefault(sku, []).append(msg)
+            msg = f"Несогласованное count_images для color_sku='{key}': {', '.join(sorted(vals))}"
+            for raw in rows:
+                if f"{raw.get('variant_sku','')}_{raw.get('world_sku','')}" == key:
+                    per_row_errors.setdefault(raw.get("variant_sku"), []).append(msg)
 
-    # 3) Собираем итоговый список ошибок
-    errors: List[Dict[str, Any]] = [
-        {"variant_sku": sku, "messages": msgs}
-        for sku, msgs in per_row_errors.items()
-    ]
-
+    errors = [{"variant_sku": sku, "messages": msgs} for sku, msgs in per_row_errors.items()]
     logger.debug("preview_rows END errors=%d", len(errors))
     return errors
 
 
 def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, int, int, List[str]]:
     """
-    Обрабатывает CSV-строки:
-      - добавляет, обновляет, удаляет записи
-    Возвращает (added, updated, deleted, warns, warn_skus).
+    Облегчённая загрузка:
+      • только проверяем формат variant_sku
+      • чистим все строки и сохраняем (create/update/delete)
+      • ловим DataError(тримминг) как предупреждение, чтобы не упасть
     """
     context = "process_rows"
-    logger.info("%s START category=%s rows=%d", context, category, len(rows))
-
+    logger.info("%s START cat=%s rows=%d", context, category, len(rows))
     Model = model_by_category(category)
     if Model is None:
-        logger.error("%s: unknown category %s", context, category)
         raise ValueError(f"Unknown category {category}")
 
     added = updated = deleted = warns = 0
     warn_skus: List[str] = []
 
     with session_scope() as session:
-        variants      = [r.get("variant_sku", "").strip() for r in rows]
-        existing_objs = session.query(Model).filter(Model.variant_sku.in_(variants)).all()
-        existing_map  = {o.variant_sku: o for o in existing_objs}
+        # получаем существующие объекты
+        variants = [r.get("variant_sku", "").strip() for r in rows]
+        existing = session.query(Model).filter(Model.variant_sku.in_(variants)).all()
+        exist_map = {o.variant_sku: o for o in existing}
 
-        for row in rows:
-            variant = row.get("variant_sku", "").strip()
-            # 0) Удаление: если есть SKU и все остальные поля пустые — удаляем
-            data_for_delete = {k: v.strip() for k, v in row.items() if k != "variant_sku"}
-            if variant and all(not v for v in data_for_delete.values()):
-                obj = existing_map.get(variant)
+        for raw in rows:
+            sku_var = raw.get("variant_sku", "").strip()
+            # 0) удаление если все прочие поля пусты
+            data_no_sku = {k: v.strip() for k, v in raw.items() if k != "variant_sku"}
+            if sku_var and all(not v for v in data_no_sku.values()):
+                obj = exist_map.get(sku_var)
                 if obj:
                     session.delete(obj)
                     deleted += 1
-                    logger.debug("%s: deleted %s", context, variant)
                 continue
 
-            # 1) Валидация
-            variant, data, err = validate_row(row)
-            if err:
+            # 1) минимальная валидация SKU
+            if not SKU_PATTERN.match(sku_var):
                 warns += 1
-                warn_skus.append(variant)
+                warn_skus.append(sku_var)
                 continue
 
-            # 2) Создание или обновление
-            obj = existing_map.get(variant)
-            if obj is None:
-                obj = Model(variant_sku=variant)
-                inc_added, inc_warn = apply_creation(obj, data, warn_skus, context)
-                session.add(obj)
-                added += inc_added
-                warns += inc_warn
-                logger.debug("%s: added %s", context, variant)
-            else:
-                inc_upd, inc_warn = apply_update(obj, data, warn_skus, context)
-                if inc_upd:
-                    session.merge(obj)
-                    updated += inc_upd
-                    logger.debug("%s: updated %s", context, variant)
-                warns += inc_warn
+            missing = [f for f, v in raw.items() if f != "variant_sku" and not v.strip() and f not in OPTIONAL_EMPTY]
+            if missing:
+                warns += 1
+                warn_skus.append(sku_var)
+                logger.warning("%s: missing fields %s for %s", context, missing, sku_var)
+                continue
+
+            # 2) готовим словарь для записи (строки очищены)
+            clean: Dict[str, Any] = {}
+            for f, s in raw.items():
+                if f == "variant_sku": continue
+                val = s.strip()
+                clean[f] = (parse_int(val) if f in INT_FIELDS else
+                            parse_float(val) if f in FLOAT_FIELDS else
+                            normalize_str(val))
+
+            # 3) создание / обновление
+            obj = exist_map.get(sku_var)
+            try:
+                if obj is None:
+                    obj = Model(variant_sku=sku_var)
+                    for f, v in clean.items():
+                        if hasattr(obj, f):
+                            setattr(obj, f, v)
+                    obj.color_sku = f"{obj.sku}_{obj.world_sku}"
+                    session.add(obj)
+                    added += 1
+                else:
+                    for f, v in clean.items():
+                        if hasattr(obj, f):
+                            setattr(obj, f, v)
+                    # пересчёт цветового SKU
+                    obj.color_sku = f"{obj.sku}_{obj.world_sku}"
+                    obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
+                    updated += 1
+                # пытаемся «пробить» вставку, чтобы сразу словить StringDataRightTruncation
+                with session.begin_nested():
+                    session.flush()
+            except (StringDataRightTruncation, DataError) as e:
+                warns += 1
+                warn_skus.append(sku_var)
+                logger.warning("%s: truncation for %s — %s", context, sku_var, e)
+                continue
+            except Exception:
+                # любые другие ошибки — считаем критичными, прерываем
+                logger.exception("%s: unexpected error for %s", context, sku_var)
+                raise
 
     logger.info("%s END added=%d updated=%d deleted=%d warns=%d", context, added, updated, deleted, warns)
     return added, updated, deleted, warns, warn_skus
