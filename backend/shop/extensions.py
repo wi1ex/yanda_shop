@@ -40,7 +40,7 @@ except Exception as e:
 
 @retry(
     reraise=True,
-    wait=wait_exponential(multiplier=1, max=10),
+    wait=wait_exponential(max=10),
     stop=stop_after_attempt(5),
     retry=retry_if_exception_type(ConnectionError),
 )
@@ -78,7 +78,7 @@ BUCKET: str = MINIO_BUCKET
     reraise=True,
     stop=stop_after_attempt(3),
     wait=wait_fixed(2),
-    retry=retry_if_exception_type(Exception),
+    retry=retry_if_exception_type(),
 )
 def ensure_bucket_exists() -> None:
     """

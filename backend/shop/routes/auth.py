@@ -1,6 +1,6 @@
 from datetime import timedelta
 from typing import Dict, Tuple
-from flask import Blueprint, request, jsonify, Response
+from flask import Blueprint, jsonify, Response
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -9,8 +9,7 @@ from flask_jwt_extended import (
     get_jwt,
 )
 from ..core.logging import logger
-from ..models import Users
-from ..utils.route_utils import handle_errors, require_json
+from ..utils.route_utils import handle_errors
 
 auth_bp: Blueprint = Blueprint("auth", __name__, url_prefix="/api/auth")
 
