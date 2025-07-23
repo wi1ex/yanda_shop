@@ -149,21 +149,39 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
     """
     Превью-валидация CSV-строк для категории category:
       - формат variant_sku, gender (только если не пустое), category
-      - обязательные поля на непустоту (одним сообщением)
+      - обязательные поля на непустоту
       - int/float поля
-      - согласованность count_images для одинаковых color_sku (вычисляемых как sku_world)
+      - согласованность count_images для одинаковых color_sku
+      - длины строковых полей не превышают max_length из модели
+      - отсутствие дубликатов variant_sku внутри пакета
     """
     logger.debug("preview_rows START category=%s rows=%d", category, len(rows))
     Model = model_by_category(category)
     if Model is None:
         raise ValueError(f"Unknown category {category}")
 
+    # 0) Вычисляем ограничения по длине из SQLAlchemy-модели
+    #    (String(N) → max_length=N, Text → None (неограниченно))
+    FIELD_MAX_LENGTHS: Dict[str, Optional[int]] = {}
+    for col in Model.__table__.columns:
+        if hasattr(col.type, "length") and col.type.length:
+            FIELD_MAX_LENGTHS[col.name] = col.type.length
+        else:
+            FIELD_MAX_LENGTHS[col.name] = None
+
     # 1) Собираем по строкам ошибки
     per_row_errors: Dict[str, List[str]] = {}
+    seen_variants: Set[str] = set()
 
-    for row in rows:
+    for idx, row in enumerate(rows, start=1):
         variant = row.get("variant_sku", "").strip()
         entry_errors: List[str] = []
+
+        # 1.0) Дубликаты variant_sku в пределах текущего импорта
+        if variant in seen_variants:
+            entry_errors.append(f"Дублирование variant_sku='{variant}' в файле (строка {idx})")
+        else:
+            seen_variants.add(variant)
 
         # 1.1) Формат SKU
         if not SKU_PATTERN.match(variant):
@@ -205,11 +223,21 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
                         entry_errors.append(f"Неверное число {fld}='{raw}'")
                         break
 
-        if entry_errors:
-            per_row_errors.setdefault(variant, []).extend(entry_errors)
+        # 1.7) Проверка длин строковых полей
+        for fld, max_len in FIELD_MAX_LENGTHS.items():
+            if max_len is None:
+                continue  # TEXT или другой неограниченный тип
+            raw = row.get(fld, "")
+            if raw is None:
+                continue
+            length = len(raw)
+            if length > max_len:
+                entry_errors.append(f"Поле '{fld}' слишком длинное ({length} > {max_len})")
 
-    # 2) Проверка согласованности count_images по color_sku,
-    #    где color_sku = f"{variant_sku}_{world_sku}"
+        if entry_errors:
+            per_row_errors.setdefault(variant or f"<строка {idx}>", []).extend(entry_errors)
+
+    # 2) Проверка согласованности count_images по color_sku, где color_sku = f"{variant_sku}_{world_sku}"
     count_map: Dict[str, Set[str]] = {}
     for row in rows:
         sku   = row.get("variant_sku", "").strip()
