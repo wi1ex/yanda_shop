@@ -197,13 +197,19 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
         # -- НОРМАЛИЗАЦИЯ + проверка чисел ---------------------
         clean: Dict[str, Any] = {}
         for f, s in data_stripped.items():
+            # пропускаем пустые в OPTIONAL_EMPTY (они могут быть пустыми)
+            if not s and f in OPTIONAL_EMPTY:
+                clean[f] = None
+                continue
             if f in INT_FIELDS:
+                # для int-полей пустую строку мы уже отловили в missing, так что тут s ≠ ""
                 ival = parse_int(s)
                 if ival is None or ival < 0:
                     errs.append(f"Неверное целое {f}='{s}'")
                     break
                 clean[f] = ival
             elif f in FLOAT_FIELDS:
+                # если строка непустая — парсим, иначе уже пропустили
                 fval = parse_float(s)
                 if fval is None or fval < 0:
                     errs.append(f"Неверное число {f}='{s}'")
