@@ -259,6 +259,11 @@ export const useStore = defineStore('main', () => {
         params: { category, variant_sku: variantSku }
       })
       detailData.value = data
+      const sl = detailData.value.size_label
+      if (/^\d+(\.\d+)?$/.test(sl)) {
+        // Превращаем "43.00" или " 43 " в "43"
+        detailData.value.size_label = parseFloat(sl).toString()
+      }
       await fetchProducts(category)
       variants.value = products.value.filter(p => p.sku === detailData.value.sku)
     } catch (e) {
