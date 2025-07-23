@@ -128,7 +128,7 @@
       <form @submit.prevent="onSubmitRequest">
         <div class="request-div">
           <h2>Не нашел что хотел?</h2>
-          <p style="margin-bottom: 24px;">Загрузите изображение или добавьте артикул товара, и мы выкупим его из официального магазина.</p>
+          <p style="margin-bottom: 24px;">Загрузи изображение или добавь артикул товара, и мы выкупим это из официального магазина.</p>
 
           <input class="input-field" type="text" v-model="request.name" placeholder="Имя *" required/>
           <input class="input-field" type="email" v-model="request.email" placeholder="Почта *" required/>
@@ -540,11 +540,14 @@ onBeforeUnmount(() => {
         padding: 16px 10px 8px;
         border-bottom: 1px solid $white-100;
         font-size: 32px;
+        font-weight: 500;
         line-height: 90%;
         letter-spacing: -1.28px;
       }
       .hero-title {
-        width: 100%;
+        position: absolute;
+        height: 64px;
+        bottom: 50%;
         mix-blend-mode: exclusion;
       }
       .hero-controls {
