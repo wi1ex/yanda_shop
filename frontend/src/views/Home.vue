@@ -12,8 +12,13 @@
                 {{ String(heroIndex + 1).padStart(2, '0') }}/{{ String(heroSlides.length).padStart(2, '0') }}
               </div>
               <div class="arrows">
-                <button type="button" class="arrow-btn" @click="prevHero" aria-label="Назад">←</button>
-                <button type="button" class="arrow-btn" @click="nextHero" aria-label="Вперёд">→</button>
+                <button type="button" class="arrow-btn" @click="prevHero" aria-label="Назад">
+                  <img :src="icon_arrow_red" alt="Arrow"/>
+                </button>
+                <button type="button" class="arrow-btn" @click="nextHero" aria-label="Вперёд"
+                        style="width: 49px; border-left: 1px solid white;">
+                  <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
+                </button>
               </div>
             </div>
             <button type="button" class="btn-catalog" @click="goToCatalog('')">В каталог →</button>
@@ -535,48 +540,62 @@ onBeforeUnmount(() => {
         display: flex;
         position: absolute;
         align-items: center;
+        justify-content: center;
         bottom: 0;
+        width: 100%;
         height: 150px;
         .slide-div {
           display: flex;
           flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          width: 50%;
           .slide-counter {
-            background: #000;
-            padding: 0.5rem 1rem;
-            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 50px;
+            background: $black-100;
+            border-radius: 4px 4px 0 0;
+            border-bottom: 1px solid $white-100;
             font-family: Bounded;
-            border-radius: 4px;
+            font-size: 20px;
+            font-weight: 300;
+            line-height: 90%;
+            letter-spacing: -1px;
           }
           .arrows {
             display: flex;
-            gap: 0.5rem;
+            background: $black-100;
+            border-radius: 0 0 4px 4px;
             .arrow-btn {
-              background: none;
-              border: 2px solid #fff;
-              color: #fff;
-              font-size: 1.5rem;
-              width: 3rem;
-              height: 3rem;
               display: flex;
               align-items: center;
               justify-content: center;
-              border-radius: 50%;
+              border: none;
+              background: none;
+              width: 50px;
+              height: 50px;
               cursor: pointer;
-              transition: background 0.2s;
+              img {
+                width: 24px;
+                height: 24px;
+                object-fit: cover;
+              }
             }
           }
         }
         .btn-catalog {
-          background: #fff;
-          color: #000;
-          padding: 0.75rem 1.5rem;
+          width: 50%;
+          height: 100%;
           border: none;
-          border-radius: 4px;
+          background: $black-25;
+          backdrop-filter: blur(8px);
+          font-size: 16px;
+          line-height: 100%;
+          letter-spacing: -0.64px;
           cursor: pointer;
-          font-size: 1rem;
-          font-family: Bounded;
-          transition: background 0.2s;
-          &:hover { background: #eee; }
         }
       }
     }
