@@ -886,14 +886,20 @@ watch(idx, updateCarouselHeight)
     flex-direction: column;
     position: relative;
     margin-top: 96px;
-    padding: 84px 16px;
-    background-color: $grey-30;
+    padding: 203px 10px 40px;
+    background-image: url('@/assets/images/request-form.png');
+    background-size: 125% auto;
+    background-position: top;
+    background-repeat: no-repeat;
     z-index: 20;
     form {
       display: flex;
       flex-direction: column;
       padding: 24px 10px;
       margin: 0 auto;
+      border-radius: 4px;
+      background-color: $black-60;
+      backdrop-filter: blur(12px);
       h2 {
         margin: 0;
         text-align: center;
