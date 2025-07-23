@@ -13,10 +13,10 @@
                 {{ String(heroIndex + 1).padStart(2, '0') }}/{{ String(heroSlides.length).padStart(2, '0') }}
               </div>
               <div class="arrows">
-                <button type="button" class="arrow-btn" @click="prevHero" aria-label="Назад">
+                <button type="button" class="arrow-btn" @click="onPrevHero" aria-label="Назад">
                   <img :src="icon_arrow_red" alt="Arrow"/>
                 </button>
-                <button type="button" class="arrow-btn" @click="nextHero" aria-label="Вперёд"
+                <button type="button" class="arrow-btn" @click="onNextHero" aria-label="Вперёд"
                         style="width: 49px; border-left: 1px solid white;">
                   <img :src="icon_arrow_red" alt="Arrow" style="transform: rotate(180deg)"/>
                 </button>
@@ -268,6 +268,8 @@ import about_text_logo from "@/assets/images/about_text_logo.svg";
 const store = useStore()
 const router = useRouter()
 
+let autoInterval = null
+let resumeTimeout = null
 const heroIndex = ref(0)
 const openedFaq = ref(null);
 const idx = ref(0)
@@ -309,12 +311,35 @@ const heroSlides = [
 
 const runningText = 'Puma //_Future_Vintage_Capsule     • sale'
 
-function prevHero() {
-  heroIndex.value = (heroIndex.value - 1 + heroSlides.length) % heroSlides.length
+function stopAuto() {
+  if (autoInterval) {
+    clearInterval(autoInterval)
+    autoInterval = null
+  }
 }
 
-function nextHero() {
+function startAuto() {
+  stopAuto()
+  autoInterval = setInterval(() => {
+    heroIndex.value = (heroIndex.value + 1) % heroSlides.length
+  }, 5000)
+}
+
+function pauseAuto() {
+  stopAuto()
+  if (resumeTimeout) clearTimeout(resumeTimeout)
+  resumeTimeout = setTimeout(startAuto, 15000)
+}
+
+// === ручные навигации ===
+function onPrevHero() {
+  heroIndex.value = (heroIndex.value - 1 + heroSlides.length) % heroSlides.length
+  pauseAuto()
+}
+
+function onNextHero() {
   heroIndex.value = (heroIndex.value + 1) % heroSlides.length
+  pauseAuto()
 }
 
 // How it works
@@ -483,16 +508,13 @@ function formatPrice(val) {
 
 watch(idx, updateCarouselHeight)
 
-let intervalId = null
 onMounted(() => {
-  // каждую 5-ю секунду переключаем слайд
-  intervalId = setInterval(() => {
-    nextHero()
-  }, 5_000)
+  startAuto()
 })
 
 onBeforeUnmount(() => {
-  clearInterval(intervalId)
+  stopAuto()
+  if (resumeTimeout) clearTimeout(resumeTimeout)
 })
 
 </script>
@@ -527,7 +549,7 @@ onBeforeUnmount(() => {
       height: 100%;
       background-size: cover;
       background-position: center;
-      transition: background-image 0.5s ease-in-out;
+      transition: all 0.5s ease-in-out;
     }
     .hero-content {
       position: absolute;
