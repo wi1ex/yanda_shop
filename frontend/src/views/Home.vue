@@ -243,6 +243,15 @@ import icon_arrow_black from '@/assets/images/arrow_black.svg'
 import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
 import icon_favorites_black from "@/assets/images/favorites_black.svg";
 import icon_paper_clip from "@/assets/images/paper_clip.svg";
+import icon_hero1_text from "@/assets/images/hero1_text.svg";
+import icon_hero2_text from "@/assets/images/hero2_text.svg";
+import icon_hero3_text from "@/assets/images/hero3_text.svg";
+import icon_hero4_text from "@/assets/images/hero4_text.svg";
+import icon_hero1 from "@/assets/images/hero1.png";
+import icon_hero2 from "@/assets/images/hero2.png";
+import icon_hero3 from "@/assets/images/hero3.png";
+import icon_hero4 from "@/assets/images/hero4.png";
+
 
 const store = useStore()
 const router = useRouter()
@@ -280,22 +289,10 @@ function updateCarouselHeight() {
 
 // Hero
 const heroSlides = [
-  {
-    image: require('@/assets/images/hero1.png'),
-    title: require('@/assets/images/hero1_text.svg'),
-  },
-  {
-    image: require('@/assets/images/hero2.png'),
-    title: require('@/assets/images/hero2_text.svg'),
-  },
-  {
-    image: require('@/assets/images/hero3.png'),
-    title: require('@/assets/images/hero3_text.svg'),
-  },
-  {
-    image: require('@/assets/images/hero4.png'),
-    title: require('@/assets/images/hero4_text.svg'),
-  }
+  { image: icon_hero1, title: icon_hero1_text },
+  { image: icon_hero2, title: icon_hero2_text },
+  { image: icon_hero3, title: icon_hero3_text },
+  { image: icon_hero4, title: icon_hero4_text }
 ]
 
 const runningText = 'Puma //_Future_Vintage_Capsule     • sale'
