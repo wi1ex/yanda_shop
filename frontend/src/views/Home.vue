@@ -128,8 +128,13 @@
 
           <label class="file-upload">
             <input type="file" @change="onFileChange" hidden />
-            <span>📎 Приложи файл</span>
-            <span class="file-size">макс. 10 MB</span>
+            <div class="file-div">
+              <button>
+                <img :src="icon_paper_clip" alt="paper clip" />
+                <span>Приложи файл</span>
+              </button>
+              <span class="file-size">макс. 10 MB</span>
+            </div>
           </label>
 
           <label class="checkbox-label">
@@ -963,15 +968,30 @@ watch(idx, updateCarouselHeight)
           font-weight: 250;
           line-height: 100%;
           letter-spacing: -0.9px;
-          span:first-child {
+          .file-div {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 8px;
-          }
-          .file-size {
-            font-size: 12px;
-            line-height: 100%;
-            letter-spacing: -0.48px;
+            button {
+              display: flex;
+              align-items: center;
+              img {
+                width: 24px;
+                height: 24px;
+                object-fit: cover;
+              }
+              .file-text {
+                font-size: 12px;
+                line-height: 100%;
+                letter-spacing: -0.48px;
+              }
+            }
+            .file-size {
+              font-size: 12px;
+              line-height: 100%;
+              letter-spacing: -0.48px;
+            }
           }
         }
         .checkbox-label {
@@ -985,14 +1005,28 @@ watch(idx, updateCarouselHeight)
           letter-spacing: -0.64px;
           cursor: pointer;
           input[type="checkbox"] {
+            appearance: none;
             margin: 0;
             width: 20px;
             height: 20px;
-            accent-color: $white-100;
+            border: 1px solid $white-60;
+            background-color: transparent;
             border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+          }
+          input[type="checkbox"]:checked::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            width: 6px;
+            height: 10px;
+            border: solid $white-100;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
           }
           u {
-            cursor: pointer;
             text-decoration: underline;
           }
         }
