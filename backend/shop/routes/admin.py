@@ -9,7 +9,7 @@ from flask import Blueprint, jsonify, request, Response
 from sqlalchemy import func
 from ..core.logging import logger
 from ..extensions import redis_client
-from ..models import ChangeLog, AdminSetting, Users, Review
+from ..models import ChangeLog, AdminSetting, Users, Review, RequestItem
 from ..utils.db_utils import session_scope
 from ..utils.google_sheets import get_sheet_url, process_rows, preview_rows
 from ..utils.jwt_utils import admin_required
