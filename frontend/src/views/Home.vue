@@ -116,14 +116,16 @@
     <!-- REQUEST FORM -->
     <section class="request-form">
       <form @submit.prevent="onSubmitRequest">
-        <h2>Не нашел что хотел?</h2>
-        <p>Загрузите изображение или добавьте артикул товара, и мы выкупим его из официального магазина.</p>
-        <input type="text" v-model="request.name" placeholder="Имя" required/>
-        <input type="email" v-model="request.email" placeholder="Почта" required/>
-        <input type="text" v-model="request.sku" placeholder="Артикул товара"/>
-        <p>или</p>
-        <input type="file" @change="onFileChange"/>
-        <label><input type="checkbox" v-model="request.agree"/>Я согласен на обработку персональных данных</label>
+        <div class="request-div">
+          <h2>Не нашел что хотел?</h2>
+          <p>Загрузите изображение или добавьте артикул товара, и мы выкупим его из официального магазина.</p>
+          <input type="text" v-model="request.name" placeholder="Имя" required/>
+          <input type="email" v-model="request.email" placeholder="Почта" required/>
+          <input type="text" v-model="request.sku" placeholder="Артикул товара"/>
+          <p>или</p>
+          <input type="file" @change="onFileChange"/>
+          <label><input type="checkbox" v-model="request.agree"/>Я согласен на обработку персональных данных</label>
+        </div>
         <button type="submit" class="btn-submit">Отправить запрос</button>
       </form>
     </section>
@@ -895,24 +897,31 @@ watch(idx, updateCarouselHeight)
     form {
       display: flex;
       flex-direction: column;
-      padding: 24px 10px;
-      margin: 0 auto;
-      border-radius: 4px;
-      background-color: $black-60;
-      backdrop-filter: blur(12px);
-      h2 {
-        margin: 0;
-        text-align: center;
-        font-family: Bounded;
-        font-weight: 500;
-        font-size: 24px;
-        line-height: 90%;
-        letter-spacing: -0.72px;
-      }
-      p {
-        font-size: 15px;
-        line-height: 110%;
-        letter-spacing: -0.6px;
+      .request-div {
+        display: flex;
+        flex-direction: column;
+        padding: 24px 10px;
+        border-radius: 4px;
+        background-color: $black-60;
+        backdrop-filter: blur(10px);
+        h2 {
+          margin: 0;
+          text-align: center;
+          color: $grey-95;
+          font-family: Bounded;
+          font-weight: 500;
+          font-size: 24px;
+          line-height: 90%;
+          letter-spacing: -0.72px;
+        }
+        p {
+          margin: 0;
+          text-align: center;
+          color: $grey-90;
+          font-size: 15px;
+          line-height: 110%;
+          letter-spacing: -0.6px;
+        }
       }
       .btn-submit {
         display: flex;
