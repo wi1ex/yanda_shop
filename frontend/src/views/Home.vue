@@ -118,7 +118,7 @@
       <form @submit.prevent="onSubmitRequest">
         <div class="request-div">
           <h2>Не нашел что хотел?</h2>
-          <p>Загрузите изображение или добавьте артикул товара, и мы выкупим его из официального магазина.</p>
+          <p style="margin-bottom: 24px;">Загрузите изображение или добавьте артикул товара, и мы выкупим его из официального магазина.</p>
 
           <input class="input-field" type="text" v-model="request.name" placeholder="Имя *" required/>
           <input class="input-field" type="email" v-model="request.email" placeholder="Почта"/>
@@ -912,12 +912,11 @@ watch(idx, updateCarouselHeight)
         display: flex;
         flex-direction: column;
         padding: 24px 10px;
-        gap: 16px;
         border-radius: 4px;
         background-color: $black-60;
         backdrop-filter: blur(10px);
         h2 {
-          margin: 0;
+          margin: 0 0 16px;
           text-align: center;
           color: $grey-95;
           font-family: Bounded;
@@ -927,7 +926,7 @@ watch(idx, updateCarouselHeight)
           letter-spacing: -0.72px;
         }
         p {
-          margin: 0;
+          margin: 0 0 16px;
           text-align: center;
           color: $grey-90;
           font-size: 15px;
@@ -935,13 +934,16 @@ watch(idx, updateCarouselHeight)
           letter-spacing: -0.6px;
         }
         .input-field {
-          padding: 16px;
+          margin-bottom: 15px;
+          padding: 21px 10px 8px;
           border: none;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.4);
           background-color: transparent;
-          color: $white-100;
-          font-size: 16px;
           outline: none;
+          border-bottom: 1px solid $white-60;
+          color: $white-100;
+          font-size: 15px;
+          line-height: 100%;
+          letter-spacing: -0.6px;
           &::placeholder {
             color: rgba(255, 255, 255, 0.6);
           }
@@ -950,32 +952,42 @@ watch(idx, updateCarouselHeight)
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.4);
+          padding: 12px 10px;
+          border: 1px solid $white-40;
           border-radius: 4px;
           background-color: transparent;
-          color: $white-100;
-          font-size: 16px;
           cursor: pointer;
+          color: $white-60;
+          font-family: Bounded;
+          font-size: 18px;
+          font-weight: 250;
+          line-height: 100%;
+          letter-spacing: -0.9px;
           span:first-child {
             display: flex;
             align-items: center;
             gap: 8px;
           }
           .file-size {
-            font-size: 14px;
-            opacity: 0.6;
+            font-size: 12px;
+            line-height: 100%;
+            letter-spacing: -0.48px;
           }
         }
         .checkbox-label {
           display: flex;
           align-items: center;
-          gap: 10px;
-          font-size: 14px;
-          color: rgba(255, 255, 255, 0.8);
+          margin-top: 24px;
+          gap: 5px;
+          color: $white-60;
+          font-size: 16px;
+          line-height: 100%;
+          letter-spacing: -0.64px;
+          cursor: pointer;
           input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
+            margin: 0;
+            width: 20px;
+            height: 20px;
             accent-color: $white-100;
             border-radius: 2px;
           }

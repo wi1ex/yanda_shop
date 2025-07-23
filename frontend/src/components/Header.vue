@@ -17,7 +17,8 @@
 
     <!-- Иконки действий -->
     <div class="actions">
-      <div @click="goToPage('Profile')" class="icon-btn" title="Профиль">
+<!--      <div @click="goToPage('Profile')" class="icon-btn" title="Профиль">-->
+      <div class="icon-btn" title="Профиль">
         <img :src="store.user.photo_url || icon_default_avatar" alt="Профиль" class="avatar" />
       </div>
       <div @click="goToPage('Favorites')" class="icon-btn" title="Избранное">
