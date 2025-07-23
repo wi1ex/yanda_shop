@@ -254,7 +254,6 @@ const store = useStore()
 
 .section {
   width: 100%;
-  max-width: 1200px;
   padding: 80px 32px;
   box-sizing: border-box;
 }

@@ -412,7 +412,6 @@ function toggleFaq(id) {
     }
     &-subtitle {
       text-align: left;
-      max-width: 600px;
       margin: 0 auto 32px;
       font-size: 16px;
       line-height: 110%;
@@ -422,7 +421,6 @@ function toggleFaq(id) {
       display: flex;
       flex-direction: column;
       margin: 0 0 64px;
-      max-width: 800px;
       gap: 4px;
       border-radius: 4px;
     }
