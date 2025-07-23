@@ -320,12 +320,12 @@ const store = useStore()
   display: inline-block;
   white-space: nowrap;
   padding-left: 100%;
-  animation: marquee 15s linear infinite;
   color: $grey-20;
   font-size: 16px;
   line-height: 110%;
   letter-spacing: -0.6px;
   word-spacing: 50px;
+  animation: marquee 15s linear infinite;
 }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 

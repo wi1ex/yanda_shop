@@ -4,16 +4,17 @@
     <!-- HERO -->
     <section class="hero">
       <div class="hero-slide" :style="{ backgroundImage: `url(${ heroSlides[heroIndex].image })` }">
-        <div class="overlay"></div>
         <div class="hero-content">
           <h1 class="hero-title">Оригинальные бренды<br>и ничего лишнего</h1>
           <div class="hero-controls">
-            <div class="slide-counter">
-              {{ String(heroIndex + 1).padStart(2, '0') }}/{{ String(heroSlides.length).padStart(2, '0') }}
-            </div>
-            <div class="arrows">
-              <button type="button" class="arrow-btn" @click="prevHero" aria-label="Назад">←</button>
-              <button type="button" class="arrow-btn" @click="nextHero" aria-label="Вперёд">→</button>
+            <div class="slide-div">
+              <div class="slide-counter">
+                {{ String(heroIndex + 1).padStart(2, '0') }}/{{ String(heroSlides.length).padStart(2, '0') }}
+              </div>
+              <div class="arrows">
+                <button type="button" class="arrow-btn" @click="prevHero" aria-label="Назад">←</button>
+                <button type="button" class="arrow-btn" @click="nextHero" aria-label="Вперёд">→</button>
+              </div>
             </div>
             <button type="button" class="btn-catalog" @click="goToCatalog('')">В каталог →</button>
           </div>
@@ -506,8 +507,9 @@ onBeforeUnmount(() => {
   /* HERO */
   .hero {
     position: relative;
-    height: 80vh;
+    height: 739px;
     overflow: hidden;
+    z-index: 20;
     .hero-slide {
       position: relative;
       width: 100%;
@@ -515,59 +517,53 @@ onBeforeUnmount(() => {
       background-size: cover;
       background-position: center;
       transition: background-image 0.5s ease-in-out;
-      .overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(0,0,0,0.4); // полупрозрачный чёрный
-      }
     }
     .hero-content {
       position: absolute;
-      top: 25%;
-      left: 10%;
-      z-index: 2;
-      color: #fff;
-      max-width: 400px;
+      top: 66px;
+      width: 100%;
+      height: calc(100% - 108px);
+      color: $white-100;
       .hero-title {
-        font-family: Bounded;
-        font-weight: 500;
-        font-size: 3rem;
-        line-height: 1;
-        margin: 0 0 1rem;
-        .hero-subtitle {
-          font-weight: 300;
-          display: block;
-        }
+        margin: 0;
+        padding: 16px 10px;
+        font-size: 32px;
+        line-height: 90%;
+        letter-spacing: -1.28px;
       }
       .hero-controls {
         display: flex;
+        position: absolute;
         align-items: center;
-        gap: 1rem;
-        margin-top: 2rem;
-        .slide-counter {
-          background: #000;
-          padding: 0.5rem 1rem;
-          font-size: 1.25rem;
-          font-family: Bounded;
-          border-radius: 4px;
-        }
-        .arrows {
+        bottom: 0;
+        height: 150px;
+        .slide-div {
           display: flex;
-          gap: 0.5rem;
-          .arrow-btn {
-            background: none;
-            border: 2px solid #fff;
-            color: #fff;
-            font-size: 1.5rem;
-            width: 3rem;
-            height: 3rem;
+          flex-direction: column;
+          .slide-counter {
+            background: #000;
+            padding: 0.5rem 1rem;
+            font-size: 1.25rem;
+            font-family: Bounded;
+            border-radius: 4px;
+          }
+          .arrows {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: background 0.2s;
-            &:hover { background: rgba(255,255,255,0.2); }
+            gap: 0.5rem;
+            .arrow-btn {
+              background: none;
+              border: 2px solid #fff;
+              color: #fff;
+              font-size: 1.5rem;
+              width: 3rem;
+              height: 3rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 50%;
+              cursor: pointer;
+              transition: background 0.2s;
+            }
           }
         }
         .btn-catalog {
@@ -588,17 +584,22 @@ onBeforeUnmount(() => {
       position: absolute;
       bottom: 0;
       width: 100%;
-      background: #000;
+      background: $black-100;
       overflow: hidden;
       .marquee-content {
         display: inline-block;
-        padding: 1rem 0;
-        color: #fff;
-        animation: marquee 12s linear infinite;
+        padding: 12px 0;
+        color: $grey-90;
+        font-family: Bounded;
+        font-size: 18px;
+        font-weight: 250;
+        line-height: 100%;
+        letter-spacing: -0.9px;
+        animation: marquee 15s linear infinite;
       }
     }
     @keyframes marquee {
-      from { transform: translateX(0); }
+      from { transform: translateX(150%); }
       to   { transform: translateX(-100%); }
     }
   }
