@@ -129,10 +129,10 @@
           <label class="file-upload">
             <input type="file" @change="onFileChange" hidden />
             <div class="file-div">
-              <button>
+              <div class="file-div-button">
                 <img :src="icon_paper_clip" alt="paper clip" />
                 <span>Приложи файл</span>
-              </button>
+              </div>
               <span class="file-size">макс. 10 MB</span>
             </div>
           </label>
@@ -242,6 +242,7 @@ import icon_arrow_grey from '@/assets/images/arrow_grey.svg'
 import icon_arrow_black from '@/assets/images/arrow_black.svg'
 import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
 import icon_favorites_black from "@/assets/images/favorites_black.svg";
+import icon_paper_clip from "@/assets/images/paper_clip.svg";
 
 const store = useStore()
 const router = useRouter()
@@ -488,6 +489,7 @@ watch(idx, updateCarouselHeight)
           background-color: $black-100;
           color: $white-100;
           border-radius: 4px;
+          cursor: pointer;
         }
       }
     }
@@ -690,6 +692,7 @@ watch(idx, updateCarouselHeight)
       font-size: 16px;
       line-height: 100%;
       letter-spacing: -0.64px;
+      cursor: pointer;
     }
   }
 
@@ -894,6 +897,7 @@ watch(idx, updateCarouselHeight)
       font-size: 16px;
       line-height: 100%;
       letter-spacing: -0.64px;
+      cursor: pointer;
       z-index: 20;
     }
   }
@@ -973,9 +977,10 @@ watch(idx, updateCarouselHeight)
             align-items: center;
             justify-content: space-between;
             gap: 8px;
-            button {
+            .file-div-button {
               display: flex;
               align-items: center;
+              cursor: pointer;
               img {
                 width: 24px;
                 height: 24px;
@@ -1045,6 +1050,7 @@ watch(idx, updateCarouselHeight)
         font-size: 16px;
         line-height: 100%;
         letter-spacing: -0.64px;
+        cursor: pointer;
       }
     }
   }
