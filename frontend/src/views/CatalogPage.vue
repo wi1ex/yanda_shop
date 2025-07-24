@@ -98,25 +98,22 @@
 
       <!-- Сетка товаров -->
       <div class="products-grid" :class="{ blurred: productsLoading }">
-        <article v-for="group in paged" :key="group.color_sku" class="product-card">
-          <div @click="goToProductDetail(group)">
-            <img :src="group.minPriceVariant.image" alt="" class="product-img"/>
-            <div class="info">
-              <p class="brand">{{ group.minPriceVariant.brand }}</p>
-              <p class="name">{{ group.minPriceVariant.name }}</p>
-              <p class="price">от {{ group.minPrice }} ₽</p>
-            </div>
+        <div v-for="group in paged" :key="group.color_sku" class="product-card" @click="goToProductDetail(group)">
+          <button type="button" class="fav" @click.stop="toggleFav(group)">
+            <img :src="store.isFavorite(group.color_sku) ? icon_favorites_black : icon_favorites_grey" alt="" />
+          </button>
+          <div class="product-img">
+            <img :src="group.image" alt="product" />
           </div>
-          <button type="button" class="fav" v-if="!store.isFavorite(group.color_sku)" @click.stop="store.addToFavorites(group.color_sku)">♡</button>
-          <button type="button" class="fav active" v-else @click.stop="store.removeFromFavorites(group.color_sku)">♥</button>
-        </article>
+          <div class="info">
+            <p class="brand">{{ group.brand }}</p>
+            <p class="name">{{ group.name }}</p>
+            <p class="price">от {{ formatPrice(group.price) }} ₽</p>
+          </div>
+        </div>
       </div>
 
-      <div class="load-more-container">
-        <button type="button" v-if="paged.length < store.displayedProducts.length" @click="loadMore" class="btn-load-more">
-          Ещё
-        </button>
-      </div>
+      <button type="button" v-if="paged.length < store.displayedProducts.length" @click="loadMore" class="btn-load-more">Ещё</button>
     </div>
   </div>
 </template>
@@ -133,6 +130,8 @@ import icon_arrow_mini_black from '@/assets/images/arrow_mini_black.svg'
 import category_shoes from '@/assets/images/category_shoes.png'
 import category_clothing from '@/assets/images/category_clothing.png'
 import category_accessories from '@/assets/images/category_accessories.png'
+import icon_favorites_black from "@/assets/images/favorites_black.svg";
+import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
 
 const store = useStore()
 const route = useRoute()
@@ -306,6 +305,15 @@ function animateGrid() {
       productsLoading.value = false
     }, 200)
   })
+}
+
+// Сохранение в избранное оставляем, но вешаем .stop на клик, чтобы не перегружать маршрут
+function toggleFav(p) {
+  store.isFavorite(p.color_sku) ? store.removeFromFavorites(p.color_sku) : store.addToFavorites(p.color_sku)
+}
+
+function formatPrice(val) {
+  return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
 async function loadCategory(cat) {
@@ -578,7 +586,7 @@ onBeforeUnmount(() => {
         font-family: Bounded;
         font-size: 14px;
         font-weight: 350;
-        line-height: 80%;
+        line-height: 120%;
         letter-spacing: -0.7px;
         cursor: pointer;
         img {
@@ -606,7 +614,7 @@ onBeforeUnmount(() => {
             font-family: Bounded;
             font-size: 14px;
             font-weight: 350;
-            line-height: 80%;
+            line-height: 120%;
             letter-spacing: -0.7px;
             white-space: nowrap;
             overflow: hidden;
@@ -634,7 +642,7 @@ onBeforeUnmount(() => {
           li {
             padding: 12px 10px;
             border-top: 1px solid $white-100;
-            background-color: $white-80;
+            background-color: $grey-95;
             color: $grey-20;
             font-family: Bounded;
             font-size: 14px;
@@ -699,85 +707,118 @@ onBeforeUnmount(() => {
         cursor: pointer;
       }
     }
+    /* === SLIDE TRANSITIONS === */
+    .slide-enter-active,
+    .slide-leave-active {
+      transition: all 0.25s ease-in-out;
+    }
+    .slide-enter-from,
+    .slide-leave-to {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+    .slide-enter-to,
+    .slide-leave-from {
+      max-height: 500px;
+      opacity: 1;
+    }
   }
   /* === PRODUCTS GRID (только тут используем grid) === */
   .products-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    grid-auto-flow: column;
+    grid-auto-columns: 50%;
+    margin-top: 40px;
+    transition: all 0.25s ease-in-out;
     &.blurred {
       filter: blur(4px);
     }
-  }
-  .product-card {
-    background-color: $white-100;
-    border-radius: 12px;
-    padding: 12px;
-    text-align: center;
-    position: relative;
-    .product-img {
-      width: 100%;
-      border-radius: 8px;
-    }
-    .info {
-      margin-top: 8px;
-      .brand {
-        font-size: 12px;
-        color: $black-60;
-      }
-      .name {
-        font-size: 16px;
-        color: $black-100;
-        margin: 4px 0;
-      }
-      .price {
-        font-size: 14px;
-        color: $black-100;
-      }
-    }
-    .fav {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: none;
-      border: none;
-      font-size: 16px;
+    .product-card {
+      display: flex;
+      box-sizing: border-box;
+      flex-direction: column;
+      position: relative;
+      min-width: 0;
+      background-color: $grey-89;
       cursor: pointer;
-      &.active {
-        color: $red-active;
+      transition: transform 0.25s ease-in-out;
+      .fav {
+        display: flex;
+        position: absolute;
+        padding: 0;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        img {
+          width: 24px;
+          height: 24px;
+          object-fit: cover;
+        }
+      }
+      .product-img {
+        display: flex;
+        padding: 40px 24px;
+        height: 100%;
+        img {
+          width: 100%;
+          object-fit: cover;
+        }
+      }
+      .info {
+        display: flex;
+        flex-direction: column;
+        padding: 10px 10px 16px;
+        background-color: $grey-87;
+        .brand {
+          margin: 0;
+          font-size: 12px;
+          line-height: 100%;
+          letter-spacing: -0.48px;
+          color: $black-60;
+        }
+        .name {
+          margin: 4px 0 12px;
+          font-family: Manrope-SemiBold;
+          font-size: 15px;
+          line-height: 100%;
+          letter-spacing: -0.6px;
+          color: $black-100;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .price {
+          margin: 0;
+          font-size: 15px;
+          line-height: 80%;
+          letter-spacing: -0.6px;
+          color: $grey-20;
+        }
       }
     }
   }
   /* === LOAD MORE === */
-  .load-more-container {
-    text-align: center;
-    margin: 16px 0;
-    .btn-load-more {
-      width: 100%;
-      padding: 12px 0;
-      background-color: $red-active;
-      color: $white-100;
-      border: none;
-      border-radius: 6px;
-      font-size: 18px;
-      cursor: pointer;
-    }
-  }
-  /* === SLIDE TRANSITIONS === */
-  .slide-enter-active,
-  .slide-leave-active {
-    transition: all 0.25s ease-in-out;
-  }
-  .slide-enter-from,
-  .slide-leave-to {
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-  }
-  .slide-enter-to,
-  .slide-leave-from {
-    max-height: 500px;
-    opacity: 1;
+  .btn-load-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 32px 0 96px;
+    padding: 0 24px;
+    width: 100%;
+    height: 56px;
+    border-radius: 4px;
+    border: none;
+    background-color: $grey-20;
+    color: $grey-95;
+    font-size: 16px;
+    line-height: 100%;
+    letter-spacing: -0.64px;
+    cursor: pointer;
   }
 }
 
