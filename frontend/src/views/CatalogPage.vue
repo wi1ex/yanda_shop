@@ -44,10 +44,10 @@
           </div>
           <div class="header-cats-div">
             <!-- Кнопки листания -->
-            <button type="button" class="nav-btn" @click="store.prevSubcatPage()" :disabled="canPrev">
+            <button type="button" class="nav-btn" @click="store.prevSubcatPage()" :disabled="!canPrev">
               ‹
             </button>
-            <button type="button" class="nav-btn" @click="store.nextSubcatPage()" :disabled="canNext">
+            <button type="button" class="nav-btn" @click="store.nextSubcatPage()" :disabled="!canNext">
               ›
             </button>
           </div>
@@ -55,9 +55,9 @@
       </nav>
     </header>
 
-    <div>
+    <div class="catalog-body">
       <!-- Основная колонка -->
-      <main>
+      <main class="main-content">
         <!-- Мобильные контролы -->
         <div class="mobile-controls">
           <div class="mobile-sort">
@@ -339,16 +339,23 @@ onMounted(() => {
     }
     .header-cats {
       display: flex;
-      gap: 8px;
+      width: 100%;
       .header-cats-template {
         display: flex;
+        flex-direction: column;
+        padding: 0 10px;
+        width: 100%;
         .header-cats-div {
           display: flex;
+          width: 100%;
+          gap: 8px;
           .cat-btn {
             display: flex;
+            flex-direction: column;
             background: $white-100;
             border-radius: 12px;
             padding: 12px;
+            width: calc(100% / 3);
             text-align: center;
             transition: box-shadow 0.25s ease-in-out;
             cursor: pointer;
@@ -372,6 +379,7 @@ onMounted(() => {
             background: $white-100;
             border-radius: 12px;
             padding: 12px;
+            width: calc(100% / 3);
             text-align: center;
             transition: box-shadow 0.25s ease-in-out;
             cursor: pointer;
@@ -393,101 +401,110 @@ onMounted(() => {
     }
   }
   /* === MOBILE CONTROLS === */
-  .mobile-controls {
+  .catalog-body {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 16px;
-    .mobile-sort {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      span {
-        font-size: 14px;
-        color: $black-100;
-      }
-      select {
-        flex: 1;
-        padding: 8px;
-        border: 1px solid $grey-89;
-        border-radius: 6px;
-        background: $white-100;
-      }
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background: $white-100;
-      border: 1px solid $grey-89;
-      border-radius: 6px;
-      text-align: left;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      .arrow {
-        width: 8px;
-        height: 8px;
-        border: solid $black-100;
-        border-width: 0 2px 2px 0;
-        display: inline-block;
-        transform: rotate(45deg);
-        &.up {
-          transform: rotate(-135deg);
-        }
-      }
-    }
-    .mobile-filters {
-      background: $white-100;
-      border: 1px solid $grey-89;
-      border-radius: 6px;
-      padding: 12px;
+    margin-top: 40px;
+    .main-content {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      input,
-      select {
-        padding: 8px;
-        border: 1px solid $grey-89;
-        border-radius: 6px;
-      }
-      .gender-filter {
+      .mobile-controls {
         display: flex;
-        gap: 12px;
-        label {
-          flex: 1;
-          text-align: center;
-          padding: 8px 0;
-          background: $white-80;
-          border-radius: 6px;
-          font-size: 14px;
-          cursor: pointer;
-          position: relative;
-          input {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 16px;
+        .mobile-sort {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          span {
+            font-size: 14px;
+            color: $black-100;
           }
-          &.active {
-            background: $red-active;
-            color: $white-100;
+          select {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid $grey-89;
+            border-radius: 6px;
+            background: $white-100;
           }
         }
-      }
-      .btn-clear {
-        padding: 8px;
-        background: $red-error;
-        color: $white-100;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
+        button {
+          width: 100%;
+          padding: 10px;
+          background: $white-100;
+          border: 1px solid $grey-89;
+          border-radius: 6px;
+          text-align: left;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          cursor: pointer;
+          .arrow {
+            width: 8px;
+            height: 8px;
+            border: solid $black-100;
+            border-width: 0 2px 2px 0;
+            display: inline-block;
+            transform: rotate(45deg);
+            &.up {
+              transform: rotate(-135deg);
+            }
+          }
+        }
+        .mobile-filters {
+          background: $white-100;
+          border: 1px solid $grey-89;
+          border-radius: 6px;
+          padding: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          input,
+          select {
+            padding: 8px;
+            border: 1px solid $grey-89;
+            border-radius: 6px;
+          }
+          .gender-filter {
+            display: flex;
+            gap: 12px;
+            label {
+              flex: 1;
+              text-align: center;
+              padding: 8px 0;
+              background: $white-80;
+              border-radius: 6px;
+              font-size: 14px;
+              cursor: pointer;
+              position: relative;
+              input {
+                position: absolute;
+                opacity: 0;
+                pointer-events: none;
+              }
+              &.active {
+                background: $red-active;
+                color: $white-100;
+              }
+            }
+          }
+          .btn-clear {
+            padding: 8px;
+            background: $red-error;
+            color: $white-100;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+          }
+        }
       }
     }
   }
   /* === PRODUCTS GRID (только тут используем grid) === */
   .products-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);;
+    grid-template-columns: repeat(2, 1fr);;
     gap: 12px;
     &.blurred {
       filter: blur(4px);
