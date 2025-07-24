@@ -15,7 +15,7 @@
       <div class="combined-preview">
         <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="zip-input-block">
           <label>{{ catLabel(cat) }}.zip</label>
-          <input type="file" @change="onPreviewZip($event,cat)" accept=".zip"/>
+          <input type="file" @change="onPreviewZip($event,cat)" accept=".zip" :ref="el => (previewZipInputs[cat].value = el)"/>
         </div>
 
         <button @click="onPreviewAll"
@@ -266,7 +266,7 @@
       <h2>Добавить отзыв</h2>
       <div v-if="formError" class="error">{{ formError }}</div>
       <div v-if="formSuccess" class="success">{{ formSuccess }}</div>
-      <form @submit.prevent="onSubmitReview">
+      <form ref="reviewForm" @submit.prevent="onSubmitReview">
         <input v-model="form.client_name" placeholder="Имя клиента" required/>
         <textarea v-model="form.client_text1" placeholder="Текст клиента 1" required></textarea>
         <textarea v-model="form.shop_response" placeholder="Ответ магазина" required></textarea>
@@ -277,8 +277,8 @@
           <input type="file" @change="onFile($event,2)" ref="fileInput2"/>
           <input type="file" @change="onFile($event,3)" ref="fileInput3"/>
         </div>
-        <button type="submit" :disabled="!form.client_name || !form.client_text1 || !form.shop_response || !form.link_url || (!files[1] && !files[2] && !files[3])">
-          Добавить
+        <button type="submit" :disabled="isLoading || !form.client_name || !form.client_text1 || !form.shop_response || !form.link_url || (!files[1] && !files[2] && !files[3])">
+          {{ isLoading ? 'Отправка…' : 'Добавить' }}
         </button>
       </form>
     </section>
@@ -310,7 +310,6 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useStore } from '@/store/index.js'
 
 const store            = useStore()
-
 const localSettings    = reactive([])
 const originalSnapshot = ref('')
 const savingAll        = ref(false)
@@ -329,6 +328,13 @@ const selected         = ref('preview')
 const logPage          = ref(1)
 const pageSize         = 10
 const newSetting       = reactive({ key: '', value: '' })
+const reviewForm       = ref(null)
+const isLoading        = ref(false)
+const previewZipInputs = {
+  shoes: ref(null),
+  clothing: ref(null),
+  accessories: ref(null),
+}
 const tabs             = [
   { key:'preview',     label:'Проверка данных'      },
   { key:'sheets',      label:'Загрузка таблиц'      },
@@ -379,9 +385,27 @@ const maxTotal = computed(() => {
 })
 
 // Утилиты
+function resetReviewForm() {
+  // 1) нативный reset всех <input> и <textarea>
+  reviewForm.value?.reset()
+  // 2) очистка реактивного объекта
+  Object.keys(form).forEach(k => form[k] = '')
+  // 3) очистка объекта files
+  for (const k of Object.keys(files)) { delete files[k] }
+  // 4) очистка файловых инпутов
+  [fileInput1, fileInput2, fileInput3].forEach(refEl => {
+    if (refEl.value) refEl.value.value = ''
+  })
+}
+
 async function onPreviewAll() {
-  await store.previewEverything(zipPreviewFiles);
-  Object.keys(zipPreviewFiles).forEach(cat => zipPreviewFiles[cat] = null);
+  await store.previewEverything(zipPreviewFiles)
+  // очистить реактивные файлы
+  Object.keys(zipPreviewFiles).forEach(cat => zipPreviewFiles[cat] = null)
+  // очистить сами инпуты
+  Object.values(previewZipInputs).forEach(refEl => {
+    if (refEl.value) refEl.value.value = ''
+  })
 }
 
 function onPreviewZip(e,cat) {
@@ -396,9 +420,11 @@ function isAny(obj) {
   return Object.values(obj).some(v => v);
 }
 
-function onFile(e,i) {
-  files[i] = e.target.files[0]
+function onFile(e, idx) {
+  const f = e.target.files[0]
+  if (f) files[idx] = f
 }
+
 function onZipSelected(e) {
   zipFile.value = e.target.files[0]
 }
@@ -409,6 +435,7 @@ function prevPage() {
     store.loadLogs(pageSize, (logPage.value - 1) * pageSize)
   }
 }
+
 function nextPage() {
   if (logPage.value * pageSize < store.totalLogs) {
     logPage.value++
@@ -427,47 +454,43 @@ function formatDate(val) {
 
 // Отправка нового отзыва
 async function onSubmitReview() {
-  // Сброс сообщений
+  // 1) сброс предыдущих сообщений
   formError.value = ''
   formSuccess.value = ''
-
-  // Проверки на фронте
-  if (!form.client_name.trim() || !form.client_text1.trim() || !form.shop_response.trim() || !form.link_url.trim()) {
+  isLoading.value = true
+  // 2) валидация обязательных полей
+  if (!form.client_name.trim() ||
+      !form.client_text1.trim() ||
+      !form.shop_response.trim() ||
+      !form.link_url.trim()) {
     formError.value = 'Пожалуйста, заполните все обязательные поля'
+    isLoading.value = false
     return
   }
-
-  // Проверка хотя бы одного фото
+  // 3) проверка хотя бы одного фото
   if (!files[1] && !files[2] && !files[3]) {
     formError.value = 'Требуется хотя бы одна фотография'
+    isLoading.value = false
     return
   }
-
-  // Формируем FormData
+  // 4) сбор FormData
   const fd = new FormData()
-  fd.append('client_name', form.client_name)
+  fd.append('client_name',  form.client_name)
   fd.append('client_text1', form.client_text1)
-  fd.append('shop_response', form.shop_response)
-  fd.append('client_text2', form.client_text2 || '') // client_text2 может быть пустым
-  fd.append('link_url', form.link_url)
-
-  // Добавляем фото
+  fd.append('shop_response',form.shop_response)
+  fd.append('client_text2', form.client_text2 || '')
+  fd.append('link_url',     form.link_url)
   for (let i = 1; i <= 3; i++) {
     if (files[i]) fd.append(`photo${i}`, files[i])
   }
-
+  // 5) отправка
   try {
-    // Отправка и получение сообщения об успехе
     formSuccess.value = await store.createReview(fd)
-    // очистка
-    Object.keys(form).forEach(k => form[k]='')
-    Object.keys(files).forEach(k => delete files[k])
-    // сброс input[type=file]
-    fileInput1.value && (fileInput1.value.value = '')
-    fileInput2.value && (fileInput2.value.value = '')
-    fileInput3.value && (fileInput3.value.value = '')
+    resetReviewForm()
   } catch (err) {
-    formError.value = err.message
+    formError.value = err.message || 'Ошибка при отправке'
+  } finally {
+    isLoading.value = false
   }
 }
 
