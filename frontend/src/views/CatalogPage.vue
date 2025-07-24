@@ -33,8 +33,7 @@
             <button class="nav-btn prev" @click="scrollSubcats(-1)" :disabled="!canPrev">
               ‹
             </button>
-            <div class="subcat-slider" ref="subcatSlider" @scroll.passive="onScroll"
-                 @touchstart.passive="onTouchStart" @touchmove.passive="onTouchMove" @touchend.passive="onTouchEnd">
+            <div class="subcat-slider" ref="subcatSlider" @scroll.passive="onScroll">
               <button class="cat-btn back-btn" @click="store.backToCats()">
                 ← Назад
               </button>
@@ -139,8 +138,6 @@ const mobileFiltersOpen = ref(false)
 const productsLoading = ref(false)
 const subcatSlider = ref(null)
 const scrollPos = ref(0)
-let touchStartX = 0
-let scrollStartX = 0
 
 const categoryImages = {
   'Одежда': category_clothing,
@@ -175,20 +172,6 @@ function scrollSubcats(dir) {
 }
 
 // свайп
-function onTouchStart(e) {
-  touchStartX = e.touches[0].clientX
-  scrollStartX = subcatSlider.value.scrollLeft
-}
-
-function onTouchMove(e) {
-  const dx = touchStartX - e.touches[0].clientX
-  subcatSlider.value.scrollLeft = scrollStartX + dx
-}
-
-function onTouchEnd() {
-  // ничего не делаем — инерция браузера
-}
-
 function onScroll() {
   const el = subcatSlider.value
   if (!el) return
@@ -436,6 +419,7 @@ onMounted(() => {
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             padding: 4px 0;
+            scroll-snap-type: x mandatory;
             &::-webkit-scrollbar {
               display: none;
             }
@@ -449,6 +433,7 @@ onMounted(() => {
               padding: 8px;
               text-align: center;
               transition: box-shadow 0.2s;
+              scroll-snap-align: start;
             }
             .cat-btn.active {
               box-shadow: 0 0 0 2px $red-active;
