@@ -19,7 +19,7 @@
         <!-- 1) Корневые категории -->
         <div v-if="!store.showSubcats" class="header-cats-template">
           <div class="header-cats-div">
-            <button type="button" class=cat-btn"" v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)">
+            <button type="button" class="cat-btn" v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)">
               <img :src="categoryImages[cat]" :alt="cat"/>
               <span>{{ cat }}</span>
             </button>
@@ -29,11 +29,8 @@
         <!-- 2) Подкатегории -->
         <div v-else class="header-cats-template">
           <div class="subcat-slider-wrapper">
-            <button type="button" class="nav-btn prev" @click="scrollSubcats(-1)" :disabled="!canPrev">
-              ‹
-            </button>
             <div class="subcat-slider" ref="subcatSlider" @scroll.passive="onScroll">
-              <button type="button" class="cat-btn back-btn" @click="store.backToCats()">
+              <button type="button" class="back-btn" @click="store.backToCats()">
                 ← Назад
               </button>
               <button type="button" class="cat-btn" v-for="sub in store.subcatListMap[store.selectedCategory]" :key="sub"
@@ -42,9 +39,14 @@
                 <span>{{ sub }}</span>
               </button>
             </div>
-            <button type="button" class="nav-btn next" @click="scrollSubcats(1)" :disabled="!canNext">
-              ›
-            </button>
+            <div class="subcat-slider-div">
+              <button type="button" class="nav-btn prev" @click="scrollSubcats(-1)" :disabled="!canPrev">
+                ‹
+              </button>
+              <button type="button" class="nav-btn next" @click="scrollSubcats(1)" :disabled="!canNext">
+                ›
+              </button>
+            </div>
           </div>
         </div>
       </nav>
@@ -393,21 +395,6 @@ onMounted(() => {
           display: flex;
           align-items: center;
           gap: 8px;
-          .nav-btn {
-            flex: 0 0 32px;
-            padding: 4px;
-            text-align: center;
-            border-radius: 8px;
-            background-color: $white-80;
-            font-size: 24px;
-            line-height: 1;
-            cursor: pointer;
-            &.prev[disabled],
-            &.next[disabled] {
-              opacity: 0.3;
-              cursor: default;
-            }
-          }
           .subcat-slider {
             display: flex;
             flex: 1;
@@ -471,6 +458,24 @@ onMounted(() => {
               }
               span {
                 color: $black-100;
+              }
+            }
+          }
+          .subcat-slider-div {
+            display: flex;
+            .nav-btn {
+              flex: 0 0 32px;
+              padding: 4px;
+              text-align: center;
+              border-radius: 8px;
+              background-color: $white-80;
+              font-size: 24px;
+              line-height: 1;
+              cursor: pointer;
+              &.prev[disabled],
+              &.next[disabled] {
+                opacity: 0.3;
+                cursor: default;
               }
             }
           }
