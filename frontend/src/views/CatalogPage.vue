@@ -29,15 +29,15 @@
         <!-- 2) Подкатегории -->
         <div v-else class="header-cats-template">
           <div class="subcat-slider-wrapper">
-            <div class="subcat-slider" ref="subcatSlider" @scroll.passive="onScroll">
-              <button type="button" class="back-btn" @click="store.backToCats()">
-                ← Назад
-              </button>
-              <button type="button" class="cat-btn" v-for="sub in store.subcatListMap[store.selectedCategory]" :key="sub"
-                      :class="{ active: store.selectedSubcat === sub }" @click="store.pickSubcat(sub)">
-                <img :src="categoryImages[store.selectedCategory]" alt="" />
-                <span>{{ sub }}</span>
-              </button>
+            <div class="subcat-slider-row">
+              <div class="subcat-slider" ref="subcatSlider" @scroll.passive="onScroll">
+                <button type="button" class="back-btn" @click="store.backToCats()">назад</button>
+                <button type="button" class="cat-btn" v-for="sub in store.subcatListMap[store.selectedCategory]" :key="sub"
+                        :class="{ active: store.selectedSubcat === sub }" @click="store.pickSubcat(sub)">
+                  <img :src="categoryImages[store.selectedCategory]" alt="" />
+                  <span>{{ sub }}</span>
+                </button>
+              </div>
             </div>
             <div class="subcat-slider-div">
               <button type="button" class="nav-btn prev" @click="scrollSubcats(-1)" :disabled="!canPrev">
@@ -393,71 +393,80 @@ onMounted(() => {
         }
         .subcat-slider-wrapper {
           display: flex;
+          flex-direction: column;
           align-items: center;
-          gap: 8px;
-          .subcat-slider {
+          gap: 16px;
+          .subcat-slider-row {
             display: flex;
-            flex: 1;
-            padding: 4px 0;
-            gap: 8px;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-            &::-webkit-scrollbar {
-              display: none;
-            }
-            .back-btn {
+            width: 100%;
+            align-items: center;
+            .subcat-slider {
               display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              padding: 8px;
-              width: 113px;
-              height: 113px;
-              border-radius: 4px;
-              border: none;
-              background-color: $grey-95;
-              cursor: pointer;
-              transition: all 0.25s ease-in-out;
-              scroll-snap-align: start;
-            }
-            .cat-btn {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              padding: 8px;
-              width: 113px;
-              height: 113px;
-              border-radius: 4px;
-              border: none;
-              background-color: $grey-95;
-              cursor: pointer;
-              transition: all 0.25s ease-in-out;
-              scroll-snap-align: start;
-              img {
-                width: 60px;
-                height: 60px;
-                object-fit: cover;
+              flex: 1;
+              padding: 4px 0;
+              gap: 8px;
+              overflow-x: auto;
+              scroll-behavior: smooth;
+              scroll-snap-type: x mandatory;
+              -webkit-overflow-scrolling: touch;
+              &::-webkit-scrollbar {
+                display: none;
               }
-              span {
-                color: $grey-20;
-                font-family: Bounded;
-                font-size: 14px;
-                font-weight: 350;
-                line-height: 80%;
-                letter-spacing: -0.84px;
+              .back-btn {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 8px;
+                width: 113px;
+                height: 113px;
+                border-radius: 4px;
+                border: none;
+                background-color: $grey-20;
+                color: $white-100;
+                font-size: 16px;
+                line-height: 100%;
+                letter-spacing: -0.64px;
+                cursor: pointer;
+                scroll-snap-align: start;
               }
-            }
-            .cat-btn.active {
-              background-color: $white-100;
-              img {
-                width: 65px;
-                height: 65px;
+              .cat-btn {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 8px;
+                width: 113px;
+                height: 113px;
+                border-radius: 4px;
+                border: none;
+                background-color: $grey-95;
+                cursor: pointer;
+                transition: all 0.25s ease-in-out;
+                scroll-snap-align: start;
+                img {
+                  width: 60px;
+                  height: 60px;
+                  object-fit: cover;
+                }
+                span {
+                  color: $grey-20;
+                  font-family: Bounded;
+                  font-size: 14px;
+                  font-weight: 350;
+                  line-height: 80%;
+                  letter-spacing: -0.84px;
+                }
               }
-              span {
-                color: $black-100;
+              .cat-btn.active {
+                background-color: $white-100;
+                img {
+                  width: 65px;
+                  height: 65px;
+                }
+                span {
+                  color: $black-100;
+                }
               }
             }
           }
