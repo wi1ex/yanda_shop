@@ -55,14 +55,15 @@
     <div class="catalog-body">
       <!-- Мобильные контролы -->
       <div class="mobile-controls">
-        <button type="button" @click="mobileFiltersOpen = !mobileFiltersOpen">
+        <button type="button" class="filter-btn" @click="mobileFiltersOpen = !mobileFiltersOpen">
           Фильтры
           <img :src="mobileFiltersOpen ? icon_close : icon_filter" alt=""/>
         </button>
         <div class="mobile-sort">
-          <button type="button" ref="sortBtn" class="sort-btn" @click="sortOpen = !sortOpen">
+          <button type="button" ref="sortBtn" class="sort-btn" @click="sortOpen = !sortOpen"
+                  :style="{ borderRadius: sortOpen ? '4px 4px 0 0' : '4px' }">
             <span>Сортировка: {{ currentLabel }}</span>
-            <img :src="icon_arrow_red" alt="" class="sort-icon" :style="{ transform: sortOpen ? 'rotate(90deg)' : 'rotate(270deg)'}"/>
+            <img :src="icon_arrow_red" alt="" :style="{ transform: sortOpen ? 'rotate(90deg)' : 'rotate(270deg)' }"/>
           </button>
           <ul v-if="sortOpen" ref="sortList" class="sort-list">
             <li v-for="opt in sortOptions" :key="opt.value" @click="selectSort(opt.value)" :class="{ active: sortOption === opt.value }">
@@ -162,10 +163,10 @@ const categoryImages = {
 
 // Список опций
 const sortOptions = [
-  { value: 'date_desc',  label: 'Новинки'             },
-  { value: 'sales_desc', label: 'Бестселлеры'         },
   { value: 'price_asc',  label: 'Цена по возрастанию' },
   { value: 'price_desc', label: 'Цена по убыванию'    },
+  { value: 'sales_desc', label: 'Популярное'          },
+  { value: 'date_desc',  label: 'Новинки'             },
 ]
 
 const currentLabel = computed(() => {
@@ -424,7 +425,7 @@ onBeforeUnmount(() => {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             padding: 8px;
             width: 113px;
             height: 113px;
@@ -473,7 +474,6 @@ onBeforeUnmount(() => {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                justify-content: center;
                 padding: 8px;
                 min-width: 113px;
                 min-height: 113px;
@@ -485,6 +485,7 @@ onBeforeUnmount(() => {
                 scroll-snap-align: start;
               }
               .back-btn {
+                justify-content: center;
                 background-color: $grey-20;
                 color: $white-100;
                 font-size: 16px;
@@ -492,6 +493,7 @@ onBeforeUnmount(() => {
                 letter-spacing: -0.64px;
               }
               .cat-btn {
+                justify-content: space-between;
                 background-color: $grey-95;
                 transition: all 0.25s ease-in-out;
                 img {
@@ -563,7 +565,7 @@ onBeforeUnmount(() => {
       display: flex;
       padding: 0 10px 10px;
       gap: 10px;
-      button {
+      .filter-btn {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -572,6 +574,7 @@ onBeforeUnmount(() => {
         border-radius: 4px;
         border: none;
         background-color: $grey-95;
+        color: $grey-20;
         font-family: Bounded;
         font-size: 14px;
         font-weight: 350;
@@ -592,42 +595,59 @@ onBeforeUnmount(() => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 12px 16px;
+          padding: 12px 8px;
           width: 100%;
-          border-radius: 6px;
-          border: 1px solid $grey-89;
-          background: $white-100;
-          font-size: 14px;
+          gap: 4px;
+          border: none;
+          background-color: $grey-95;
           cursor: pointer;
-          transition: all 0.25s ease-in-out;
           span {
-            color: $black-100;
+            color: $grey-20;
+            font-family: Bounded;
+            font-size: 14px;
+            font-weight: 350;
+            line-height: 80%;
+            letter-spacing: -0.7px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
-          .sort-icon {
+          img {
             width: 16px;
             height: 16px;
+            object-fit: cover;
           }
         }
         .sort-list {
           display: flex;
+          flex-direction: column;
           position: absolute;
           top: 100%;
           left: 0;
           right: 0;
-          margin-top: 4px;
-          border-radius: 6px;
-          border: 1px solid $grey-89;
-          background: $white-100;
+          margin: 0;
+          padding: 0;
+          border-radius: 0 0 4px 4px;
+          background-color: $grey-95;
           list-style: none;
           z-index: 20;
           li {
-            padding: 12px 16px;
+            padding: 12px 10px;
+            border-top: 1px solid $white-100;
+            background-color: $white-80;
+            color: $grey-20;
+            font-family: Bounded;
             font-size: 14px;
-            color: $black-100;
+            font-weight: 350;
+            line-height: 80%;
+            letter-spacing: -0.7px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             cursor: pointer;
-            background: $white-80;
             &.active {
-              background: $white-100;
+              color: $black-100;
+              background-color: $white-100;
             }
           }
         }
