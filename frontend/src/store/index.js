@@ -481,6 +481,7 @@ export const useStore = defineStore('main', () => {
     selectedSubcat.value = ''
     filterSubcat.value = ''
     currentSubcatPage.value = 0
+    selectedCategory.value = ''
   }
 
   // Выбор подкатегории

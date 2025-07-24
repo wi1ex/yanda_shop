@@ -10,8 +10,8 @@
 
       <!-- Текст слева -->
       <div class="header-text">
-        <p>Здесь оригинальные вещи на любой вкус: от классики до уличного кэжуала.</p>
-        <p>Только проверенные бренды и актуальные коллекции. Одежда, в которой ты будешь выглядеть современно, уверенно и круто.</p>
+        <p>Здесь оригинальные вещи на любой вкус: от классики до уличного кэжуала.<br><br>
+          Только проверенные бренды и актуальные коллекции. Одежда, в которой ты будешь выглядеть современно, уверенно и круто.</p>
       </div>
 
       <!-- Навигация по категориям под логотипом -->
@@ -31,18 +31,25 @@
         <div v-else class="header-cats-template">
           <div class="header-cats-div">
             <!-- Кнопка «назад» -->
-            <button type="button" class="cat-btn back-btn" @click="store.backToCats()">← Назад</button>
+            <button type="button" class="back-btn" @click="store.backToCats()">
+              ← Назад
+            </button>
             <!-- Список текущих 2-х подкатегорий -->
             <button type="button" v-for="sub in visibleSubcats" :key="sub" @click="store.pickSubcat(sub)"
                     :class="['cat-btn', { active: store.selectedSubcat === sub }]">
 <!--              <img :src="subcategoryImages[sub]" :alt="sub"/>-->
+              <img :src="categoryImages[cat]" :alt="cat"/>
               <span>{{ sub }}</span>
             </button>
           </div>
           <div class="header-cats-div">
             <!-- Кнопки листания -->
-            <button type="button" v-if="canPrev" class="cat-btn nav-btn" @click="store.prevSubcatPage()">‹</button>
-            <button type="button" v-if="canNext" class="cat-btn nav-btn" @click="store.nextSubcatPage()">›</button>
+            <button type="button" class="nav-btn" @click="store.prevSubcatPage()" :disabled="canPrev">
+              ‹
+            </button>
+            <button type="button" class="nav-btn" @click="store.nextSubcatPage()" :disabled="canNext">
+              ›
+            </button>
           </div>
         </div>
       </nav>
@@ -293,79 +300,95 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .catalog {
-  background: $grey-87;
-  padding: 16px;
+  margin-top: 120px;
   /* === HEADER (мобильный) === */
-  &-header {
-    text-align: center;
-    margin: 32px 0 16px;
+  .catalog-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     .header-logo {
       display: flex;
+      align-items: flex-start;
       justify-content: center;
-      align-items: flex-end;
       .logo-title {
-        font-family: Bounded;
-        font-weight: 500;
-        font-size: 32px;
-        line-height: 0.9;
-        letter-spacing: -2.24px;
         color: $black-100;
+        font-family: Bounded;
+        font-weight: 400;
+        font-size: 32px;
+        line-height: 90%;
+        letter-spacing: -2.24px;
       }
       .logo-count {
-        font-size: 15px;
-        line-height: 1.1;
-        letter-spacing: -0.6px;
         color: $red-active;
-        margin-left: 4px;
-        margin-bottom: 2px;
+        font-size: 15px;
+        line-height: 110%;
+        letter-spacing: -0.6px;
       }
     }
     .header-text {
-      color: $black-70;
-      font-size: 15px;
-      line-height: 1.2;
-      letter-spacing: -0.6px;
-      margin-top: 8px;
-      p + p {
-        margin-top: 6px;
+      margin: 24px 0 40px;
+      width: 75%;
+      text-align: center;
+      p {
+        margin: 0;
+        color: $grey-20;
+        font-size: 15px;
+        line-height: 110%;
+        letter-spacing: -0.6px;
       }
     }
     .header-cats {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 16px;
-      .cat-btn {
-        background: $white-100;
-        border-radius: 12px;
-        padding: 12px;
-        text-align: center;
-        transition: box-shadow 0.2s;
-        cursor: pointer;
-        &.active {
-          box-shadow: 0 0 0 2px $red-active;
+      gap: 8px;
+      .header-cats-template {
+        display: flex;
+        .header-cats-div {
+          display: flex;
+          .cat-btn {
+            display: flex;
+            background: $white-100;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            transition: box-shadow 0.25s ease-in-out;
+            cursor: pointer;
+            &.active {
+              box-shadow: 0 0 0 2px $red-active;
+            }
+            img {
+              width: 48px;
+              height: 48px;
+              object-fit: contain;
+              margin-bottom: 6px;
+            }
+            span {
+              display: block;
+              font-size: 14px;
+              line-height: 1;
+              color: $black-100;
+            }
+          }
+          .back-btn {
+            background: $white-100;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            transition: box-shadow 0.25s ease-in-out;
+            cursor: pointer;
+            background: $white-80;
+            font-size: 18px;
+          }
+          .nav-btn {
+            background: $white-100;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            transition: box-shadow 0.25s ease-in-out;
+            cursor: pointer;
+            background: $white-80;
+            font-size: 18px;
+          }
         }
-        img {
-          width: 48px;
-          height: 48px;
-          object-fit: contain;
-          margin-bottom: 6px;
-        }
-        span {
-          display: block;
-          font-size: 14px;
-          line-height: 1;
-          color: $black-100;
-        }
-      }
-      .back-btn,
-      .nav-btn {
-        background: $white-80;
-        border-radius: 12px;
-        padding: 12px 8px;
-        font-size: 18px;
-        cursor: pointer;
       }
     }
   }
@@ -476,7 +499,7 @@ onMounted(() => {
     padding: 12px;
     text-align: center;
     position: relative;
-    transition: transform 0.2s;
+    transition: transform 0.25s ease-in-out;
     .product-img {
       width: 100%;
       border-radius: 8px;
@@ -528,7 +551,7 @@ onMounted(() => {
   /* === SLIDE TRANSITIONS === */
   .slide-enter-active,
   .slide-leave-active {
-    transition: all 0.3s ease;
+    transition: all 0.25s ease-in-out;
   }
   .slide-enter-from,
   .slide-leave-to {
@@ -545,9 +568,7 @@ onMounted(() => {
   /* MOBILE (<600px) */
   @media (max-width: 600px) {
     .catalog {
-      .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      margin-top: 96px;
     }
   }
 }
