@@ -19,8 +19,7 @@
         <!-- 1) Корневые категории -->
         <div v-if="!store.showSubcats" class="header-cats-template">
           <div class="header-cats-div">
-            <button type="button" v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)"
-                    :class="['cat-btn', { active: store.selectedCategory === cat }]">
+            <button type="button" class=cat-btn"" v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)">
               <img :src="categoryImages[cat]" :alt="cat"/>
               <span>{{ cat }}</span>
             </button>
@@ -30,20 +29,20 @@
         <!-- 2) Подкатегории -->
         <div v-else class="header-cats-template">
           <div class="subcat-slider-wrapper">
-            <button class="nav-btn prev" @click="scrollSubcats(-1)" :disabled="!canPrev">
+            <button type="button" class="nav-btn prev" @click="scrollSubcats(-1)" :disabled="!canPrev">
               ‹
             </button>
             <div class="subcat-slider" ref="subcatSlider" @scroll.passive="onScroll">
-              <button class="cat-btn back-btn" @click="store.backToCats()">
+              <button type="button" class="cat-btn back-btn" @click="store.backToCats()">
                 ← Назад
               </button>
-              <button v-for="sub in store.subcatListMap[store.selectedCategory]" :key="sub" class="cat-btn"
+              <button type="button" class="cat-btn" v-for="sub in store.subcatListMap[store.selectedCategory]" :key="sub"
                       :class="{ active: store.selectedSubcat === sub }" @click="store.pickSubcat(sub)">
                 <img :src="categoryImages[store.selectedCategory]" alt="" />
                 <span>{{ sub }}</span>
               </button>
             </div>
-            <button class="nav-btn next" @click="scrollSubcats(1)" :disabled="!canNext">
+            <button type="button" class="nav-btn next" @click="scrollSubcats(1)" :disabled="!canNext">
               ›
             </button>
           </div>
@@ -156,7 +155,7 @@ const canPrev = computed(() => scrollPos.value > 0)
 const canNext = computed(() => {
   const el = subcatSlider.value
   if (!el) return false
-  return scrollPos.value + el.clientWidth < el.scrollWidth
+  return el.scrollLeft < el.scrollWidth - el.clientWidth - 1
 })
 
 // стрелки: dir = ±1 — сдвигаем на две карточки
@@ -358,52 +357,50 @@ onMounted(() => {
       .header-cats-template {
         display: flex;
         flex-direction: column;
-        padding: 0 10px;
         width: 100%;
         .header-cats-div {
           display: flex;
-          width: 100%;
+          justify-content: center;
           gap: 8px;
           .cat-btn {
             display: flex;
             flex-direction: column;
-            background: $white-100;
-            border-radius: 12px;
-            padding: 12px;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
             width: 113px;
             height: 113px;
-            text-align: center;
-            transition: box-shadow 0.25s ease-in-out;
+            border-radius: 4px;
+            border: none;
+            background-color: $grey-95;
             cursor: pointer;
-            &.active {
-              box-shadow: 0 0 0 2px $red-active;
-            }
             img {
-              width: 48px;
-              height: 48px;
-              object-fit: contain;
-              margin-bottom: 6px;
+              width: 60px;
+              height: 60px;
+              object-fit: cover;
             }
             span {
-              display: block;
+              color: $grey-20;
+              font-family: Bounded;
               font-size: 14px;
-              line-height: 1;
-              color: $black-100;
+              font-weight: 350;
+              line-height: 80%;
+              letter-spacing: -0.84px;
             }
           }
         }
         .subcat-slider-wrapper {
           display: flex;
           align-items: center;
-          width: 100%;
+          gap: 8px;
           .nav-btn {
             flex: 0 0 32px;
-            background: $white-80;
+            padding: 4px;
+            text-align: center;
             border-radius: 8px;
+            background-color: $white-80;
             font-size: 24px;
             line-height: 1;
-            text-align: center;
-            padding: 4px;
             cursor: pointer;
             &.prev[disabled],
             &.next[disabled] {
@@ -412,45 +409,69 @@ onMounted(() => {
             }
           }
           .subcat-slider {
-            flex: 1;
-            overflow-x: auto;
             display: flex;
-            gap: 8px;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
+            flex: 1;
             padding: 4px 0;
+            gap: 8px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
             scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
             &::-webkit-scrollbar {
               display: none;
             }
-            .cat-btn,
             .back-btn {
-              flex: 0 0 auto;
-              width: 96px;
-              height: 96px;
-              background: $white-100;
-              border-radius: 12px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
               padding: 8px;
-              text-align: center;
-              transition: box-shadow 0.2s;
+              width: 113px;
+              height: 113px;
+              border-radius: 4px;
+              border: none;
+              background-color: $grey-95;
+              cursor: pointer;
+              transition: all 0.25s ease-in-out;
               scroll-snap-align: start;
             }
+            .cat-btn {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              padding: 8px;
+              width: 113px;
+              height: 113px;
+              border-radius: 4px;
+              border: none;
+              background-color: $grey-95;
+              cursor: pointer;
+              transition: all 0.25s ease-in-out;
+              scroll-snap-align: start;
+              img {
+                width: 60px;
+                height: 60px;
+                object-fit: cover;
+              }
+              span {
+                color: $grey-20;
+                font-family: Bounded;
+                font-size: 14px;
+                font-weight: 350;
+                line-height: 80%;
+                letter-spacing: -0.84px;
+              }
+            }
             .cat-btn.active {
-              box-shadow: 0 0 0 2px $red-active;
-            }
-            .back-btn {
-              background: $white-80;
-            }
-            img {
-              width: 40px;
-              height: 40px;
-              object-fit: contain;
-              margin-bottom: 4px;
-            }
-            span {
-              display: block;
-              font-size: 12px;
-              color: $black-100;
+              background-color: $white-100;
+              img {
+                width: 65px;
+                height: 65px;
+              }
+              span {
+                color: $black-100;
+              }
             }
           }
         }
@@ -483,13 +504,13 @@ onMounted(() => {
             padding: 8px;
             border: 1px solid $grey-89;
             border-radius: 6px;
-            background: $white-100;
+            background-color: $white-100;
           }
         }
         button {
           width: 100%;
           padding: 10px;
-          background: $white-100;
+          background-color: $white-100;
           border: 1px solid $grey-89;
           border-radius: 6px;
           text-align: left;
@@ -510,7 +531,7 @@ onMounted(() => {
           }
         }
         .mobile-filters {
-          background: $white-100;
+          background-color: $white-100;
           border: 1px solid $grey-89;
           border-radius: 6px;
           padding: 12px;
@@ -530,7 +551,7 @@ onMounted(() => {
               flex: 1;
               text-align: center;
               padding: 8px 0;
-              background: $white-80;
+              background-color: $white-80;
               border-radius: 6px;
               font-size: 14px;
               cursor: pointer;
@@ -541,14 +562,14 @@ onMounted(() => {
                 pointer-events: none;
               }
               &.active {
-                background: $red-active;
+                background-color: $red-active;
                 color: $white-100;
               }
             }
           }
           .btn-clear {
             padding: 8px;
-            background: $red-error;
+            background-color: $red-error;
             color: $white-100;
             border: none;
             border-radius: 6px;
@@ -568,12 +589,11 @@ onMounted(() => {
     }
   }
   .product-card {
-    background: $white-100;
+    background-color: $white-100;
     border-radius: 12px;
     padding: 12px;
     text-align: center;
     position: relative;
-    transition: transform 0.25s ease-in-out;
     .product-img {
       width: 100%;
       border-radius: 8px;
@@ -614,7 +634,7 @@ onMounted(() => {
     .btn-load-more {
       width: 100%;
       padding: 12px 0;
-      background: $red-active;
+      background-color: $red-active;
       color: $white-100;
       border: none;
       border-radius: 6px;
