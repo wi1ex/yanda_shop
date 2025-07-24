@@ -1,5 +1,6 @@
 <template>
   <div class="catalog">
+    <div class="line-vert"></div>
     <!-- HEADER: текст, логотип, категории, селект сортировки -->
     <header class="catalog-header">
       <!-- Логотип по центру -->
@@ -73,6 +74,8 @@
         </div>
       </div>
 
+      <div class="line-hor"></div>
+
       <transition name="slide">
         <div v-if="mobileFiltersOpen" class="mobile-filters">
           <input type="number" v-model.number="store.filterPriceMin" placeholder="Мин. цена" />
@@ -116,6 +119,7 @@
       <button type="button" v-if="paged.length < store.displayedProducts.length" @click="loadMore" class="btn-load-more">Ещё</button>
     </div>
   </div>
+  <div class="line-hor"></div>
 </template>
 
 <script setup>
@@ -379,6 +383,22 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="scss">
+
+.line-vert {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 0.5px);
+  width: 1px;
+  height: 100%;
+  background-color: $white-100;
+  z-index: 10;
+}
+.line-hor {
+  width: 100%;
+  height: 1px;
+  background-color: $white-100;
+  z-index: 100;
+}
 .catalog {
   margin-top: 120px;
   /* === HEADER (мобильный) === */
