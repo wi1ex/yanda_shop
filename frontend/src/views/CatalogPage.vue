@@ -2,16 +2,16 @@
   <div class="catalog">
     <!-- HEADER: текст, логотип, категории, селект сортировки -->
     <header class="catalog-header">
-      <!-- Текст слева -->
-      <div class="header-text">
-        <p>Здесь оригинальные вещи на любой вкус: от классики до уличного кэжуала.</p>
-        <p>Только проверенные бренды и актуальные коллекции. Одежда, в которой ты будешь выглядеть современно, уверенно и круто.</p>
-      </div>
-
       <!-- Логотип по центру -->
       <div class="header-logo">
         <span class="logo-title">{{ headerTitle }}</span>
         <sup class="logo-count">{{ totalItems }}</sup>
+      </div>
+
+      <!-- Текст слева -->
+      <div class="header-text">
+        <p>Здесь оригинальные вещи на любой вкус: от классики до уличного кэжуала.</p>
+        <p>Только проверенные бренды и актуальные коллекции. Одежда, в которой ты будешь выглядеть современно, уверенно и круто.</p>
       </div>
 
       <!-- Навигация по категориям под логотипом -->
@@ -48,11 +48,11 @@
       </nav>
     </header>
 
-    <div class="catalog-body">
+    <div>
       <!-- Основная колонка -->
-      <main class="main-content">
+      <main>
         <!-- Мобильные контролы -->
-        <div class="mobile-controls mobile-only">
+        <div class="mobile-controls">
           <div class="mobile-sort">
             <span>Сортировка:</span>
             <select v-model="sortOption">
@@ -94,7 +94,7 @@
         <!-- Сетка товаров -->
         <div class="products-grid" :class="{ blurred: productsLoading }">
           <article v-for="group in paged" :key="group.color_sku" class="product-card">
-            <div class="clickable" @click="goToProductDetail(group)">
+            <div @click="goToProductDetail(group)">
               <img :src="group.minPriceVariant.image" alt="" class="product-img"/>
               <div class="info">
                 <p class="brand">{{ group.minPriceVariant.brand }}</p>
@@ -292,393 +292,263 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-
 .catalog {
-  padding: 2vw 4vw;
-  background: #DEDEDE;
-}
-
-/* === HEADER === */
-.catalog-header {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  grid-template-rows: auto auto;
-  gap: 16px;
-  align-items: center;
-  margin-bottom: 32px;
-  margin-top: 50px;
-
-  .header-text {
-    grid-column: 1;
-    grid-row: 2;
-    color: $grey-20;
-    font-size: 16px;
-    line-height: 110%;
-    letter-spacing: -0.64px;
-  }
-
-  .header-logo {
-    display: flex;
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: center;
-    .logo-title {
-      color: $black-100;
-      font-family: Bounded;
-      font-weight: 400;
-      font-size: 64px;
-      line-height: 90%;
-      letter-spacing: -5.12px;
-    }
-    .logo-count  {
-      color: $red-active;
-      margin-left: 8px;
-      margin-top: 2px;
-      font-size: 16px;
-      line-height: 110%;
-      letter-spacing: -0.64px;
-    }
-  }
-
-  .header-sort {
-    grid-column: 3;
-    grid-row: 2;
-    justify-self: start;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    select {
-      padding: 6px 10px;
-      border: 1px solid #CCC;
-      border-radius: 6px;
-      background: #FFF;
-    }
-  }
-
-  .header-cats {
-    grid-column: 2;
-    grid-row: 2;
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    .header-cats-template {
+  background: $grey-87;
+  padding: 16px;
+  /* === HEADER (мобильный) === */
+  &-header {
+    text-align: center;
+    margin: 32px 0 16px;
+    .header-logo {
       display: flex;
-      flex-direction: column;
-      .header-cats-div {
-        display: flex;
-        .cat-btn {
-          background: #FFF;
-          border-radius: 12px;
-          padding: 16px;
-          text-align: center;
-          transition: box-shadow .2s;
-          &.active {
-            box-shadow: 0 0 0 2px #FF3B30;
-          }
-          img {
-            width: 64px; height: 64px;
-            object-fit: contain;
-            margin-bottom: 8px;
-          }
-          span {
-            display: block;
-            color: $black-100;
-            font-family: Bounded;
-            font-weight: 350;
-            font-size: 14px;
-            line-height: 90%;
-            letter-spacing: -0.84px;
-          }
-        }
-        .back-btn {
-          background: none;
-          font-size: 16px;
-          color: $black-100;
-          padding: 16px;
-          border-radius: 12px;
-          &:hover { background: #F0F0F0; }
-        }
-        .nav-btn {
-          font-size: 24px;
-          padding: 16px;
-          border-radius: 12px;
-          background: #FFF;
-          &:hover {
-            background: #F0F0F0;
-          }
-        }
+      justify-content: center;
+      align-items: flex-end;
+      .logo-title {
+        font-family: Bounded;
+        font-weight: 500;
+        font-size: 32px;
+        line-height: 0.9;
+        letter-spacing: -2.24px;
+        color: $black-100;
+      }
+      .logo-count {
+        font-size: 15px;
+        line-height: 1.1;
+        letter-spacing: -0.6px;
+        color: $red-active;
+        margin-left: 4px;
+        margin-bottom: 2px;
       }
     }
-  }
-}
-
-/* === BODY === */
-.catalog-body {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 24px;
-}
-.load-more-container {
-  text-align: center;
-  margin: 24px 0;
-}
-
-.btn-load-more {
-  padding: 10px 20px;
-  background: #FF3B30;
-  color: #FFF;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-/* Sidebar фильтров */
-.sidebar {
-  .filters-panel {
-    background: #FFF;
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-
-    input, select {
-      padding: 8px;
-      border: 1px solid #CCC;
-      border-radius: 6px;
+    .header-text {
+      color: $black-70;
+      font-size: 15px;
+      line-height: 1.2;
+      letter-spacing: -0.6px;
+      margin-top: 8px;
+      p + p {
+        margin-top: 6px;
+      }
     }
-    .btn-clear {
-      background: #DC3545;
-      color: #FFF;
-      border: none;
-      border-radius: 6px;
-      padding: 8px;
-      cursor: pointer;
-    }
-    .gender-filter {
+    .header-cats {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
-      label {
-        font-size: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 16px;
+      .cat-btn {
+        background: $white-100;
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        transition: box-shadow 0.2s;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        input {
-          margin-right: 6px;
+        &.active {
+          box-shadow: 0 0 0 2px $red-active;
         }
+        img {
+          width: 48px;
+          height: 48px;
+          object-fit: contain;
+          margin-bottom: 6px;
+        }
+        span {
+          display: block;
+          font-size: 14px;
+          line-height: 1;
+          color: $black-100;
+        }
+      }
+      .back-btn,
+      .nav-btn {
+        background: $white-80;
+        border-radius: 12px;
+        padding: 12px 8px;
+        font-size: 18px;
+        cursor: pointer;
       }
     }
   }
-}
-
-/* Main content */
-.main-content {
+  /* === MOBILE CONTROLS === */
   .mobile-controls {
     display: flex;
     flex-direction: column;
     gap: 8px;
     margin-bottom: 16px;
-
+    .mobile-sort {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      span {
+        font-size: 14px;
+        color: $black-100;
+      }
+      select {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid $grey-89;
+        border-radius: 6px;
+        background: $white-100;
+      }
+    }
     button {
       width: 100%;
       padding: 10px;
-      background: #FFF;
-      border: 1px solid #CCC;
+      background: $white-100;
+      border: 1px solid $grey-89;
       border-radius: 6px;
       text-align: left;
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
-
       .arrow {
-        border: solid #333;
+        width: 8px;
+        height: 8px;
+        border: solid $black-100;
         border-width: 0 2px 2px 0;
         display: inline-block;
-        padding: 4px;
-        &.down  {
-          transform: rotate(45deg);
-        }
-        &.up    {
+        transform: rotate(45deg);
+        &.up {
           transform: rotate(-135deg);
         }
       }
     }
-
-    /* Новый блок «мобильной сортировки» (отдельный от кнопок) */
-    .mobile-sort {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      span {
-        font-size: 14px;
-      }
-      select {
-        flex: 1;
-        padding: 8px;
-        border: 1px solid #CCC;
-        border-radius: 6px;
-        background: #FFF;
-      }
-    }
-
     .mobile-filters {
-      background: #FFF;
-      border: 1px solid #CCC;
+      background: $white-100;
+      border: 1px solid $grey-89;
       border-radius: 6px;
       padding: 12px;
       display: flex;
       flex-direction: column;
       gap: 8px;
-
-      input, select {
+      input,
+      select {
         padding: 8px;
-        border: 1px solid #CCC;
+        border: 1px solid $grey-89;
         border-radius: 6px;
-      }
-      .btn-clear {
-        background: #DC3545;
-        color: #FFF;
-        border: none;
-        border-radius: 6px;
-        padding: 8px;
       }
       .gender-filter {
         display: flex;
-        flex-direction: row;
         gap: 12px;
         label {
           flex: 1;
-          justify-content: center;
-          padding: 8px 0;
-          background: #F5F5F5;
-          border-radius: 6px;
           text-align: center;
+          padding: 8px 0;
+          background: $white-80;
+          border-radius: 6px;
           font-size: 14px;
+          cursor: pointer;
+          position: relative;
           input {
-            display: none;
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
           }
           &.active {
-            background: #FF3B30;
-            color: #FFF;
+            background: $red-active;
+            color: $white-100;
           }
         }
       }
+      .btn-clear {
+        padding: 8px;
+        background: $red-error;
+        color: $white-100;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
     }
   }
-
-  /* Сетка товаров */
+  /* === PRODUCTS GRID (только тут используем grid) === */
   .products-grid {
     display: grid;
-    grid-template-columns: repeat(4,1fr);
-    gap: 24px;
+    grid-template-columns: repeat(4, 1fr);;
+    gap: 12px;
     &.blurred {
       filter: blur(4px);
     }
   }
   .product-card {
-    background: #FFF;
+    background: $white-100;
     border-radius: 12px;
-    padding: 16px;
-    position: relative;
+    padding: 12px;
     text-align: center;
-
+    position: relative;
+    transition: transform 0.2s;
     .product-img {
       width: 100%;
       border-radius: 8px;
     }
     .info {
-      margin-top: 12px;
+      margin-top: 8px;
       .brand {
         font-size: 12px;
-        color: #777;
+        color: $black-60;
       }
-      .name  {
-        font-size: 18px;
-        color: #333;
+      .name {
+        font-size: 16px;
+        color: $black-100;
         margin: 4px 0;
       }
       .price {
-        font-size: 16px;
-        color: #000;
+        font-size: 14px;
+        color: $black-100;
       }
     }
     .fav {
       position: absolute;
-      top: 12px; right: 12px;
+      top: 8px;
+      right: 8px;
       background: none;
       border: none;
+      font-size: 16px;
+      cursor: pointer;
+      &.active {
+        color: $red-active;
+      }
+    }
+  }
+  /* === LOAD MORE === */
+  .load-more-container {
+    text-align: center;
+    margin: 16px 0;
+    .btn-load-more {
+      width: 100%;
+      padding: 12px 0;
+      background: $red-active;
+      color: $white-100;
+      border: none;
+      border-radius: 6px;
       font-size: 18px;
       cursor: pointer;
-      &.active { color: #FF3B30; }
     }
   }
-}
-
-/* Плавное развёртывание */
-.slide-enter-active, .slide-leave-active {
-  transition: all .3s ease;
-}
-.slide-enter-from, .slide-leave-to {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-}
-.slide-enter-to, .slide-leave-from {
-  max-height: 500px;
-  opacity: 1;
-}
-
-/* === MEDIA (<600px) === */
-@media (max-width: 600px) {
-  .catalog-body {
-    grid-template-columns: 1fr;
+  /* === SLIDE TRANSITIONS === */
+  .slide-enter-active,
+  .slide-leave-active {
+    transition: all 0.3s ease;
   }
-  .load-more-container {
-    margin: 16px 0;
+  .slide-enter-from,
+  .slide-leave-to {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
   }
-  .btn-load-more {
-    width: 100%;
-    padding: 12px 0;
-    font-size: 18px;
+  .slide-enter-to,
+  .slide-leave-from {
+    max-height: 500px;
+    opacity: 1;
   }
 
-  .catalog-header {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto auto;
-    text-align: center;
-    .header-text   {
-      grid-column: 2;
-      grid-row: 2;
-      font-size: 15px;
-      letter-spacing: -0.6px;
-    }
-    .header-logo   {
-      grid-row: 1;
-      .logo-title {
-        font-size: 32px;
-        letter-spacing: -2.24px;
-      }
-      .logo-count  {
-        margin-left: 4px;
-        margin-top: 0;
-        font-size: 15px;
-        letter-spacing: -0.6px;
+  /* MOBILE (<600px) */
+  @media (max-width: 600px) {
+    .catalog {
+      .products-grid {
+        grid-template-columns: repeat(2, 1fr);
       }
     }
-    .header-cats   {
-      grid-row: 3;
-    }
-  }
-
-  .main-content .products-grid {
-    grid-template-columns: repeat(2,1fr);
-    gap: 12px;
   }
 }
 </style>
