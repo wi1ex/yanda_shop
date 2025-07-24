@@ -66,15 +66,15 @@
             <span>Сортировка: {{ currentLabel }}</span>
             <img :src="icon_arrow_red" alt="" :style="{ transform: sortOpen ? 'rotate(90deg)' : 'rotate(270deg)' }"/>
           </button>
-          <ul v-if="sortOpen" ref="sortList" class="sort-list">
-            <li v-for="opt in sortOptions" :key="opt.value" @click="selectSort(opt.value)" :class="{ active: sortOption === opt.value }">
-              {{ opt.label }}
-            </li>
-          </ul>
+          <transition name="slide-down">
+            <ul v-if="sortOpen" ref="sortList" class="sort-list">
+              <li v-for="opt in sortOptions" :key="opt.value" @click="selectSort(opt.value)" :class="{ active: sortOption === opt.value }">
+                {{ opt.label }}
+              </li>
+            </ul>
+          </transition>
         </div>
       </div>
-
-      <div class="line-hor"></div>
 
       <transition name="slide">
         <div v-if="mobileFiltersOpen" class="mobile-filters">
@@ -98,6 +98,8 @@
           <button type="button" @click="handleClearFilters" class="btn-clear">Сбросить</button>
         </div>
       </transition>
+
+      <div class="line-hor"></div>
 
       <!-- Сетка товаров -->
       <div class="products-grid" :class="{ blurred: productsLoading }">
@@ -406,6 +408,8 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
+    z-index: 20;
     .header-logo {
       display: flex;
       align-items: flex-start;
@@ -598,7 +602,7 @@ onBeforeUnmount(() => {
         align-items: center;
         justify-content: space-between;
         padding: 12px 8px;
-        width: 50%;
+        min-width: calc(50% - 5px);
         border-radius: 4px;
         border: none;
         background-color: $grey-95;
@@ -618,7 +622,7 @@ onBeforeUnmount(() => {
       .mobile-sort {
         display: flex;
         position: relative;
-        width: 50%;
+        min-width: calc(50% - 5px);
         .sort-btn {
           display: flex;
           align-items: center;
@@ -679,6 +683,21 @@ onBeforeUnmount(() => {
             }
           }
         }
+        /* Плавное раскрытие вверх-вниз */
+        .slide-down-enter-active,
+        .slide-down-leave-active {
+          transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+        .slide-down-enter-from,
+        .slide-down-leave-to {
+          max-height: 0;
+          opacity: 0;
+        }
+        .slide-down-enter-to,
+        .slide-down-leave-from {
+          max-height: 500px;  /* достаточно большое, чтобы вместить все пункты */
+          opacity: 1;
+        }
       }
     }
     .mobile-filters {
@@ -689,6 +708,7 @@ onBeforeUnmount(() => {
       display: flex;
       flex-direction: column;
       gap: 8px;
+      z-index: 20;
       input,
       select {
         padding: 8px;
@@ -748,7 +768,7 @@ onBeforeUnmount(() => {
   .products-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    margin-top: 40px;
+    margin-top: 10px;
     transition: all 0.25s ease-in-out;
     &.blurred {
       filter: blur(4px);
@@ -826,7 +846,7 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 32px 0 96px;
+    margin: 16px 0 96px;
     padding: 0 24px;
     width: 100%;
     height: 56px;
@@ -838,6 +858,7 @@ onBeforeUnmount(() => {
     line-height: 100%;
     letter-spacing: -0.64px;
     cursor: pointer;
+    z-index: 20;
   }
 }
 
