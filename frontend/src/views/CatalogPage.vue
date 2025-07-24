@@ -56,10 +56,34 @@
     <div class="catalog-body">
       <!-- Мобильные контролы -->
       <div class="mobile-controls">
-        <button type="button" class="filter-btn" @click="mobileFiltersOpen = !mobileFiltersOpen">
-          Фильтры
-          <img :src="mobileFiltersOpen ? icon_close : icon_filter" alt=""/>
-        </button>
+        <div class="mobile-filter">
+          <button type="button" ref="filterBtn" class="filter-btn" @click="mobileFiltersOpen = !mobileFiltersOpen">
+            Фильтры
+            <img :src="mobileFiltersOpen ? icon_close : icon_filter" alt=""/>
+          </button>
+          <transition name="slide-down">
+            <div v-if="mobileFiltersOpen" ref="filterList" class="filter-list">
+              <input type="number" v-model.number="store.filterPriceMin" placeholder="Мин. цена" />
+              <input type="number" v-model.number="store.filterPriceMax" placeholder="Макс. цена" />
+              <select v-model="store.filterColor">
+                <option value="">Все цвета</option>
+                <option v-for="color in distinctColors" :key="color" :value="color">{{ color }}</option>
+              </select>
+              <div class="gender-filter">
+              <label :class="{ active: store.filterGender === '' }">
+                <input type="radio" v-model="store.filterGender" value="" /> Все
+              </label>
+              <label :class="{ active: store.filterGender === 'M' }">
+                <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
+              </label>
+              <label :class="{ active: store.filterGender === 'F' }">
+                <input type="radio" v-model="store.filterGender" value="F" /> Женщинам
+              </label>
+              </div>
+              <button type="button" @click="handleClearFilters" class="btn-clear">Сбросить</button>
+            </div>
+          </transition>
+        </div>
         <div class="mobile-sort">
           <button type="button" ref="sortBtn" class="sort-btn" @click="sortOpen = !sortOpen"
                   :style="{ borderRadius: sortOpen ? '4px 4px 0 0' : '4px' }">
@@ -75,29 +99,6 @@
           </transition>
         </div>
       </div>
-
-      <transition name="slide">
-        <div v-if="mobileFiltersOpen" class="mobile-filters">
-          <input type="number" v-model.number="store.filterPriceMin" placeholder="Мин. цена" />
-          <input type="number" v-model.number="store.filterPriceMax" placeholder="Макс. цена" />
-          <select v-model="store.filterColor">
-            <option value="">Все цвета</option>
-            <option v-for="color in distinctColors" :key="color" :value="color">{{ color }}</option>
-          </select>
-          <div class="gender-filter">
-          <label :class="{ active: store.filterGender === '' }">
-            <input type="radio" v-model="store.filterGender" value="" /> Все
-          </label>
-          <label :class="{ active: store.filterGender === 'M' }">
-            <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
-          </label>
-          <label :class="{ active: store.filterGender === 'F' }">
-            <input type="radio" v-model="store.filterGender" value="F" /> Женщинам
-          </label>
-          </div>
-          <button type="button" @click="handleClearFilters" class="btn-clear">Сбросить</button>
-        </div>
-      </transition>
 
       <div class="line-hor"></div>
 
@@ -119,6 +120,7 @@
       </div>
 
       <button type="button" v-if="paged.length < store.displayedProducts.length" @click="loadMore" class="btn-load-more">Ещё</button>
+      <div v-else class="btn-load-more-div"></div>
     </div>
   </div>
   <div class="line-hor"></div>
@@ -153,6 +155,8 @@ const sortOpen = ref(false)
 const sortOption = ref(store.sortBy + '_' + store.sortOrder)
 const sortBtn = ref(null)
 const sortList = ref(null)
+const filterBtn = ref(null)
+const filterList = ref(null)
 
 const categoryImages = {
   'Одежда': category_clothing,
@@ -336,6 +340,13 @@ function onClickOutside(e) {
     !sortList.value?.contains(e.target)
   ) {
     sortOpen.value = false
+  }
+  if (
+    mobileFiltersOpen.value &&
+    !filterBtn.value.contains(e.target) &&
+    !filterList.value?.contains(e.target)
+  ) {
+    mobileFiltersOpen.value = false
   }
 }
 
@@ -597,26 +608,80 @@ onBeforeUnmount(() => {
       display: flex;
       padding: 0 10px 10px;
       gap: 10px;
-      .filter-btn {
+      .mobile-filter {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 8px;
+        position: relative;
         min-width: calc(50% - 5px);
-        border-radius: 4px;
-        border: none;
-        background-color: $grey-95;
-        color: $grey-20;
-        font-family: Bounded;
-        font-size: 14px;
-        font-weight: 350;
-        line-height: 120%;
-        letter-spacing: -0.7px;
-        cursor: pointer;
-        img {
-          width: 16px;
-          height: 16px;
-          object-fit: cover;
+        .filter-btn {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px 8px;
+          width: 100%;
+          border-radius: 4px;
+          border: none;
+          background-color: $grey-95;
+          color: $grey-20;
+          font-family: Bounded;
+          font-size: 14px;
+          font-weight: 350;
+          line-height: 120%;
+          letter-spacing: -0.7px;
+          cursor: pointer;
+          img {
+            width: 16px;
+            height: 16px;
+            object-fit: cover;
+          }
+        }
+        .filter-list {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          margin: 0;
+          padding: 0;
+          background: $white-100;
+          border: 1px solid $grey-89;
+          border-radius: 6px;
+          z-index: 20;
+          input,
+          select {
+            padding: 8px;
+            border: 1px solid $grey-89;
+            border-radius: 6px;
+          }
+          .gender-filter {
+            display: flex;
+            gap: 12px;
+            label {
+              flex: 1;
+              text-align: center;
+              padding: 8px 0;
+              background-color: $white-80;
+              border-radius: 6px;
+              font-size: 14px;
+              cursor: pointer;
+              position: relative;
+              input {
+                position: absolute;
+                opacity: 0;
+                pointer-events: none;
+              }
+              &.active {
+                background-color: $red-active;
+                color: $white-100;
+              }
+            }
+          }
+          .btn-clear {
+            padding: 8px;
+            background-color: $red-error;
+            color: $white-100;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+          }
         }
       }
       .mobile-sort {
@@ -683,85 +748,22 @@ onBeforeUnmount(() => {
             }
           }
         }
-        /* Плавное раскрытие вверх-вниз */
-        .slide-down-enter-active,
-        .slide-down-leave-active {
-          transition: max-height 0.3s ease, opacity 0.3s ease;
-        }
-        .slide-down-enter-from,
-        .slide-down-leave-to {
-          max-height: 0;
-          opacity: 0;
-        }
-        .slide-down-enter-to,
-        .slide-down-leave-from {
-          max-height: 500px;  /* достаточно большое, чтобы вместить все пункты */
-          opacity: 1;
-        }
       }
-    }
-    .mobile-filters {
-      background-color: $white-100;
-      border: 1px solid $grey-89;
-      border-radius: 6px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      z-index: 20;
-      input,
-      select {
-        padding: 8px;
-        border: 1px solid $grey-89;
-        border-radius: 6px;
+      /* Плавное раскрытие вверх-вниз */
+      .slide-down-enter-active,
+      .slide-down-leave-active {
+        transition: max-height 0.25s ease-in-out, opacity 0.25s ease-in-out;
       }
-      .gender-filter {
-        display: flex;
-        gap: 12px;
-        label {
-          flex: 1;
-          text-align: center;
-          padding: 8px 0;
-          background-color: $white-80;
-          border-radius: 6px;
-          font-size: 14px;
-          cursor: pointer;
-          position: relative;
-          input {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-          }
-          &.active {
-            background-color: $red-active;
-            color: $white-100;
-          }
-        }
+      .slide-down-enter-from,
+      .slide-down-leave-to {
+        max-height: 0;
+        opacity: 0;
       }
-      .btn-clear {
-        padding: 8px;
-        background-color: $red-error;
-        color: $white-100;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
+      .slide-down-enter-to,
+      .slide-down-leave-from {
+        max-height: 500px;
+        opacity: 1;
       }
-    }
-    /* === SLIDE TRANSITIONS === */
-    .slide-enter-active,
-    .slide-leave-active {
-      transition: all 0.25s ease-in-out;
-    }
-    .slide-enter-from,
-    .slide-leave-to {
-      max-height: 0;
-      opacity: 0;
-      overflow: hidden;
-    }
-    .slide-enter-to,
-    .slide-leave-from {
-      max-height: 500px;
-      opacity: 1;
     }
   }
   /* === PRODUCTS GRID (только тут используем grid) === */
@@ -859,6 +861,11 @@ onBeforeUnmount(() => {
     letter-spacing: -0.64px;
     cursor: pointer;
     z-index: 20;
+  }
+  .btn-load-more-div {
+    display: flex;
+    margin: 0 0 96px;
+    width: 100%;
   }
 }
 
