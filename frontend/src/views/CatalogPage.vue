@@ -29,25 +29,22 @@
 
         <!-- 2) Подкатегории -->
         <div v-else class="header-cats-template">
-          <div class="header-cats-div">
-            <!-- Кнопка «назад» -->
-            <button type="button" class="back-btn" @click="store.backToCats()">
-              ← Назад
-            </button>
-            <!-- Список текущих 2-х подкатегорий -->
-            <button type="button" v-for="sub in visibleSubcats" :key="sub" @click="store.pickSubcat(sub)"
-                    :class="['cat-btn', { active: store.selectedSubcat === sub }]">
-<!--              <img :src="subcategoryImages[sub]" :alt="sub"/>-->
-              <img :src="categoryImages[cat]" :alt="cat"/>
-              <span>{{ sub }}</span>
-            </button>
-          </div>
-          <div class="header-cats-div">
-            <!-- Кнопки листания -->
-            <button type="button" class="nav-btn" @click="store.prevSubcatPage()" :disabled="!canPrev">
+          <div class="subcat-slider-wrapper">
+            <button class="nav-btn prev" @click="scrollSubcats(-1)" :disabled="!canPrev">
               ‹
             </button>
-            <button type="button" class="nav-btn" @click="store.nextSubcatPage()" :disabled="!canNext">
+            <div class="subcat-slider" ref="subcatSlider" @scroll.passive="onScroll"
+                 @touchstart.passive="onTouchStart" @touchmove.passive="onTouchMove" @touchend.passive="onTouchEnd">
+              <button class="cat-btn back-btn" @click="store.backToCats()">
+                ← Назад
+              </button>
+              <button v-for="sub in store.subcatListMap[store.selectedCategory]" :key="sub" class="cat-btn"
+                      :class="{ active: store.selectedSubcat === sub }" @click="store.pickSubcat(sub)">
+                <img :src="categoryImages[store.selectedCategory]" alt="" />
+                <span>{{ sub }}</span>
+              </button>
+            </div>
+            <button class="nav-btn next" @click="scrollSubcats(1)" :disabled="!canNext">
               ›
             </button>
           </div>
@@ -140,6 +137,10 @@ const page = ref(1)
 const perPage = 24
 const mobileFiltersOpen = ref(false)
 const productsLoading = ref(false)
+const subcatSlider = ref(null)
+const scrollPos = ref(0)
+let touchStartX = 0
+let scrollStartX = 0
 
 const categoryImages = {
   'Одежда': category_clothing,
@@ -153,20 +154,46 @@ const categoryImages = {
 //   // … остальные подкатегории …
 // }
 
-const visibleSubcats = computed(() => {
-  const all = store.subcatListMap[store.selectedCategory] || []
-  const page = store.currentSubcatPage
-  return all.slice(page * 2, page * 2 + 2)
-})
-
-const canPrev = computed(() =>
-  store.currentSubcatPage > 0
-)
+const canPrev = computed(() => scrollPos.value > 0)
 
 const canNext = computed(() => {
-  const all = store.subcatListMap[store.selectedCategory] || []
-  return (store.currentSubcatPage + 1) * 2 < all.length
+  const el = subcatSlider.value
+  if (!el) return false
+  return scrollPos.value + el.clientWidth < el.scrollWidth
 })
+
+// стрелки: dir = ±1 — сдвигаем на две карточки
+function scrollSubcats(dir) {
+  const el = subcatSlider.value
+  if (!el) return
+  // ширина одной карточки + gap (примерно)
+  const cardWidth = el.querySelector('.cat-btn').offsetWidth + 8
+  el.scrollBy({
+    left: dir * cardWidth * 2,
+    behavior: 'smooth'
+  })
+}
+
+// свайп
+function onTouchStart(e) {
+  touchStartX = e.touches[0].clientX
+  scrollStartX = subcatSlider.value.scrollLeft
+}
+
+function onTouchMove(e) {
+  const dx = touchStartX - e.touches[0].clientX
+  subcatSlider.value.scrollLeft = scrollStartX + dx
+}
+
+function onTouchEnd() {
+  // ничего не делаем — инерция браузера
+}
+
+function onScroll() {
+  const el = subcatSlider.value
+  if (!el) return
+  scrollPos.value = el.scrollLeft
+}
 
 // 1) Количество отфильтрованных товаров
 const totalItems = computed(() => store.displayedProducts.length)
@@ -293,6 +320,10 @@ onMounted(() => {
     const g = route.query.gender
     store.filterGender = (g === 'M' || g === 'F') ? g : ''
   }
+  if (subcatSlider.value) {
+    subcatSlider.value.scrollLeft = 0
+    scrollPos.value = 0
+  }
   animateGrid()
   loadCategory(store.selectedCategory)
 })
@@ -310,6 +341,7 @@ onMounted(() => {
       display: flex;
       align-items: flex-start;
       justify-content: center;
+      gap: 4px;
       .logo-title {
         color: $black-100;
         font-family: Bounded;
@@ -355,7 +387,8 @@ onMounted(() => {
             background: $white-100;
             border-radius: 12px;
             padding: 12px;
-            width: calc(100% / 3);
+            width: 113px;
+            height: 113px;
             text-align: center;
             transition: box-shadow 0.25s ease-in-out;
             cursor: pointer;
@@ -375,26 +408,65 @@ onMounted(() => {
               color: $black-100;
             }
           }
-          .back-btn {
-            background: $white-100;
-            border-radius: 12px;
-            padding: 12px;
-            width: calc(100% / 3);
-            text-align: center;
-            transition: box-shadow 0.25s ease-in-out;
-            cursor: pointer;
-            background: $white-80;
-            font-size: 18px;
-          }
+        }
+        .subcat-slider-wrapper {
+          display: flex;
+          align-items: center;
+          width: 100%;
           .nav-btn {
-            background: $white-100;
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
-            transition: box-shadow 0.25s ease-in-out;
-            cursor: pointer;
+            flex: 0 0 32px;
             background: $white-80;
-            font-size: 18px;
+            border-radius: 8px;
+            font-size: 24px;
+            line-height: 1;
+            text-align: center;
+            padding: 4px;
+            cursor: pointer;
+            &.prev[disabled],
+            &.next[disabled] {
+              opacity: 0.3;
+              cursor: default;
+            }
+          }
+          .subcat-slider {
+            flex: 1;
+            overflow-x: auto;
+            display: flex;
+            gap: 8px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            padding: 4px 0;
+            &::-webkit-scrollbar {
+              display: none;
+            }
+            .cat-btn,
+            .back-btn {
+              flex: 0 0 auto;
+              width: 96px;
+              height: 96px;
+              background: $white-100;
+              border-radius: 12px;
+              padding: 8px;
+              text-align: center;
+              transition: box-shadow 0.2s;
+            }
+            .cat-btn.active {
+              box-shadow: 0 0 0 2px $red-active;
+            }
+            .back-btn {
+              background: $white-80;
+            }
+            img {
+              width: 40px;
+              height: 40px;
+              object-fit: contain;
+              margin-bottom: 4px;
+            }
+            span {
+              display: block;
+              font-size: 12px;
+              color: $black-100;
+            }
           }
         }
       }
@@ -504,7 +576,7 @@ onMounted(() => {
   /* === PRODUCTS GRID (только тут используем grid) === */
   .products-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);;
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     &.blurred {
       filter: blur(4px);
@@ -581,12 +653,12 @@ onMounted(() => {
     max-height: 500px;
     opacity: 1;
   }
+}
 
-  /* MOBILE (<600px) */
-  @media (max-width: 600px) {
-    .catalog {
-      margin-top: 96px;
-    }
+/* MOBILE (<600px) */
+@media (max-width: 600px) {
+  .catalog {
+    margin-top: 96px;
   }
 }
 </style>
