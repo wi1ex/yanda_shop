@@ -182,7 +182,7 @@
                 </div>
                 <a :href="rev.link_url" target="_blank">
                   Смотреть
-                  <img :src="icon_arrow_black" alt="Arrow" style="transform: rotate(180deg)"/>
+                  <img :src="icon_arrow_grey" alt="Arrow" style="transform: rotate(180deg)"/>
                 </a>
               </div>
             </div>
@@ -249,7 +249,6 @@ import icon_faq_plus from '@/assets/images/faq_plus.svg'
 import icon_minus_red from '@/assets/images/minus_red.svg'
 import icon_arrow_red from '@/assets/images/arrow_red.svg'
 import icon_arrow_grey from '@/assets/images/arrow_grey.svg'
-import icon_arrow_black from '@/assets/images/arrow_black.svg'
 import icon_arrow_white from '@/assets/images/arrow_white.svg'
 import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
 import icon_favorites_black from "@/assets/images/favorites_black.svg";

@@ -136,7 +136,7 @@
       <h2 class="section-title">Сообщество</h2>
       <div class="community-column">
         <div class="community-div">
-          <img :src="about_image17" alt=""/>
+          <img :src="icon_arrow_red" alt="" style="transform: rotate(180deg)"/>
           <p>Пиши нам</p>
         </div>
         <div class="community-div">
@@ -191,9 +191,9 @@ import about_image13 from '@/assets/images/about_image13.svg'
 import about_image14 from '@/assets/images/about_image14.svg'
 import about_image15 from '@/assets/images/about_image15.svg'
 import about_image16 from '@/assets/images/about_image16.svg'
-import about_image17 from '@/assets/images/about_image17.svg'
 import about_image18 from '@/assets/images/about_image18.svg'
 import about_text_logo from '@/assets/images/about_text_logo.svg'
+import icon_arrow_red from '@/assets/images/arrow_red.svg'
 
 const store = useStore()
 </script>

@@ -56,16 +56,19 @@
       <!-- Мобильные контролы -->
       <div class="mobile-controls">
         <button type="button" @click="mobileFiltersOpen = !mobileFiltersOpen">
-          Фильтры <i :class="['arrow', mobileFiltersOpen ? 'up' : 'down']"/>
+          Фильтры
+          <img :src="mobileFiltersOpen ? icon_close : icon_filter" alt=""/>
         </button>
         <div class="mobile-sort">
-          <span>Сортировка:</span>
-          <select v-model="sortOption">
-            <option value="date_desc">Новинки</option>
-            <option value="sales_desc">Бестселлеры</option>
-            <option value="price_asc">Цена ↑</option>
-            <option value="price_desc">Цена ↓</option>
-          </select>
+          <button type="button" ref="sortBtn" class="sort-btn" @click="sortOpen = !sortOpen">
+            <span>Сортировка: {{ currentLabel }}</span>
+            <img :src="icon_arrow_red" alt="" class="sort-icon" :style="{ transform: sortOpen ? 'rotate(90deg)' : 'rotate(270deg)'}"/>
+          </button>
+          <ul v-if="sortOpen" ref="sortList" class="sort-list">
+            <li v-for="opt in sortOptions" :key="opt.value" @click="selectSort(opt.value)" :class="{ active: sortOption === opt.value }">
+              {{ opt.label }}
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -118,9 +121,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/store/index.js'
+import icon_close from '@/assets/images/close.svg'
+import icon_filter from '@/assets/images/filter.svg'
+import icon_arrow_red from '@/assets/images/arrow_red.svg'
 import icon_arrow_mini_red from '@/assets/images/arrow_mini_red.svg'
 import icon_arrow_mini_black from '@/assets/images/arrow_mini_black.svg'
 import category_shoes from '@/assets/images/category_shoes.png'
@@ -137,6 +143,10 @@ const mobileFiltersOpen = ref(false)
 const productsLoading = ref(false)
 const subcatSlider = ref(null)
 const scrollPos = ref(0)
+const sortOpen = ref(false)
+const sortOption = ref(store.sortBy + '_' + store.sortOrder)
+const sortBtn = ref(null)
+const sortList = ref(null)
 
 const categoryImages = {
   'Одежда': category_clothing,
@@ -149,6 +159,19 @@ const categoryImages = {
 //   'Джинсы':      subcat_jeans,
 //   // … остальные подкатегории …
 // }
+
+// Список опций
+const sortOptions = [
+  { value: 'date_desc',  label: 'Новинки'             },
+  { value: 'sales_desc', label: 'Бестселлеры'         },
+  { value: 'price_asc',  label: 'Цена по возрастанию' },
+  { value: 'price_desc', label: 'Цена по убыванию'    },
+]
+
+const currentLabel = computed(() => {
+  const opt = sortOptions.find(o => o.value === sortOption.value)
+  return opt ? opt.label : ''
+})
 
 const canPrev = computed(() =>
   scrollPos.value > 0
@@ -179,6 +202,17 @@ function onScroll() {
   scrollPos.value = el.scrollLeft
 }
 
+// при выборе — обновляем стор и закрываем
+function selectSort(val) {
+  const [by, order] = val.split('_')
+  store.sortBy    = by
+  store.sortOrder = order
+  sortOption.value = val
+  sortOpen.value   = false
+  page.value       = 1
+  animateGrid()
+}
+
 // 1) Количество отфильтрованных товаров
 const totalItems = computed(() => store.displayedProducts.length)
 
@@ -194,14 +228,6 @@ const paged = computed(() =>
   store.displayedProducts.slice(0, page.value * perPage)
 )
 
-const sortOption = computed({
-  get() { return `${store.sortBy}_${store.sortOrder}` },
-  set(v) {
-    const [by, order] = v.split('_')
-    store.sortBy = by
-    store.sortOrder = order
-  }
-})
 
 const distinctColors = computed(() =>
   Array.from(new Set(store.products.map(p => p.color).filter(Boolean)))
@@ -287,10 +313,24 @@ async function loadCategory(cat) {
   productsLoading.value = false
 }
 
+function onClickOutside(e) {
+  // если дропдаун открыт, и клик был вне кнопки и не внутри списка
+  if (
+    sortOpen.value &&
+    !sortBtn.value.contains(e.target) &&
+    !sortList.value?.contains(e.target)
+  ) {
+    sortOpen.value = false
+  }
+}
+
 watch(() => store.selectedCategory, (cat) => { page.value = 1; loadCategory(cat)})
 watch(
+  () => [store.sortBy, store.sortOrder],
+  () => { sortOption.value = `${store.sortBy}_${store.sortOrder}` }
+)
+watch(
   () => [
-    sortOption.value,
     store.filterColor,
     store.filterGender,
     store.filterPriceMin,
@@ -304,6 +344,7 @@ watch(
 
 // При монтировании грузим товары
 onMounted(() => {
+  document.addEventListener('click', onClickOutside)
   if (route.query.sort) {
     const [by, order] = String(route.query.sort).split('_')
     store.sortBy = by
@@ -316,10 +357,16 @@ onMounted(() => {
   if (subcatSlider.value) {
     subcatSlider.value.scrollLeft = 0
     scrollPos.value = 0
+    onScroll()
   }
   animateGrid()
   loadCategory(store.selectedCategory)
 })
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onClickOutside)
+})
+
 </script>
 
 <style scoped lang="scss">
@@ -491,6 +538,7 @@ onMounted(() => {
               &.prev[disabled],
               &.next[disabled] {
                 cursor: default;
+                pointer-events: none;
                 img {
                   opacity: 0.4;
                 }
@@ -519,8 +567,8 @@ onMounted(() => {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 10px;
-        width: 100%;
+        padding: 12px 8px;
+        width: 50%;
         border-radius: 4px;
         border: none;
         background-color: $grey-95;
@@ -530,79 +578,105 @@ onMounted(() => {
         line-height: 80%;
         letter-spacing: -0.7px;
         cursor: pointer;
-        .arrow {
-          width: 8px;
-          height: 8px;
-          border: solid $black-100;
-          border-width: 0 2px 2px 0;
-          display: inline-block;
-          transform: rotate(45deg);
-          &.up {
-            transform: rotate(-135deg);
-          }
+        img {
+          width: 16px;
+          height: 16px;
+          object-fit: cover;
         }
       }
       .mobile-sort {
         display: flex;
-        align-items: center;
-        gap: 8px;
-        span {
-          font-size: 14px;
-          color: $black-100;
-        }
-        select {
-          flex: 1;
-          padding: 8px;
-          border: 1px solid $grey-89;
-          border-radius: 6px;
-          background-color: $white-100;
-        }
-      }
-      .mobile-filters {
-        background-color: $white-100;
-        border: 1px solid $grey-89;
-        border-radius: 6px;
-        padding: 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        input,
-        select {
-          padding: 8px;
-          border: 1px solid $grey-89;
-          border-radius: 6px;
-        }
-        .gender-filter {
+        position: relative;
+        width: 50%;
+        .sort-btn {
           display: flex;
-          gap: 12px;
-          label {
-            flex: 1;
-            text-align: center;
-            padding: 8px 0;
-            background-color: $white-80;
-            border-radius: 6px;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px 16px;
+          width: 100%;
+          border-radius: 6px;
+          border: 1px solid $grey-89;
+          background: $white-100;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.25s ease-in-out;
+          span {
+            color: $black-100;
+          }
+          .sort-icon {
+            width: 16px;
+            height: 16px;
+          }
+        }
+        .sort-list {
+          display: flex;
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          margin-top: 4px;
+          border-radius: 6px;
+          border: 1px solid $grey-89;
+          background: $white-100;
+          list-style: none;
+          z-index: 20;
+          li {
+            padding: 12px 16px;
             font-size: 14px;
+            color: $black-100;
             cursor: pointer;
-            position: relative;
-            input {
-              position: absolute;
-              opacity: 0;
-              pointer-events: none;
-            }
+            background: $white-80;
             &.active {
-              background-color: $red-active;
-              color: $white-100;
+              background: $white-100;
             }
           }
         }
-        .btn-clear {
-          padding: 8px;
-          background-color: $red-error;
-          color: $white-100;
-          border: none;
+      }
+    }
+    .mobile-filters {
+      background-color: $white-100;
+      border: 1px solid $grey-89;
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      input,
+      select {
+        padding: 8px;
+        border: 1px solid $grey-89;
+        border-radius: 6px;
+      }
+      .gender-filter {
+        display: flex;
+        gap: 12px;
+        label {
+          flex: 1;
+          text-align: center;
+          padding: 8px 0;
+          background-color: $white-80;
           border-radius: 6px;
+          font-size: 14px;
           cursor: pointer;
+          position: relative;
+          input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+          }
+          &.active {
+            background-color: $red-active;
+            color: $white-100;
+          }
         }
+      }
+      .btn-clear {
+        padding: 8px;
+        background-color: $red-error;
+        color: $white-100;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
       }
     }
   }
