@@ -127,7 +127,7 @@
              :class="{ 'section-disabled': !store.detailData?.description?.trim(), open: showDescription }">
           <div class="section-header">
             <span>Описание</span>
-            <img :src="showDescription ? icon_arrow_up : icon_arrow_down" alt="" />
+            <img :src="icon_arrow_up" alt="" :style="{ transform: showDescription ? 'none' : 'rotate(180deg)'}"/>
           </div>
           <div class="section-body" :class="{ open: showDescription }">
             <p>{{ store.detailData.description }}</p>
@@ -139,7 +139,7 @@
              @click="toggleMaterial" :class="{ open: showMaterial }">
           <div class="section-header">
             <span>Материал</span>
-            <img :src="showMaterial ? icon_arrow_up : icon_arrow_down" alt="" />
+            <img :src="icon_arrow_up" alt="" :style="{ transform: showMaterial ? 'none' : 'rotate(180deg)'}"/>
           </div>
           <div class="section-body" :class="{ open: showMaterial }">
             <p>{{ store.detailData.material }}</p>
@@ -151,7 +151,7 @@
              @click="toggleSize" :class="{ open: showSize }">
           <div class="section-header">
             <span>Размеры</span>
-            <img :src="showSize ? icon_arrow_up : icon_arrow_down" alt="" />
+            <img :src="icon_arrow_up" alt="" :style="{ transform: showSize ? 'none' : 'rotate(180deg)'}"/>
           </div>
           <div class="section-body" :class="{ open: showSize }">
             <p class="char-row" v-if="store.detailData.category === 'Обувь'">
@@ -174,7 +174,7 @@
              @click="toggleDelivery" :class="{ open: showDelivery }">
           <div class="section-header">
             <span>Доставка и оплата</span>
-            <img :src="showDelivery ? icon_arrow_up : icon_arrow_down" alt="" />
+            <img :src="icon_arrow_up" alt="" :style="{ transform: showDelivery ? 'none' : 'rotate(180deg)'}"/>
           </div>
           <div class="section-body" :class="{ open: showDelivery }">
             <p>Выкуп и доставка товара занимают от 14 до 25 дней.</p>
@@ -191,7 +191,7 @@
              @click="toggleRefund" :class="{ open: showRefund }">
           <div class="section-header">
             <span>Возврат</span>
-            <img :src="showRefund ? icon_arrow_up : icon_arrow_down" alt="" />
+            <img :src="icon_arrow_up" alt="" :style="{ transform: showRefund ? 'none' : 'rotate(180deg)'}"/>
           </div>
           <div class="section-body" :class="{ open: showRefund }">
             <p>Мы принимаем возвраты только в случае бракованного товара или ошибки с нашей стороны.</p>
@@ -215,7 +215,6 @@ import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
 import icon_favorites_black from "@/assets/images/favorites_black.svg";
 import icon_minus_grey from '@/assets/images/minus_grey.svg'
 import icon_plus_red from '@/assets/images/plus_red.svg'
-import icon_arrow_down from '@/assets/images/arrow_down.svg'
 import icon_arrow_up from '@/assets/images/arrow_up.svg'
 
 const store = useStore()
