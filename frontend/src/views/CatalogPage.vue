@@ -103,12 +103,12 @@
             <img :src="store.isFavorite(group.color_sku) ? icon_favorites_black : icon_favorites_grey" alt="" />
           </button>
           <div class="product-img">
-            <img :src="group.image" alt="product" />
+            <img :src="group.minPriceVariant.image" alt="product" />
           </div>
           <div class="info">
-            <p class="brand">{{ group.brand }}</p>
-            <p class="name">{{ group.name }}</p>
-            <p class="price">от {{ formatPrice(group.price) }} ₽</p>
+            <p class="brand">{{ group.minPriceVariant.brand }}</p>
+            <p class="name">{{ group.minPriceVariant.name }}</p>
+            <p class="price">от {{ formatPrice(group.minPrice) }} ₽</p>
           </div>
         </div>
       </div>
@@ -727,8 +727,7 @@ onBeforeUnmount(() => {
   /* === PRODUCTS GRID (только тут используем grid) === */
   .products-grid {
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 50%;
+    grid-template-columns: repeat(2, 1fr);
     margin-top: 40px;
     transition: all 0.25s ease-in-out;
     &.blurred {
