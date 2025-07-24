@@ -53,70 +53,66 @@
     </header>
 
     <div class="catalog-body">
-      <!-- Основная колонка -->
-      <main class="main-content">
-        <!-- Мобильные контролы -->
-        <div class="mobile-controls">
-          <div class="mobile-sort">
-            <span>Сортировка:</span>
-            <select v-model="sortOption">
-              <option value="date_desc">Новинки</option>
-              <option value="sales_desc">Бестселлеры</option>
-              <option value="price_asc">Цена ↑</option>
-              <option value="price_desc">Цена ↓</option>
-            </select>
+      <!-- Мобильные контролы -->
+      <div class="mobile-controls">
+        <button type="button" @click="mobileFiltersOpen = !mobileFiltersOpen">
+          Фильтры <i :class="['arrow', mobileFiltersOpen ? 'up' : 'down']"/>
+        </button>
+        <div class="mobile-sort">
+          <span>Сортировка:</span>
+          <select v-model="sortOption">
+            <option value="date_desc">Новинки</option>
+            <option value="sales_desc">Бестселлеры</option>
+            <option value="price_asc">Цена ↑</option>
+            <option value="price_desc">Цена ↓</option>
+          </select>
+        </div>
+      </div>
+
+      <transition name="slide">
+        <div v-if="mobileFiltersOpen" class="mobile-filters">
+          <input type="number" v-model.number="store.filterPriceMin" placeholder="Мин. цена" />
+          <input type="number" v-model.number="store.filterPriceMax" placeholder="Макс. цена" />
+          <select v-model="store.filterColor">
+            <option value="">Все цвета</option>
+            <option v-for="color in distinctColors" :key="color" :value="color">{{ color }}</option>
+          </select>
+          <div class="gender-filter">
+          <label :class="{ active: store.filterGender === '' }">
+            <input type="radio" v-model="store.filterGender" value="" /> Все
+          </label>
+          <label :class="{ active: store.filterGender === 'M' }">
+            <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
+          </label>
+          <label :class="{ active: store.filterGender === 'F' }">
+            <input type="radio" v-model="store.filterGender" value="F" /> Женщинам
+          </label>
           </div>
+          <button type="button" @click="handleClearFilters" class="btn-clear">Сбросить</button>
+        </div>
+      </transition>
 
-          <button type="button" @click="mobileFiltersOpen = !mobileFiltersOpen">
-            Фильтры <i :class="['arrow', mobileFiltersOpen ? 'up' : 'down']"/>
-          </button>
-
-          <transition name="slide">
-            <div v-if="mobileFiltersOpen" class="mobile-filters">
-              <input type="number" v-model.number="store.filterPriceMin" placeholder="Мин. цена" />
-              <input type="number" v-model.number="store.filterPriceMax" placeholder="Макс. цена" />
-              <select v-model="store.filterColor">
-                <option value="">Все цвета</option>
-                <option v-for="color in distinctColors" :key="color" :value="color">{{ color }}</option>
-              </select>
-              <div class="gender-filter">
-              <label :class="{ active: store.filterGender === '' }">
-                <input type="radio" v-model="store.filterGender" value="" /> Все
-              </label>
-              <label :class="{ active: store.filterGender === 'M' }">
-                <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
-              </label>
-              <label :class="{ active: store.filterGender === 'F' }">
-                <input type="radio" v-model="store.filterGender" value="F" /> Женщинам
-              </label>
-              </div>
-              <button type="button" @click="handleClearFilters" class="btn-clear">Сбросить</button>
+      <!-- Сетка товаров -->
+      <div class="products-grid" :class="{ blurred: productsLoading }">
+        <article v-for="group in paged" :key="group.color_sku" class="product-card">
+          <div @click="goToProductDetail(group)">
+            <img :src="group.minPriceVariant.image" alt="" class="product-img"/>
+            <div class="info">
+              <p class="brand">{{ group.minPriceVariant.brand }}</p>
+              <p class="name">{{ group.minPriceVariant.name }}</p>
+              <p class="price">от {{ group.minPrice }} ₽</p>
             </div>
-          </transition>
-        </div>
+          </div>
+          <button type="button" class="fav" v-if="!store.isFavorite(group.color_sku)" @click.stop="store.addToFavorites(group.color_sku)">♡</button>
+          <button type="button" class="fav active" v-else @click.stop="store.removeFromFavorites(group.color_sku)">♥</button>
+        </article>
+      </div>
 
-        <!-- Сетка товаров -->
-        <div class="products-grid" :class="{ blurred: productsLoading }">
-          <article v-for="group in paged" :key="group.color_sku" class="product-card">
-            <div @click="goToProductDetail(group)">
-              <img :src="group.minPriceVariant.image" alt="" class="product-img"/>
-              <div class="info">
-                <p class="brand">{{ group.minPriceVariant.brand }}</p>
-                <p class="name">{{ group.minPriceVariant.name }}</p>
-                <p class="price">от {{ group.minPrice }} ₽</p>
-              </div>
-            </div>
-            <button type="button" class="fav" v-if="!store.isFavorite(group.color_sku)" @click.stop="store.addToFavorites(group.color_sku)">♡</button>
-            <button type="button" class="fav active" v-else @click.stop="store.removeFromFavorites(group.color_sku)">♥</button>
-          </article>
-        </div>
-
-        <div class="load-more-container">
-          <button type="button" v-if="paged.length < store.displayedProducts.length" @click="loadMore" class="btn-load-more">
-            Ещё
-          </button>
-        </div>
-      </main>
+      <div class="load-more-container">
+        <button type="button" v-if="paged.length < store.displayedProducts.length" @click="loadMore" class="btn-load-more">
+          Ещё
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -154,12 +150,14 @@ const categoryImages = {
 //   // … остальные подкатегории …
 // }
 
-const canPrev = computed(() => scrollPos.value > 0)
+const canPrev = computed(() =>
+  scrollPos.value > 0
+)
 
 const canNext = computed(() => {
   const el = subcatSlider.value
   if (!el) return false
-  return el.scrollLeft < el.scrollWidth - el.clientWidth - 1
+  return scrollPos.value + el.clientWidth + 1 < el.scrollWidth
 })
 
 // стрелки: dir = ±1 — сдвигаем на две карточки
@@ -290,10 +288,19 @@ async function loadCategory(cat) {
 }
 
 watch(() => store.selectedCategory, (cat) => { page.value = 1; loadCategory(cat)})
-watch(() => sortOption.value, () => { page.value = 1; animateGrid() })
-watch(() => store.filterColor, () => { page.value = 1; animateGrid() })
-watch(() => store.filterGender, () => { page.value = 1; animateGrid() })
-watch(() => [store.filterPriceMin, store.filterPriceMax], () => { page.value = 1; animateGrid() })
+watch(
+  () => [
+    sortOption.value,
+    store.filterColor,
+    store.filterGender,
+    store.filterPriceMin,
+    store.filterPriceMax,
+  ],
+  () => {
+    page.value = 1
+    animateGrid()
+  }
+)
 
 // При монтировании грузим товары
 onMounted(() => {
@@ -405,6 +412,7 @@ onMounted(() => {
             align-items: center;
             .subcat-slider {
               display: flex;
+              width: 100%;
               gap: 8px;
               overflow-x: auto;
               scroll-behavior: smooth;
@@ -503,98 +511,97 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     margin-top: 40px;
-    .main-content {
+    .mobile-controls {
       display: flex;
-      flex-direction: column;
-      .mobile-controls {
+      padding: 0 10px 10px;
+      gap: 10px;
+      button {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px;
+        width: 100%;
+        border-radius: 4px;
+        border: none;
+        background-color: $grey-95;
+        font-family: Bounded;
+        font-size: 14px;
+        font-weight: 350;
+        line-height: 80%;
+        letter-spacing: -0.7px;
+        cursor: pointer;
+        .arrow {
+          width: 8px;
+          height: 8px;
+          border: solid $black-100;
+          border-width: 0 2px 2px 0;
+          display: inline-block;
+          transform: rotate(45deg);
+          &.up {
+            transform: rotate(-135deg);
+          }
+        }
+      }
+      .mobile-sort {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        span {
+          font-size: 14px;
+          color: $black-100;
+        }
+        select {
+          flex: 1;
+          padding: 8px;
+          border: 1px solid $grey-89;
+          border-radius: 6px;
+          background-color: $white-100;
+        }
+      }
+      .mobile-filters {
+        background-color: $white-100;
+        border: 1px solid $grey-89;
+        border-radius: 6px;
+        padding: 12px;
         display: flex;
         flex-direction: column;
         gap: 8px;
-        margin-bottom: 16px;
-        .mobile-sort {
+        input,
+        select {
+          padding: 8px;
+          border: 1px solid $grey-89;
+          border-radius: 6px;
+        }
+        .gender-filter {
           display: flex;
-          align-items: center;
-          gap: 8px;
-          span {
-            font-size: 14px;
-            color: $black-100;
-          }
-          select {
+          gap: 12px;
+          label {
             flex: 1;
-            padding: 8px;
-            border: 1px solid $grey-89;
+            text-align: center;
+            padding: 8px 0;
+            background-color: $white-80;
             border-radius: 6px;
-            background-color: $white-100;
-          }
-        }
-        button {
-          width: 100%;
-          padding: 10px;
-          background-color: $white-100;
-          border: 1px solid $grey-89;
-          border-radius: 6px;
-          text-align: left;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          cursor: pointer;
-          .arrow {
-            width: 8px;
-            height: 8px;
-            border: solid $black-100;
-            border-width: 0 2px 2px 0;
-            display: inline-block;
-            transform: rotate(45deg);
-            &.up {
-              transform: rotate(-135deg);
-            }
-          }
-        }
-        .mobile-filters {
-          background-color: $white-100;
-          border: 1px solid $grey-89;
-          border-radius: 6px;
-          padding: 12px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          input,
-          select {
-            padding: 8px;
-            border: 1px solid $grey-89;
-            border-radius: 6px;
-          }
-          .gender-filter {
-            display: flex;
-            gap: 12px;
-            label {
-              flex: 1;
-              text-align: center;
-              padding: 8px 0;
-              background-color: $white-80;
-              border-radius: 6px;
-              font-size: 14px;
-              cursor: pointer;
-              position: relative;
-              input {
-                position: absolute;
-                opacity: 0;
-                pointer-events: none;
-              }
-              &.active {
-                background-color: $red-active;
-                color: $white-100;
-              }
-            }
-          }
-          .btn-clear {
-            padding: 8px;
-            background-color: $red-error;
-            color: $white-100;
-            border: none;
-            border-radius: 6px;
+            font-size: 14px;
             cursor: pointer;
+            position: relative;
+            input {
+              position: absolute;
+              opacity: 0;
+              pointer-events: none;
+            }
+            &.active {
+              background-color: $red-active;
+              color: $white-100;
+            }
           }
+        }
+        .btn-clear {
+          padding: 8px;
+          background-color: $red-error;
+          color: $white-100;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
         }
       }
     }
