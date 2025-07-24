@@ -34,17 +34,17 @@
                 <button type="button" class="back-btn" @click="store.backToCats()">назад</button>
                 <button type="button" class="cat-btn" v-for="sub in store.subcatListMap[store.selectedCategory]" :key="sub"
                         :class="{ active: store.selectedSubcat === sub }" @click="store.pickSubcat(sub)">
-                  <img :src="categoryImages[store.selectedCategory]" alt="" />
+                  <img :src="categoryImages[store.selectedCategory]" alt=""/>
                   <span>{{ sub }}</span>
                 </button>
               </div>
             </div>
             <div class="subcat-slider-div">
               <button type="button" class="nav-btn prev" @click="scrollSubcats(-1)" :disabled="!canPrev">
-                ‹
+                <img :src="canPrev ? icon_arrow_mini_red : icon_arrow_mini_black" alt=""/>
               </button>
               <button type="button" class="nav-btn next" @click="scrollSubcats(1)" :disabled="!canNext">
-                ›
+                <img :src="canNext ? icon_arrow_mini_red : icon_arrow_mini_black" alt="" style="transform: rotate(180deg)"/>
               </button>
             </div>
           </div>
@@ -125,6 +125,8 @@
 import { ref, onMounted, watch, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/store/index.js'
+import icon_arrow_mini_red from '@/assets/images/arrow_mini_red.svg'
+import icon_arrow_mini_black from '@/assets/images/arrow_mini_black.svg'
 import category_shoes from '@/assets/images/category_shoes.png'
 import category_clothing from '@/assets/images/category_clothing.png'
 import category_accessories from '@/assets/images/category_accessories.png'
@@ -395,6 +397,7 @@ onMounted(() => {
           display: flex;
           flex-direction: column;
           align-items: center;
+          padding: 0 10px;
           gap: 16px;
           .subcat-slider-row {
             display: flex;
@@ -402,8 +405,6 @@ onMounted(() => {
             align-items: center;
             .subcat-slider {
               display: flex;
-              flex: 1;
-              padding: 4px 0;
               gap: 8px;
               overflow-x: auto;
               scroll-behavior: smooth;
@@ -412,38 +413,32 @@ onMounted(() => {
               &::-webkit-scrollbar {
                 display: none;
               }
-              .back-btn {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: 8px;
-                width: 113px;
-                height: 113px;
-                border-radius: 4px;
-                border: none;
-                background-color: $grey-20;
-                color: $white-100;
-                font-size: 16px;
-                line-height: 100%;
-                letter-spacing: -0.64px;
-                cursor: pointer;
-                scroll-snap-align: start;
-              }
+              .back-btn,
               .cat-btn {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
                 padding: 8px;
+                min-width: 113px;
+                min-height: 113px;
                 width: 113px;
                 height: 113px;
                 border-radius: 4px;
                 border: none;
-                background-color: $grey-95;
                 cursor: pointer;
-                transition: all 0.25s ease-in-out;
                 scroll-snap-align: start;
+              }
+              .back-btn {
+                background-color: $grey-20;
+                color: $white-100;
+                font-size: 16px;
+                line-height: 100%;
+                letter-spacing: -0.64px;
+              }
+              .cat-btn {
+                background-color: $grey-95;
+                transition: all 0.25s ease-in-out;
                 img {
                   width: 60px;
                   height: 60px;
@@ -472,19 +467,30 @@ onMounted(() => {
           }
           .subcat-slider-div {
             display: flex;
+            align-items: center;
+            gap: 10px;
             .nav-btn {
-              flex: 0 0 32px;
-              padding: 4px;
-              text-align: center;
-              border-radius: 8px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 8px 12px;
+              width: 40px;
+              height: 30px;
+              border-radius: 64px;
+              border: none;
               background-color: $white-80;
-              font-size: 24px;
-              line-height: 1;
               cursor: pointer;
               &.prev[disabled],
               &.next[disabled] {
-                opacity: 0.3;
                 cursor: default;
+                img {
+                  opacity: 0.4;
+                }
+              }
+              img {
+                width: 16px;
+                height: 16px;
+                object-fit: cover;
               }
             }
           }
