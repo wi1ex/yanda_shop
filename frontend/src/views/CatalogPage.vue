@@ -194,7 +194,7 @@ import category_accessories from '@/assets/images/category_accessories.png'
 import icon_favorites_black from "@/assets/images/favorites_black.svg";
 import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
 const imagesContext = import.meta.glob(
-  '/src/assets/images/subcats/*.png',
+  '@/assets/images/subcats/*.png',
   { eager: true, as: 'url' }
 )
 
