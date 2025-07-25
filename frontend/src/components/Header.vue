@@ -43,30 +43,35 @@
             Меню
             <img :src="icon_close" alt="Меню" />
           </button>
+
           <div @click="goToPage('Brands')" class="dropdown-link">Бренды</div>
-          <div class="dropdown-link" :class="{ open: openSubmenu.M }"
-               @click="toggleSubmenu('M')" :aria-expanded="openSubmenu.M">
+
+          <div class="dropdown-link" :class="{ open: openSubmenu.M }" @click="toggleSubmenu('M')" :aria-expanded="openSubmenu.M">
             Мужчинам
             <img :src="icon_arrow_up" alt="" :style="{ transform: openSubmenu.M ? 'none' : 'rotate(180deg)'}"/>
           </div>
-          <div v-if="openSubmenu.M" class="dropdown-sublinks">
-            <div v-for="cat in store.categoryList" :key="`M-${cat}`"
-                 class="dropdown-sublink" @click="goToCategory('M', cat)">
-              {{ cat }}
+          <transition name="submenu">
+            <div v-if="openSubmenu.M" class="dropdown-sublinks">
+              <div v-for="cat in store.categoryList" :key="`M-${cat}`" class="dropdown-sublink" @click="goToCategory('M', cat)">
+                {{ cat }}
+              </div>
             </div>
-          </div>
-          <div class="dropdown-link" :class="{ open: openSubmenu.F }"
-               @click="toggleSubmenu('F')" :aria-expanded="openSubmenu.F">
+          </transition>
+
+          <div class="dropdown-link" :class="{ open: openSubmenu.F }" @click="toggleSubmenu('F')" :aria-expanded="openSubmenu.F">
             Женщинам
             <img :src="icon_arrow_up" alt="" :style="{ transform: openSubmenu.F ? 'none' : 'rotate(180deg)'}"/>
           </div>
-          <div v-if="openSubmenu.F" class="dropdown-sublinks">
-            <div v-for="cat in store.categoryList" :key="`F-${cat}`"
-                 class="dropdown-sublink" @click="goToCategory('F', cat)">
-              {{ cat }}
+          <transition name="submenu">
+            <div v-if="openSubmenu.F" class="dropdown-sublinks">
+              <div v-for="cat in store.categoryList" :key="`F-${cat}`" class="dropdown-sublink" @click="goToCategory('F', cat)">
+                {{ cat }}
+              </div>
             </div>
-          </div>
+          </transition>
+
           <div @click="goToPage('About')" class="dropdown-link">О нас</div>
+
           <div v-if="isAdmin" @click="goToPage('Admin')" class="dropdown-link">Админ-панель</div>
         </div>
         <div class="dropdown-menu-bottom">
@@ -305,12 +310,12 @@ watch(
         width: 16px;
         height: 16px;
       }
+      .open {
+        background-color: $grey-90;
+      }
     }
     .dropdown-link:last-child {
       border-bottom: 1px solid $grey-87;
-    }
-    .dropdown-link .open {
-      background-color: $grey-90;
     }
     .dropdown-sublinks {
       display: flex;
@@ -326,6 +331,23 @@ watch(
         letter-spacing: -0.6px;
         cursor: pointer;
       }
+    }
+    .submenu-enter-active,
+    .submenu-leave-active {
+      transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+      overflow: hidden;
+    }
+    .submenu-enter-from,
+    .submenu-leave-to {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+    .submenu-enter-to,
+    .submenu-leave-from {
+      max-height: 500px;
+      opacity: 1;
     }
   }
   .dropdown-menu-bottom {
