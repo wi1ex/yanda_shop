@@ -20,7 +20,8 @@
         <!-- 1) Корневые категории -->
         <div v-if="!store.showSubcats" class="header-cats-template">
           <div class="header-cats-div">
-            <button type="button" class="cat-btn" v-for="cat in store.categoryList" :key="cat" @click="onCategoryClick(cat)">
+            <button type="button" class="cat-btn" v-for="cat in store.categoryList"
+                    :class="{ active: store.selectedCategory === cat }" :key="cat" @click="onCategoryClick(cat)">
               <img :src="categoryImages[cat]" :alt="cat"/>
               <span>{{ cat }}</span>
             </button>
@@ -65,7 +66,7 @@
             <ul v-if="mobileFiltersOpen" ref="filterList" class="filter-list">
               <!-- Секция «Для кого» -->
               <li class="filter-item">
-                <button class="filter-header" @click="openSection('gender')">
+                <button type="button" class="filter-header" @click="openSection('gender')">
                   Для кого
                   <span :class="{ open: openSections.gender }">⌄</span>
                 </button>
@@ -86,7 +87,7 @@
 
               <!-- Секция «Бренды» -->
               <li class="filter-item">
-                <button class="filter-header" @click="openSection('brand')">
+                <button type="button" class="filter-header" @click="openSection('brand')">
                   Бренды
                   <span :class="{ open: openSections.brand }">⌄</span>
                 </button>
@@ -102,7 +103,7 @@
 
               <!-- Секция «Цвет» -->
               <li class="filter-item">
-                <button class="filter-header" @click="openSection('color')">
+                <button type="button" class="filter-header" @click="openSection('color')">
                   Цвет
                   <span :class="{ open: openSections.color }">⌄</span>
                 </button>
@@ -118,7 +119,7 @@
 
               <!-- Секция «Цена» -->
               <li class="filter-item">
-                <button class="filter-header" @click="openSection('price')">
+                <button type="button" class="filter-header" @click="openSection('price')">
                   Цена
                   <span :class="{ open: openSections.price }">⌄</span>
                 </button>

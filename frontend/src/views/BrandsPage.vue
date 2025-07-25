@@ -1,31 +1,31 @@
 <template>
   <div class="brands-page">
     <div class="line-vert"></div>
-    <h1 class="section-title">Бренды</h1>
+    <h1>Бренды</h1>
     <div class="line-hor"></div>
-        <div class="brands-content">
+    <div class="brands-content">
       <!-- Левая колонка: полный список брендов, сгруппированных по букве -->
       <div class="brands-list">
-        <section class="brands-section" v-for="(items, letter) in groupedByLetter" :key="letter" :id="letter">
-          <h2 class="brands-letter">{{ letter }}</h2>
-          <ul class="brands-ul">
-            <li v-for="brand in items" :key="brand" class="brands-li">
-              <button type="button" class="brand-btn" @click="onBrandClick(brand)">
+        <section v-for="(items, letter) in groupedByLetter" :key="letter" :id="letter">
+          <h2>{{ letter }}</h2>
+          <ul>
+            <li v-for="brand in items" :key="brand">
+              <button type="button" @click="onBrandClick(brand)">
                 {{ brand }}
               </button>
             </li>
           </ul>
         </section>
       </div>
-      <!-- Правая колонка: якорный алфавит -->
-      <nav class="brands-alphabet">
-        <ul>
-          <li v-for="letter in alphabet" :key="letter">
-            <a :href="'#' + letter">{{ letter }}</a>
-          </li>
-        </ul>
-      </nav>
     </div>
+    <!-- Правая колонка: якорный алфавит -->
+    <nav>
+      <ul>
+        <li v-for="letter in alphabet" :key="letter">
+          <a :href="'#' + letter">{{ letter }}</a>
+        </li>
+      </ul>
+    </nav>
   </div>
   <div class="line-hor"></div>
 </template>
@@ -65,6 +65,7 @@ const groupedByLetter = computed(() => {
 
 // При клике — переход в каталог с query.brand
 function onBrandClick(brand) {
+  store.clearFilters()
   router.push({
     name: 'Catalog',
     query: { brand }
@@ -95,7 +96,7 @@ function onBrandClick(brand) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  .section-title {
+  h1 {
     margin: 120px 0 64px;
     color: $black-100;
     font-family: Bounded;
@@ -107,57 +108,70 @@ function onBrandClick(brand) {
   }
   .brands-content {
     display: flex;
+    position: relative;
+    padding: 10px;
+    width: calc(100% - 20px);
+    z-index: 20;
     .brands-list {
-      flex: 1;
-      .brands-section {
-        margin-bottom: 32px;
-        .brands-letter {
-          font-size: 24px;
-          margin-bottom: 12px;
-        }
-        .brands-ul {
-          list-style: none;
-          padding: 0;
+      display: flex;
+      flex-direction: column;
+      section {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 40px;
+        gap: 8px;
+        h2 {
           margin: 0;
+          color: $black-100;
+          font-family: Bounded;
+          font-size: 16px;
+          font-weight: 375;
+          line-height: 80%;
+          letter-spacing: -0.8px;
         }
-        .brands-li {
-          margin-bottom: 8px;
-        }
-        .brand-btn {
-          background: none;
-          border: none;
-          font-size: 18px;
+        ul {
+          display: flex;
+          flex-direction: column;
+          margin: 0;
           padding: 0;
-          cursor: pointer;
-          color: #000;
-          text-align: left;
-          &:hover {
-            text-decoration: underline;
+          gap: 8px;
+          list-style: none;
+          li {
+            display: flex;
+            button {
+              padding: 0;
+              border: none;
+              background: none;
+              color: $black-100;
+              font-size: 16px;
+              line-height: 100%;
+              letter-spacing: -0.64px;
+              cursor: pointer;
+            }
           }
         }
       }
     }
   }
-  .brands-alphabet {
+  nav {
     position: fixed;
-    top: 150px;
+    top: 176px;
     right: 10px;
-    width: 48px;
-    margin-left: 24px;
     ul {
       display: flex;
       flex-direction: column;
-      padding: 0;
       margin: 0;
+      padding: 0;
+      gap: 6px;
+      list-style: none;
       li {
-        margin: 4px 0;
+        display: flex;
         a {
+          color: $black-40;
           font-size: 14px;
-          color: #888;
+          line-height: 100%;
+          letter-spacing: -0.56px;
           text-decoration: none;
-          &:hover {
-            color: #000;
-          }
         }
       }
     }
@@ -166,7 +180,7 @@ function onBrandClick(brand) {
 
 @media (max-width: 600px) {
   .brands-page {
-    .section-title {
+    h1 {
       margin: 96px 0 40px;
       font-size: 32px;
       letter-spacing: -2.24px;
