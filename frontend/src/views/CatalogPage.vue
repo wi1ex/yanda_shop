@@ -1,5 +1,5 @@
 <template>
-  <div class="catalog" :class="{ blurred: productsLoading }">
+  <div class="catalog">
     <div class="line-vert"></div>
     <!-- HEADER: текст, логотип, категории, селект сортировки -->
     <header class="catalog-header">
@@ -16,7 +16,7 @@
       </div>
 
       <!-- Навигация по категориям под логотипом -->
-      <nav class="header-cats">
+      <nav class="header-cats" :class="{ blurred: productsLoading }">
         <!-- 1) Корневые категории -->
         <div v-if="!store.showSubcats" class="header-cats-template">
           <div class="header-cats-div">
@@ -54,7 +54,7 @@
       </nav>
     </header>
 
-    <div class="catalog-body">
+    <div class="catalog-body" :class="{ blurred: productsLoading }">
       <!-- Мобильные контролы -->
       <div class="mobile-controls">
         <div class="mobile-filter">
@@ -596,9 +596,6 @@ onBeforeUnmount(() => {
 }
 .catalog {
   margin-top: 120px;
-  &.blurred {
-    filter: blur(4px);
-  }
   /* === HEADER (мобильный) === */
   .catalog-header {
     display: flex;
@@ -642,6 +639,9 @@ onBeforeUnmount(() => {
     .header-cats {
       display: flex;
       width: 100%;
+      &.blurred {
+        filter: blur(4px);
+      }
       .header-cats-template {
         display: flex;
         flex-direction: column;
@@ -800,6 +800,9 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     margin-top: 40px;
+    &.blurred {
+      filter: blur(4px);
+    }
     .mobile-controls {
       display: flex;
       padding: 0 10px 10px;
