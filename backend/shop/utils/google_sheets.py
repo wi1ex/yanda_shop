@@ -36,6 +36,69 @@ VALID_CATS     = {"Обувь", "Одежда", "Аксессуары"}
 OPTIONAL_EMPTY = {"description", "width_cm", "height_cm", "depth_cm", "chest_cm", "depth_mm"}
 INT_FIELDS     = {"price", "count_in_stock", "count_images", "size_category"}
 FLOAT_FIELDS   = {"chest_cm", "width_cm", "height_cm", "depth_cm", "depth_mm"}
+# ------------------------------------------------------------
+# 1) Маппинг всех «правильных» подкатегорий
+SUBCATEGORY_MAP: Dict[str, str] = {
+    # Одежда
+    'Блузы':              'Blouse',
+    'Бомберы':            'Bomber',
+    'Брюки':              'Trousers',
+    'Верхняя Одежда':     'Outerwear',
+    'Джемперы':           'Jumper',
+    'Джинсы':             'Jeans',
+    'Жилетки':            'Vest',
+    'Кардиганы':          'Cardigan',
+    'Купальники':         'Swimsuit',
+    'Лонгсливы':          'Longsleeve',
+    'Майки':              'T_shirt',
+    'Нижнее Белье':       'Underwear',
+    'Пиджаки':            'Blazer',
+    'Платья':             'Dress',
+    'Поло':               'Polo',
+    'Пуховики':           'Down_jacket',
+    'Рубашки':            'Shirt',
+    'Свитеры':            'Sweater',
+    'Свитшоты':           'Sweatshirt',
+    'Спортивные Костюмы': 'Sports_suit',
+    'Футболки':           'Tee_shirt',
+    'Худи':               'Hoodie',
+    'Шорты':              'Shorts',
+    'Юбки':               'Skirt',
+    'Плавательные шорты': 'Swimming_shorts',
+    # Обувь
+    'Балетки':            'Ballet',
+    'Босоножки':          'Slingbacks',
+    'Ботильоны':          'Ankle_boots',
+    'Казаки':             'Cossacks',
+    'Кеды':               'Keds',
+    'Кроссовки':          'Sneakers',
+    'Мокасины':           'Moccasins',
+    'Мюли':               'Mules',
+    'Резиновая обувь':    'Rubber_shoes',
+    'Сабо':               'Sabo',
+    'Сандалии':           'Sandals',
+    'Сапоги':             'Boots',
+    'Слипоны':            'Slip_ons',
+    'Топсайдеры':         'Topsiders',
+    'Туфли':              'Shoes',
+    'Шлепки':             'Flip_flops',
+    'Эспадрильи':         'Espadrilles',
+    # Аксессуары
+    'Головные Уборы':     'Headwear',
+    'Очки':               'Glasses',
+    'Ремни':              'Belts',
+    'Сумки':              'Bags',
+    'Рюкзаки':            'Backpacks',
+    'Кошельки':           'Wallets',
+    'Платки':             'Handkerchiefs',
+    'Украшения':          'Decorations',
+    'Часы':               'Watch',
+    'Шарфы':              'Scarves',
+}
+# Множество для быстрой проверки
+VALID_SUBCATS: Set[str] = set(SUBCATEGORY_MAP.keys())
+# ------------------------------------------------------------
+
 
 def validate_row(row: Dict[str, str]) -> Tuple[Optional[str], Optional[Dict[str, str]], Optional[str]]:
     """
@@ -150,10 +213,10 @@ def apply_update(obj, data: Dict[str, str], warn_skus: List[str], context: str) 
 def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, Any]]:
     """
     Превью-валидация CSV-строк:
-      • базовая валидация SKU, gender, category и обязательных полей
+      • базовая валидация SKU, gender, category, subcategory
       • нормализация строк через normalize_str
       • проверка int/float
-      • проверка реальных ограничений длины из модели (включая Text vs String(N))
+      • проверка реальных ограничений длины из модели
       • проверка производного color_sku
       • дубли variant_sku внутри файла
       • согласованность count_images
@@ -163,8 +226,11 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
     if Model is None:
         raise ValueError(f"Unknown category {category}")
 
-    # 0) собираем реальные ограничения по длине из модели
-    FIELD_MAX: Dict[str, Optional[int]] = {col.name: getattr(col.type, "length", None) for col in Model.__table__.columns}
+    # 0) реальные ограничения по длине из модели
+    FIELD_MAX: Dict[str, Optional[int]] = {
+        col.name: getattr(col.type, "length", None)
+        for col in Model.__table__.columns
+    }
     per_row_errors: Dict[str, List[str]] = {}
     seen: Set[str] = set()
 
@@ -176,22 +242,32 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
         # SKU
         if not SKU_PATTERN.match(sku_variant):
             errs.append("Неправильный формат variant_sku")
+
         # gender
         gen = raw.get("gender", "").strip()
         if gen and gen not in VALID_GENDERS:
             errs.append(f"Недопустимый gender='{gen}'")
-        # category
+
+        # main category
         cat = raw.get("category", "").strip()
         if cat not in VALID_CATS:
             errs.append(f"Недопустимый category='{cat}'")
-        # обязательные поля
+
+        # subcategory
+        subcat = raw.get("subcategory", "").strip()
+        if subcat not in VALID_SUBCATS:
+            errs.append(f"Недопустимая подкатегория='{subcat}'")
+
+        # обязательные поля (кроме OPTIONAL_EMPTY)
         data_stripped = {k: v.strip() for k, v in raw.items() if k != "variant_sku"}
         missing = [f for f, v in data_stripped.items() if not v and f not in OPTIONAL_EMPTY]
         if missing:
             errs.append(f"Пустые обязательные поля: {', '.join(missing)}")
-        # stop if базовая провалилась
+
+        # если упало на базовой валидации — сразу сохраняем ошибку и идём дальше
         if errs:
-            per_row_errors.setdefault(sku_variant or f"<строка{idx}>", []).extend(errs)
+            key = sku_variant or f"<строка{idx}>"
+            per_row_errors.setdefault(key, []).extend(errs)
             continue
 
         # -- НОРМАЛИЗАЦИЯ + проверка чисел ---------------------
