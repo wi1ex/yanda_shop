@@ -1,5 +1,5 @@
 <template>
-  <div class="catalog">
+  <div class="catalog" :class="{ blurred: productsLoading }">
     <div class="line-vert"></div>
     <!-- HEADER: текст, логотип, категории, селект сортировки -->
     <header class="catalog-header">
@@ -156,7 +156,7 @@
       <div class="line-hor"></div>
 
       <!-- Сетка товаров -->
-      <div class="products-grid" :class="{ blurred: productsLoading }">
+      <div class="products-grid">
         <div v-for="group in paged" :key="group.color_sku" class="product-card" @click="goToProductDetail(group)">
           <button type="button" class="fav" @click.stop="toggleFav(group)">
             <img :src="store.isFavorite(group.color_sku) ? icon_favorites_black : icon_favorites_grey" alt="" />
@@ -596,6 +596,9 @@ onBeforeUnmount(() => {
 }
 .catalog {
   margin-top: 120px;
+  &.blurred {
+    filter: blur(4px);
+  }
   /* === HEADER (мобильный) === */
   .catalog-header {
     display: flex;
@@ -968,9 +971,6 @@ onBeforeUnmount(() => {
     grid-template-columns: repeat(2, 1fr);
     margin-top: 10px;
     transition: all 0.25s ease-in-out;
-    &.blurred {
-      filter: blur(4px);
-    }
     .product-card {
       display: flex;
       box-sizing: border-box;
