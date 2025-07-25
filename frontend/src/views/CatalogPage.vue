@@ -221,8 +221,6 @@ for (const path in imagesContext) {
   const file = path.split('/').pop().replace('.png','')
   allSubcatImages[file] = imagesContext[path]
 }
-console.log('glob keys count:', Object.keys(imagesContext).length)
-console.log('allSubcatImages keys:', Object.keys(allSubcatImages).sort())
 
 const openSections = reactive({
   gender: false,
@@ -296,21 +294,23 @@ const subcatNameToFileKey = {
 
 const subcategoryImages = computed(() => {
   const genderSuffix = store.filterGender === 'M' ? 'Man' : store.filterGender === 'F' ? 'Woman' : 'Common'
-  const map = {}
-  // все подкатегории из текущего store.subcatListMap
-  const allSubs = Object.values(store.subcatListMap).flat()
-  new Set(allSubs).forEach(name => {
+  const cat = store.selectedCategory
+  const result = {}
+  // префиксы для поиска
+  const prefixGen    = `${genderSuffix}_Subcategory_${cat}_`
+  const prefixCommon = `Common_Subcategory_${cat}_`
+  // перебираем ВСЕ подкатегории, которые есть в текущем map
+  const allNames = Array.from(new Set(Object.values(store.subcatListMap).flat()))
+  allNames.forEach(name => {
     const key = subcatNameToFileKey[name]
     if (!key) return
-    const fullKeyGen = `${genderSuffix}_Subcategory_${store.selectedCategory}_${key}`
-    const fullKeyCommon = `Common_Subcategory_${store.selectedCategory}_${key}`
-    if (allSubcatImages[fullKeyGen]) {
-      map[name] = allSubcatImages[fullKeyGen]
-    } else if (allSubcatImages[fullKeyCommon]) {
-      map[name] = allSubcatImages[fullKeyCommon]
-    }
+    // ищем в ключах либо exact, либо с «-»
+    const genKey = Object.keys(allSubcatImages).find(k => k === prefixGen + key || k.startsWith(prefixGen + key + '-') )
+    const comKey = Object.keys(allSubcatImages).find(k => k === prefixCommon + key || k.startsWith(prefixCommon + key + '-') )
+    const fileKey = genKey || comKey
+    if (fileKey) result[name] = allSubcatImages[fileKey]
   })
-  return map
+  return result
 })
 
 // Список опций
