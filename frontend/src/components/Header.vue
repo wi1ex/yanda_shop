@@ -39,13 +39,33 @@
     <transition name="fade">
       <nav v-if="menuOpen" class="dropdown-menu">
         <div class="dropdown-menu-top">
-          <button type="button" class="dropdown-menu-btn" @click="toggleMenu()">
+          <button type="button" class="dropdown-menu-btn" @click="toggleMenuClose()">
             Меню
             <img :src="icon_close" alt="Меню" />
           </button>
           <div @click="goToPage('Brands')" class="dropdown-link">Бренды</div>
-          <div @click="goToGender('M')" class="dropdown-link">Мужчинам</div>
-          <div @click="goToGender('F')" class="dropdown-link">Женщинам</div>
+          <div class="dropdown-link dropdown-link-parent" :class="{ open: openSubmenu.M }"
+               @click="toggleSubmenu('M')" :aria-expanded="openSubmenu.M">
+            Мужчинам
+            <span class="arrow" />
+          </div>
+          <div v-if="openSubmenu.M" class="dropdown-sublinks">
+            <div v-for="cat in store.categoryList" :key="`M-${cat}`"
+                 class="dropdown-sublink" @click="goToCategory('M', cat)">
+              {{ cat }}
+            </div>
+          </div>
+          <div class="dropdown-link dropdown-link-parent" :class="{ open: openSubmenu.F }"
+               @click="toggleSubmenu('F')" :aria-expanded="openSubmenu.F">
+            Женщинам
+            <span class="arrow" />
+          </div>
+          <div v-if="openSubmenu.F" class="dropdown-sublinks">
+            <div v-for="cat in store.categoryList" :key="`F-${cat}`"
+                 class="dropdown-sublink" @click="goToCategory('F', cat)">
+              {{ cat }}
+            </div>
+          </div>
           <div @click="goToPage('About')" class="dropdown-link">О нас</div>
           <div v-if="isAdmin" @click="goToPage('Admin')" class="dropdown-link">Админ-панель</div>
         </div>
@@ -74,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRoute, useRouter } from 'vue-router'
 import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
@@ -97,6 +117,7 @@ const route = useRoute()
 const router = useRouter()
 const menuOpen = ref(false)
 let prevOverflowMenu
+const openSubmenu = reactive({ M: false, F: false })
 const isAdmin = computed(() => store.user?.role === 'admin')
 const isIconWhite = computed(() => route.name === 'About' || route.name === 'Home')
 const icon_default_avatar = computed(() => isIconWhite.value ? icon_default_avatar_white : icon_default_avatar_grey)
@@ -104,14 +125,25 @@ const icon_favorites = computed(() => isIconWhite.value ? icon_favorites_white :
 const icon_cart = computed(() => isIconWhite.value ? icon_cart_white : icon_cart_grey)
 const icon_logo = computed(() => isIconWhite.value ? icon_logo_white : icon_logo_orange)
 
+// переключить видимость подменю по полу
+function toggleSubmenu(gender) {
+  // переключаем одну, закрываем другую
+  openSubmenu[gender] = !openSubmenu[gender]
+  const other = gender === 'M' ? 'F' : 'M'
+  if (openSubmenu[gender]) openSubmenu[other] = false
+}
 
-function goToGender(gender) {
+function goToCategory(gender, category) {
+  // закрываем меню и оба подменю
   toggleMenuClose()
-  store.selectedCategory = ''
+  // сбрасываем стор
+  store.selectedCategory = category
   store.filterGender = gender
+  store.filterSubcat = ''
+  // навигация в каталог с двумя фильтрами
   router.push({
-    name:  'Catalog',
-    query: { gender }
+    name: 'Catalog',
+    query: { gender, category }
   })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -125,8 +157,12 @@ function goToPage(page) {
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
+
 function toggleMenuClose() {
-  if (menuOpen.value === true) menuOpen.value = false
+  if (menuOpen.value) {
+    menuOpen.value = false
+    openSubmenu.M = openSubmenu.F = false
+  }
 }
 
 watch(
@@ -264,6 +300,36 @@ watch(
     }
     .dropdown-link:last-child {
       border-bottom: 1px solid $grey-87;
+    }
+    .dropdown-link-parent {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      .arrow {
+        width: 8px;
+        height: 8px;
+        border-right: 2px solid $grey-20;
+        border-bottom: 2px solid $grey-20;
+        transform: rotate(45deg);
+        transition: transform .2s ease;
+      }
+    }
+    .dropdown-link-parent.open .arrow {
+      transform: rotate(-135deg);
+    }
+    .dropdown-sublinks {
+      display: flex;
+      flex-direction: column;
+      background-color: $grey-95;
+      .dropdown-sublink {
+        padding: 12px 16px;
+        font-size: 14px;
+        line-height: 1;
+        color: $grey-20;
+        border-top: 1px solid $grey-87;
+        cursor: pointer;
+      }
     }
   }
   .dropdown-menu-bottom {
