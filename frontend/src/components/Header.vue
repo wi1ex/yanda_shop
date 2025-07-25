@@ -133,10 +133,10 @@ const icon_logo = computed(() => isIconWhite.value ? icon_logo_white : icon_logo
 
 // переключить видимость подменю по полу
 function toggleSubmenu(gender) {
-  // переключаем одну, закрываем другую
   openSubmenu[gender] = !openSubmenu[gender]
-  const other = gender === 'M' ? 'F' : 'M'
-  if (openSubmenu[gender]) openSubmenu[other] = false
+  // переключаем одну, закрываем другую
+  // const other = gender === 'M' ? 'F' : 'M'
+  // if (openSubmenu[gender]) openSubmenu[other] = false
 }
 
 function goToCategory(gender, category) {
@@ -310,7 +310,7 @@ watch(
         width: 16px;
         height: 16px;
       }
-      .open {
+      &.open {
         background-color: $grey-90;
       }
     }
@@ -334,7 +334,7 @@ watch(
     }
     .submenu-enter-active,
     .submenu-leave-active {
-      transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+      transition: max-height 0.25s ease-in-out, opacity 0.25s ease-in-out, padding 0.25s ease-in-out;
       overflow: hidden;
     }
     .submenu-enter-from,
@@ -391,9 +391,8 @@ watch(
     }
   }
 }
-
 .fade-enter-active, .fade-leave-active {
-  transition: opacity .2s ease;
+  transition: opacity 0.25s ease-in-out;
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
