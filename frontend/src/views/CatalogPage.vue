@@ -245,85 +245,89 @@ const categoryFileKey = {
 // 2) Маппинг русских имён → ключи файлов
 const subcatNameToFileKey = {
   // Одежда
-  'Блуза':            'Blouse',
-  'Бомбер':           'Bomber',
-  'Брюки':            'Pants',
-  'Верхняя одежда':   'Outerwear',
-  'Джемпер':          'Jumper',
-  'Джинсы':           'Jeans',
-  'Жилетка':          'Vest',
-  'Кардиган':         'Cardigan',
-  'Купальник':        'Swimsuit',
-  'Лонгслив':         'Longsleeve',
-  'Майка':            'Tanktop',
-  'Нижнее белье':     'Underwear',
-  'Пиджак':           'Blazer',
-  'Платье':           'Dress',
-  'Поло':             'Polo',
-  'Пуховик':          'Down_jacket',
-  'Рубашка':          'Shirt',
-  'Свитер':           'Sweater',
-  'Свитшот':          'Sweatshirt',
-  'Спорт. костюм':    'Tracksuit',
-  'Футболка':         'Tshirt',
-  'Худи':             'Hoodie',
-  'Шорты':            'Shorts',
-  'Юбка':             'Skirt',
+  'Блузы':              'Blouse',
+  'Бомберы':            'Bomber',
+  'Брюки':              'Trousers',
+  'Верхняя Одежда':     'Outerwear',
+  'Джемперы':           'Jumper',
+  'Джинсы':             'Jeans',
+  'Жилетки':            'Vest',
+  'Кардиганы':          'Cardigan',
+  'Купальники':         'Swimsuit',
+  'Лонгсливы':          'Longsleeve',
+  'Майки':              'T_shirt',
+  'Нижнее Белье':       'Underwear',
+  'Пиджаки':            'Blazer',
+  'Платья':             'Dress',
+  'Поло':               'Polo',
+  'Пуховики':           'Down_jacket',
+  'Рубашки':            'Shirt',
+  'Свитеры':            'Sweater',
+  'Свитшоты':           'Sweatshirt',
+  'Спортивные Костюмы': 'Sports_suit',
+  'Футболки':           'Tee_shirt',
+  'Худи':               'Hoodie',
+  'Шорты':              'Shorts',
+  'Юбки':               'Skirt',
+  'Плавательные шорты': 'Swimming_shorts',
+
   // Обувь
-  'Балетки':          'Ballet',
-  'Босоножки':        'Slingbacks',
-  'Ботильоны':        'Ankleboots',
-  'Казаки':           'Cossacks',
-  'Кеды':             'Keds',
-  'Кроссовки':        'Sneakers',
-  'Мокасины':         'Moccasins',
-  'Мюли':             'Mules',
-  'Резиновая обувь':  'Rubber_shoes',
-  'Сабо':             'Sabo',
-  'Сандалии':         'Sandals',
-  'Сапоги':           'Boots',
-  'Слипоны':          'Slip-ons',
-  'Топсайдеры':       'Topsiders',
-  'Туфли':            'Shoes',
-  'Шлепки':           'Flip_flops',
-  'Эспадрильи':       'Espadrilles',
+  'Балетки':            'Ballet',
+  'Босоножки':          'Slingbacks',
+  'Ботильоны':          'Ankle_boots',
+  'Казаки':             'Cossacks',
+  'Кеды':               'Keds',
+  'Кроссовки':          'Sneakers',
+  'Мокасины':           'Moccasins',
+  'Мюли':               'Mules',
+  'Резиновая обувь':    'Rubber_shoes',
+  'Сабо':               'Sabo',
+  'Сандалии':           'Sandals',
+  'Сапоги':             'Boots',
+  'Слипоны':            'Slip_ons',
+  'Топсайдеры':         'Topsiders',
+  'Туфли':              'Shoes',
+  'Шлепки':             'Flip_flops',
+  'Эспадрильи':         'Espadrilles',
+
   // Аксессуары
-  'Головные уборы':   'Headwear',
-  'Очки':             'Glasses',
-  'Платки':           'Handkerchiefs',
-  'Ремни':            'Belts',
-  'Рюкзаки':          'Backpacks',
-  'Сумки':            'Bags',
-  'Украшения':        'Decorations',
-  'Часы':             'Watch',
-  'Шарфы':            'Scarves'
+  'Головные Уборы':     'Headwear',
+  'Очки':               'Glasses',
+  'Ремни':              'Belts',
+  'Сумки':              'Bags',
+  'Рюкзаки':            'Backpacks',
+  'Кошельки':           'Wallets',
+  'Платки':             'Handkerchiefs',
+  'Украшения':          'Decorations',
+  'Часы':               'Watch',
+  'Шарфы':              'Scarves',
 }
 
 const subcategoryImages = computed(() => {
-  // определяем префикс по полу
+  // 3.1 префикс по полу
   const genderSuffix = store.filterGender === 'M' ? 'Man' : store.filterGender === 'F' ? 'Woman' : 'Common'
 
-  // переводим «Одежда» → «Clothing» и т.д.
+  // 3.2 переводим корневую категорию в английский ключ файлов
   const catEng = categoryFileKey[store.selectedCategory]
   if (!catEng) return {}
 
+  // 3.3 собираем полный префикс
   const prefixGen    = `${genderSuffix}_Subcategory_${catEng}_`
   const prefixCommon = `Common_Subcategory_${catEng}_`
 
   const result = {}
-  // берём уникальный список имён подкатегорий
+  // 3.4 проходим по всем названиям подкатегорий, которые есть в сторе
   const allNames = Array.from(new Set(Object.values(store.subcatListMap).flat()))
   allNames.forEach(name => {
     const fileKey = subcatNameToFileKey[name]
     if (!fileKey) return
-
-    // ищем сначала «гендерный» файл, затем общий
-    const matchGen = Object.keys(allSubcatImages).find(k => k === prefixGen + fileKey || k.startsWith(prefixGen + fileKey + '-'))
-    const matchCom = Object.keys(allSubcatImages).find(k => k === prefixCommon + fileKey || k.startsWith(prefixCommon + fileKey + '-'))
-
-    const found = matchGen || matchCom
-    if (found) {
-      result[name] = allSubcatImages[found]
+    // сначала пробуем гендерный вариант, потом общий
+    const genKey = prefixGen + fileKey
+    const comKey = prefixCommon + fileKey
+    if (allSubcatImages[genKey]) {
+      result[name] = allSubcatImages[genKey]
+    } else if (allSubcatImages[comKey]) {
+      result[name] = allSubcatImages[comKey]
     }
   })
 
