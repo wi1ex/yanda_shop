@@ -570,6 +570,16 @@ onBeforeUnmount(() => {
               letter-spacing: -0.84px;
             }
           }
+          .cat-btn.active {
+            background-color: $white-100;
+            img {
+              width: 65px;
+              height: 65px;
+            }
+            span {
+              color: $black-100;
+            }
+          }
         }
         .subcat-slider-wrapper {
           display: flex;
