@@ -235,33 +235,40 @@ const categoryImages = {
   'Аксессуары': category_accessories,
 }
 
+// 1) Добавляем маппинг русских имён категорий → английским ключам в именах файлов
+const categoryFileKey = {
+  'Одежда':      'Clothing',
+  'Обувь':       'Shoes',
+  'Аксессуары':  'Accessories',
+}
+
 // 2) Маппинг русских имён → ключи файлов
 const subcatNameToFileKey = {
   // Одежда
-  'Блуза':         'Blouse',
-  'Бомбер':        'Bomber',
-  'Брюки':         'Pants',
-  'Верхняя одежда':'Outerwear',
-  'Джемпер':       'Jumper',
-  'Джинсы':        'Jeans',
-  'Жилетка':       'Vest',
-  'Кардиган':      'Cardigan',
-  'Купальник':     'Swimsuit',
-  'Лонгслив':      'Longsleeve',
-  'Майка':         'Tanktop',
-  'Нижнее белье':  'Underwear',
-  'Пиджак':        'Blazer',
-  'Платье':        'Dress',
-  'Поло':          'Polo',
-  'Пуховик':       'Down_jacket',
-  'Рубашка':       'Shirt',
-  'Свитер':        'Sweater',
-  'Свитшот':       'Sweatshirt',
-  'Спорт. костюм': 'Tracksuit',
-  'Футболка':      'Tshirt',
-  'Худи':          'Hoodie',
-  'Шорты':         'Shorts',
-  'Юбка':          'Skirt',
+  'Блуза':            'Blouse',
+  'Бомбер':           'Bomber',
+  'Брюки':            'Pants',
+  'Верхняя одежда':   'Outerwear',
+  'Джемпер':          'Jumper',
+  'Джинсы':           'Jeans',
+  'Жилетка':          'Vest',
+  'Кардиган':         'Cardigan',
+  'Купальник':        'Swimsuit',
+  'Лонгслив':         'Longsleeve',
+  'Майка':            'Tanktop',
+  'Нижнее белье':     'Underwear',
+  'Пиджак':           'Blazer',
+  'Платье':           'Dress',
+  'Поло':             'Polo',
+  'Пуховик':          'Down_jacket',
+  'Рубашка':          'Shirt',
+  'Свитер':           'Sweater',
+  'Свитшот':          'Sweatshirt',
+  'Спорт. костюм':    'Tracksuit',
+  'Футболка':         'Tshirt',
+  'Худи':             'Hoodie',
+  'Шорты':            'Shorts',
+  'Юбка':             'Skirt',
   // Обувь
   'Балетки':          'Ballet',
   'Босоножки':        'Slingbacks',
@@ -293,23 +300,33 @@ const subcatNameToFileKey = {
 }
 
 const subcategoryImages = computed(() => {
+  // определяем префикс по полу
   const genderSuffix = store.filterGender === 'M' ? 'Man' : store.filterGender === 'F' ? 'Woman' : 'Common'
-  const cat = store.selectedCategory
+
+  // переводим «Одежда» → «Clothing» и т.д.
+  const catEng = categoryFileKey[store.selectedCategory]
+  if (!catEng) return {}
+
+  const prefixGen    = `${genderSuffix}_Subcategory_${catEng}_`
+  const prefixCommon = `Common_Subcategory_${catEng}_`
+
   const result = {}
-  // префиксы для поиска
-  const prefixGen    = `${genderSuffix}_Subcategory_${cat}_`
-  const prefixCommon = `Common_Subcategory_${cat}_`
-  // перебираем ВСЕ подкатегории, которые есть в текущем map
+  // берём уникальный список имён подкатегорий
   const allNames = Array.from(new Set(Object.values(store.subcatListMap).flat()))
   allNames.forEach(name => {
-    const key = subcatNameToFileKey[name]
-    if (!key) return
-    // ищем в ключах либо exact, либо с «-»
-    const genKey = Object.keys(allSubcatImages).find(k => k === prefixGen + key || k.startsWith(prefixGen + key + '-') )
-    const comKey = Object.keys(allSubcatImages).find(k => k === prefixCommon + key || k.startsWith(prefixCommon + key + '-') )
-    const fileKey = genKey || comKey
-    if (fileKey) result[name] = allSubcatImages[fileKey]
+    const fileKey = subcatNameToFileKey[name]
+    if (!fileKey) return
+
+    // ищем сначала «гендерный» файл, затем общий
+    const matchGen = Object.keys(allSubcatImages).find(k => k === prefixGen + fileKey || k.startsWith(prefixGen + fileKey + '-'))
+    const matchCom = Object.keys(allSubcatImages).find(k => k === prefixCommon + fileKey || k.startsWith(prefixCommon + fileKey + '-'))
+
+    const found = matchGen || matchCom
+    if (found) {
+      result[name] = allSubcatImages[found]
+    }
   })
+
   return result
 })
 
