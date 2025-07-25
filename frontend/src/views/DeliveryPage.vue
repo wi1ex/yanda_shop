@@ -496,7 +496,7 @@ function toggleFaq(id) {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .delivery-page {
     .info-row {
       flex-direction: column;

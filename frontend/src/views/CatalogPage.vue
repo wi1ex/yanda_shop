@@ -62,26 +62,78 @@
             <img :src="mobileFiltersOpen ? icon_close : icon_filter" alt=""/>
           </button>
           <transition name="slide-down">
-            <div v-if="mobileFiltersOpen" ref="filterList" class="filter-list">
-              <input type="number" v-model.number="store.filterPriceMin" placeholder="Мин. цена" />
-              <input type="number" v-model.number="store.filterPriceMax" placeholder="Макс. цена" />
-              <select v-model="store.filterColor">
-                <option value="">Все цвета</option>
-                <option v-for="color in distinctColors" :key="color" :value="color">{{ color }}</option>
-              </select>
-              <div class="gender-filter">
-              <label :class="{ active: store.filterGender === '' }">
-                <input type="radio" v-model="store.filterGender" value="" /> Все
-              </label>
-              <label :class="{ active: store.filterGender === 'M' }">
-                <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
-              </label>
-              <label :class="{ active: store.filterGender === 'F' }">
-                <input type="radio" v-model="store.filterGender" value="F" /> Женщинам
-              </label>
-              </div>
-              <button type="button" @click="handleClearFilters" class="btn-clear">Сбросить</button>
-            </div>
+            <ul v-if="mobileFiltersOpen" ref="filterList" class="filter-list">
+              <!-- Секция «Для кого» -->
+              <li class="filter-item">
+                <button class="filter-header" @click="openSection('gender')">
+                  Для кого
+                  <span :class="{ open: openSections.gender }">⌄</span>
+                </button>
+                <transition name="slide-down">
+                  <div v-if="openSections.gender" class="filter-body">
+                    <label :class="{ active: store.filterGender === '' }">
+                      <input type="radio" v-model="store.filterGender" value="" /> Все
+                    </label>
+                    <label :class="{ active: store.filterGender === 'M' }">
+                      <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
+                    </label>
+                    <label :class="{ active: store.filterGender === 'F' }">
+                      <input type="radio" v-model="store.filterGender" value="F" /> Женщинам
+                    </label>
+                  </div>
+                </transition>
+              </li>
+
+              <!-- Секция «Бренды» -->
+              <li class="filter-item">
+                <button class="filter-header" @click="openSection('brand')">
+                  Бренды
+                  <span :class="{ open: openSections.brand }">⌄</span>
+                </button>
+                <transition name="slide-down">
+                  <div v-if="openSections.brand" class="filter-body">
+                    <select v-model="store.filterBrand">
+                      <option value="">Все бренды</option>
+                      <option v-for="b in distinctBrands" :key="b" :value="b">{{ b }}</option>
+                    </select>
+                  </div>
+                </transition>
+              </li>
+
+              <!-- Секция «Цвет» -->
+              <li class="filter-item">
+                <button class="filter-header" @click="openSection('color')">
+                  Цвет
+                  <span :class="{ open: openSections.color }">⌄</span>
+                </button>
+                <transition name="slide-down">
+                  <div v-if="openSections.color" class="filter-body">
+                    <select v-model="store.filterColor">
+                      <option value="">Все цвета</option>
+                      <option v-for="c in distinctColors" :key="c" :value="c">{{ c }}</option>
+                    </select>
+                  </div>
+                </transition>
+              </li>
+
+              <!-- Секция «Цена» -->
+              <li class="filter-item">
+                <button class="filter-header" @click="openSection('price')">
+                  Цена
+                  <span :class="{ open: openSections.price }">⌄</span>
+                </button>
+                <transition name="slide-down">
+                  <div v-if="openSections.price" class="filter-body">
+                    <input type="number" v-model.number="store.filterPriceMin" placeholder="Мин. цена" />
+                    <input type="number" v-model.number="store.filterPriceMax" placeholder="Макс. цена" />
+                  </div>
+                </transition>
+              </li>
+
+              <li class="filter-clear">
+                <button type="button" @click="handleClearFilters" class="btn-clear">Сбросить всё фильтры</button>
+              </li>
+            </ul>
           </transition>
         </div>
         <div class="mobile-sort">
@@ -158,6 +210,14 @@ const sortList = ref(null)
 const filterBtn = ref(null)
 const filterList = ref(null)
 
+
+const openSections = reactive({
+  gender: false,
+  brand:  false,
+  color:  false,
+  price:  false,
+})
+
 const categoryImages = {
   'Одежда': category_clothing,
   'Обувь': category_shoes,
@@ -228,9 +288,10 @@ const totalItems = computed(() => store.displayedProducts.length)
 
 // 2) Динамический заголовок
 const headerTitle = computed(() => {
-  if (store.filterGender === 'M') return 'ДЛЯ НЕГО'
-  if (store.filterGender === 'F') return 'ДЛЯ НЕЁ'
-  return 'КАТАЛОГ'
+  if (store.filterGender === 'M') return 'Для него'
+  if (store.filterGender === 'F') return 'Для неё'
+  if (store.filterBrand !== '') return store.filterBrand
+  return 'Каталог'
 })
 
 // товары для отображения: первые page*perPage элементов
@@ -238,6 +299,11 @@ const paged = computed(() =>
   store.displayedProducts.slice(0, page.value * perPage)
 )
 
+// Список уникальных брендов из всех загруженных products
+const distinctBrands = computed(() =>
+  Array.from(new Set(store.products.map(p => p.brand).filter(Boolean)))
+       .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }))
+)
 
 const distinctColors = computed(() =>
   Array.from(new Set(store.products.map(p => p.color).filter(Boolean)))
@@ -317,6 +383,14 @@ function animateGrid() {
   })
 }
 
+function openSection(key) {
+  // если нужно множественное раскрытие — просто переключаем:
+  openSections[key] = !openSections[key]
+  // если нужна только одна открытая секция, раскомментируйте ниже:
+  // Object.keys(openSections).forEach(k => openSections[k] = false)
+  // openSections[key] = true
+}
+
 // Сохранение в избранное оставляем, но вешаем .stop на клик, чтобы не перегружать маршрут
 function toggleFav(p) {
   store.isFavorite(p.color_sku) ? store.removeFromFavorites(p.color_sku) : store.addToFavorites(p.color_sku)
@@ -357,8 +431,9 @@ watch(
 )
 watch(
   () => [
-    store.filterColor,
     store.filterGender,
+    store.filterBrand,
+    store.filterColor,
     store.filterPriceMin,
     store.filterPriceMax,
   ],
@@ -379,6 +454,9 @@ onMounted(() => {
   if (route.query.gender) {
     const g = route.query.gender
     store.filterGender = (g === 'M' || g === 'F') ? g : ''
+  }
+  if (route.query.brand) {
+    store.filterBrand = String(route.query.brand)
   }
   if (subcatSlider.value) {
     subcatSlider.value.scrollLeft = 0
@@ -433,6 +511,7 @@ onBeforeUnmount(() => {
         font-size: 32px;
         line-height: 90%;
         letter-spacing: -2.24px;
+        text-transform: uppercase;
       }
       .logo-count {
         color: $red-active;
@@ -645,42 +724,45 @@ onBeforeUnmount(() => {
           border: 1px solid $grey-89;
           border-radius: 6px;
           z-index: 20;
-          input,
-          select {
-            padding: 8px;
-            border: 1px solid $grey-89;
-            border-radius: 6px;
-          }
-          .gender-filter {
-            display: flex;
-            gap: 12px;
-            label {
-              flex: 1;
-              text-align: center;
-              padding: 8px 0;
-              background-color: $white-80;
-              border-radius: 6px;
+          .filter-item {
+            border-bottom: 1px solid $grey-89;
+            .filter-header {
+              width: 100%;
+              padding: 12px;
+              background: $white-100;
+              border: none;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
               font-size: 14px;
               cursor: pointer;
-              position: relative;
-              input {
-                position: absolute;
-                opacity: 0;
-                pointer-events: none;
+              span {
+                transition: transform 0.25s ease-in-out;
               }
-              &.active {
-                background-color: $red-active;
-                color: $white-100;
+            }
+            .filter-header .open {
+              transform: rotate(180deg);
+            }
+            .filter-body {
+              padding: 8px 12px 12px;
+              background: $white-80;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+              select {
+                width: 100%;
+                padding: 4px 8px;
+                font-size: 16px;
               }
             }
           }
-          .btn-clear {
-            padding: 8px;
-            background-color: $red-error;
-            color: $white-100;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
+          .filter-clear {
+            border-bottom: 1px solid $grey-89;
+            text-align: center;
+            .btn-clear {
+              width: 100%;
+              padding: 10px;
+            }
           }
         }
       }

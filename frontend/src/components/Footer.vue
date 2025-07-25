@@ -10,8 +10,9 @@
 
         <!-- Колонка “Категории” -->
         <nav class="footer-nav" style="left: 18vw">
-          <a href="#" class="footer-link" @click.prevent="goToGender('M')">Мужчинам</a>
-          <a href="#" class="footer-link" @click.prevent="goToGender('F')">Женщинам</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Brands')">Бренды</a>
+          <a href="#" class="footer-link" @click.prevent="goToGender('M')">Мужчины</a>
+          <a href="#" class="footer-link" @click.prevent="goToGender('F')">Женщины</a>
           <a href="#" class="footer-link" @click.prevent="goToCategory('Аксессуары')">Аксессуары</a>
           <a href="#" class="footer-link" @click.prevent="goToCategory('Одежда')">Одежда</a>
           <a href="#" class="footer-link" @click.prevent="goToCategory('Обувь')">Обувь</a>
@@ -49,8 +50,9 @@
 
         <!-- Колонка “Категории” -->
         <nav class="footer-nav">
-          <a href="#" class="footer-link" @click.prevent="goToGender('M')">Мужчинам</a>
-          <a href="#" class="footer-link" @click.prevent="goToGender('F')">Женщинам</a>
+          <a href="#" class="footer-link" @click.prevent="goToPage('Brands')">Бренды</a>
+          <a href="#" class="footer-link" @click.prevent="goToGender('M')">Мужчины</a>
+          <a href="#" class="footer-link" @click.prevent="goToGender('F')">Женщины</a>
           <a href="#" class="footer-link" @click.prevent="goToCategory('Аксессуары')">Аксессуары</a>
           <a href="#" class="footer-link" @click.prevent="goToCategory('Одежда')">Одежда</a>
           <a href="#" class="footer-link" @click.prevent="goToCategory('Обувь')">Обувь</a>
