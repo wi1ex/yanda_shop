@@ -137,25 +137,26 @@ function onBrandClick(brand) {
         }
       }
     }
-    .brands-alphabet {
-      width: 48px;
-      margin-left: 24px;
-      position: sticky;
-      top: 100px;
-      ul {
-        display: flex;
-        flex-direction: column;
-        padding: 0;
-        margin: 0;
-        li {
-          margin: 4px 0;
-          a {
-            font-size: 14px;
-            color: #888;
-            text-decoration: none;
-            &:hover {
-              color: #000;
-            }
+  }
+  .brands-alphabet {
+    position: fixed;
+    top: 150px;
+    right: 10px;
+    width: 48px;
+    margin-left: 24px;
+    ul {
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      margin: 0;
+      li {
+        margin: 4px 0;
+        a {
+          font-size: 14px;
+          color: #888;
+          text-decoration: none;
+          &:hover {
+            color: #000;
           }
         }
       }
