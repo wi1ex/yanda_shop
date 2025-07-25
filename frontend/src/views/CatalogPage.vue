@@ -36,7 +36,7 @@
                 <button type="button" class="back-btn" @click="store.backToCats()">назад</button>
                 <button type="button" class="cat-btn" v-for="sub in store.subcatListMap[store.selectedCategory]" :key="sub"
                         :class="{ active: store.selectedSubcat === sub }" @click="store.pickSubcat(sub)">
-                  <img :src="categoryImages[store.selectedCategory]" alt=""/>
+                  <img v-if="subcategoryImages[sub]" :src="subcategoryImages[sub]" :alt="sub"/>
                   <span>{{ sub }}</span>
                 </button>
               </div>
@@ -193,6 +193,10 @@ import category_clothing from '@/assets/images/category_clothing.png'
 import category_accessories from '@/assets/images/category_accessories.png'
 import icon_favorites_black from "@/assets/images/favorites_black.svg";
 import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
+const imagesContext = import.meta.glob(
+  '/src/assets/images/subcats/*.png',
+  { eager: true, as: 'url' }
+)
 
 const store = useStore()
 const route = useRoute()
@@ -210,7 +214,13 @@ const sortBtn = ref(null)
 const sortList = ref(null)
 const filterBtn = ref(null)
 const filterList = ref(null)
+const allSubcatImages = {}
 
+for (const path in imagesContext) {
+  // path = '/src/assets/images/subcats/Common_Subcategory_Shoes_Sneakers.png'
+  const file = path.split('/').pop().replace('.png','')    // 'Common_Subcategory_Shoes_Sneakers'
+  allSubcatImages[file] = imagesContext[path]
+}
 
 const openSections = reactive({
   gender: false,
@@ -225,11 +235,81 @@ const categoryImages = {
   'Аксессуары': category_accessories,
 }
 
-// const subcategoryImages = {
-//   'Блуза':       subcat_blouse,
-//   'Джинсы':      subcat_jeans,
-//   // … остальные подкатегории …
-// }
+// 2) Маппинг русских имён → ключи файлов
+const subcatNameToFileKey = {
+  // Одежда
+  'Блуза':         'Blouse',
+  'Бомбер':        'Bomber',
+  'Брюки':         'Pants',
+  'Верхняя одежда':'Outerwear',
+  'Джемпер':       'Jumper',
+  'Джинсы':        'Jeans',
+  'Жилетка':       'Vest',
+  'Кардиган':      'Cardigan',
+  'Купальник':     'Swimsuit',
+  'Лонгслив':      'Longsleeve',
+  'Майка':         'Tanktop',
+  'Нижнее белье':  'Underwear',
+  'Пиджак':        'Blazer',
+  'Платье':        'Dress',
+  'Поло':          'Polo',
+  'Пуховик':       'Down_jacket',
+  'Рубашка':       'Shirt',
+  'Свитер':        'Sweater',
+  'Свитшот':       'Sweatshirt',
+  'Спорт. костюм': 'Tracksuit',
+  'Футболка':      'Tshirt',
+  'Худи':          'Hoodie',
+  'Шорты':         'Shorts',
+  'Юбка':          'Skirt',
+  // Обувь
+  'Балетки':          'Ballet',
+  'Босоножки':        'Slingbacks',
+  'Ботильоны':        'Ankleboots',
+  'Казаки':           'Cossacks',
+  'Кеды':             'Keds',
+  'Кроссовки':        'Sneakers',
+  'Мокасины':         'Moccasins',
+  'Мюли':             'Mules',
+  'Резиновая обувь':  'Rubber_shoes',
+  'Сабо':             'Sabo',
+  'Сандалии':         'Sandals',
+  'Сапоги':           'Boots',
+  'Слипоны':          'Slip-ons',
+  'Топсайдеры':       'Topsiders',
+  'Туфли':            'Shoes',
+  'Шлепки':           'Flip_flops',
+  'Эспадрильи':       'Espadrilles',
+  // Аксессуары
+  'Головные уборы':   'Headwear',
+  'Очки':             'Glasses',
+  'Платки':           'Handkerchiefs',
+  'Ремни':            'Belts',
+  'Рюкзаки':          'Backpacks',
+  'Сумки':            'Bags',
+  'Украшения':        'Decorations',
+  'Часы':             'Watch',
+  'Шарфы':            'Scarves'
+}
+
+const subcategoryImages = computed(() => {
+  const genderSuffix = store.filterGender === 'M' ? 'Man' : store.filterGender === 'F' ? 'Woman' : 'Common'
+  const map = {}
+  // все подкатегории из текущего store.subcatListMap
+  const allSubs = Object.values(store.subcatListMap).flat()
+  new Set(allSubs).forEach(name => {
+    const key = subcatNameToFileKey[name]
+    if (!key) return
+    const fullKeyGen = `${genderSuffix}_Subcategory_${store.selectedCategory}_${key}`
+    const fullKeyCommon = `Common_Subcategory_${store.selectedCategory}_${key}`
+    if (allSubcatImages[fullKeyGen]) {
+      map[name] = allSubcatImages[fullKeyGen]
+    } else if (allSubcatImages[fullKeyCommon]) {
+      map[name] = allSubcatImages[fullKeyCommon]
+    }
+  })
+  return map
+})
 
 // Список опций
 const sortOptions = [
