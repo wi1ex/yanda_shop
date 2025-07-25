@@ -218,9 +218,11 @@ const allSubcatImages = {}
 
 for (const path in imagesContext) {
   // path = '/src/assets/images/subcats/Common_Subcategory_Shoes_Sneakers.png'
-  const file = path.split('/').pop().replace('.png','')    // 'Common_Subcategory_Shoes_Sneakers'
+  const file = path.split('/').pop().replace('.png','')
   allSubcatImages[file] = imagesContext[path]
 }
+console.log('glob keys count:', Object.keys(imagesContext).length)
+console.log('allSubcatImages keys:', Object.keys(allSubcatImages).sort())
 
 const openSections = reactive({
   gender: false,
@@ -467,9 +469,9 @@ function animateGrid() {
 function openSection(key) {
   // если нужно множественное раскрытие — просто переключаем:
   openSections[key] = !openSections[key]
-  // если нужна только одна открытая секция, раскомментируйте ниже:
-  // Object.keys(openSections).forEach(k => openSections[k] = false)
-  // openSections[key] = true
+  // если нужна только одна открытая секция:
+  Object.keys(openSections).forEach(k => openSections[k] = false)
+  openSections[key] = true
 }
 
 // Сохранение в избранное оставляем, но вешаем .stop на клик, чтобы не перегружать маршрут
