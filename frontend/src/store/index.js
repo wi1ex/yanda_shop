@@ -74,6 +74,7 @@ export const useStore = defineStore('main', () => {
   const filterColor         = ref('')
   const filterGender        = ref('')
   const filterSubcat        = ref('')
+  const filterBrand         = ref('')
 
   // Товары
   const products            = ref([])
@@ -423,6 +424,14 @@ export const useStore = defineStore('main', () => {
     })
   })
 
+  const distinctBrands = computed(() => {
+    return Array
+      .from(new Set(products.value.map(p => p.brand).filter(Boolean)))
+      .sort((a, b) =>
+        a.localeCompare(b, 'ru', { sensitivity: 'base' })
+      )
+  })
+
   const displayedProducts = computed(() => {
     let list = colorGroups.value.slice()
 
@@ -441,6 +450,9 @@ export const useStore = defineStore('main', () => {
     if (filterSubcat.value) {
       list = list.filter(g => g.variants.some(v => v.subcategory === filterSubcat.value))
     }
+    if (filterBrand.value) {
+      list = list.filter(g => g.variants.some(v => v.brand === filterBrand.value))
+    }
 
     list.forEach(g => {
       g.totalSales = g.variants.reduce((sum, v) => sum + (v.count_sales||0), 0)
@@ -454,6 +466,7 @@ export const useStore = defineStore('main', () => {
     } else {
       list.sort((a, b) => mod * a.minDate.localeCompare(b.minDate))
     }
+
     return list
   })
 
@@ -493,15 +506,6 @@ export const useStore = defineStore('main', () => {
       selectedSubcat.value = subcat
       filterSubcat.value = subcat
     }
-  }
-
-  // Листание «страниц» подкатегорий
-  function nextSubcatPage() {
-    currentSubcatPage.value++
-  }
-
-  function prevSubcatPage() {
-    currentSubcatPage.value--
   }
 
   function changeCategory(cat) {
@@ -581,6 +585,8 @@ export const useStore = defineStore('main', () => {
     filterPriceMax.value = null
     filterGender.value = ''
     filterColor.value = ''
+    filterBrand.value = ''
+    filterSubcat.value = ''
   }
 
   // -------------------------------------------------
@@ -819,7 +825,7 @@ export const useStore = defineStore('main', () => {
     categoryList, selectedCategory,
     showSubcats, currentSubcatPage, selectedSubcat, subcatListMap,
     sortBy, sortOrder,
-    filterPriceMin, filterPriceMax, filterColor, filterGender, filterSubcat,
+    filterPriceMin, filterPriceMax, filterColor, filterGender, filterSubcat, filterBrand,
     products,
     cartOrder, cart, cartLoaded, showCartDrawer,
     favorites, favoritesLoaded,
@@ -833,7 +839,7 @@ export const useStore = defineStore('main', () => {
     parameters, settings, reviews, users,
 
     // grouping/computed
-    colorGroups, displayedProducts, groupedCartItems,
+    colorGroups, displayedProducts, groupedCartItems, distinctBrands,
 
     // helpers
     isTelegramUserId,
@@ -856,7 +862,7 @@ export const useStore = defineStore('main', () => {
 
 
     // filters/sorting
-    changeCategory, openSubcats, backToCats, pickSubcat, nextSubcatPage, prevSubcatPage,
+    changeCategory, openSubcats, backToCats, pickSubcat,
 
     // cart helpers
     addToCart, increaseQuantity, decreaseQuantity,

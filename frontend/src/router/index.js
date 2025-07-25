@@ -7,6 +7,7 @@ import ProfilePage from '@/views/ProfilePage.vue'
 import AboutPage from '@/views/AboutPage.vue'
 import DeliveryPage from '@/views/DeliveryPage.vue'
 import ContactsPage from '@/views/ContactsPage.vue'
+import BrandsPage from '@/views/BrandsPage.vue'
 import AdminPage from '@/views/AdminPage.vue'
 import { useStore } from '@/store/index.js'
 
@@ -19,6 +20,7 @@ const routes = [
   { path: '/about', name: 'About', component: AboutPage },
   { path: '/delivery', name: 'Delivery', component: DeliveryPage },
   { path: '/contacts', name: 'Contacts', component: ContactsPage },
+  { path: '/brands', name: 'Brands', component: BrandsPage },
   { path: '/admin', name: 'Admin', component: AdminPage },
   { path: '/:catchAll(.*)', redirect: '/' }
 ]

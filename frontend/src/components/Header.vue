@@ -43,6 +43,7 @@
             Меню
             <img :src="icon_close" alt="Меню" />
           </button>
+          <div @click="goToPage('Brands')" class="dropdown-link">Бренды</div>
           <div @click="goToGender('M')" class="dropdown-link">Мужчинам</div>
           <div @click="goToGender('F')" class="dropdown-link">Женщинам</div>
           <div @click="goToPage('About')" class="dropdown-link">О нас</div>

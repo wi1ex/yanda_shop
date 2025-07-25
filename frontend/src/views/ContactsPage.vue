@@ -146,7 +146,7 @@ const store = useStore()
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .contacts-page {
     .section-title {
       margin: 96px 0 40px;
