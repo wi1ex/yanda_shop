@@ -44,10 +44,10 @@
             <img :src="icon_close" alt="Меню" />
           </button>
           <div @click="goToPage('Brands')" class="dropdown-link">Бренды</div>
-          <div class="dropdown-link dropdown-link-parent" :class="{ open: openSubmenu.M }"
+          <div class="dropdown-link" :class="{ open: openSubmenu.M }"
                @click="toggleSubmenu('M')" :aria-expanded="openSubmenu.M">
             Мужчинам
-            <span class="arrow" />
+            <img :src="icon_arrow_up" alt="" :style="{ transform: openSubmenu.M ? 'none' : 'rotate(180deg)'}"/>
           </div>
           <div v-if="openSubmenu.M" class="dropdown-sublinks">
             <div v-for="cat in store.categoryList" :key="`M-${cat}`"
@@ -55,10 +55,10 @@
               {{ cat }}
             </div>
           </div>
-          <div class="dropdown-link dropdown-link-parent" :class="{ open: openSubmenu.F }"
+          <div class="dropdown-link" :class="{ open: openSubmenu.F }"
                @click="toggleSubmenu('F')" :aria-expanded="openSubmenu.F">
             Женщинам
-            <span class="arrow" />
+            <img :src="icon_arrow_up" alt="" :style="{ transform: openSubmenu.F ? 'none' : 'rotate(180deg)'}"/>
           </div>
           <div v-if="openSubmenu.F" class="dropdown-sublinks">
             <div v-for="cat in store.categoryList" :key="`F-${cat}`"
@@ -111,6 +111,7 @@ import icon_logo_telegram from '@/assets/images/logo_telegram.svg'
 import icon_logo_whatsapp from '@/assets/images/logo_whatsapp.svg'
 import icon_logo_mail from '@/assets/images/logo_mail.svg'
 import icon_logo_instagram from '@/assets/images/logo_instagram.svg'
+import icon_arrow_up from "@/assets/images/arrow_up.svg";
 
 const store = useStore()
 const route = useRoute()
@@ -288,46 +289,41 @@ watch(
     }
     .dropdown-link {
       display: flex;
-      padding: 16px 8px;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      padding: 12px 10px;
       color: $grey-20;
       font-family: Bounded;
       font-weight: 350;
-      font-size: 16px;
+      font-size: 14px;
       line-height: 80%;
-      letter-spacing: -0.8px;
+      letter-spacing: -0.7px;
       cursor: pointer;
       border-top: 1px solid $grey-87;
+      img {
+        width: 16px;
+        height: 16px;
+      }
     }
     .dropdown-link:last-child {
       border-bottom: 1px solid $grey-87;
     }
-    .dropdown-link-parent {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: relative;
-      .arrow {
-        width: 8px;
-        height: 8px;
-        border-right: 2px solid $grey-20;
-        border-bottom: 2px solid $grey-20;
-        transform: rotate(45deg);
-        transition: transform .2s ease;
-      }
-    }
-    .dropdown-link-parent.open .arrow {
-      transform: rotate(-135deg);
+    .dropdown-link .open {
+      background-color: $grey-90;
     }
     .dropdown-sublinks {
       display: flex;
       flex-direction: column;
       background-color: $grey-95;
       .dropdown-sublink {
-        padding: 12px 16px;
-        font-size: 14px;
-        line-height: 1;
+        padding: 12px 10px;
+        border-top: 1px solid $white-100;
+        background-color: $grey-90;
         color: $grey-20;
-        border-top: 1px solid $grey-87;
+        font-size: 16px;
+        line-height: 110%;
+        letter-spacing: -0.6px;
         cursor: pointer;
       }
     }
@@ -432,11 +428,6 @@ watch(
           width: 24px;
           height: 24px;
         }
-      }
-      .dropdown-link {
-        padding: 12px 10px;
-        font-size: 14px;
-        letter-spacing: -0.7px;
       }
     }
   }
