@@ -17,15 +17,15 @@
           </ul>
         </section>
       </div>
+      <!-- Правая колонка: якорный алфавит -->
+      <nav class="alf-nav">
+        <ul class="alf-ul">
+          <li class="alf-li" v-for="letter in alphabet" :key="letter">
+            <a :href="'#' + letter" @click.prevent="scrollToLetter(letter)">{{ letter }}</a>
+          </li>
+        </ul>
+      </nav>
     </div>
-    <!-- Правая колонка: якорный алфавит -->
-    <nav class="alf-nav">
-      <ul class="alf-ul">
-        <li class="alf-li" v-for="letter in alphabet" :key="letter">
-          <a :href="'#' + letter">{{ letter }}</a>
-        </li>
-      </ul>
-    </nav>
   </div>
   <div class="line-hor"></div>
 </template>
@@ -62,6 +62,14 @@ const groupedByLetter = computed(() => {
   )
   return map
 })
+
+function scrollToLetter(letter) {
+  const el = document.getElementById(letter)
+  if (!el) return
+  const topY = el.getBoundingClientRect().top + window.scrollY - 176
+  window.scrollTo({ top: topY, behavior: 'smooth' })
+}
+
 
 // При клике — переход в каталог с query.brand
 function onBrandClick(brand) {
@@ -108,6 +116,7 @@ function onBrandClick(brand) {
   }
   .brands-content {
     display: flex;
+    align-items: flex-start;
     position: relative;
     padding: 10px;
     width: calc(100% - 20px);
@@ -115,6 +124,7 @@ function onBrandClick(brand) {
     .brands-list {
       display: flex;
       flex-direction: column;
+      flex: 1;
       .brands-section {
         display: flex;
         flex-direction: column;
@@ -152,26 +162,25 @@ function onBrandClick(brand) {
         }
       }
     }
-  }
-  .alf-nav {
-    position: fixed;
-    top: 176px;
-    right: 10px;
-    .alf-ul {
-      display: flex;
-      flex-direction: column;
-      margin: 0;
-      padding: 0;
-      gap: 6px;
-      list-style: none;
-      .alf-li {
+    .alf-nav {
+      position: sticky;
+      top: 176px;
+      .alf-ul {
         display: flex;
-        a {
-          color: $black-40;
-          font-size: 14px;
-          line-height: 100%;
-          letter-spacing: -0.56px;
-          text-decoration: none;
+        flex-direction: column;
+        margin: 0;
+        padding: 0;
+        gap: 6px;
+        list-style: none;
+        .alf-li {
+          display: flex;
+          a {
+            color: $black-40;
+            font-size: 14px;
+            line-height: 100%;
+            letter-spacing: -0.56px;
+            text-decoration: none;
+          }
         }
       }
     }
