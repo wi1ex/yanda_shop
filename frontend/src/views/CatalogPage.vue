@@ -58,17 +58,18 @@
       <!-- Мобильные контролы -->
       <div class="mobile-controls">
         <div class="mobile-filter">
-          <button type="button" ref="filterBtn" class="filter-btn" @click="mobileFiltersOpen = !mobileFiltersOpen">
+          <button type="button" ref="filterBtn" class="filter-btn" @click="filtersOpen = !filtersOpen"
+                  :style="{ borderRadius: filtersOpen ? '4px 4px 0 0' : '4px' }">
             Фильтры
-            <img :src="mobileFiltersOpen ? icon_close : icon_filter" alt=""/>
+            <img :src="filtersOpen ? icon_close : icon_filter" alt=""/>
           </button>
           <transition name="slide-down">
-            <ul v-if="mobileFiltersOpen" ref="filterList" class="filter-list">
+            <ul v-if="filtersOpen" ref="filterList" class="filter-list">
               <!-- Секция «Для кого» -->
               <li class="filter-item">
                 <button type="button" class="filter-header" @click="openSection('gender')">
                   Для кого
-                  <span :class="{ open: openSections.gender }">⌄</span>
+                  <img :src="icon_arrow_up" alt="" :style="{ transform: openSections.gender ? 'none' : 'rotate(180deg)'}"/>
                 </button>
                 <transition name="slide-down">
                   <div v-if="openSections.gender" class="filter-body">
@@ -76,10 +77,10 @@
                       <input type="radio" v-model="store.filterGender" value="" /> Все
                     </label>
                     <label :class="{ active: store.filterGender === 'M' }">
-                      <input type="radio" v-model="store.filterGender" value="M" /> Мужчинам
+                      <input type="radio" v-model="store.filterGender" value="M" /> Для него
                     </label>
                     <label :class="{ active: store.filterGender === 'F' }">
-                      <input type="radio" v-model="store.filterGender" value="F" /> Женщинам
+                      <input type="radio" v-model="store.filterGender" value="F" /> Для неё
                     </label>
                   </div>
                 </transition>
@@ -89,7 +90,7 @@
               <li class="filter-item">
                 <button type="button" class="filter-header" @click="openSection('brand')">
                   Бренды
-                  <span :class="{ open: openSections.brand }">⌄</span>
+                  <img :src="icon_arrow_up" alt="" :style="{ transform: openSections.brand ? 'none' : 'rotate(180deg)'}"/>
                 </button>
                 <transition name="slide-down">
                   <div v-if="openSections.brand" class="filter-body">
@@ -105,7 +106,7 @@
               <li class="filter-item">
                 <button type="button" class="filter-header" @click="openSection('color')">
                   Цвет
-                  <span :class="{ open: openSections.color }">⌄</span>
+                  <img :src="icon_arrow_up" alt="" :style="{ transform: openSections.color ? 'none' : 'rotate(180deg)'}"/>
                 </button>
                 <transition name="slide-down">
                   <div v-if="openSections.color" class="filter-body">
@@ -121,7 +122,7 @@
               <li class="filter-item">
                 <button type="button" class="filter-header" @click="openSection('price')">
                   Цена
-                  <span :class="{ open: openSections.price }">⌄</span>
+                  <img :src="icon_arrow_up" alt="" :style="{ transform: openSections.price ? 'none' : 'rotate(180deg)'}"/>
                 </button>
                 <transition name="slide-down">
                   <div v-if="openSections.price" class="filter-body">
@@ -193,6 +194,7 @@ import category_clothing from '@/assets/images/category_clothing.png'
 import category_accessories from '@/assets/images/category_accessories.png'
 import icon_favorites_black from "@/assets/images/favorites_black.svg";
 import icon_favorites_grey from "@/assets/images/favorites_grey.svg";
+import icon_arrow_up from "@/assets/images/arrow_up.svg";
 const imagesContext = import.meta.glob(
   '@/assets/images/subcats/*.png',
   { eager: true, as: 'url' }
@@ -204,7 +206,7 @@ const router = useRouter()
 
 const page = ref(1)
 const perPage = 24
-const mobileFiltersOpen = ref(false)
+const filtersOpen = ref(false)
 const productsLoading = ref(false)
 const subcatSlider = ref(null)
 const scrollPos = ref(0)
@@ -488,11 +490,13 @@ function animateGrid() {
 }
 
 function openSection(key) {
-  // если нужно множественное раскрытие — просто переключаем:
-  openSections[key] = !openSections[key]
-  // если нужна только одна открытая секция:
-  Object.keys(openSections).forEach(k => openSections[k] = false)
-  openSections[key] = true
+  Object.keys(openSections).forEach(k => {
+    if (k === key) {
+      openSections[key] = !openSections[key]
+    } else {
+      openSections[k] = false
+    }
+  })
 }
 
 // Сохранение в избранное оставляем, но вешаем .stop на клик, чтобы не перегружать маршрут
@@ -520,11 +524,11 @@ function onClickOutside(e) {
     sortOpen.value = false
   }
   if (
-    mobileFiltersOpen.value &&
+    filtersOpen.value &&
     !filterBtn.value.contains(e.target) &&
     !filterList.value?.contains(e.target)
   ) {
-    mobileFiltersOpen.value = false
+    filtersOpen.value = false
   }
 }
 
@@ -639,6 +643,7 @@ onBeforeUnmount(() => {
     .header-cats {
       display: flex;
       width: 100%;
+      transition: all 0.25s cubic-bezier(0, 0.5, 0.25, 1);
       &.blurred {
         filter: blur(4px);
       }
@@ -662,10 +667,12 @@ onBeforeUnmount(() => {
             border: none;
             background-color: $grey-95;
             cursor: pointer;
+            transition: all 0.25s ease-in-out;
             img {
               width: 60px;
               height: 60px;
               object-fit: cover;
+              transition: all 0.25s ease-in-out;
             }
             span {
               color: $grey-20;
@@ -674,16 +681,17 @@ onBeforeUnmount(() => {
               font-weight: 350;
               line-height: 80%;
               letter-spacing: -0.84px;
+              transition: all 0.25s ease-in-out;
             }
-          }
-          .cat-btn.active {
-            background-color: $white-100;
-            img {
-              width: 65px;
-              height: 65px;
-            }
-            span {
-              color: $black-100;
+            &.active {
+              background-color: $white-100;
+              img {
+                width: 65px;
+                height: 65px;
+              }
+              span {
+                color: $black-100;
+              }
             }
           }
         }
@@ -739,6 +747,7 @@ onBeforeUnmount(() => {
                   width: 60px;
                   height: 60px;
                   object-fit: cover;
+                  transition: all 0.25s ease-in-out;
                 }
                 span {
                   color: $grey-20;
@@ -747,16 +756,17 @@ onBeforeUnmount(() => {
                   font-weight: 350;
                   line-height: 80%;
                   letter-spacing: -0.84px;
+                  transition: all 0.25s ease-in-out;
                 }
-              }
-              .cat-btn.active {
-                background-color: $white-100;
-                img {
-                  width: 65px;
-                  height: 65px;
-                }
-                span {
-                  color: $black-100;
+                &.active {
+                  background-color: $white-100;
+                  img {
+                    width: 65px;
+                    height: 65px;
+                  }
+                  span {
+                    color: $black-100;
+                  }
                 }
               }
             }
@@ -776,6 +786,13 @@ onBeforeUnmount(() => {
               border: none;
               background-color: $white-80;
               cursor: pointer;
+              transition: all 0.25s ease-in-out;
+              img {
+                width: 16px;
+                height: 16px;
+                object-fit: cover;
+                transition: all 0.25s ease-in-out;
+              }
               &.prev[disabled],
               &.next[disabled] {
                 cursor: default;
@@ -783,11 +800,6 @@ onBeforeUnmount(() => {
                 img {
                   opacity: 0.4;
                 }
-              }
-              img {
-                width: 16px;
-                height: 16px;
-                object-fit: cover;
               }
             }
           }
@@ -800,6 +812,7 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     margin-top: 40px;
+    transition: all 0.25s cubic-bezier(0, 0.5, 0.25, 1);
     &.blurred {
       filter: blur(4px);
     }
@@ -817,7 +830,6 @@ onBeforeUnmount(() => {
           justify-content: space-between;
           padding: 12px 8px;
           width: 100%;
-          border-radius: 4px;
           border: none;
           background-color: $grey-95;
           color: $grey-20;
@@ -834,38 +846,36 @@ onBeforeUnmount(() => {
           }
         }
         .filter-list {
+          display: flex;
+          flex-direction: column;
           position: absolute;
           top: 100%;
           left: 0;
           right: 0;
           margin: 0;
           padding: 0;
-          background: $white-100;
-          border: 1px solid $grey-89;
-          border-radius: 6px;
-          z-index: 20;
+          border-radius: 0 0 4px 4px;
+          background-color: $white-100;
+          list-style: none;
+          z-index: 200;
           .filter-item {
-            border-bottom: 1px solid $grey-89;
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid $white-100;
             .filter-header {
-              width: 100%;
-              padding: 12px;
-              background: $white-100;
-              border: none;
               display: flex;
               justify-content: space-between;
               align-items: center;
+              width: 100%;
+              padding: 12px 10px;
+              border-top: 1px solid $white-100;
+              background-color: $grey-95;
               font-size: 14px;
               cursor: pointer;
-              span {
-                transition: transform 0.25s ease-in-out;
-              }
-            }
-            .filter-header .open {
-              transform: rotate(180deg);
             }
             .filter-body {
               padding: 8px 12px 12px;
-              background: $white-80;
+              background-color: $white-80;
               display: flex;
               flex-direction: column;
               gap: 8px;
@@ -896,7 +906,6 @@ onBeforeUnmount(() => {
           justify-content: space-between;
           padding: 12px 8px;
           width: 100%;
-          gap: 4px;
           border: none;
           background-color: $grey-95;
           cursor: pointer;
@@ -929,17 +938,15 @@ onBeforeUnmount(() => {
           border-radius: 0 0 4px 4px;
           background-color: $grey-95;
           list-style: none;
-          z-index: 20;
+          z-index: 200;
           li {
             padding: 12px 10px;
             border-top: 1px solid $white-100;
             background-color: $grey-95;
             color: $grey-20;
-            font-family: Bounded;
-            font-size: 14px;
-            font-weight: 350;
-            line-height: 80%;
-            letter-spacing: -0.7px;
+            font-size: 15px;
+            line-height: 110%;
+            letter-spacing: -0.6px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -973,7 +980,6 @@ onBeforeUnmount(() => {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     margin-top: 10px;
-    transition: all 0.25s ease-in-out;
     .product-card {
       display: flex;
       box-sizing: border-box;
@@ -982,7 +988,6 @@ onBeforeUnmount(() => {
       min-width: 0;
       background-color: $grey-89;
       cursor: pointer;
-      transition: transform 0.25s ease-in-out;
       .fav {
         display: flex;
         position: absolute;
