@@ -425,34 +425,29 @@ export const useStore = defineStore('main', () => {
     })
   })
 
-  const distinctColors = computed(() => {
-    return Array
-      .from(new Set(products.map(p => p.color).filter(Boolean)))
-      .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }));
-  });
+  const distinctColors = computed(() =>
+    Array
+      .from(new Set(products.value.map(p => p.color).filter(Boolean)))
+      .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }))
+  )
 
-  const distinctBrands = computed(() => {
-    return Array
-      .from(new Set(products.map(p => p.brand).filter(Boolean)))
-      .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }));
-  });
+  const distinctBrands = computed(() =>
+    Array
+      .from(new Set(products.value.map(p => p.brand).filter(Boolean)))
+      .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }))
+  )
 
   const distinctSizes = computed(() => {
-    const sizes = Array
-      .from(new Set(products.map(p => p.size_label).filter(Boolean)));
-
+    const sizes = Array.from(new Set(products.value.map(p => p.size_label).filter(Boolean)))
     return sizes.sort((a, b) => {
-      const na = parseFloat(a);
-      const nb = parseFloat(b);
-      const bothNum = !isNaN(na) && !isNaN(nb);
-
-      if (bothNum) return na - nb;       // оба «числовые» — по значению
-      if (!isNaN(na)) return -1;         // только a — числовой, будет раньше
-      if (!isNaN(nb)) return 1;          // только b — числовой, будет раньше
-      // оба не числа — по алфавиту (русская локаль)
-      return a.localeCompare(b, 'ru', { sensitivity: 'base' });
-    });
-  });
+      const na = parseFloat(a), nb = parseFloat(b)
+      const bothNum = !isNaN(na) && !isNaN(nb)
+      if (bothNum) return na - nb
+      if (!isNaN(na)) return -1
+      if (!isNaN(nb)) return 1
+      return a.localeCompare(b, 'ru', { sensitivity: 'base' })
+    })
+  })
 
   const displayedProducts = computed(() => {
     let list = colorGroups.value.slice()
