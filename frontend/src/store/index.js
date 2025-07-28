@@ -427,19 +427,19 @@ export const useStore = defineStore('main', () => {
 
   const distinctColors = computed(() => {
     return Array
-      .from(new Set(store.products.map(p => p.color).filter(Boolean)))
+      .from(new Set(products.map(p => p.color).filter(Boolean)))
       .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }));
   });
 
   const distinctBrands = computed(() => {
     return Array
-      .from(new Set(store.products.map(p => p.brand).filter(Boolean)))
+      .from(new Set(products.map(p => p.brand).filter(Boolean)))
       .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }));
   });
 
   const distinctSizes = computed(() => {
     const sizes = Array
-      .from(new Set(store.products.map(p => p.size_label).filter(Boolean)));
+      .from(new Set(products.map(p => p.size_label).filter(Boolean)));
 
     return sizes.sort((a, b) => {
       const na = parseFloat(a);

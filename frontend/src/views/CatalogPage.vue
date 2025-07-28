@@ -63,17 +63,15 @@
             Фильтры
             <img :src="filtersOpen ? icon_close : icon_filter" alt=""/>
           </button>
-
-          <!-- PANEL: активные фильтры -->
-          <div v-if="activeFilters.length" class="applied-filters">
-            <span v-for="f in activeFilters" :key="f.key" class="applied-filters__item" @click="clearFilterItem(f)">
-              {{ f.label }}
-              <img :src="icon_close" alt="×" class="applied-filters__close" />
-            </span>
-          </div>
-          <hr v-if="activeFilters.length" class="applied-filters__divider" />
           <transition name="slide-down">
             <ul v-if="filtersOpen" ref="filterList" class="filter-list">
+              <!-- Активные фильтры -->
+              <li v-if="activeFilters.length" class="applied-filters">
+                <span v-for="f in activeFilters" :key="f.key" class="applied-filters__item" @click="clearFilterItem(f)">
+                  {{ f.label }}
+                  <img :src="icon_close" alt="×" class="applied-filters__close" />
+                </span>
+              </li>
 
               <!-- Секция «Для кого» -->
               <li class="filter-item">
@@ -938,33 +936,6 @@ onBeforeUnmount(() => {
             transition: all 0.25s ease-in-out;
           }
         }
-        .applied-filters {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          padding: 12px;
-          background: $grey-95;
-          .applied-filters__item {
-            display: inline-flex;
-            align-items: center;
-            background: $white-100;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 14px;
-            color: $black-100;
-            cursor: pointer;
-            .applied-filters__close {
-              width: 12px;
-              height: 12px;
-              margin-left: 4px;
-            }
-          }
-        }
-        .applied-filters__divider {
-          margin: 0;
-          border: none;
-          border-top: 1px solid $white-100;
-        }
         .filter-list {
           display: flex;
           flex-direction: column;
@@ -978,6 +949,28 @@ onBeforeUnmount(() => {
           background-color: $white-100;
           list-style: none;
           z-index: 200;
+          .applied-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+            background: $grey-95;
+            .applied-filters__item {
+              display: inline-flex;
+              align-items: center;
+              background: $white-100;
+              border-radius: 4px;
+              padding: 4px 8px;
+              font-size: 14px;
+              color: $black-100;
+              cursor: pointer;
+              .applied-filters__close {
+                width: 12px;
+                height: 12px;
+                margin-left: 4px;
+              }
+            }
+          }
           .filter-item {
             display: flex;
             flex-direction: column;
