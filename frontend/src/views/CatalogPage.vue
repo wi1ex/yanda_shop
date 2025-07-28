@@ -63,8 +63,18 @@
             Фильтры
             <img :src="filtersOpen ? icon_close : icon_filter" alt=""/>
           </button>
+
+          <!-- PANEL: активные фильтры -->
+          <div v-if="activeFilters.length" class="applied-filters">
+            <span v-for="f in activeFilters" :key="f.key" class="applied-filters__item" @click="clearFilterItem(f)">
+              {{ f.label }}
+              <img :src="icon_close" alt="×" class="applied-filters__close" />
+            </span>
+          </div>
+          <hr v-if="activeFilters.length" class="applied-filters__divider" />
           <transition name="slide-down">
             <ul v-if="filtersOpen" ref="filterList" class="filter-list">
+
               <!-- Секция «Для кого» -->
               <li class="filter-item">
                 <button type="button" class="filter-header" @click="openSection('gender')">
@@ -72,64 +82,67 @@
                   <img :src="icon_arrow_up" alt="" :style="{ transform: openSections.gender ? 'none' : 'rotate(180deg)'}"/>
                 </button>
                 <transition name="slide-down">
-                  <div v-if="openSections.gender" class="filter-body">
-                    <label :class="{ active: store.filterGender === '' }">
-                      <input type="radio" v-model="store.filterGender" value="" /> Все
-                    </label>
-                    <label :class="{ active: store.filterGender === 'M' }">
-                      <input type="radio" v-model="store.filterGender" value="M" /> Для него
-                    </label>
-                    <label :class="{ active: store.filterGender === 'F' }">
-                      <input type="radio" v-model="store.filterGender" value="F" /> Для неё
-                    </label>
+                  <div v-if="openSections.gender" class="gender-buttons">
+                    <button type="button" class="gender-btn" :class="{ active: store.filterGender === '' }"
+                            @click="store.filterGender = ''">Все</button>
+                    <button type="button" class="gender-btn" :class="{ active: store.filterGender === 'M' }"
+                            @click="store.filterGender = 'M'">Для него</button>
+                    <button type="button" class="gender-btn" :class="{ active: store.filterGender === 'F' }"
+                            @click="store.filterGender = 'F'">Для неё</button>
                   </div>
                 </transition>
               </li>
 
               <!-- Секция «Бренды» -->
               <li class="filter-item">
-                <button type="button" class="filter-header" @click="openSection('brand')">
+                <button class="filter-header" @click="openSection('brand')">
                   Бренды
                   <img :src="icon_arrow_up" alt="" :style="{ transform: openSections.brand ? 'none' : 'rotate(180deg)'}"/>
                 </button>
                 <transition name="slide-down">
                   <div v-if="openSections.brand" class="filter-body">
-                    <select v-model="store.filterBrand">
-                      <option value="">Все бренды</option>
-                      <option v-for="b in store.distinctBrands" :key="b" :value="b">{{ b }}</option>
-                    </select>
+                    <div class="options-list">
+                      <label v-for="b in store.distinctBrands" :key="b" class="option">
+                        <input type="checkbox" :value="b" v-model="store.filterBrands"/>
+                        <span>{{ b }}</span>
+                      </label>
+                    </div>
                   </div>
                 </transition>
               </li>
 
               <!-- Секция «Размер» -->
               <li class="filter-item">
-                <button type="button" class="filter-header" @click="openSection('size')">
+                <button class="filter-header" @click="openSection('size')">
                   Размер
                   <img :src="icon_arrow_up" alt="" :style="{ transform: openSections.size ? 'none' : 'rotate(180deg)' }"/>
                 </button>
                 <transition name="slide-down">
                   <div v-if="openSections.size" class="filter-body">
-                    <select v-model="store.filterSizeLabel">
-                      <option value="">Все размеры</option>
-                      <option v-for="s in store.distinctSizes" :key="s" :value="s">{{ s }}</option>
-                    </select>
+                    <div class="options-list">
+                      <label v-for="s in store.distinctSizes" :key="s" class="option">
+                        <input type="checkbox" :value="s" v-model="store.filterSizes"/>
+                        <span>{{ s }}</span>
+                      </label>
+                    </div>
                   </div>
                 </transition>
               </li>
 
               <!-- Секция «Цвет» -->
               <li class="filter-item">
-                <button type="button" class="filter-header" @click="openSection('color')">
+                <button class="filter-header" @click="openSection('color')">
                   Цвет
                   <img :src="icon_arrow_up" alt="" :style="{ transform: openSections.color ? 'none' : 'rotate(180deg)'}"/>
                 </button>
                 <transition name="slide-down">
                   <div v-if="openSections.color" class="filter-body">
-                    <select v-model="store.filterColor">
-                      <option value="">Все цвета</option>
-                      <option v-for="c in distinctColors" :key="c" :value="c">{{ c }}</option>
-                    </select>
+                    <div class="options-list">
+                      <label v-for="c in distinctColors" :key="c" class="option">
+                        <input type="checkbox" :value="c" v-model="store.filterColors"/>
+                        <span>{{ c }}</span>
+                      </label>
+                    </div>
                   </div>
                 </transition>
               </li>
@@ -413,17 +426,13 @@ const totalItems = computed(() => store.displayedProducts.length)
 const headerTitle = computed(() => {
   if (store.filterGender === 'M') return 'Для него'
   if (store.filterGender === 'F') return 'Для неё'
-  if (store.filterBrand !== '') return store.filterBrand
+  if (store.filterBrands.length === 1) return store.filterBrands[0]
   return 'Каталог'
 })
 
 // товары для отображения: первые page*perPage элементов
 const paged = computed(() =>
   store.displayedProducts.slice(0, page.value * perPage)
-)
-
-const distinctColors = computed(() =>
-  Array.from(new Set(store.products.map(p => p.color).filter(Boolean)))
 )
 
 // увеличить страницу (если есть ещё)
@@ -543,6 +552,58 @@ function onClickOutside(e) {
   }
 }
 
+const activeFilters = computed(() => {
+  const arr = []
+  // пол
+  if (store.filterGender) {
+    arr.push({ key: 'gender', type: 'gender', label: store.filterGender === 'M' ? 'Для него' : 'Для неё' })
+  }
+  // бренды
+  store.filterBrands.forEach(b => {
+    arr.push({ key: `brand:${b}`,   type: 'brand', label: b })
+  })
+  // цвета
+  store.filterColors.forEach(c => {
+    arr.push({ key: `color:${c}`,   type: 'color', label: c })
+  })
+  // размеры
+  store.filterSizes.forEach(s => {
+    arr.push({ key: `size:${s}`,    type: 'size',  label: s })
+  })
+  // цена от
+  if (store.filterPriceMin != null) {
+    arr.push({ key: 'priceMin', type: 'priceMin', label: `от ${formatPrice(store.filterPriceMin)} ₽` })
+  }
+  // цена до
+  if (store.filterPriceMax != null) {
+    arr.push({ key: 'priceMax', type: 'priceMax', label: `до ${formatPrice(store.filterPriceMax)} ₽` })
+  }
+  return arr
+})
+
+function clearFilterItem(f) {
+  switch (f.type) {
+    case 'gender':
+      store.filterGender = ''
+      break
+    case 'brand':
+      store.filterBrands = store.filterBrands.filter(x => x !== f.label)
+      break
+    case 'color':
+      store.filterColors = store.filterColors.filter(x => x !== f.label)
+      break
+    case 'size':
+      store.filterSizes = store.filterSizes.filter(x => x !== f.label)
+      break
+    case 'priceMin':
+      store.filterPriceMin = null
+      break
+    case 'priceMax':
+      store.filterPriceMax = null
+      break
+  }
+}
+
 watch(() => store.selectedCategory, (cat) => { page.value = 1; loadCategory(cat)})
 watch(
   () => [store.sortBy, store.sortOrder],
@@ -551,11 +612,11 @@ watch(
 watch(
   () => [
     store.filterGender,
-    store.filterBrand,
-    store.filterSizeLabel,
-    store.filterColor,
     store.filterPriceMin,
     store.filterPriceMax,
+    store.filterColors.join(','),
+    store.filterBrands.join(','),
+    store.filterSizes.join(','),
   ],
   () => {
     page.value = 1
@@ -566,23 +627,42 @@ watch(
 // При монтировании грузим товары
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
+
   if (route.query.sort) {
     const [by, order] = String(route.query.sort).split('_')
     store.sortBy = by
     store.sortOrder = order
   }
+
   if (route.query.gender) {
     const g = route.query.gender
     store.filterGender = (g === 'M' || g === 'F') ? g : ''
   }
+
   if (route.query.brand) {
-    store.filterBrand = String(route.query.brand)
+    store.filterBrands = String(route.query.brand).split(',')
+  } else {
+    store.filterBrands = []
   }
+
+  if (route.query.color) {
+    store.filterColors = String(route.query.color).split(',')
+  } else {
+    store.filterColors = []
+  }
+
+  if (route.query.size) {
+    store.filterSizes = String(route.query.size).split(',')
+  } else {
+    store.filterSizes = []
+  }
+
   if (subcatSlider.value) {
     subcatSlider.value.scrollLeft = 0
     scrollPos.value = 0
     onScroll()
   }
+
   animateGrid()
   loadCategory(store.selectedCategory)
 })
@@ -858,6 +938,33 @@ onBeforeUnmount(() => {
             transition: all 0.25s ease-in-out;
           }
         }
+        .applied-filters {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          padding: 12px;
+          background: $grey-95;
+          .applied-filters__item {
+            display: inline-flex;
+            align-items: center;
+            background: $white-100;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 14px;
+            color: $black-100;
+            cursor: pointer;
+            .applied-filters__close {
+              width: 12px;
+              height: 12px;
+              margin-left: 4px;
+            }
+          }
+        }
+        .applied-filters__divider {
+          margin: 0;
+          border: none;
+          border-top: 1px solid $white-100;
+        }
         .filter-list {
           display: flex;
           flex-direction: column;
@@ -875,6 +982,23 @@ onBeforeUnmount(() => {
             display: flex;
             flex-direction: column;
             border-top: 1px solid $white-100;
+            .gender-buttons {
+              display: flex;
+              gap: 8px;
+              .gender-btn {
+                padding: 8px 12px;
+                border-radius: 4px;
+                border: none;
+                background: $white-100;
+                font-size: 15px;
+                color: $grey-20;
+                cursor: pointer;
+                &.active {
+                  background: $black-100;
+                  color: $white-100;
+                }
+              }
+            }
             .filter-header {
               display: flex;
               justify-content: space-between;
@@ -899,8 +1023,44 @@ onBeforeUnmount(() => {
               flex-direction: column;
               padding: 12px 10px;
               background-color: $grey-95;
-              select {
-                width: 100%;
+              .options-list {
+                max-height: 200px;
+                overflow-y: auto;
+                padding: 0 12px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+              }
+              .option {
+                display: flex;
+                align-items: center;
+                font-size: 15px;
+                line-height: 110%;
+                color: $grey-20;
+                cursor: pointer;
+                input {
+                  width: 18px;
+                  height: 18px;
+                  margin-right: 8px;
+                  accent-color: $red-active;
+                }
+                span {
+                  flex-shrink: 0;
+                }
+              }
+              .options-list::-webkit-scrollbar {
+                width: 6px;
+              }
+              .options-list::-webkit-scrollbar-track {
+                background: transparent;
+              }
+              .options-list::-webkit-scrollbar-thumb {
+                background-color: $grey-87;
+                border-radius: 3px;
+              }
+              .option input:checked + span {
+                font-weight: 600;
+                color: $black-100;
               }
             }
           }
