@@ -67,9 +67,9 @@
             <ul v-if="filtersOpen" ref="filterList" class="filter-list">
               <!-- Активные фильтры -->
               <li v-if="activeFilters.length" class="applied-filters">
-                <span v-for="f in activeFilters" :key="f.key" class="applied-filters__item" @click="clearFilterItem(f)">
+                <span v-for="f in activeFilters" :key="f.key" class="applied-filters-item" @click.stop="clearFilterItem(f)">
                   {{ f.label }}
-                  <img :src="icon_close" alt="×" class="applied-filters__close" />
+                  <img :src="icon_close" alt="×"/>
                 </span>
               </li>
 
@@ -83,10 +83,10 @@
                   <div v-if="openSections.gender" class="gender-buttons">
                     <button type="button" class="gender-btn" :class="{ active: store.filterGender === '' }"
                             @click="store.filterGender = ''">Все</button>
-                    <button type="button" class="gender-btn" :class="{ active: store.filterGender === 'M' }"
-                            @click="store.filterGender = 'M'">Для него</button>
                     <button type="button" class="gender-btn" :class="{ active: store.filterGender === 'F' }"
                             @click="store.filterGender = 'F'">Для неё</button>
+                    <button type="button" class="gender-btn" :class="{ active: store.filterGender === 'M' }"
+                            @click="store.filterGender = 'M'">Для него</button>
                   </div>
                 </transition>
               </li>
@@ -383,12 +383,22 @@ const canNext = computed(() => {
   return scrollPos.value + el.clientWidth + 1 < el.scrollWidth
 })
 
-const allPrices = computed(() =>
-  displayedProducts.value.flatMap(g => g.variants.map(v => v.price))
-)
+// собираем все цены из отображаемых (отфильтрованных) групп
+const allPrices = computed(() => {
+  return store.displayedProducts
+    .flatMap(group => group.variants.map(v => v.price))
+    .filter(p => typeof p === 'number')
+})
+
+// границы диапазона
 const priceBounds = computed(() => {
-  if (!allPrices.value.length) return [0, 0]
-  return [Math.min(...allPrices.value), Math.max(...allPrices.value)]
+  if (!allPrices.value.length) {
+    return [0, 0]
+  }
+  return [
+    Math.min(...allPrices.value),
+    Math.max(...allPrices.value)
+  ]
 })
 
 // стрелки: dir = ±1 — сдвигаем на две карточки
@@ -413,11 +423,11 @@ function onScroll() {
 // при выборе — обновляем стор и закрываем
 function selectSort(val) {
   const [by, order] = val.split('_')
-  store.sortBy    = by
-  store.sortOrder = order
-  sortOption.value = val
-  sortOpen.value   = false
-  page.value       = 1
+  store.sortBy      = by
+  store.sortOrder   = order
+  sortOption.value  = val
+  sortOpen.value    = false
+  page.value        = 1
   animateGrid()
 }
 
@@ -950,23 +960,25 @@ onBeforeUnmount(() => {
           z-index: 200;
           .applied-filters {
             display: flex;
-            flex-wrap: wrap;
+            padding: 4px 8px 12px;
             gap: 8px;
-            padding: 12px;
-            background: $grey-95;
-            .applied-filters__item {
+            background-color: $grey-95;
+            flex-wrap: wrap;
+            .applied-filters-item {
               display: inline-flex;
               align-items: center;
-              background: $white-100;
+              padding: 8px;
               border-radius: 4px;
-              padding: 4px 8px;
-              font-size: 14px;
+              background-color: $white-40;
               color: $black-100;
+              font-size: 15px;
+              line-height: 100%;
+              letter-spacing: -0.6px;
               cursor: pointer;
-              .applied-filters__close {
-                width: 12px;
-                height: 12px;
-                margin-left: 4px;
+              img {
+                width: 16px;
+                height: 16px;
+                object-fit: cover;
               }
             }
           }
@@ -974,23 +986,6 @@ onBeforeUnmount(() => {
             display: flex;
             flex-direction: column;
             border-top: 1px solid $white-100;
-            .gender-buttons {
-              display: flex;
-              gap: 8px;
-              .gender-btn {
-                padding: 8px 12px;
-                border-radius: 4px;
-                border: none;
-                background: $white-100;
-                font-size: 15px;
-                color: $grey-20;
-                cursor: pointer;
-                &.active {
-                  background: $black-100;
-                  color: $white-100;
-                }
-              }
-            }
             .filter-header {
               display: flex;
               justify-content: space-between;
@@ -1010,49 +1005,89 @@ onBeforeUnmount(() => {
                 transition: all 0.25s ease-in-out;
               }
             }
+            .gender-buttons {
+              display: flex;
+              padding: 12px 10px;
+              gap: 8px;
+              background-color: $grey-95;
+              flex-wrap: wrap;
+              .gender-btn {
+                padding: 8px 12px;
+                border-radius: 4px;
+                border: none;
+                background-color: $white-40;
+                color: $black-100;
+                font-size: 15px;
+                line-height: 100%;
+                letter-spacing: -0.6px;
+                cursor: pointer;
+                &.active {
+                  background-color: $black-100;
+                  color: $white-100;
+                }
+              }
+            }
             .filter-body {
               display: flex;
               flex-direction: column;
               padding: 12px 10px;
               background-color: $grey-95;
               .options-list {
-                max-height: 200px;
-                overflow-y: auto;
-                padding: 0 12px;
                 display: flex;
                 flex-direction: column;
+                padding: 0 12px;
+                max-height: 153px;
                 gap: 8px;
-              }
-              .option {
-                display: flex;
-                align-items: center;
-                font-size: 15px;
-                line-height: 110%;
-                color: $grey-20;
-                cursor: pointer;
-                input {
-                  width: 18px;
-                  height: 18px;
-                  margin-right: 8px;
-                  accent-color: $red-active;
-                }
-                span {
-                  flex-shrink: 0;
+                overflow-y: auto;
+                overflow-x: hidden;
+                .option {
+                  display: flex;
+                  align-items: center;
+                  position: relative;
+                  gap: 8px;
+                  cursor: pointer;
+                  input[type="checkbox"] {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 16px;
+                    height: 16px;
+                    border: 2px solid $grey-20;
+                    border-radius: 2px;
+                    cursor: pointer;
+                    vertical-align: middle;
+                    background-color: transparent;
+                  }
+                  input[type="checkbox"]:checked {
+                    border-color: $black-100;
+                  }
+                  input[type="checkbox"]:checked::after {
+                    content: "";
+                    position: absolute;
+                    top: 2px;
+                    left: 4px;
+                    width: 5px;
+                    height: 9px;
+                    border: solid $black-100;
+                    border-width: 0 2px 2px 0;
+                    transform: rotate(45deg);
+                  }
+                  span {
+                    color: $grey-20;
+                    font-size: 15px;
+                    line-height: 110%;
+                    letter-spacing: -0.6px;
+                  }
                 }
               }
               .options-list::-webkit-scrollbar {
-                width: 6px;
+                width: 2px;
               }
               .options-list::-webkit-scrollbar-track {
                 background: transparent;
               }
               .options-list::-webkit-scrollbar-thumb {
-                background-color: $grey-87;
-                border-radius: 3px;
-              }
-              .option input:checked + span {
-                font-weight: 600;
-                color: $black-100;
+                background-color: $grey-20;
+                border-radius: 1px;
               }
             }
           }
