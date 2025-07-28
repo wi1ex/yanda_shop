@@ -164,7 +164,7 @@
             <p class="char-row" v-else-if="store.detailData.category === 'Аксессуары'">
               <p v-if="store.detailData.width_cm">Ширина: {{ store.detailData.width_cm }} см</p>
               <p v-if="store.detailData.height_cm">Высота: {{ store.detailData.height_cm }} см</p>
-              <p v-if="store.detailData.depth_cm">Глубина:{{ store.detailData.depth_cm }} см</p>
+              <p v-if="store.detailData.depth_cm">Глубина: {{ store.detailData.depth_cm }} см</p>
             </p>
           </div>
         </div>

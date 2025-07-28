@@ -118,11 +118,11 @@ import icon_logo_mail from '@/assets/images/logo_mail.svg'
 import icon_logo_instagram from '@/assets/images/logo_instagram.svg'
 import icon_arrow_up from "@/assets/images/arrow_up.svg";
 
+let prevOverflowMenu
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
 const menuOpen = ref(false)
-let prevOverflowMenu
 const openSubmenu = reactive({ M: false, F: false })
 const isAdmin = computed(() => store.user?.role === 'admin')
 const isIconWhite = computed(() => route.name === 'About' || route.name === 'Home')
@@ -134,9 +134,6 @@ const icon_logo = computed(() => isIconWhite.value ? icon_logo_white : icon_logo
 // переключить видимость подменю по полу
 function toggleSubmenu(gender) {
   openSubmenu[gender] = !openSubmenu[gender]
-  // переключаем одну, закрываем другую
-  // const other = gender === 'M' ? 'F' : 'M'
-  // if (openSubmenu[gender]) openSubmenu[other] = false
 }
 
 function goToCategory(gender, category) {
