@@ -71,11 +71,11 @@ export const useStore = defineStore('main', () => {
   // Фильтры
   const filterPriceMin      = ref(null)
   const filterPriceMax      = ref(null)
-  const filterColor         = ref('')
   const filterGender        = ref('')
   const filterSubcat        = ref('')
-  const filterBrand         = ref('')
-  const filterSizeLabel     = ref('')
+  const filterBrands        = ref([])
+  const filterColors        = ref([])
+  const filterSizes         = ref([])
 
   // Товары
   const products            = ref([])
@@ -425,23 +425,34 @@ export const useStore = defineStore('main', () => {
     })
   })
 
+  const distinctColors = computed(() => {
+    return Array
+      .from(new Set(store.products.map(p => p.color).filter(Boolean)))
+      .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }));
+  });
+
   const distinctBrands = computed(() => {
     return Array
-      .from(new Set(products.value.map(p => p.brand).filter(Boolean)))
-      .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }))
-  })
+      .from(new Set(store.products.map(p => p.brand).filter(Boolean)))
+      .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }));
+  });
 
   const distinctSizes = computed(() => {
-    const sizes = Array.from(new Set(products.value.map(p => p.size_label).filter(Boolean)))
+    const sizes = Array
+      .from(new Set(store.products.map(p => p.size_label).filter(Boolean)));
+
     return sizes.sort((a, b) => {
-      const na = parseFloat(a), nb = parseFloat(b)
-      const bothNum = !isNaN(na) && !isNaN(nb)
-      if (bothNum) return na - nb
-      if (!isNaN(na)) return -1
-      if (!isNaN(nb)) return 1
-      return String(a).localeCompare(b, 'ru', { sensitivity: 'base' })
-    })
-  })
+      const na = parseFloat(a);
+      const nb = parseFloat(b);
+      const bothNum = !isNaN(na) && !isNaN(nb);
+
+      if (bothNum) return na - nb;       // оба «числовые» — по значению
+      if (!isNaN(na)) return -1;         // только a — числовой, будет раньше
+      if (!isNaN(nb)) return 1;          // только b — числовой, будет раньше
+      // оба не числа — по алфавиту (русская локаль)
+      return a.localeCompare(b, 'ru', { sensitivity: 'base' });
+    });
+  });
 
   const displayedProducts = computed(() => {
     let list = colorGroups.value.slice()
@@ -449,8 +460,8 @@ export const useStore = defineStore('main', () => {
     if (['M','F'].includes(filterGender.value)) {
       list = list.filter(g => g.variants.some(v => v.gender === filterGender.value || v.gender === 'U'))
     }
-    if (filterColor.value) {
-      list = list.filter(g => g.variants.some(v => v.color === filterColor.value))
+    if (filterColors.value.length) {
+      list = list.filter(g => g.variants.some(p => filterColors.value.includes(p.color)) )
     }
     if (filterPriceMin.value != null) {
       list = list.filter(g => g.variants.some(v => v.price >= filterPriceMin.value))
@@ -461,11 +472,11 @@ export const useStore = defineStore('main', () => {
     if (filterSubcat.value) {
       list = list.filter(g => g.variants.some(v => v.subcategory === filterSubcat.value))
     }
-    if (filterBrand.value) {
-      list = list.filter(g => g.variants.some(v => v.brand === filterBrand.value))
+    if (filterBrands.value.length) {
+      list = list.filter(g => g.variants.some(p => filterBrands.value.includes(p.brand)))
     }
-    if (filterSizeLabel.value) {
-      list = list.filter(g => g.variants.some(v => v.size_label === filterSizeLabel.value))
+    if (filterSizes.value.length) {
+      list = list.filter(g => g.variants.some(p => filterSizes.value.includes(p.size_label)) )
     }
 
     list.forEach(g => {
@@ -524,11 +535,11 @@ export const useStore = defineStore('main', () => {
 
   function changeCategory(cat) {
     selectedCategory.value = cat
-    sortBy.value = 'date'
+    // сортировка на дефолт
+    sortBy.value    = 'date'
     sortOrder.value = 'desc'
-    filterPriceMin.value = null
-    filterPriceMax.value = null
-    filterColor.value = ''
+    // сбросить фильтры
+    clearFilters()
   }
 
   function addToCart(product) {
@@ -597,11 +608,11 @@ export const useStore = defineStore('main', () => {
   function clearFilters() {
     filterPriceMin.value = null
     filterPriceMax.value = null
-    filterGender.value = ''
-    filterColor.value = ''
-    filterBrand.value = ''
-    filterSubcat.value = ''
-    filterSizeLabel.value  = ''
+    filterSubcat.value   = ''
+    filterGender.value   = ''
+    filterBrands.value   = []
+    filterColors.value   = []
+    filterSizes.value    = []
   }
 
   // -------------------------------------------------
@@ -840,7 +851,7 @@ export const useStore = defineStore('main', () => {
     categoryList, selectedCategory,
     showSubcats, currentSubcatPage, selectedSubcat, subcatListMap,
     sortBy, sortOrder,
-    filterPriceMin, filterPriceMax, filterColor, filterGender, filterSubcat, filterBrand, filterSizeLabel,
+    filterPriceMin, filterPriceMax, filterColors, filterGender, filterSubcat, filterBrands, filterSizes,
     products,
     cartOrder, cart, cartLoaded, showCartDrawer,
     favorites, favoritesLoaded,
@@ -854,7 +865,7 @@ export const useStore = defineStore('main', () => {
     parameters, settings, reviews, users,
 
     // grouping/computed
-    colorGroups, displayedProducts, groupedCartItems, distinctBrands, distinctSizes,
+    colorGroups, displayedProducts, groupedCartItems, distinctBrands, distinctSizes, distinctColors,
 
     // helpers
     isTelegramUserId,
