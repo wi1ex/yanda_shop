@@ -158,10 +158,6 @@
                   </div>
                 </transition>
               </li>
-
-              <li class="filter-clear">
-                <button type="button" @click="handleClearFilters" class="btn-clear">Сбросить всё фильтры</button>
-              </li>
             </ul>
           </transition>
         </div>
@@ -387,17 +383,13 @@ const canNext = computed(() => {
   return scrollPos.value + el.clientWidth + 1 < el.scrollWidth
 })
 
+const allPrices = computed(() =>
+  displayedProducts.value.flatMap(g => g.variants.map(v => v.price))
+)
 const priceBounds = computed(() => {
-  // Собираем все цены из вариантов каждого цвето-групп
-  const all = store.displayedProducts
-    .flatMap(group => group.variants.map(v => v.price))
-    .filter(p => typeof p === 'number');
-  if (!all.length) return [0, 0];
-  return [
-    Math.min(...all),
-    Math.max(...all)
-  ];
-});
+  if (!allPrices.value.length) return [0, 0]
+  return [Math.min(...allPrices.value), Math.max(...allPrices.value)]
+})
 
 // стрелки: dir = ±1 — сдвигаем на две карточки
 function scrollSubcats(dir) {
@@ -450,11 +442,6 @@ function loadMore() {
   if (page.value * perPage < store.displayedProducts.length) {
     page.value++
   }
-}
-
-function handleClearFilters() {
-  animateGrid()
-  store.clearFilters()
 }
 
 function onCategoryClick(cat) {
@@ -570,15 +557,15 @@ const activeFilters = computed(() => {
   }
   // бренды
   store.filterBrands.forEach(b => {
-    arr.push({ key: `brand:${b}`,   type: 'brand', label: b })
+    arr.push({ key: `brand:${b}`, type: 'brand', label: b })
   })
   // цвета
   store.filterColors.forEach(c => {
-    arr.push({ key: `color:${c}`,   type: 'color', label: c })
+    arr.push({ key: `color:${c}`, type: 'color', label: c })
   })
   // размеры
   store.filterSizes.forEach(s => {
-    arr.push({ key: `size:${s}`,    type: 'size',  label: s })
+    arr.push({ key: `size:${s}`, type: 'size',  label: s })
   })
   // цена от
   if (store.filterPriceMin != null) {
@@ -1067,13 +1054,6 @@ onBeforeUnmount(() => {
                 font-weight: 600;
                 color: $black-100;
               }
-            }
-          }
-          .filter-clear {
-            text-align: center;
-            .btn-clear {
-              width: 100%;
-              padding: 12px 10px;
             }
           }
         }
