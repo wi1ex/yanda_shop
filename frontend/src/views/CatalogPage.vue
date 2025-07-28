@@ -93,7 +93,7 @@
 
               <!-- Секция «Бренды» -->
               <li class="filter-item">
-                <button class="filter-header" @click="openSection('brand')">
+                <button type="button" class="filter-header" @click="openSection('brand')">
                   Бренды
                   <img :src="icon_arrow_up" alt="" :style="{ transform: openSections.brand ? 'none' : 'rotate(180deg)'}"/>
                 </button>
@@ -111,7 +111,7 @@
 
               <!-- Секция «Размер» -->
               <li class="filter-item">
-                <button class="filter-header" @click="openSection('size')">
+                <button type="button" class="filter-header" @click="openSection('size')">
                   Размер
                   <img :src="icon_arrow_up" alt="" :style="{ transform: openSections.size ? 'none' : 'rotate(180deg)' }"/>
                 </button>
@@ -129,7 +129,7 @@
 
               <!-- Секция «Цвет» -->
               <li class="filter-item">
-                <button class="filter-header" @click="openSection('color')">
+                <button type="button" class="filter-header" @click="openSection('color')">
                   Цвет
                   <img :src="icon_arrow_up" alt="" :style="{ transform: openSections.color ? 'none' : 'rotate(180deg)'}"/>
                 </button>
@@ -153,8 +153,8 @@
                 </button>
                 <transition name="slide-down">
                   <div v-if="openSections.price" class="filter-body">
-                    <input type="number" v-model.number="store.filterPriceMin" :placeholder="`от ${formatPrice(priceBounds[0])} ₽`" />
-                    <input type="number" v-model.number="store.filterPriceMax" :placeholder="`до ${formatPrice(priceBounds[1])} ₽`" />
+                    <input type="number" class="input-number" v-model.number="store.filterPriceMin" :placeholder="`от ${formatPrice(priceBounds[0])} ₽`" />
+                    <input type="number" class="input-number" v-model.number="store.filterPriceMax" :placeholder="`до ${formatPrice(priceBounds[1])} ₽`" />
                   </div>
                 </transition>
               </li>
@@ -1031,6 +1031,7 @@ onBeforeUnmount(() => {
               display: flex;
               flex-direction: column;
               padding: 12px 10px;
+              gap: 4px;
               background-color: $grey-95;
               .options-list {
                 display: flex;
@@ -1051,24 +1052,24 @@ onBeforeUnmount(() => {
                     appearance: none;
                     width: 16px;
                     height: 16px;
-                    border: 2px solid $grey-20;
+                    border: 1px solid $black-40;
                     border-radius: 2px;
                     cursor: pointer;
                     vertical-align: middle;
                     background-color: transparent;
                   }
                   input[type="checkbox"]:checked {
-                    border-color: $black-100;
+                    border-color: $grey-20;
                   }
                   input[type="checkbox"]:checked::after {
                     content: "";
                     position: absolute;
-                    top: 2px;
-                    left: 4px;
+                    top: 5px;
+                    left: 9px;
                     width: 5px;
-                    height: 9px;
-                    border: solid $black-100;
-                    border-width: 0 2px 2px 0;
+                    height: 8px;
+                    border: solid $grey-20;
+                    border-width: 0 1px 1px 0;
                     transform: rotate(45deg);
                   }
                   span {
@@ -1088,6 +1089,25 @@ onBeforeUnmount(() => {
               .options-list::-webkit-scrollbar-thumb {
                 background-color: $grey-20;
                 border-radius: 1px;
+              }
+              .input-number {
+                padding: 12px 8px;
+                border: 1px solid $black-40;
+                background-color: $grey-95;
+                color: $black-100;
+                font-size: 14px;
+                line-height: 100%;
+                letter-spacing: -0.56px;
+                &::placeholder {
+                  color: $black-40;
+                  font-size: 14px;
+                  line-height: 100%;
+                  letter-spacing: -0.56px;
+                }
+                &:focus {
+                  border-color: $black-40;
+                  outline: none;
+                }
               }
             }
           }
