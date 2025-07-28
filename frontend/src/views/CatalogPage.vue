@@ -136,7 +136,7 @@
                 <transition name="slide-down">
                   <div v-if="openSections.color" class="filter-body">
                     <div class="options-list">
-                      <label v-for="c in distinctColors" :key="c" class="option">
+                      <label v-for="c in store.distinctColors" :key="c" class="option">
                         <input type="checkbox" :value="c" v-model="store.filterColors"/>
                         <span>{{ c }}</span>
                       </label>
@@ -153,8 +153,8 @@
                 </button>
                 <transition name="slide-down">
                   <div v-if="openSections.price" class="filter-body">
-                    <input type="number" v-model.number="store.filterPriceMin" placeholder="Мин. цена" />
-                    <input type="number" v-model.number="store.filterPriceMax" placeholder="Макс. цена" />
+                    <input type="number" v-model.number="store.filterPriceMin" :placeholder="`от ${formatPrice(priceBounds[0])} ₽`" />
+                    <input type="number" v-model.number="store.filterPriceMax" :placeholder="`до ${formatPrice(priceBounds[1])} ₽`" />
                   </div>
                 </transition>
               </li>
@@ -386,6 +386,18 @@ const canNext = computed(() => {
   if (!el) return false
   return scrollPos.value + el.clientWidth + 1 < el.scrollWidth
 })
+
+const priceBounds = computed(() => {
+  // Собираем все цены из вариантов каждого цвето-групп
+  const all = store.displayedProducts
+    .flatMap(group => group.variants.map(v => v.price))
+    .filter(p => typeof p === 'number');
+  if (!all.length) return [0, 0];
+  return [
+    Math.min(...all),
+    Math.max(...all)
+  ];
+});
 
 // стрелки: dir = ±1 — сдвигаем на две карточки
 function scrollSubcats(dir) {
