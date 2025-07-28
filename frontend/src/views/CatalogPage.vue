@@ -96,7 +96,23 @@
                   <div v-if="openSections.brand" class="filter-body">
                     <select v-model="store.filterBrand">
                       <option value="">Все бренды</option>
-                      <option v-for="b in distinctBrands" :key="b" :value="b">{{ b }}</option>
+                      <option v-for="b in store.distinctBrands" :key="b" :value="b">{{ b }}</option>
+                    </select>
+                  </div>
+                </transition>
+              </li>
+
+              <!-- Секция «Размер» -->
+              <li class="filter-item">
+                <button type="button" class="filter-header" @click="openSection('size')">
+                  Размер
+                  <img :src="icon_arrow_up" alt="" :style="{ transform: openSections.size ? 'none' : 'rotate(180deg)' }"/>
+                </button>
+                <transition name="slide-down">
+                  <div v-if="openSections.size" class="filter-body">
+                    <select v-model="store.filterSizeLabel">
+                      <option value="">Все размеры</option>
+                      <option v-for="s in store.distinctSizes" :key="s" :value="s">{{ s }}</option>
                     </select>
                   </div>
                 </transition>
@@ -142,7 +158,7 @@
           <button type="button" ref="sortBtn" class="sort-btn" @click="sortOpen = !sortOpen"
                   :style="{ borderRadius: sortOpen ? '4px 4px 0 0' : '4px' }">
             <span>Сортировка: {{ currentLabel }}</span>
-            <img :src="icon_arrow_red" alt="" :style="{ transform: sortOpen ? 'rotate(90deg)' : 'rotate(270deg)' }"/>
+            <img :src="icon_arrow_red" alt="" :style="{ transform: sortOpen ? 'rotate(90deg)' : 'rotate(-90deg)' }"/>
           </button>
           <transition name="slide-down">
             <ul v-if="sortOpen" ref="sortList" class="sort-list">
@@ -227,6 +243,7 @@ for (const path in imagesContext) {
 const openSections = reactive({
   gender: false,
   brand:  false,
+  size:   false,
   color:  false,
   price:  false,
 })
@@ -405,12 +422,6 @@ const paged = computed(() =>
   store.displayedProducts.slice(0, page.value * perPage)
 )
 
-// Список уникальных брендов из всех загруженных products
-const distinctBrands = computed(() =>
-  Array.from(new Set(store.products.map(p => p.brand).filter(Boolean)))
-       .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }))
-)
-
 const distinctColors = computed(() =>
   Array.from(new Set(store.products.map(p => p.color).filter(Boolean)))
 )
@@ -541,6 +552,7 @@ watch(
   () => [
     store.filterGender,
     store.filterBrand,
+    store.filterSizeLabel,
     store.filterColor,
     store.filterPriceMin,
     store.filterPriceMax,
@@ -843,6 +855,7 @@ onBeforeUnmount(() => {
             width: 16px;
             height: 16px;
             object-fit: cover;
+            transition: all 0.25s ease-in-out;
           }
         }
         .filter-list {
@@ -868,30 +881,34 @@ onBeforeUnmount(() => {
               align-items: center;
               width: 100%;
               padding: 12px 10px;
-              border-top: 1px solid $white-100;
+              border: none;
               background-color: $grey-95;
-              font-size: 14px;
+              font-size: 15px;
+              line-height: 110%;
+              letter-spacing: -0.6px;
               cursor: pointer;
+              img {
+                width: 20px;
+                height: 20px;
+                object-fit: cover;
+                transition: all 0.25s ease-in-out;
+              }
             }
             .filter-body {
-              padding: 8px 12px 12px;
-              background-color: $white-80;
               display: flex;
               flex-direction: column;
-              gap: 8px;
+              padding: 12px 10px;
+              background-color: $grey-95;
               select {
                 width: 100%;
-                padding: 4px 8px;
-                font-size: 16px;
               }
             }
           }
           .filter-clear {
-            border-bottom: 1px solid $grey-89;
             text-align: center;
             .btn-clear {
               width: 100%;
-              padding: 10px;
+              padding: 12px 10px;
             }
           }
         }
@@ -924,6 +941,7 @@ onBeforeUnmount(() => {
             width: 16px;
             height: 16px;
             object-fit: cover;
+            transition: all 0.25s ease-in-out;
           }
         }
         .sort-list {

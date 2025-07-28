@@ -75,6 +75,7 @@ export const useStore = defineStore('main', () => {
   const filterGender        = ref('')
   const filterSubcat        = ref('')
   const filterBrand         = ref('')
+  const filterSizeLabel     = ref('')
 
   // Товары
   const products            = ref([])
@@ -427,9 +428,19 @@ export const useStore = defineStore('main', () => {
   const distinctBrands = computed(() => {
     return Array
       .from(new Set(products.value.map(p => p.brand).filter(Boolean)))
-      .sort((a, b) =>
-        a.localeCompare(b, 'ru', { sensitivity: 'base' })
-      )
+      .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }))
+  })
+
+  const distinctSizes = computed(() => {
+    const sizes = Array.from(new Set(products.value.map(p => p.size_label).filter(Boolean)))
+    return sizes.sort((a, b) => {
+      const na = parseFloat(a), nb = parseFloat(b)
+      const bothNum = !isNaN(na) && !isNaN(nb)
+      if (bothNum) return na - nb
+      if (!isNaN(na)) return -1
+      if (!isNaN(nb)) return 1
+      return String(a).localeCompare(b, 'ru', { sensitivity: 'base' })
+    })
   })
 
   const displayedProducts = computed(() => {
@@ -452,6 +463,9 @@ export const useStore = defineStore('main', () => {
     }
     if (filterBrand.value) {
       list = list.filter(g => g.variants.some(v => v.brand === filterBrand.value))
+    }
+    if (filterSizeLabel.value) {
+      list = list.filter(g => g.variants.some(v => v.size_label === filterSizeLabel.value))
     }
 
     list.forEach(g => {
@@ -587,6 +601,7 @@ export const useStore = defineStore('main', () => {
     filterColor.value = ''
     filterBrand.value = ''
     filterSubcat.value = ''
+    filterSizeLabel.value  = ''
   }
 
   // -------------------------------------------------
@@ -825,7 +840,7 @@ export const useStore = defineStore('main', () => {
     categoryList, selectedCategory,
     showSubcats, currentSubcatPage, selectedSubcat, subcatListMap,
     sortBy, sortOrder,
-    filterPriceMin, filterPriceMax, filterColor, filterGender, filterSubcat, filterBrand,
+    filterPriceMin, filterPriceMax, filterColor, filterGender, filterSubcat, filterBrand, filterSizeLabel,
     products,
     cartOrder, cart, cartLoaded, showCartDrawer,
     favorites, favoritesLoaded,
@@ -839,7 +854,7 @@ export const useStore = defineStore('main', () => {
     parameters, settings, reviews, users,
 
     // grouping/computed
-    colorGroups, displayedProducts, groupedCartItems, distinctBrands,
+    colorGroups, displayedProducts, groupedCartItems, distinctBrands, distinctSizes,
 
     // helpers
     isTelegramUserId,
