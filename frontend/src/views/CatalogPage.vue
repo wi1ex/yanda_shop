@@ -627,7 +627,7 @@ watch(
   ],
   () => {
     page.value = 1
-    animateGrid()
+    // animateGrid()
   }
 )
 
@@ -1036,7 +1036,6 @@ onBeforeUnmount(() => {
               .options-list {
                 display: flex;
                 flex-direction: column;
-                padding: 0 12px;
                 max-height: 153px;
                 gap: 8px;
                 overflow-y: auto;
@@ -1087,7 +1086,7 @@ onBeforeUnmount(() => {
                 background: transparent;
               }
               .options-list::-webkit-scrollbar-thumb {
-                background-color: $grey-20;
+                background-color: $black-40;
                 border-radius: 1px;
               }
               .input-number {
