@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Optional, Any, Set
 from zoneinfo import ZoneInfo
 from psycopg2.errors import StringDataRightTruncation
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.exc import DataError
 from .db_utils import session_scope
 from .validators import (
@@ -193,13 +194,29 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
     if Model is None:
         raise ValueError(f"Unknown category {category}")
 
+    # 1) Собираем метаданные из модели
     FIELD_MAX: Dict[str, Optional[int]] = {col.name: getattr(col.type, "length", None) for col in Model.__table__.columns}
+    NUM_CONSTRAINTS: Dict[str, Tuple[int, int]] = {}
+    ENUM_CONSTRAINTS: Dict[str, Set[str]] = {}
+    NULLABLE: Dict[str, bool] = {}
+    for col in Model.__table__.columns:
+        # precision & scale для Numeric
+        if hasattr(col.type, "precision") and hasattr(col.type, "scale") and col.type.precision:
+            NUM_CONSTRAINTS[col.name] = (col.type.precision, col.type.scale)
+        # ENUM
+        if isinstance(col.type, SQLEnum):
+            ENUM_CONSTRAINTS[col.name] = set(col.type.enums)
+        # NOT NULL
+        NULLABLE[col.name] = col.nullable
+
     per_row_errors: Dict[str, List[str]] = {}
-    # 1) Базовая валидация строки
+
+    # 2) Перебираем каждую строку
     for idx, raw in enumerate(rows, start=1):
         sku = raw.get("variant_sku", "").strip()
         errs: List[str] = []
-        # SKU/Gender/Category/Subcategory
+
+        # 2.1) Базовая валидация SKU/Gender/Category/Subcategory
         for fn, arg in [
             (validate_sku, sku),
             (lambda v: validate_gender(v, VALID_GENDERS), raw.get("gender", "").strip()),
@@ -209,13 +226,27 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
             err = fn(arg)
             if err:
                 errs.append(err)
-        # Обязательные поля
+
+        # 2.2) NOT NULL
+        for field, is_nullable in NULLABLE.items():
+            if not is_nullable and not raw.get(field, "").strip():
+                errs.append(f"Поле '{field}' не может быть пустым")
+
+        # 2.3) ENUM
+        for field, allowed in ENUM_CONSTRAINTS.items():
+            val = raw.get(field, "").strip()
+            if val and val not in allowed:
+                errs.append(f"Недопустимое значение '{val}' для поля '{field}'")
+
+        # 2.4) Проверка обязательных полей (OPTIONAL_EMPTY)
         data_strip = {k: v.strip() for k, v in raw.items() if k != "variant_sku"}
         errs += validate_required_fields(data_strip, OPTIONAL_EMPTY)
+
         if errs:
             per_row_errors.setdefault(sku or f"<строка{idx}>", []).extend(errs)
             continue
-        # 2) Нормализация и проверка чисел
+
+        # 2.5) Нормализация и проверка чисел
         clean: Dict[str, Any] = {}
         for f, s in data_strip.items():
             if not s and f in OPTIONAL_EMPTY:
@@ -238,27 +269,41 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
         if errs:
             per_row_errors.setdefault(sku, []).extend(errs)
             continue
-        # 3) Проверка длины
+
+        # 2.6) Эмуляция ограничения precision/scale
+        for field, (prec, scale) in NUM_CONSTRAINTS.items():
+            val = clean.get(field)
+            if val is None:
+                continue
+            # Формируем строку с фиксированным количеством дробных знаков
+            formatted = f"{val:.{scale}f}"
+            int_part, _, frac_part = formatted.partition('.')
+            if len(int_part) > (prec - scale) or len(frac_part) > scale:
+                errs.append(f"Число '{field}={val}' выходит за Numeric({prec},{scale})")
+
+        # 2.7) Проверка длины VARCHAR
         for field, limit in FIELD_MAX.items():
             val = clean.get(field, normalize_str(raw.get(field, "")))
             err = validate_length(field, val, limit)
             if err:
                 errs.append(err)
-        # 4) Валидация и автокоррекция цвета
+
+        # 2.8) Валидация и автокоррекция цвета
         ok, corrected_color, err_msg = validate_and_correct_color(raw.get("color", "").strip())
         if not ok:
             errs.append(err_msg)
         else:
             clean["color"] = corrected_color
+
         if errs:
             per_row_errors.setdefault(sku, []).extend(errs)
-    # 5) Дубликаты и картинок
-    dup = find_duplicate_skus(rows)
-    for sku, idxs in dup.items():
+
+    # 3) Дубликаты SKU
+    for sku, idxs in find_duplicate_skus(rows).items():
         per_row_errors.setdefault(sku, []).append(f"Дублирование variant_sku в файле (строки {idxs})")
-    # 6) Согласованность count_images: теперь получаем { sku: message }
-    ci_errors = validate_count_images_consistency(rows)
-    for sku, msg in ci_errors.items():
+
+    # 4) Согласованность count_images
+    for sku, msg in validate_count_images_consistency(rows).items():
         per_row_errors.setdefault(sku, []).append(msg)
 
     errors = [{"variant_sku": sku, "messages": msgs} for sku, msgs in per_row_errors.items()]
