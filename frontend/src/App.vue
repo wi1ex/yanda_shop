@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container" v-if="store.user">
+  <div class="app-container" v-if="store.userStore.user">
     <Header/>
     <Cart/>
     <router-view/>
@@ -23,7 +23,7 @@ let prevOverflowCart
 
 // следим за открытием/закрытием корзины/меню
 watch(
-  () => store.showCartDrawer,
+  () => store.cartStore.showCartDrawer,
   (isOpen) => {
     if (isOpen) {
       prevOverflowCart = document.body.style.overflow
@@ -37,13 +37,13 @@ watch(
 onMounted(async () => {
   if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
     const tgUser = window.Telegram.WebApp.initDataUnsafe.user
-    await store.initializeTelegramUser(tgUser)
+    await store.userStore.initializeTelegramUser(tgUser)
   } else {
-    await store.initializeVisitorUser()
+    await store.userStore.initializeVisitorUser()
   }
-  await store.fetchProducts()
-  await store.fetchParameters()
-  await store.fetchReviews()
+  await store.productStore.fetchProducts()
+  await store.globalStore.fetchParameters()
+  await store.globalStore.fetchReviews()
 })
 
 onBeforeUnmount(() => {

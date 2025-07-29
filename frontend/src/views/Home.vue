@@ -99,7 +99,7 @@
         <div class="best-items" :style="{ transform: `translateX(-${bestIndex * 100}%)` }">
           <div class="best-item" v-for="p in bests" :key="p.variant_sku" @click="goToProduct(p)">
             <button type="button" class="fav-btn" @click.stop="toggleFav(p)">
-              <img :src="store.isFavorite(p.color_sku) ? icon_favorites_black : icon_favorites_grey" alt="" />
+              <img :src="store.cartStore.isFavorite(p.color_sku) ? icon_favorites_black : icon_favorites_grey" alt="" />
             </button>
             <div class="product-image">
               <img :src="p.image" alt="product" />
@@ -159,14 +159,14 @@
     <!-- TESTIMONIALS -->
     <section class="testimonials">
       <h2>Твой стиль, твои отзывы</h2>
-      <div v-if="!store.reviews.length" class="no-reviews">
+      <div v-if="!store.globalStore.reviews.length" class="no-reviews">
         Отзывов пока нет.
       </div>
       <div v-else class="carousel" ref="carousel">
-        <div class="review-items" :style="{width: `${store.reviews.length * 100}%`,
+        <div class="review-items" :style="{width: `${store.globalStore.reviews.length * 100}%`,
                                            transform: `translateX(${offsetPercent}% )`,
                                            height: carouselHeight + 'px'}">
-          <div class="slide" v-for="(rev, i) in store.reviews" :key="i" :style="{ flex: `0 0 ${100 / store.reviews.length}%` }">
+          <div class="slide" v-for="(rev, i) in store.globalStore.reviews" :key="i" :style="{ flex: `0 0 ${100 / store.globalStore.reviews.length}%` }">
             <div class="review">
               <p class="user-text">{{ rev.client_text1 }}</p>
               <div class="photos">
@@ -277,17 +277,17 @@ const carouselHeight = ref(0)
 const uploadedFileName = ref('')
 
 const offsetPercent = computed(() =>
-  ((store.reviews.length - 1) / 2 - idx.value) * (100 / store.reviews.length)
+  ((store.globalStore.reviews.length - 1) / 2 - idx.value) * (100 / store.globalStore.reviews.length)
 )
 
 function prev() {
-  if (!store.reviews.length) return
-  idx.value = (idx.value + store.reviews.length - 1) % store.reviews.length
+  if (!store.globalStore.reviews.length) return
+  idx.value = (idx.value + store.globalStore.reviews.length - 1) % store.globalStore.reviews.length
 }
 
 function next() {
-  if (!store.reviews.length) return
-  idx.value = (idx.value + 1) % store.reviews.length
+  if (!store.globalStore.reviews.length) return
+  idx.value = (idx.value + 1) % store.globalStore.reviews.length
 }
 
 function updateCarouselHeight() {
@@ -378,7 +378,7 @@ const origBlocks = [
 const bests = computed(() => {
   // сгруппировать
   const groups = {}
-  store.products.forEach(p => {
+  store.productStore.products.forEach(p => {
     if (!groups[p.color_sku]) groups[p.color_sku] = { variants: [], totalSales: 0 }
     groups[p.color_sku].variants.push(p)
     groups[p.color_sku].totalSales += p.count_sales || 0
@@ -418,21 +418,21 @@ function goToProduct(p) {
 
 // 4) Переход на страницу каталога
 function goToCatalog(cat) {
-  store.selectedCategory = cat
+  store.productStore.selectedCategory = cat
   router.push({ name: 'Catalog' })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // 4) Переход на страницу бестселлеров каталога
 function goToCatalogSales() {
-  store.selectedCategory = ''
+  store.productStore.selectedCategory = ''
   router.push({ name: 'Catalog', query: { sort: 'sales_desc' } })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // Сохранение в избранное оставляем, но вешаем .stop на клик, чтобы не перегружать маршрут
 function toggleFav(p) {
-  store.isFavorite(p.color_sku) ? store.removeFromFavorites(p.color_sku) : store.addToFavorites(p.color_sku)
+  store.cartStore.isFavorite(p.color_sku) ? store.cartStore.removeFromFavorites(p.color_sku) : store.cartStore.addToFavorites(p.color_sku)
 }
 
 // Request form
@@ -465,7 +465,7 @@ function onSubmitRequest() {
   fd.append("sku",   request.value.sku)
   if (file) fd.append("file", file)
 
-  store.createRequest(fd)
+  store.globalStore.createRequest(fd)
     .then(() => {
       alert("Запрос успешно отправлен")
       // сброс формы
@@ -480,7 +480,7 @@ function onSubmitRequest() {
 // FAQ
 const faqItems = computed(() => {
   const items = []
-  const allKeys = Object.keys(store.parameters)
+  const allKeys = Object.keys(store.globalStore.parameters)
   const faqNumbers = [ ...new Set(allKeys
       .filter(key => key.startsWith('faq_question_') || key.startsWith('faq_answer_'))
       .map(key => parseInt(key.replace(/\D+/g, '')))
@@ -489,8 +489,8 @@ const faqItems = computed(() => {
   faqNumbers.sort((a, b) => a - b).forEach(num => {
     items.push({
       id: num,
-      question: store.parameters[`faq_question_${num}`] || `Вопрос ${num}`,
-      answer: store.parameters[`faq_answer_${num}`] || 'Ответ не найден',
+      question: store.globalStore.parameters[`faq_question_${num}`] || `Вопрос ${num}`,
+      answer: store.globalStore.parameters[`faq_answer_${num}`] || 'Ответ не найден',
     })
   })
   return items

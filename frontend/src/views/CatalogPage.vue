@@ -18,10 +18,10 @@
       <!-- Навигация по категориям под логотипом -->
       <nav class="header-cats">
         <!-- 1) Корневые категории -->
-        <div v-if="!store.showSubcats" class="header-cats-template">
+        <div v-if="!store.productStore.showSubcats" class="header-cats-template">
           <div class="header-cats-div">
-            <button type="button" class="cat-btn" v-for="cat in store.categoryList"
-                    :class="{ active: store.selectedCategory === cat }" :key="cat" @click="onCategoryClick(cat)">
+            <button type="button" class="cat-btn" v-for="cat in store.productStore.categoryList"
+                    :class="{ active: store.productStore.selectedCategory === cat }" :key="cat" @click="onCategoryClick(cat)">
               <img :src="categoryImages[cat]" :alt="cat"/>
               <span>{{ cat }}</span>
             </button>
@@ -33,9 +33,9 @@
           <div class="subcat-slider-wrapper">
             <div class="subcat-slider-row">
               <div class="subcat-slider" ref="subcatSlider" @scroll.passive="onScroll">
-                <button type="button" class="back-btn" @click="store.backToCats()">назад</button>
-                <button type="button" class="cat-btn" v-for="sub in store.subcatListMap[store.selectedCategory]" :key="sub"
-                        :class="{ active: store.selectedSubcat === sub }" @click="store.pickSubcat(sub)">
+                <button type="button" class="back-btn" @click="store.productStore.backToCats()">назад</button>
+                <button type="button" class="cat-btn" v-for="sub in store.productStore.subcatListMap[store.productStore.selectedCategory]" :key="sub"
+                        :class="{ active: store.productStore.selectedSubcat === sub }" @click="store.productStore.pickSubcat(sub)">
                   <img v-if="subcategoryImages[sub]" :src="subcategoryImages[sub]" :alt="sub"/>
                   <span>{{ sub }}</span>
                 </button>
@@ -81,12 +81,12 @@
                 </button>
                 <transition name="slide-down">
                   <div v-if="openSections.gender" class="gender-buttons">
-                    <button type="button" class="gender-btn" :class="{ active: store.filterGender === '' }"
-                            @click="store.filterGender = ''">Все</button>
-                    <button type="button" class="gender-btn" :class="{ active: store.filterGender === 'F' }"
-                            @click="store.filterGender = 'F'">Для неё</button>
-                    <button type="button" class="gender-btn" :class="{ active: store.filterGender === 'M' }"
-                            @click="store.filterGender = 'M'">Для него</button>
+                    <button type="button" class="gender-btn" :class="{ active: store.productStore.filterGender === '' }"
+                            @click="store.productStore.filterGender = ''">Все</button>
+                    <button type="button" class="gender-btn" :class="{ active: store.productStore.filterGender === 'F' }"
+                            @click="store.productStore.filterGender = 'F'">Для неё</button>
+                    <button type="button" class="gender-btn" :class="{ active: store.productStore.filterGender === 'M' }"
+                            @click="store.productStore.filterGender = 'M'">Для него</button>
                   </div>
                 </transition>
               </li>
@@ -100,8 +100,8 @@
                 <transition name="slide-down">
                   <div v-if="openSections.brand" class="filter-body">
                     <div class="options-list">
-                      <label v-for="b in store.distinctBrands" :key="b" class="option">
-                        <input type="checkbox" :value="b" v-model="store.filterBrands"/>
+                      <label v-for="b in store.productStore.distinctBrands" :key="b" class="option">
+                        <input type="checkbox" :value="b" v-model="store.productStore.filterBrands"/>
                         <span>{{ b }}</span>
                       </label>
                     </div>
@@ -118,8 +118,8 @@
                 <transition name="slide-down">
                   <div v-if="openSections.size" class="filter-body">
                     <div class="options-list">
-                      <label v-for="s in store.distinctSizes" :key="s" class="option">
-                        <input type="checkbox" :value="s" v-model="store.filterSizes"/>
+                      <label v-for="s in store.productStore.distinctSizes" :key="s" class="option">
+                        <input type="checkbox" :value="s" v-model="store.productStore.filterSizes"/>
                         <span>{{ s }}</span>
                       </label>
                     </div>
@@ -136,8 +136,8 @@
                 <transition name="slide-down">
                   <div v-if="openSections.color" class="filter-body">
                     <div class="options-list">
-                      <label v-for="c in store.distinctColors" :key="c" class="option">
-                        <input type="checkbox" :value="c" v-model="store.filterColors"/>
+                      <label v-for="c in store.productStore.distinctColors" :key="c" class="option">
+                        <input type="checkbox" :value="c" v-model="store.productStore.filterColors"/>
                         <span>{{ c }}</span>
                       </label>
                     </div>
@@ -153,8 +153,8 @@
                 </button>
                 <transition name="slide-down">
                   <div v-if="openSections.price" class="filter-body">
-                    <input type="number" class="input-number" v-model.number="store.filterPriceMin" :placeholder="`от ${formatPrice(priceBounds[0])} ₽`" />
-                    <input type="number" class="input-number" v-model.number="store.filterPriceMax" :placeholder="`до ${formatPrice(priceBounds[1])} ₽`" />
+                    <input type="number" class="input-number" v-model.number="store.productStore.filterPriceMin" :placeholder="`от ${formatPrice(priceBounds[0])} ₽`" />
+                    <input type="number" class="input-number" v-model.number="store.productStore.filterPriceMax" :placeholder="`до ${formatPrice(priceBounds[1])} ₽`" />
                   </div>
                 </transition>
               </li>
@@ -183,7 +183,7 @@
       <div class="products-grid">
         <div v-for="group in paged" :key="group.color_sku" class="product-card" @click="goToProductDetail(group)">
           <button type="button" class="fav" @click.stop="toggleFav(group)">
-            <img :src="store.isFavorite(group.color_sku) ? icon_favorites_black : icon_favorites_grey" alt="" />
+            <img :src="store.cartStore.isFavorite(group.color_sku) ? icon_favorites_black : icon_favorites_grey" alt="" />
           </button>
           <div class="product-img">
             <img :src="group.minPriceVariant.image" alt="product" />
@@ -196,7 +196,7 @@
         </div>
       </div>
 
-      <button type="button" v-if="paged.length < store.displayedProducts.length" @click="loadMore" class="btn-load-more">Ещё</button>
+      <button type="button" v-if="paged.length < store.productStore.displayedProducts.length" @click="loadMore" class="btn-load-more">Ещё</button>
       <div v-else class="btn-load-more-div"></div>
     </div>
   </div>
@@ -233,7 +233,7 @@ const filtersOpen = ref(false)
 const subcatSlider = ref(null)
 const scrollPos = ref(0)
 const sortOpen = ref(false)
-const sortOption = ref(store.sortBy + '_' + store.sortOrder)
+const sortOption = ref(store.productStore.sortBy + '_' + store.productStore.sortOrder)
 const sortBtn = ref(null)
 const sortList = ref(null)
 const filterBtn = ref(null)
@@ -330,10 +330,10 @@ const subcatNameToFileKey = {
 
 const subcategoryImages = computed(() => {
   // 3.1 префикс по полу
-  const genderSuffix = store.filterGender === 'M' ? 'Man' : store.filterGender === 'F' ? 'Woman' : 'Common'
+  const genderSuffix = store.productStore.filterGender === 'M' ? 'Man' : store.productStore.filterGender === 'F' ? 'Woman' : 'Common'
 
   // 3.2 переводим корневую категорию в английский ключ файлов
-  const catEng = categoryFileKey[store.selectedCategory]
+  const catEng = categoryFileKey[store.productStore.selectedCategory]
   if (!catEng) return {}
 
   // 3.3 собираем полный префикс
@@ -342,7 +342,7 @@ const subcategoryImages = computed(() => {
 
   const result = {}
   // 3.4 проходим по всем названиям подкатегорий, которые есть в сторе
-  const allNames = Array.from(new Set(Object.values(store.subcatListMap).flat()))
+  const allNames = Array.from(new Set(Object.values(store.productStore.subcatListMap).flat()))
   allNames.forEach(name => {
     const fileKey = subcatNameToFileKey[name]
     if (!fileKey) return
@@ -384,7 +384,7 @@ const canNext = computed(() => {
 
 // собираем все цены из отображаемых (отфильтрованных) групп
 const allPrices = computed(() => {
-  return store.displayedProducts
+  return store.productStore.displayedProducts
     .flatMap(group => group.variants.map(v => v.price))
     .filter(p => typeof p === 'number')
 })
@@ -422,51 +422,51 @@ function onScroll() {
 // при выборе — обновляем стор и закрываем
 function selectSort(val) {
   const [by, order] = val.split('_')
-  store.sortBy      = by
-  store.sortOrder   = order
-  sortOption.value  = val
-  sortOpen.value    = false
-  page.value        = 1
+  store.productStore.sortBy = by
+  store.productStore.sortOrder = order
+  sortOption.value = val
+  sortOpen.value = false
+  page.value = 1
 }
 
 // 1) Количество отфильтрованных товаров
-const totalItems = computed(() => store.displayedProducts.length)
+const totalItems = computed(() => store.productStore.displayedProducts.length)
 
 // 2) Динамический заголовок
 const headerTitle = computed(() => {
-  if (store.filterGender === 'M') return 'Для него'
-  if (store.filterGender === 'F') return 'Для неё'
-  if (store.filterBrands.length === 1) return store.filterBrands[0]
+  if (store.productStore.filterGender === 'M') return 'Для него'
+  if (store.productStore.filterGender === 'F') return 'Для неё'
+  if (store.productStore.filterBrands.length === 1) return store.productStore.filterBrands[0]
   return 'Каталог'
 })
 
 // товары для отображения: первые page*perPage элементов
 const paged = computed(() =>
-  store.displayedProducts.slice(0, page.value * perPage)
+  store.productStore.displayedProducts.slice(0, page.value * perPage)
 )
 
 // увеличить страницу (если есть ещё)
 function loadMore() {
-  if (page.value * perPage < store.displayedProducts.length) {
+  if (page.value * perPage < store.productStore.displayedProducts.length) {
     page.value++
   }
 }
 
 function onCategoryClick(cat) {
   page.value = 1
-  if (!store.showSubcats) {
+  if (!store.productStore.showSubcats) {
     // если мы в режиме корней, то переключаемся в подкатегории
-    store.selectedCategory = cat
-    store.openSubcats()
-  } else if (store.selectedCategory !== cat) {
+    store.productStore.selectedCategory = cat
+    store.productStore.openSubcats()
+  } else if (store.productStore.selectedCategory !== cat) {
     // если уже в подкатегориях, но кликнули по другому корню — перейти в его подкатегории
-    store.selectedCategory = cat
-    store.currentSubcatPage = 0
-    store.selectedSubcat = ''
-    store.filterSubcat = ''
+    store.productStore.selectedCategory = cat
+    store.productStore.currentSubcatPage = 0
+    store.productStore.selectedSubcat = ''
+    store.productStore.filterSubcat = ''
   } else {
     // если кликнули на тот же корень повторно — возврат к корням
-    store.backToCats()
+    store.productStore.backToCats()
   }
 }
 
@@ -474,10 +474,10 @@ function goToProductDetail(group) {
   // из всех вариантов данного цвета выбираем сначала подходящие по фильтру цены (если есть)
   let candidates = group.variants.filter(v => v.count_in_stock >= 0)
 
-  if (store.filterPriceMin != null || store.filterPriceMax != null) {
+  if (store.productStore.filterPriceMin != null || store.productStore.filterPriceMax != null) {
     candidates = candidates.filter(v =>
-      (store.filterPriceMin == null || v.price >= store.filterPriceMin) &&
-      (store.filterPriceMax == null || v.price <= store.filterPriceMax)
+      (store.productStore.filterPriceMin == null || v.price >= store.productStore.filterPriceMin) &&
+      (store.productStore.filterPriceMax == null || v.price <= store.productStore.filterPriceMax)
     )
     if (!candidates.length) {
       // если внутри не попало ни одного — возвращаемся к всем
@@ -515,7 +515,7 @@ function openSection(key) {
 
 // Сохранение в избранное оставляем, но вешаем .stop на клик, чтобы не перегружать маршрут
 function toggleFav(p) {
-  store.isFavorite(p.color_sku) ? store.removeFromFavorites(p.color_sku) : store.addToFavorites(p.color_sku)
+  store.cartStore.isFavorite(p.color_sku) ? store.cartStore.removeFromFavorites(p.color_sku) : store.cartStore.addToFavorites(p.color_sku)
 }
 
 function formatPrice(val) {
@@ -543,28 +543,28 @@ function onClickOutside(e) {
 const activeFilters = computed(() => {
   const arr = []
   // пол
-  if (store.filterGender) {
-    arr.push({ key: 'gender', type: 'gender', label: store.filterGender === 'M' ? 'Для него' : 'Для неё' })
+  if (store.productStore.filterGender) {
+    arr.push({ key: 'gender', type: 'gender', label: store.productStore.filterGender === 'M' ? 'Для него' : 'Для неё' })
   }
   // бренды
-  store.filterBrands.forEach(b => {
+  store.productStore.filterBrands.forEach(b => {
     arr.push({ key: `brand:${b}`, type: 'brand', label: b })
   })
   // цвета
-  store.filterColors.forEach(c => {
+  store.productStore.filterColors.forEach(c => {
     arr.push({ key: `color:${c}`, type: 'color', label: c })
   })
   // размеры
-  store.filterSizes.forEach(s => {
+  store.productStore.filterSizes.forEach(s => {
     arr.push({ key: `size:${s}`, type: 'size',  label: s })
   })
   // цена от
-  if (store.filterPriceMin != null) {
-    arr.push({ key: 'priceMin', type: 'priceMin', label: `от ${formatPrice(store.filterPriceMin)} ₽` })
+  if (store.productStore.filterPriceMin != null) {
+    arr.push({ key: 'priceMin', type: 'priceMin', label: `от ${formatPrice(store.productStore.filterPriceMin)} ₽` })
   }
   // цена до
-  if (store.filterPriceMax != null) {
-    arr.push({ key: 'priceMax', type: 'priceMax', label: `до ${formatPrice(store.filterPriceMax)} ₽` })
+  if (store.productStore.filterPriceMax != null) {
+    arr.push({ key: 'priceMax', type: 'priceMax', label: `до ${formatPrice(store.productStore.filterPriceMax)} ₽` })
   }
   return arr
 })
@@ -572,39 +572,39 @@ const activeFilters = computed(() => {
 function clearFilterItem(f) {
   switch (f.type) {
     case 'gender':
-      store.filterGender = ''
+      store.productStore.filterGender = ''
       break
     case 'brand':
-      store.filterBrands = store.filterBrands.filter(x => x !== f.label)
+      store.productStore.filterBrands = store.productStore.filterBrands.filter(x => x !== f.label)
       break
     case 'color':
-      store.filterColors = store.filterColors.filter(x => x !== f.label)
+      store.productStore.filterColors = store.productStore.filterColors.filter(x => x !== f.label)
       break
     case 'size':
-      store.filterSizes = store.filterSizes.filter(x => x !== f.label)
+      store.productStore.filterSizes = store.productStore.filterSizes.filter(x => x !== f.label)
       break
     case 'priceMin':
-      store.filterPriceMin = null
+      store.productStore.filterPriceMin = null
       break
     case 'priceMax':
-      store.filterPriceMax = null
+      store.productStore.filterPriceMax = null
       break
   }
 }
 
 watch(
-  () => [store.sortBy, store.sortOrder],
-  () => { sortOption.value = `${store.sortBy}_${store.sortOrder}` }
+  () => [store.productStore.sortBy, store.productStore.sortOrder],
+  () => { sortOption.value = `${store.productStore.sortBy}_${store.productStore.sortOrder}` }
 )
 watch(
   () => [
-    store.selectedCategory,
-    store.filterGender,
-    store.filterPriceMin,
-    store.filterPriceMax,
-    store.filterColors.join(','),
-    store.filterBrands.join(','),
-    store.filterSizes.join(','),
+    store.productStore.selectedCategory,
+    store.productStore.filterGender,
+    store.productStore.filterPriceMin,
+    store.productStore.filterPriceMax,
+    store.productStore.filterColors.join(','),
+    store.productStore.filterBrands.join(','),
+    store.productStore.filterSizes.join(','),
   ],
   () => {
     page.value = 1
@@ -617,31 +617,31 @@ onMounted(async () => {
 
   if (route.query.sort) {
     const [by, order] = String(route.query.sort).split('_')
-    store.sortBy = by
-    store.sortOrder = order
+    store.productStore.sortBy = by
+    store.productStore.sortOrder = order
   }
 
   if (route.query.gender) {
     const g = route.query.gender
-    store.filterGender = (g === 'M' || g === 'F') ? g : ''
+    store.productStore.filterGender = (g === 'M' || g === 'F') ? g : ''
   }
 
   if (route.query.brand) {
-    store.filterBrands = String(route.query.brand).split(',')
+    store.productStore.filterBrands = String(route.query.brand).split(',')
   } else {
-    store.filterBrands = []
+    store.productStore.filterBrands = []
   }
 
   if (route.query.color) {
-    store.filterColors = String(route.query.color).split(',')
+    store.productStore.filterColors = String(route.query.color).split(',')
   } else {
-    store.filterColors = []
+    store.productStore.filterColors = []
   }
 
   if (route.query.size) {
-    store.filterSizes = String(route.query.size).split(',')
+    store.productStore.filterSizes = String(route.query.size).split(',')
   } else {
-    store.filterSizes = []
+    store.productStore.filterSizes = []
   }
 
   if (subcatSlider.value) {
@@ -650,7 +650,7 @@ onMounted(async () => {
     onScroll()
   }
 
-  await store.fetchProducts()
+  await store.productStore.fetchProducts()
 })
 
 onBeforeUnmount(() => {

@@ -1,17 +1,17 @@
 <template>
   <transition name="drawer">
-    <div v-if="store.showCartDrawer" class="cart-drawer-overlay" @click.self="store.closeCartDrawer()">
+    <div v-if="store.cartStore.showCartDrawer" class="cart-drawer-overlay" @click.self="store.cartStore.closeCartDrawer()">
       <div class="cart-drawer">
 
         <div class="cart-header">
-          <h2 v-if="store.cart.items.length === 0">Корзина</h2>
-          <h2 v-else>Корзина [ {{ store.cart.count }} ]</h2>
-          <button type="button" class="close-btn" @click="store.closeCartDrawer()">
+          <h2 v-if="store.cartStore.cart.items.length === 0">Корзина</h2>
+          <h2 v-else>Корзина [ {{ store.cartStore.cart.count }} ]</h2>
+          <button type="button" class="close-btn" @click="store.cartStore.closeCartDrawer()">
             <img :src="icon_close" alt="Закрыть" />
           </button>
         </div>
 
-        <div v-if="store.cart.items.length === 0" class="empty-cart">
+        <div v-if="store.cartStore.cart.items.length === 0" class="empty-cart">
           В корзине пока что ничего нет...
           <button type="button" class="action-button" @click="goToCatalog">
             Перейти в каталог
@@ -19,7 +19,7 @@
         </div>
 
         <div v-else class="cart-items-frame">
-          <div v-for="item in store.groupedCartItems" :key="item.variant_sku" class="cart-item">
+          <div v-for="item in store.cartStore.groupedCartItems" :key="item.variant_sku" class="cart-item">
             <div class="item-image-container">
               <img :src="item.image" alt="" />
             </div>
@@ -31,11 +31,11 @@
               </div>
 
               <div class="item-quantity-controls">
-                <button type="button" class="qty-btn" @click="store.decreaseQuantity(item)">
+                <button type="button" class="qty-btn" @click="store.cartStore.decreaseQuantity(item)">
                   <img :src="icon_minus_grey" alt="Минус" />
                 </button>
                 <span class="qty">{{ item.quantity }}</span>
-                <button type="button" class="qty-btn" @click="store.increaseQuantity(item)">
+                <button type="button" class="qty-btn" @click="store.cartStore.increaseQuantity(item)">
                   <img :src="icon_plus_grey" alt="Плюс" />
                 </button>
               </div>
@@ -58,16 +58,16 @@
           </div>
         </div>
 
-        <div v-if="store.cart.items.length" class="cart-summary">
+        <div v-if="store.cartStore.cart.items.length" class="cart-summary">
           <div class="summary-block">
             <p class="summary-label">Стоимость:</p>
-            <p class="summary-total">{{ formatPrice(store.cart.total) }} ₽</p>
+            <p class="summary-total">{{ formatPrice(store.cartStore.cart.total) }} ₽</p>
           </div>
           <p class="summary-note">Стоимость доставки рассчитывается при оформлении заказа</p>
         </div>
 
-        <div class="cart-action" v-if="store.cart.items.length">
-          <button type="button" v-if="store.isTelegramUserId(store.user?.id)" class="action-button" @click="store.checkout">
+        <div class="cart-action" v-if="store.cartStore.cart.items.length">
+          <button type="button" v-if="store.userStore.isTelegramUserId(store.userStore.user?.id)" class="action-button" @click="store.cartStore.checkout">
             Оформить заказ
           </button>
           <button type="button" v-else class="action-button" @click="onRegister">
@@ -92,9 +92,9 @@ const store = useStore()
 const router = useRouter()
 
 function removeItem(item) {
-  const qty = store.getProductQuantity(item)
+  const qty = store.cartStore.getProductQuantity(item)
   for (let i = 0; i < qty; i++) {
-    store.decreaseQuantity(item)
+    store.cartStore.decreaseQuantity(item)
   }
 }
 
@@ -111,8 +111,8 @@ function onRegister() {
 }
 
 function goToCatalog() {
-  store.closeCartDrawer()
-  store.selectedCategory = ''
+  store.cartStore.closeCartDrawer()
+  store.productStore.selectedCategory = ''
   router.push({ name: 'Catalog' })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }

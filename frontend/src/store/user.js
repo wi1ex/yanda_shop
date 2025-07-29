@@ -23,10 +23,6 @@ export const useUserStore = defineStore('user', () => {
   const profileLoading = ref(false)
   const profileError = ref('')
 
-  // Public settings & reviews
-  const parameters = ref([])
-  const reviews = ref([])
-
   // Helpers
   function isTelegramUserId(id) {
     const n = parseInt(id, 10)
@@ -123,33 +119,6 @@ export const useUserStore = defineStore('user', () => {
     user.value.id = id
   }
 
-  // Public data
-  async function fetchParameters() {
-    try {
-      const { data } = await api.get(API.general.getParameters)
-      parameters.value = data
-    } catch (e) {
-      console.error('Failed to load parameters:', e)
-    }
-  }
-
-  async function fetchReviews() {
-    try {
-      const { data } = await api.get(API.general.listReviews)
-      reviews.value = data.reviews
-    } catch (e) {
-      console.error('Failed to load reviews:', e)
-    }
-  }
-
-  // Contact form
-  async function createRequest(formData) {
-    try {
-      await api.post(API.general.createRequest, formData)
-    } catch (e) {
-      console.error('Failed to send request:', e)
-    }
-  }
 
   return {
     // state
@@ -159,8 +128,6 @@ export const useUserStore = defineStore('user', () => {
     profile,
     profileLoading,
     profileError,
-    parameters,
-    reviews,
 
     // helpers
     isTelegramUserId,
@@ -172,12 +139,5 @@ export const useUserStore = defineStore('user', () => {
     fetchUserProfile,
     initializeTelegramUser,
     initializeVisitorUser,
-
-    // public data
-    fetchParameters,
-    fetchReviews,
-
-    // contact
-    createRequest
   }
 })

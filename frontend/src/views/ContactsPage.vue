@@ -9,22 +9,22 @@
         <div class="card-div">
           <p class="card-item">
             <span>Телеграм:</span>
-            <a v-if="store.parameters.url_social_telegram_user1"
-               :href="store.parameters.url_social_telegram_user1" target="_blank" rel="noopener" class="link">
-              @{{ store.parameters.url_social_telegram_user1.split('/').pop() }}
+            <a v-if="store.globalStore.parameters.url_social_telegram_user1"
+               :href="store.globalStore.parameters.url_social_telegram_user1" target="_blank" rel="noopener" class="link">
+              @{{ store.globalStore.parameters.url_social_telegram_user1.split('/').pop() }}
             </a>
           </p>
           <p class="card-item">
             <span>E-mail:</span>
-            <a v-if="store.parameters.url_social_email"
-               :href="`mailto:${store.parameters.url_social_email}`" rel="noopener" class="link">
-              {{ store.parameters.url_social_email }}
+            <a v-if="store.globalStore.parameters.url_social_email"
+               :href="`mailto:${store.globalStore.parameters.url_social_email}`" rel="noopener" class="link">
+              {{ store.globalStore.parameters.url_social_email }}
             </a>
           </p>
         </div>
         <p class="card-note">
           Подпишитесь на
-          <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram"
+          <a v-if="store.globalStore.parameters.url_social_telegram" :href="store.globalStore.parameters.url_social_telegram"
              target="_blank" rel="noopener" class="black-link">наш телеграм-канал</a>
           , там вся самая свежая информация о товарах и акциях
         </p>
@@ -34,8 +34,8 @@
         <div class="card-div">
           <p class="card-item">
             <span>Телеграм:</span>
-            <a v-if="store.parameters.url_social_telegram_user2" :href="store.parameters.url_social_telegram_user2" target="_blank" rel="noopener" class="link">
-              @{{ store.parameters.url_social_telegram_user2.split('/').pop() }}
+            <a v-if="store.globalStore.parameters.url_social_telegram_user2" :href="store.globalStore.parameters.url_social_telegram_user2" target="_blank" rel="noopener" class="link">
+              @{{ store.globalStore.parameters.url_social_telegram_user2.split('/').pop() }}
             </a>
           </p>
         </div>
