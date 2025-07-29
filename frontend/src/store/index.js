@@ -247,12 +247,9 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
   // Product Actions
   // -------------------------------------------------
-  async function fetchProducts(cat = null) {
-    if (cat) selectedCategory.value = cat
+  async function fetchProducts() {
     try {
-      const { data } = await api.get(API.product.listProducts, {
-        params: cat ? { category: cat } : {}
-      })
+      const { data } = await api.get(API.product.listProducts)
       products.value = data
     } catch (e) {
       console.error('Не удалось загрузить товары:', e)
@@ -266,7 +263,7 @@ export const useStore = defineStore('main', () => {
         params: { category, variant_sku: variantSku }
       })
       detailData.value = data
-      await fetchProducts(category)
+      await fetchProducts()
       variants.value = products.value.filter(p => p.sku === detailData.value.sku)
     } catch (e) {
       console.error(e)
@@ -452,8 +449,17 @@ export const useStore = defineStore('main', () => {
   const displayedProducts = computed(() => {
     let list = colorGroups.value.slice()
 
+    if (selectedCategory.value) {
+      list = list.filter(g => g.variants.some(v => v.category === selectedCategory.value))
+    }
+    if (filterSubcat.value) {
+      list = list.filter(g => g.variants.some(v => v.subcategory === filterSubcat.value))
+    }
     if (['M','F'].includes(filterGender.value)) {
       list = list.filter(g => g.variants.some(v => v.gender === filterGender.value || v.gender === 'U'))
+    }
+    if (filterBrands.value.length) {
+      list = list.filter(g => g.variants.some(p => filterBrands.value.includes(p.brand)))
     }
     if (filterColors.value.length) {
       list = list.filter(g => g.variants.some(p => filterColors.value.includes(p.color)) )
@@ -464,19 +470,11 @@ export const useStore = defineStore('main', () => {
     if (filterPriceMax.value != null) {
       list = list.filter(g => g.variants.some(v => v.price <= filterPriceMax.value))
     }
-    if (filterSubcat.value) {
-      list = list.filter(g => g.variants.some(v => v.subcategory === filterSubcat.value))
-    }
-    if (filterBrands.value.length) {
-      list = list.filter(g => g.variants.some(p => filterBrands.value.includes(p.brand)))
-    }
     if (filterSizes.value.length) {
       list = list.filter(g => g.variants.some(p => filterSizes.value.includes(p.size_label)) )
     }
 
-    list.forEach(g => {
-      g.totalSales = g.variants.reduce((sum, v) => sum + (v.count_sales||0), 0)
-    })
+    list.forEach(g => { g.totalSales = g.variants.reduce((sum, v) => sum + (v.count_sales||0), 0) })
 
     const mod = (sortOrder.value === 'asc' ? 1 : -1)
     if (sortBy.value === 'price') {

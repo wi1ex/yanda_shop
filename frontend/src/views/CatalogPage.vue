@@ -535,9 +535,9 @@ function formatPrice(val) {
   return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
-async function loadCategory(cat) {
+async function loadCategory() {
   productsLoading.value = true
-  await store.fetchProducts(cat)
+  await store.fetchProducts()
   productsLoading.value = false
 }
 
@@ -611,7 +611,7 @@ function clearFilterItem(f) {
   }
 }
 
-watch(() => store.selectedCategory, (cat) => { page.value = 1; loadCategory(cat)})
+watch(() => store.selectedCategory, () => { page.value = 1; loadCategory()})
 watch(
   () => [store.sortBy, store.sortOrder],
   () => { sortOption.value = `${store.sortBy}_${store.sortOrder}` }
@@ -671,7 +671,7 @@ onMounted(() => {
   }
 
   animateGrid()
-  loadCategory(store.selectedCategory)
+  loadCategory()
 })
 
 onBeforeUnmount(() => {
