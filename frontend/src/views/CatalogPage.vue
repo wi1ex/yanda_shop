@@ -1022,6 +1022,8 @@ onBeforeUnmount(() => {
                   input[type="checkbox"] {
                     -webkit-appearance: none;
                     appearance: none;
+                    min-width: 16px;
+                    min-height: 16px;
                     width: 16px;
                     height: 16px;
                     border: 1px solid $black-40;

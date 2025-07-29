@@ -12,6 +12,7 @@ export const useProductStore = defineStore('product', () => {
   const showSubcats = ref(false);
   const selectedSubcat = ref('');
   const currentSubcatPage = ref(0);
+  const isFetching = ref(false);
 
   const sortBy = ref('date');
   const sortOrder = ref('desc');
@@ -219,12 +220,16 @@ export const useProductStore = defineStore('product', () => {
   }
 
   async function fetchProducts() {
+    if (isFetching.value) return;
+    isFetching.value = true;
     try {
       const { data } = await api.get(API.product.listProducts);
       products.value = data;
       buildIndexes(data);
     } catch (e) {
       console.error('Failed to load products:', e);
+    } finally {
+      isFetching.value = false;
     }
   }
 
@@ -298,6 +303,7 @@ export const useProductStore = defineStore('product', () => {
     showSubcats,
     selectedSubcat,
     currentSubcatPage,
+    isFetching,
     sortBy,
     sortOrder,
     filterPriceMin,
