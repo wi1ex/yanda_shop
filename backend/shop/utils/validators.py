@@ -109,7 +109,8 @@ def validate_and_correct_color(color_str: str) -> Tuple[bool, Optional[str], Opt
     Возвращает (valid, corrected_value, message).
     """
     original = color_str or ''
-    normalized = re.sub(r'\s*-\s*', '-', original.strip())
+    s = original.replace('.', ',').replace('Ё', 'Е').replace('ё', 'е')
+    normalized = re.sub(r'\s*-\s*', '-', s.strip())
     normalized = re.sub(r'\s+', ' ', normalized)
     parts = [p.strip() for p in normalized.split(',')]
     corrected_parts: List[str] = []
@@ -124,8 +125,6 @@ def validate_and_correct_color(color_str: str) -> Tuple[bool, Optional[str], Opt
         corrected_parts.append(candidate)
 
     corrected = ', '.join(corrected_parts)
-    if corrected != original:
-        return True, corrected, f"Цвет '{original}' автоматически исправлен на '{corrected}'"
     return True, corrected, None
 
 
