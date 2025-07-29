@@ -105,11 +105,17 @@ def validate_length(field: str, value: str, max_len: Optional[int]) -> Optional[
 
 def validate_and_correct_color(color_str: str) -> Tuple[bool, Optional[str], Optional[str]]:
     """
-    Проверка и автокоррекция поля color.
-    Возвращает (valid, corrected_value, message).
+    Проверка и автокоррекция поля color. Этапы:
+      1. Точки -> запятые, Ё/ё -> Е/е
+      2. Нормализация пробелов вокруг дефиса и между словами
+      3. Приведение регистра (первая заглавная, остальные строчные)
+      4. Сортировка списка цветов по алфавиту для единообразия
+    Возвращает (valid, corrected_value, None).
     """
     original = color_str or ''
+    # 1) точки→запятые, Ё/ё→Е/е
     s = original.replace('.', ',').replace('Ё', 'Е').replace('ё', 'е')
+    # 2) нормализация пробелов и дефисов
     normalized = re.sub(r'\s*-\s*', '-', s.strip())
     normalized = re.sub(r'\s+', ' ', normalized)
     parts = [p.strip() for p in normalized.split(',')]
@@ -118,13 +124,16 @@ def validate_and_correct_color(color_str: str) -> Tuple[bool, Optional[str], Opt
     for part in parts:
         if not part:
             return False, None, f"Пустой элемент цвета в строке '{original}'"
+        # 3) приводим регистр в каждой части (или в каждой половинке через дефис)
         sub = [w.lower().capitalize() for w in part.split('-')]
         candidate = '-'.join(sub)
         if not COLOR_ENTRY_PATTERN.match(candidate):
             return False, None, f"Неправильный формат цвета '{part}'"
         corrected_parts.append(candidate)
 
-    corrected = ', '.join(corrected_parts)
+    # 4) сортируем по алфавиту, чтобы 'Черный, Белый' → ['Белый', 'Черный']
+    sorted_parts = sorted(corrected_parts)
+    corrected = ', '.join(sorted_parts)
     return True, corrected, None
 
 
