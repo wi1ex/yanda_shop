@@ -16,7 +16,7 @@
       </div>
 
       <!-- Навигация по категориям под логотипом -->
-      <nav class="header-cats" :class="{ blurred: productsLoading }">
+      <nav class="header-cats">
         <!-- 1) Корневые категории -->
         <div v-if="!store.showSubcats" class="header-cats-template">
           <div class="header-cats-div">
@@ -54,7 +54,7 @@
       </nav>
     </header>
 
-    <div class="catalog-body" :class="{ blurred: productsLoading }">
+    <div class="catalog-body">
       <!-- Мобильные контролы -->
       <div class="mobile-controls">
         <div class="mobile-filter">
@@ -204,7 +204,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onBeforeUnmount, watch, computed, nextTick } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/store/index.js'
 import icon_close from '@/assets/images/close.svg'
@@ -230,7 +230,6 @@ const router = useRouter()
 const page = ref(1)
 const perPage = 24
 const filtersOpen = ref(false)
-const productsLoading = ref(false)
 const subcatSlider = ref(null)
 const scrollPos = ref(0)
 const sortOpen = ref(false)
@@ -428,7 +427,6 @@ function selectSort(val) {
   sortOption.value  = val
   sortOpen.value    = false
   page.value        = 1
-  animateGrid()
 }
 
 // 1) Количество отфильтрованных товаров
@@ -505,17 +503,6 @@ function goToProductDetail(group) {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// вспомогательная функция «анимации» (браур → снятие)
-function animateGrid() {
-  productsLoading.value = true
-  // после следующего рендера через 200 мс убираем блюр
-  nextTick(() => {
-    setTimeout(() => {
-      productsLoading.value = false
-    }, 200)
-  })
-}
-
 function openSection(key) {
   Object.keys(openSections).forEach(k => {
     if (k === key) {
@@ -533,12 +520,6 @@ function toggleFav(p) {
 
 function formatPrice(val) {
   return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-}
-
-async function loadCategory() {
-  productsLoading.value = true
-  await store.fetchProducts()
-  productsLoading.value = false
 }
 
 function onClickOutside(e) {
@@ -611,13 +592,13 @@ function clearFilterItem(f) {
   }
 }
 
-watch(() => store.selectedCategory, () => { page.value = 1; loadCategory()})
 watch(
   () => [store.sortBy, store.sortOrder],
   () => { sortOption.value = `${store.sortBy}_${store.sortOrder}` }
 )
 watch(
   () => [
+    store.selectedCategory,
     store.filterGender,
     store.filterPriceMin,
     store.filterPriceMax,
@@ -627,12 +608,11 @@ watch(
   ],
   () => {
     page.value = 1
-    // animateGrid()
   }
 )
 
 // При монтировании грузим товары
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('click', onClickOutside)
 
   if (route.query.sort) {
@@ -670,8 +650,7 @@ onMounted(() => {
     onScroll()
   }
 
-  animateGrid()
-  loadCategory()
+  await store.fetchProducts()
 })
 
 onBeforeUnmount(() => {
@@ -743,9 +722,6 @@ onBeforeUnmount(() => {
       display: flex;
       width: 100%;
       transition: all 0.25s cubic-bezier(0, 0.5, 0.25, 1);
-      &.blurred {
-        filter: blur(4px);
-      }
       .header-cats-template {
         display: flex;
         flex-direction: column;
@@ -912,9 +888,6 @@ onBeforeUnmount(() => {
     flex-direction: column;
     margin-top: 40px;
     transition: all 0.25s cubic-bezier(0, 0.5, 0.25, 1);
-    &.blurred {
-      filter: blur(4px);
-    }
     .mobile-controls {
       display: flex;
       padding: 0 10px 10px;
