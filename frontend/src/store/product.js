@@ -203,19 +203,24 @@ export const useProductStore = defineStore('product', () => {
 
     distinctBrands.value = Array.from(indexByField.brand.keys()).sort((a, b) =>
       a.localeCompare(b, 'ru')
-    );
+    )
+
     distinctColors.value = Array.from(indexByField.color.keys()).sort((a, b) =>
       a.localeCompare(b, 'ru')
-    );
+    )
+
+
     distinctSizes.value = Array.from(indexByField.size.keys()).sort((a, b) => {
-      const na = parseFloat(a),
-        nb = parseFloat(b);
-      const an = !isNaN(na),
-        bn = !isNaN(nb);
-      if (an && bn) return na - nb;
-      if (an) return -1;
-      if (bn) return 1;
-      return a.localeCompare(b, 'ru');
+      const numericRe = /^\d+(\.\d+)?$/
+      const aIsNum = numericRe.test(a)
+      const bIsNum = numericRe.test(b)
+      // оба не-числа → по алфавиту
+      if (!aIsNum && !bIsNum) return a.localeCompare(b, 'ru', { sensitivity: 'base' })
+      // одно не-число и одно число → не-число впереди
+      if (!aIsNum && bIsNum) return -1
+      if (aIsNum && !bIsNum) return 1
+      // оба числа → сравниваем как числа
+      return parseFloat(a) - parseFloat(b)
     });
   }
 
