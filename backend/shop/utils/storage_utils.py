@@ -10,7 +10,7 @@ from minio.error import S3Error
 from werkzeug.utils import secure_filename
 from .db_utils import session_scope
 from .google_sheets import get_sheet_url
-from .parsers import parse_int
+from .validators import parse_int
 from ..core.logging import logger
 from ..extensions import minio_client, BUCKET
 from ..models import Review
