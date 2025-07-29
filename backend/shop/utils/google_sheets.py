@@ -245,13 +245,11 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
             if err:
                 errs.append(err)
         # 4) Валидация и автокоррекция цвета
-        ok, corrected, msg = validate_and_correct_color(raw.get("color", "").strip())
+        ok, corrected_color, err_msg = validate_and_correct_color(raw.get("color", "").strip())
         if not ok:
-            errs.append(msg)
+            errs.append(err_msg)
         else:
-            if msg:
-                errs.append(msg)
-            clean["color"] = corrected
+            clean["color"] = corrected_color
         if errs:
             per_row_errors.setdefault(sku, []).extend(errs)
     # 5) Дубликаты и картинок
@@ -313,15 +311,13 @@ def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, i
                             parse_float(val) if f in FLOAT_FIELDS else
                             normalize_str(val))
             # Валидация цвета
-            ok, corr, msg = validate_and_correct_color(raw.get("color", "").strip())
+            ok, corrected_color, err_msg = validate_and_correct_color(raw.get("color", "").strip())
             if not ok:
                 warns += 1
                 warn_skus.append(sku)
-                logger.warning("%s: invalid color '%s' for %s — %s", context, raw.get("color"), sku, msg)
+                logger.warning("%s: invalid color '%s' for %s — %s", context, raw.get("color"), sku, err_msg)
                 continue
-            if msg:
-                clean["color"] = corr
-                logger.debug("%s: corrected color '%s' → '%s' for %s", context, raw.get("color"), corr, sku)
+            clean["color"] = corrected_color
             # Create or update
             obj = exist_map.get(sku)
             try:
