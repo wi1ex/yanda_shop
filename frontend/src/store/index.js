@@ -1,4 +1,5 @@
 // src/store/index.js
+import { storeToRefs } from 'pinia'
 import { useProductStore } from './product';
 import { useCartStore }    from './cart';
 import { useUserStore }    from './user';
@@ -9,12 +10,13 @@ export function useStore() {
   const prod = useProductStore()
   const cart = useCartStore()
   const user = useUserStore()
-  const admin= useAdminStore()
+  const admin = useAdminStore()
+
   return {
-    ...prod,
-    ...cart,
-    ...user,
-    ...admin,
+    ...storeToRefs(prod),
+    ...storeToRefs(cart),
+    ...storeToRefs(user),
+    ...storeToRefs(admin),
     api: API,
   }
 }
