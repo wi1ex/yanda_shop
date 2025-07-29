@@ -504,13 +504,19 @@ function submitZip() {
 }
 
 // Функция удаления отзыва
-function deleteReview(id) {
-  if (confirm(`Удалить отзыв #${id}?`)) store.deleteReview(id)
+async function deleteReview(id) {
+  if (confirm(`Удалить отзыв #${id}?`)) {
+    await store.deleteReview(id)
+    await store.fetchReviews()
+  }
 }
 
 // Функция удаления заявки
-function onDeleteRequest(id) {
-  if (confirm(`Удалить заявку #${id}?`)) store.deleteRequest(id)
+async function onDeleteRequest(id) {
+  if (confirm(`Удалить заявку #${id}?`)) {
+    await store.deleteRequest(id)
+    await store.fetchRequests()
+  }
 }
 
 // Сохраняем все изменённые параметры подряд
