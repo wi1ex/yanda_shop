@@ -39,7 +39,7 @@ const store  = useStore()
 const router = useRouter()
 
 // 1) Все уникальные бренды
-const brands = computed(() => store.distinctBrands)
+const brands = computed(() => store.productStore.distinctBrands)
 
 // 2) Буквы, которые есть в списке брендов
 const alphabet = computed(() =>
@@ -73,7 +73,7 @@ function scrollToLetter(letter) {
 
 // При клике — переход в каталог с query.brand
 function onBrandClick(brand) {
-  store.clearFilters()
+  store.productStore.clearFilters()
   router.push({
     name: 'Catalog',
     query: { brand }

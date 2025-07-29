@@ -35,12 +35,12 @@ router.beforeEach(async (to, from, next) => {
   const store = useStore()
   if (to.name === 'Admin') {
     // если нет токенов или server-side проверка провалилась — домой
-    const ok = store.accessToken && store.refreshToken && await store.verifyAdminAccess()
+    const ok = store.userStore.accessToken && store.userStore.refreshToken && await store.userStore.verifyAdminAccess()
     if (!ok) return next({ name: 'Home' })
   }
   if (to.name === 'Home') {
-    store.selectedCategory = ''
-    store.clearFilters()
+    store.productStore.selectedCategory = ''
+    store.productStore.clearFilters()
   }
   next()
 })

@@ -22,7 +22,7 @@
 
     <div v-else class="products-grid" :class="{ blurred: favoritesLoading }">
       <div v-for="product in favoriteProducts" :key="product.color_sku" @click="goToProduct(product)" class="product-card">
-        <button type="button" class="remove-fav-btn" @click.prevent.stop="store.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">
+        <button type="button" class="remove-fav-btn" @click.prevent.stop="store.cartStore.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">
           <img :src="icon_favorites_black" alt="product" />
         </button>
 
@@ -55,9 +55,9 @@ const favoritesLoading = ref(false)
 
 // вычисляем реальный список products по каждому color_sku
 const favoriteProducts = computed(() =>
-  store.favorites.items
+  store.cartStore.favorites.items
       .slice().reverse()
-      .map(cs => store.colorGroups.find(g => g.color_sku === cs))
+      .map(cs => store.productStore.colorGroups.find(g => g.color_sku === cs))
       .filter(Boolean)
       .map(g => g.minPriceVariant)
 )
@@ -76,7 +76,7 @@ function goBack() {
 }
 
 function goToCatalog() {
-  store.selectedCategory = ''
+  store.productStore.selectedCategory = ''
   router.push({ name: 'Catalog' })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -94,8 +94,8 @@ function goToProduct(p) {
 // при монтировании: плавно показываем, грузим ВСЕ товары + избранное, убираем эффект
 onMounted(async () => {
   favoritesLoading.value = true
-  await store.fetchProducts()
-  await store.loadFavoritesFromServer()
+  await store.productStore.fetchProducts()
+  await store.cartStore.loadFavoritesFromServer()
   await nextTick()
   setTimeout(() => {
     favoritesLoading.value = false

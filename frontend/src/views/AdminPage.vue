@@ -19,9 +19,9 @@
         </div>
 
         <button @click="onPreviewAll"
-                :disabled="isAny(store.previewSheetLoading) || isAny(store.previewZipLoading) || !hasAnyZip"
-                :aria-busy="isAny(store.previewSheetLoading) || isAny(store.previewZipLoading)">
-          {{ (isAny(store.previewSheetLoading)||isAny(store.previewZipLoading)) ? 'Проверяем…' : 'Проверить всё' }}
+                :disabled="isAny(store.adminStore.previewSheetLoading) || isAny(store.adminStore.previewZipLoading) || !hasAnyZip"
+                :aria-busy="isAny(store.adminStore.previewSheetLoading) || isAny(store.adminStore.previewZipLoading)">
+          {{ (isAny(store.adminStore.previewSheetLoading)||isAny(store.adminStore.previewZipLoading)) ? 'Проверяем…' : 'Проверить всё' }}
         </button>
       </div>
 
@@ -29,12 +29,12 @@
       <div class="sheet-preview-block">
         <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="preview-result">
           <h4>{{ catLabel(cat) }}</h4>
-          <div v-if="store.previewSheetLoading[cat]">…</div>
-          <div v-else-if="store.previewSheetResult[cat]">
-            <p>Всего строк: {{ store.previewSheetResult[cat].total_rows }}</p>
-            <p>Ошибок: {{ store.previewSheetResult[cat].invalid_count }}</p>
-            <ul v-if="store.previewSheetResult[cat].errors?.length">
-              <li v-for="e in store.previewSheetResult[cat].errors" :key="e.variant_sku">
+          <div v-if="store.adminStore.previewSheetLoading[cat]">…</div>
+          <div v-else-if="store.adminStore.previewSheetResult[cat]">
+            <p>Всего строк: {{ store.adminStore.previewSheetResult[cat].total_rows }}</p>
+            <p>Ошибок: {{ store.adminStore.previewSheetResult[cat].invalid_count }}</p>
+            <ul v-if="store.adminStore.previewSheetResult[cat].errors?.length">
+              <li v-for="e in store.adminStore.previewSheetResult[cat].errors" :key="e.variant_sku">
                 <strong>{{ e.variant_sku }}</strong>: {{ e.messages.join('; ') }}
               </li>
             </ul>
@@ -47,12 +47,12 @@
       <div class="zip-preview-block">
         <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="preview-result">
           <h4>{{ catLabel(cat) }}</h4>
-          <div v-if="store.previewZipLoading[cat]">…</div>
-          <div v-else-if="store.previewZipResult[cat]">
-            <div v-if="store.previewZipResult[cat].error" class="error">{{ store.previewZipResult[cat].error }}</div>
+          <div v-if="store.adminStore.previewZipLoading[cat]">…</div>
+          <div v-else-if="store.adminStore.previewZipResult[cat]">
+            <div v-if="store.adminStore.previewZipResult[cat].error" class="error">{{ store.adminStore.previewZipResult[cat].error }}</div>
             <div v-else>
-              <ul v-if="store.previewZipResult[cat].errors?.length">
-                <li v-for="err in store.previewZipResult[cat].errors" :key="err.sku_or_filename">
+              <ul v-if="store.adminStore.previewZipResult[cat].errors?.length">
+                <li v-for="err in store.adminStore.previewZipResult[cat].errors" :key="err.sku_or_filename">
                   <strong>{{ err.sku_or_filename }}</strong>: {{ err.messages.join('; ') }}
                 </li>
               </ul>
@@ -73,28 +73,28 @@
 
         <!-- Режим редактирования ссылки -->
         <template v-if="editingUrl[cat]">
-          <input type="text" v-model="store.sheetUrls[cat]" :placeholder="`URL для ${cat}`" class="sheet-input"/>
-          <button type="button" @click="onSaveUrl(cat)" :disabled="store.sheetSaveLoading[cat]" class="sheet-save">
-            {{ store.sheetSaveLoading[cat] ? 'Сохранение…' : 'Сохранить ссылку' }}
+          <input type="text" v-model="store.adminStore.sheetUrls[cat]" :placeholder="`URL для ${cat}`" class="sheet-input"/>
+          <button type="button" @click="onSaveUrl(cat)" :disabled="store.adminStore.sheetSaveLoading[cat]" class="sheet-save">
+            {{ store.adminStore.sheetSaveLoading[cat] ? 'Сохранение…' : 'Сохранить ссылку' }}
           </button>
         </template>
 
         <!-- Стандартный режим -->
         <template v-else>
-          <button type="button" v-if="!store.sheetUrls[cat]" @click="startEdit(cat)">
+          <button type="button" v-if="!store.adminStore.sheetUrls[cat]" @click="startEdit(cat)">
             Загрузить ссылку
           </button>
-          <button type="button" v-else @click="startEdit(cat)" :disabled="store.sheetImportLoading[cat]">
+          <button type="button" v-else @click="startEdit(cat)" :disabled="store.adminStore.sheetImportLoading[cat]">
             Обновить ссылку
           </button>
 
-          <button type="button" @click="store.importSheet(cat)" :disabled="!store.sheetUrls[cat] || store.sheetImportLoading[cat] || editingUrl[cat]" class="sheet-import">
-            {{ store.sheetImportLoading[cat] ? 'Обновление…' : 'Обновить данные' }}
+          <button type="button" @click="store.adminStore.importSheet(cat)" :disabled="!store.adminStore.sheetUrls[cat] || store.adminStore.sheetImportLoading[cat] || editingUrl[cat]" class="sheet-import">
+            {{ store.adminStore.sheetImportLoading[cat] ? 'Обновление…' : 'Обновить данные' }}
           </button>
         </template>
 
-        <p v-if="store.sheetResult[cat]" class="upload-result">
-          {{ store.sheetResult[cat] }}
+        <p v-if="store.adminStore.sheetResult[cat]" class="upload-result">
+          {{ store.adminStore.sheetResult[cat] }}
         </p>
       </div>
     </section>
@@ -104,17 +104,17 @@
       <h2>Загрузить ZIP с изображениями</h2>
       <form @submit.prevent="submitZip">
         <input type="file" accept=".zip" @change="onZipSelected" ref="zipInput" />
-        <button type="submit" :disabled="!zipFile || store.zipLoading">
-          {{ store.zipLoading ? 'Загрузка…' : 'Загрузить ZIP' }}
+        <button type="submit" :disabled="!zipFile || store.adminStore.zipLoading">
+          {{ store.adminStore.zipLoading ? 'Загрузка…' : 'Загрузить ZIP' }}
         </button>
       </form>
-      <p v-if="store.zipResult" class="upload-result">{{ store.zipResult }}</p>
+      <p v-if="store.adminStore.zipResult" class="upload-result">{{ store.adminStore.zipResult }}</p>
     </section>
 
     <!-- Логи изменений товаров/изображений -->
     <section class="logs-section" v-if="selected === 'logs'">
       <h2>Последние 10 событий</h2>
-      <div v-if="store.logsLoading" class="loading-logs">Загрузка журналов...</div>
+      <div v-if="store.adminStore.logsLoading" class="loading-logs">Загрузка журналов...</div>
       <div v-else>
         <table class="logs-table">
           <thead>
@@ -128,7 +128,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="log in store.logs" :key="log.id">
+            <tr v-for="log in store.adminStore.logs" :key="log.id">
               <td>{{ log.id }}</td>
               <td>{{ log.author_id }}</td>
               <td>{{ log.author_name }}</td>
@@ -136,15 +136,15 @@
               <td>{{ log.description }}</td>
               <td>{{ log.timestamp }}</td>
             </tr>
-            <tr v-if="store.logs.length === 0">
+            <tr v-if="store.adminStore.logs.length === 0">
               <td colspan="6" class="no-logs">Нет записей</td>
             </tr>
           </tbody>
         </table>
         <div class="pagination-controls">
           <button type="button" @click="prevPage" :disabled="logPage===1">← Предыдущие</button>
-          <span>Стр. {{ logPage }} из {{ Math.ceil(store.totalLogs / pageSize) }}</span>
-          <button type="button" @click="nextPage" :disabled="logPage*pageSize>=store.totalLogs">Следующие →</button>
+          <span>Стр. {{ logPage }} из {{ Math.ceil(store.adminStore.totalLogs / pageSize) }}</span>
+          <button type="button" @click="nextPage" :disabled="logPage*pageSize>=store.adminStore.totalLogs">Следующие →</button>
         </div>
       </div>
     </section>
@@ -159,14 +159,14 @@
         <button type="button" class="refresh-button" @click="fetchVisits">Обновить</button>
       </div>
 
-      <div v-if="store.visitsLoading" class="loading-visits">Загрузка данных...</div>
+      <div v-if="store.adminStore.visitsLoading" class="loading-visits">Загрузка данных...</div>
 
       <div v-else class="chart-wrapper">
         <!-- Если нет данных, выводим сообщение -->
-        <div v-if="!store.visitsData.hours.length" class="no-data">Нет данных за выбранный день</div>
+        <div v-if="!store.adminStore.visitsData.hours.length" class="no-data">Нет данных за выбранный день</div>
         <!-- Иначе: «самописный» бар-чарт -->
         <div v-else class="bar-chart">
-          <div v-for="h in store.visitsData.hours" :key="h.hour" class="bar" :style="{ height: (h.total / maxTotal * 100) + '%' }">
+          <div v-for="h in store.adminStore.visitsData.hours" :key="h.hour" class="bar" :style="{ height: (h.total / maxTotal * 100) + '%' }">
             <div class="bar-label">{{ Number(h.hour) }}</div>
             <div class="bar-value">{{ h.total }}</div>
           </div>
@@ -185,17 +185,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="u in store.users" :key="u.user_id">
+          <tr v-for="u in store.adminStore.users" :key="u.user_id">
             <td>
-              <button type="button" v-if="store.user.id !== u.user_id && u.role !== 'admin'" @click="makeAdmin(u.user_id)">Сделать админом</button>
-              <button type="button" v-if="store.user.id !== u.user_id && u.role === 'admin'" @click="revokeAdmin(u.user_id)">Снять админа</button>
+              <button type="button" v-if="store.userStore.user.id !== u.user_id && u.role !== 'admin'" @click="makeAdmin(u.user_id)">Сделать админом</button>
+              <button type="button" v-if="store.userStore.user.id !== u.user_id && u.role === 'admin'" @click="revokeAdmin(u.user_id)">Снять админа</button>
             </td>
             <td v-for="col in userColumns" :key="col">
               <span v-if="isDateField(col)">{{ formatDate(u[col]) }}</span>
               <span v-else>{{ u[col] }}</span>
             </td>
           </tr>
-          <tr v-if="!store.users.length">
+          <tr v-if="!store.adminStore.users.length">
             <td :colspan="userColumns.length" class="no-data">Нет пользователей</td>
           </tr>
         </tbody>
@@ -239,8 +239,8 @@
     <!-- Все отзывы -->
     <section class="all-reviews-section" v-if="selected === 'all_reviews'">
       <h2>Все отзывы</h2>
-      <ul v-if="store.reviews.length">
-        <li v-for="r in store.reviews" :key="r.id" class="admin-review">
+      <ul v-if="store.globalStore.reviews.length">
+        <li v-for="r in store.globalStore.reviews" :key="r.id" class="admin-review">
           <div class="review-header">
             <strong>#{{ r.id }}</strong>
             <span>{{ r.client_name }}</span>
@@ -286,8 +286,8 @@
     <!-- Все заявки -->
     <section class="requests-section" v-if="selected === 'requests'">
       <h2>Заявки клиентов</h2>
-      <ul v-if="store.requests.length" class="requests-list">
-        <li v-for="r in store.requests" :key="r.id" class="request-item">
+      <ul v-if="store.adminStore.requests.length" class="requests-list">
+        <li v-for="r in store.adminStore.requests" :key="r.id" class="request-item">
           <div class="request-header">
             <strong>#{{ r.id }}</strong>
             <span>{{ r.name }}</span>
@@ -362,8 +362,8 @@ const form = reactive({
 // Вычисляем список колонок по ключам первого пользователя
 const preferredColumns = ['user_id', 'username', 'first_name', 'last_name', 'gender', 'phone', 'date_of_birth', 'order_count', 'total_spent']
 const userColumns = computed(() => {
-  if (!store.users.length) return []
-  const cols = Object.keys(store.users[0])
+  if (!store.adminStore.users.length) return []
+  const cols = Object.keys(store.adminStore.users[0])
   const first = preferredColumns.filter(c => cols.includes(c))
   const rest  = cols.filter(c => !preferredColumns.includes(c))
   return [...first, ...rest]
@@ -380,7 +380,7 @@ const hasSettingsChanged = computed(() =>
 )
 
 const maxTotal = computed(() => {
-  const hours = store.visitsData.hours || []
+  const hours = store.adminStore.visitsData.hours || []
   return hours.length ? Math.max(...hours.map(h => h.total)) : 1
 })
 
@@ -399,7 +399,7 @@ function resetReviewForm() {
 }
 
 async function onPreviewAll() {
-  await store.previewEverything(zipPreviewFiles)
+  await store.adminStore.previewEverything(zipPreviewFiles)
   // очистить реактивные файлы
   Object.keys(zipPreviewFiles).forEach(cat => zipPreviewFiles[cat] = null)
   // очистить сами инпуты
@@ -432,14 +432,14 @@ function onZipSelected(e) {
 function prevPage() {
   if (logPage.value > 1) {
     logPage.value--
-    store.loadLogs(pageSize, (logPage.value - 1) * pageSize)
+    store.adminStore.loadLogs(pageSize, (logPage.value - 1) * pageSize)
   }
 }
 
 function nextPage() {
-  if (logPage.value * pageSize < store.totalLogs) {
+  if (logPage.value * pageSize < store.adminStore.totalLogs) {
     logPage.value++
-    store.loadLogs(pageSize, (logPage.value - 1) * pageSize)
+    store.adminStore.loadLogs(pageSize, (logPage.value - 1) * pageSize)
   }
 }
 
@@ -485,7 +485,7 @@ async function onSubmitReview() {
   }
   // 5) отправка
   try {
-    formSuccess.value = await store.createReview(fd)
+    formSuccess.value = await store.adminStore.createReview(fd)
     resetReviewForm()
   } catch (err) {
     formError.value = err.message || 'Ошибка при отправке'
@@ -497,7 +497,7 @@ async function onSubmitReview() {
 // Другие действия
 function submitZip() {
   if (!zipFile.value) return
-  store.uploadZip(zipFile.value).then(() => {
+  store.adminStore.uploadZip(zipFile.value).then(() => {
     zipFile.value = null
     zipInput.value.value = ''
   })
@@ -506,16 +506,16 @@ function submitZip() {
 // Функция удаления отзыва
 async function deleteReview(id) {
   if (confirm(`Удалить отзыв #${id}?`)) {
-    await store.deleteReview(id)
-    await store.fetchReviews()
+    await store.adminStore.deleteReview(id)
+    await store.globalStore.fetchReviews()
   }
 }
 
 // Функция удаления заявки
 async function onDeleteRequest(id) {
   if (confirm(`Удалить заявку #${id}?`)) {
-    await store.deleteRequest(id)
-    await store.fetchRequests()
+    await store.adminStore.deleteRequest(id)
+    await store.adminStore.fetchRequests()
   }
 }
 
@@ -529,9 +529,9 @@ async function saveAllSettings() {
       return orig && orig.value !== s.value
     })
     for (const s of changed) {
-      await store.saveSetting(s.key, s.value)
+      await store.adminStore.saveSetting(s.key, s.value)
     }
-    await store.fetchSettings()
+    await store.adminStore.fetchSettings()
     // оригинальный снимок обновится через watch
   } catch (err) {
     alert(err.message || 'Ошибка при сохранении')
@@ -544,8 +544,8 @@ async function saveAllSettings() {
 async function deleteSetting(key) {
   savingAll.value = true
   try {
-    await store.deleteSetting(key)
-    await store.fetchSettings()
+    await store.adminStore.deleteSetting(key)
+    await store.adminStore.fetchSettings()
   } catch (err) {
     alert(err.message || 'Ошибка при удалении')
   } finally {
@@ -555,8 +555,8 @@ async function deleteSetting(key) {
 
 async function onAddSetting() {
   saving.value = 'add'
-  await store.saveSetting(newSetting.key.trim(), newSetting.value)
-  await store.fetchSettings()
+  await store.adminStore.saveSetting(newSetting.key.trim(), newSetting.value)
+  await store.adminStore.fetchSettings()
   newSetting.key = ''
   newSetting.value = ''
   saving.value = null
@@ -567,23 +567,23 @@ function startEdit(cat) {
 }
 
 function fetchVisits() {
-  store.loadVisits(selectedDate.value)
+  store.adminStore.loadVisits(selectedDate.value)
 }
 
 async function onSaveUrl(cat) {
-  if (await store.saveSheetUrl(cat)) editingUrl[cat] = false
+  if (await store.adminStore.saveSheetUrl(cat)) editingUrl[cat] = false
 }
 
 async function makeAdmin(userId) {
   try {
-    await store.updateUserRole(userId, 'admin')
+    await store.adminStore.updateUserRole(userId, 'admin')
   } catch (e) {
     alert(e.message)
   }
 }
 async function revokeAdmin(userId) {
   try {
-    await store.updateUserRole(userId, 'customer')
+    await store.adminStore.updateUserRole(userId, 'customer')
   } catch (e) {
     alert(e.message)
   }
@@ -591,18 +591,18 @@ async function revokeAdmin(userId) {
 
 // При монтировании — подгрузим все по умолчанию
 onMounted(() => {
-  store.loadSheetUrls()
-  store.loadLogs(pageSize, 0)
-  store.loadVisits(selectedDate.value)
-  store.fetchSettings()
-  store.fetchReviews()
-  store.fetchUsers()
-  store.fetchRequests()
+  store.adminStore.loadSheetUrls()
+  store.adminStore.loadLogs(pageSize, 0)
+  store.adminStore.loadVisits(selectedDate.value)
+  store.adminStore.fetchSettings()
+  store.globalStore.fetchReviews()
+  store.adminStore.fetchUsers()
+  store.adminStore.fetchRequests()
 })
 
 // Когда store.settings обновляются — заполняем localSettings и снимаем снимок
 watch(
-  () => store.settings,
+  () => store.adminStore.settings,
   (newSettings) => {
     const filtered = newSettings
       .filter(s => !s.key.startsWith('sheet_url_'))
@@ -633,35 +633,35 @@ watch(
 watch(selected, (tab) => {
   switch(tab) {
     case 'preview':
-      store.loadSheetUrls()
+      store.adminStore.loadSheetUrls()
       break
     case 'sheets':
-      store.loadSheetUrls()
+      store.adminStore.loadSheetUrls()
       break
     case 'upload':
       // ничего не нужно грузить
       break
     case 'logs':
       logPage.value = 1
-      store.loadLogs(pageSize, 0)
+      store.adminStore.loadLogs(pageSize, 0)
       break
     case 'visits':
-      store.loadVisits(selectedDate.value)
+      store.adminStore.loadVisits(selectedDate.value)
       break
     case 'users':
-      store.fetchUsers()
+      store.adminStore.fetchUsers()
       break
     case 'settings':
-      store.fetchSettings()
+      store.adminStore.fetchSettings()
       break
     case 'all_reviews':
-      store.fetchReviews()
+      store.globalStore.fetchReviews()
       break
     case 'add_review':
       // ничего не грузим
       break
     case 'requests':
-      store.fetchRequests()
+      store.adminStore.fetchRequests()
       break
   }
 })

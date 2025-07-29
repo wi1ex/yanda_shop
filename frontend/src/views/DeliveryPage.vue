@@ -65,8 +65,8 @@
         <div class="info-note-block">
           <img :src="icon_info" alt=""/>
           <p>Для возврата напиши нам письмо на
-            <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`"
-               rel="noopener" class="link">{{ store.parameters.url_social_email }}</a>
+            <a v-if="store.globalStore.parameters.url_social_email" :href="`mailto:${store.globalStore.parameters.url_social_email}`"
+               rel="noopener" class="link">{{ store.globalStore.parameters.url_social_email }}</a>
             с темой
             <span class="link">«Возврат товара по заказу №»</span>
             и пришли факт несовпадения размера или модели.<br><br>
@@ -150,7 +150,7 @@ const openedFaq = ref(null);
 
 const faqItems = computed(() => {
   const items = []
-  const allKeys = Object.keys(store.parameters)
+  const allKeys = Object.keys(store.globalStore.parameters)
   const faqNumbers = [ ...new Set(allKeys
       .filter(key => key.startsWith('faq_delivery_question_') || key.startsWith('faq_delivery_answer_'))
       .map(key => parseInt(key.replace(/\D+/g, '')))
@@ -159,8 +159,8 @@ const faqItems = computed(() => {
   faqNumbers.sort((a, b) => a - b).forEach(num => {
     items.push({
       id: num,
-      question: store.parameters[`faq_delivery_question_${num}`] || `Вопрос ${num}`,
-      answer: store.parameters[`faq_delivery_answer_${num}`] || 'Ответ не найден',
+      question: store.globalStore.parameters[`faq_delivery_question_${num}`] || `Вопрос ${num}`,
+      answer: store.globalStore.parameters[`faq_delivery_answer_${num}`] || 'Ответ не найден',
     })
   })
   return items

@@ -3,30 +3,30 @@
     <h1>Профиль пользователя</h1>
 
     <!-- Если мы решили редиректить или показывать сообщение гостю, можно добавить тут отдельный блок -->
-    <div v-if="!store.isTelegramUserId(store.user?.id)" class="not-tg-message">
+    <div v-if="!store.userStore.isTelegramUserId(store.userStore.user?.id)" class="not-tg-message">
       <p>Профиль доступен только авторизованным через Telegram пользователям.</p>
       <button type="button" @click="goToPage('Home')">Вернуться на главную</button>
     </div>
 
     <!-- Если идёт загрузка профиля (и это telegram-пользователь) -->
-    <div v-else-if="store.profileLoading" class="loading-profile">
+    <div v-else-if="store.userStore.profileLoading" class="loading-profile">
       Загрузка профиля...
     </div>
 
     <!-- Если ошибка (и telegram-пользователь) -->
-    <div v-else-if="store.profileError" class="error-profile">{{ store.profileError }}</div>
+    <div v-else-if="store.userStore.profileError" class="error-profile">{{ store.profileError }}</div>
 
     <!-- Когда профиль успешно загружен (и telegram-пользователь) -->
     <div v-else class="profile-info">
-      <img :src="store.user.photo_url || icon_default_avatar_grey" alt="avatar" class="profile-avatar"/>
-      <p v-if="store.user.username">
-        <strong>Username:</strong> {{ store.user.username }}
+      <img :src="store.userStore.user.photo_url || icon_default_avatar_grey" alt="avatar" class="profile-avatar"/>
+      <p v-if="store.userStore.user.username">
+        <strong>Username:</strong> {{ store.userStore.user.username }}
       </p>
-      <p v-if="store.user.first_name">
-        <strong>Имя:</strong> {{ store.user.first_name }}
+      <p v-if="store.userStore.user.first_name">
+        <strong>Имя:</strong> {{ store.userStore.user.first_name }}
       </p>
-      <p v-if="store.user.last_name">
-        <strong>Фамилия:</strong> {{ store.user.last_name }}
+      <p v-if="store.userStore.user.last_name">
+        <strong>Фамилия:</strong> {{ store.userStore.user.last_name }}
       </p>
     </div>
   </div>

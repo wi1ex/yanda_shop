@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { useStore } from '@/store'
 
 const api = axios.create({
   baseURL: 'https://shop.yanda.twc1.net'

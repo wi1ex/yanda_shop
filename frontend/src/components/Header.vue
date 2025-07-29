@@ -19,18 +19,18 @@
     <div class="actions">
 <!--      <div @click="goToPage('Profile')" class="icon-btn" title="Профиль">-->
       <div class="icon-btn" title="Профиль">
-        <img :src="store.user.photo_url || icon_default_avatar" alt="Профиль" class="avatar" />
+        <img :src="store.userStore.user.photo_url || icon_default_avatar" alt="Профиль" class="avatar" />
       </div>
       <div @click="goToPage('Favorites')" class="icon-btn" title="Избранное">
         <img :src="icon_favorites" alt="Избранное" />
-        <span v-if="store.favorites.count" class="badge badge-fav">
-          {{ store.favorites.count < 10 ? store.favorites.count : "9+" }}
+        <span v-if="store.cartStore.favorites.count" class="badge badge-fav">
+          {{ store.cartStore.favorites.count < 10 ? store.cartStore.favorites.count : "9+" }}
         </span>
       </div>
-      <button type="button" @click="store.openCartDrawer()" class="icon-btn" title="Корзина">
+      <button type="button" @click="store.cartStore.openCartDrawer()" class="icon-btn" title="Корзина">
         <img :src="icon_cart" alt="Корзина" />
-        <span v-if="store.cart.count" class="badge badge-cart">
-          {{ store.cart.count < 10 ? store.cart.count : "9+"}}
+        <span v-if="store.cartStore.cart.count" class="badge badge-cart">
+          {{ store.cartStore.cart.count < 10 ? store.cartStore.cart.count : "9+"}}
         </span>
       </button>
     </div>
@@ -52,7 +52,7 @@
           </div>
           <transition name="submenu">
             <div v-if="openSubmenu.M" class="dropdown-sublinks">
-              <div v-for="cat in store.categoryList" :key="`M-${cat}`" class="dropdown-sublink" @click="goToCategory('M', cat)">
+              <div v-for="cat in store.productStore.categoryList" :key="`M-${cat}`" class="dropdown-sublink" @click="goToCategory('M', cat)">
                 {{ cat }}
               </div>
             </div>
@@ -64,7 +64,7 @@
           </div>
           <transition name="submenu">
             <div v-if="openSubmenu.F" class="dropdown-sublinks">
-              <div v-for="cat in store.categoryList" :key="`F-${cat}`" class="dropdown-sublink" @click="goToCategory('F', cat)">
+              <div v-for="cat in store.productStore.categoryList" :key="`F-${cat}`" class="dropdown-sublink" @click="goToCategory('F', cat)">
                 {{ cat }}
               </div>
             </div>
@@ -76,17 +76,17 @@
         </div>
         <div class="dropdown-menu-bottom">
           <div class="dropdown-menu-urls">
-            <a v-if="store.parameters.url_social_email" :href="`mailto:${store.parameters.url_social_email}`" rel="noopener">
+            <a v-if="store.globalStore.parameters.url_social_email" :href="`mailto:${store.globalStore.parameters.url_social_email}`" rel="noopener">
               <img :src="icon_logo_mail" alt="Mail" />
             </a>
-            <a v-if="store.parameters.url_social_telegram" :href="store.parameters.url_social_telegram" target="_blank" rel="noopener">
+            <a v-if="store.globalStore.parameters.url_social_telegram" :href="store.globalStore.parameters.url_social_telegram" target="_blank" rel="noopener">
               <img :src="icon_logo_telegram" alt="Telegram" />
             </a>
-            <a v-if="store.parameters.url_social_whatsapp" :href="store.parameters.url_social_whatsapp" target="_blank" rel="noopener">
+            <a v-if="store.globalStore.parameters.url_social_whatsapp" :href="store.globalStore.parameters.url_social_whatsapp" target="_blank" rel="noopener">
               <img :src="icon_logo_whatsapp" alt="WhatsApp" />
               <p class="dropdown-menu-symb">*</p>
             </a>
-            <a v-if="store.parameters.url_social_instagram" :href="store.parameters.url_social_instagram" target="_blank" rel="noopener">
+            <a v-if="store.globalStore.parameters.url_social_instagram" :href="store.globalStore.parameters.url_social_instagram" target="_blank" rel="noopener">
               <img :src="icon_logo_instagram" alt="Instagram" />
               <p class="dropdown-menu-symb">*</p>
             </a>
@@ -124,7 +124,7 @@ const route = useRoute()
 const router = useRouter()
 const menuOpen = ref(false)
 const openSubmenu = reactive({ M: false, F: false })
-const isAdmin = computed(() => store.user?.role === 'admin')
+const isAdmin = computed(() => store.userStore.user?.role === 'admin')
 const isIconWhite = computed(() => route.name === 'About' || route.name === 'Home')
 const icon_default_avatar = computed(() => isIconWhite.value ? icon_default_avatar_white : icon_default_avatar_grey)
 const icon_favorites = computed(() => isIconWhite.value ? icon_favorites_white : icon_favorites_grey)
@@ -140,9 +140,9 @@ function goToCategory(gender, category) {
   // закрываем меню и оба подменю
   toggleMenuClose()
   // сбрасываем стор
-  store.selectedCategory = category
-  store.filterGender = gender
-  store.filterSubcat = ''
+  store.productStore.selectedCategory = category
+  store.productStore.filterGender = gender
+  store.productStore.filterSubcat = ''
   // навигация в каталог с двумя фильтрами
   router.push({
     name: 'Catalog',
