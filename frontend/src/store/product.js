@@ -209,19 +209,34 @@ export const useProductStore = defineStore('product', () => {
       a.localeCompare(b, 'ru')
     )
 
+    const letterRe = /^[A-Za-z]+$/;
+    const numericRe = /^\d+(\.\d+)?$/;
+    const letterOrder = ['XXXXS','XXXS','XXS','XS','S','M','L','XL','XXL','XXXL','XXXXL'];
 
-    distinctSizes.value = Array.from(indexByField.size.keys()).sort((a, b) => {
-      const numericRe = /^\d+(\.\d+)?$/
-      const aIsNum = numericRe.test(a)
-      const bIsNum = numericRe.test(b)
-      // оба не-числа → по алфавиту
-      if (!aIsNum && !bIsNum) return a.localeCompare(b, 'ru', { sensitivity: 'base' })
-      // одно не-число и одно число → не-число впереди
-      if (!aIsNum && bIsNum) return -1
-      if (aIsNum && !bIsNum) return 1
-      // оба числа → сравниваем как числа
-      return parseFloat(a) - parseFloat(b)
-    });
+    distinctSizes.value = Array.from(indexByField.size.keys())
+      .sort((a, b) => {
+        const aIsLetter = letterRe.test(a);
+        const bIsLetter = letterRe.test(b);
+        if (aIsLetter && bIsLetter) {
+          const ai = letterOrder.indexOf(a);
+          const bi = letterOrder.indexOf(b);
+          if (ai !== -1 && bi !== -1) return ai - bi;
+          if (ai !== -1) return -1;
+          if (bi !== -1) return 1;
+          return a.localeCompare(b, 'ru', { sensitivity: 'base' });
+        }
+        if (aIsLetter) return -1;
+        if (bIsLetter) return 1;
+
+        const aIsNum = numericRe.test(a);
+        const bIsNum = numericRe.test(b);
+        if (aIsNum && bIsNum) {
+          return parseFloat(a) - parseFloat(b);
+        }
+        if (aIsNum) return -1;
+        if (bIsNum) return 1;
+        return a.localeCompare(b, 'ru', { sensitivity: 'base' });
+      });
   }
 
   async function fetchProducts() {
