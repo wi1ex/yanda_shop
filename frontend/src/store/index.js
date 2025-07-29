@@ -127,6 +127,19 @@ export const useStore = defineStore('main', () => {
   const reviews             = ref([])
   const users               = ref([])
 
+  const colorGroups         = ref([])       // Array<{ color_sku, variants }>
+  const distinctBrands      = ref([])
+  const distinctColors      = ref([])
+  const distinctSizes       = ref([])
+  const indexByField        = reactive({
+    category: new Map(),  // Map<string, Set<group>>
+    subcat:   new Map(),
+    gender:   new Map(),
+    brand:    new Map(),
+    color:    new Map(),
+    size:     new Map(),
+  })
+
   // -------------------------------------------------
   // Watchers
   // -------------------------------------------------
@@ -247,10 +260,68 @@ export const useStore = defineStore('main', () => {
   // -------------------------------------------------
   // Product Actions
   // -------------------------------------------------
+
+  // Построение индексов после загрузки всех товаров
+  function buildIndexes(productsArray) {
+    const mapGroups = {}
+    productsArray.forEach(p => {
+      if (!mapGroups[p.color_sku]) mapGroups[p.color_sku] = { color_sku: p.color_sku, variants: [] }
+      mapGroups[p.color_sku].variants.push(p)
+    })
+    const all = Object.values(mapGroups)
+    colorGroups.value = all
+
+    for (const m of Object.values(indexByField)) m.clear()
+
+    const add = (m, key, g) => {
+      if (!m.has(key)) m.set(key, new Set())
+      m.get(key).add(g)
+    }
+
+    all.forEach(g => {
+      // категории
+      new Set(g.variants.map(v => v.category))
+        .forEach(cat => add(indexByField.category, cat, g))
+      // подкатегории
+      new Set(g.variants.map(v => v.subcategory))
+        .forEach(sc => add(indexByField.subcat, sc, g))
+      // пол
+      new Set(g.variants.map(v => v.gender))
+        .forEach(gd => add(indexByField.gender, gd, g))
+      // бренд
+      new Set(g.variants.map(v => v.brand))
+        .forEach(br => add(indexByField.brand, br, g))
+      // цвет
+      new Set(g.variants.map(v => v.color))
+        .forEach(cl => add(indexByField.color, cl, g))
+      // размер
+      new Set(g.variants.map(v => v.size_label))
+        .forEach(sz => add(indexByField.size, sz, g))
+    })
+
+    // --- обновляем distinct-массивы для фильтров ---
+    distinctBrands.value = Array.from(indexByField.brand.keys())
+      .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }))
+
+    distinctColors.value = Array.from(indexByField.color.keys())
+      .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }))
+
+    // для размеров сохраняем прежнюю логику сортировки «числовые сначала»
+    distinctSizes.value = Array.from(indexByField.size.keys()).sort((a, b) => {
+      const na = parseFloat(a), nb = parseFloat(b)
+      const an = !isNaN(na), bn = !isNaN(nb)
+      if (an && bn) return na - nb
+      if (an) return -1
+      if (bn) return 1
+      return a.localeCompare(b, 'ru', { sensitivity: 'base' })
+    })
+  }
+
   async function fetchProducts() {
     try {
       const { data } = await api.get(API.product.listProducts)
       products.value = data
+      buildIndexes(data)
     } catch (e) {
       console.error('Не удалось загрузить товары:', e)
     }
@@ -401,91 +472,80 @@ export const useStore = defineStore('main', () => {
     return result;
   })
 
-  const colorGroups = computed(() => {
-    const map = {}
-    products.value.forEach(p => {
-      const key = p.color_sku
-      if (!map[key]) map[key] = { color_sku: key, variants: [] }
-      map[key].variants.push(p)
-    })
-    return Object.values(map).map(group => {
-      const minPriceVariant = group.variants.reduce((prev, cur) => prev.price <= cur.price ? prev : cur)
-      const minDateVariant = group.variants.reduce((prev, cur) => prev.created_at <= cur.created_at ? prev : cur)
-      return {
-        color_sku: group.color_sku,
-        variants: group.variants,
-        minPriceVariant,
-        minDateVariant,
-        minPrice: minPriceVariant.price,
-        minDate: minDateVariant.created_at
-      }
-    })
-  })
-
-  const distinctColors = computed(() =>
-    Array
-      .from(new Set(products.value.map(p => p.color).filter(Boolean)))
-      .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }))
-  )
-
-  const distinctBrands = computed(() =>
-    Array
-      .from(new Set(products.value.map(p => p.brand).filter(Boolean)))
-      .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }))
-  )
-
-  const distinctSizes = computed(() => {
-    const sizes = Array.from(new Set(products.value.map(p => p.size_label).filter(Boolean)))
-    return sizes.sort((a, b) => {
-      const na = parseFloat(a), nb = parseFloat(b)
-      const bothNum = !isNaN(na) && !isNaN(nb)
-      if (bothNum) return na - nb
-      if (!isNaN(na)) return -1
-      if (!isNaN(nb)) return 1
-      return a.localeCompare(b, 'ru', { sensitivity: 'base' })
-    })
-  })
+  function intersect(a, b) {
+    return new Set([...a].filter(x => b.has(x)))
+  }
+  function union(a, b) {
+    b.forEach(x => a.add(x))
+    return a
+  }
 
   const displayedProducts = computed(() => {
-    let list = colorGroups.value.slice()
+    // начальный набор — все группы
+    let result = new Set(colorGroups.value)
 
+    // 5.1. Фильтр по категории
     if (selectedCategory.value) {
-      list = list.filter(g => g.variants.some(v => v.category === selectedCategory.value))
+      result = intersect(result, indexByField.category.get(selectedCategory.value) || new Set())
     }
+    // 5.2. По подкатегории
     if (filterSubcat.value) {
-      list = list.filter(g => g.variants.some(v => v.subcategory === filterSubcat.value))
+      result = intersect(result, indexByField.subcat.get(filterSubcat.value) || new Set())
     }
-    if (['M','F'].includes(filterGender.value)) {
-      list = list.filter(g => g.variants.some(v => v.gender === filterGender.value || v.gender === 'U'))
+    // 5.3. По полу
+    if (filterGender.value) {
+      result = intersect(result, indexByField.gender.get(filterGender.value) || new Set())
     }
+    // 5.4. По брендам
     if (filterBrands.value.length) {
-      list = list.filter(g => g.variants.some(p => filterBrands.value.includes(p.brand)))
+      const u = filterBrands.value
+        .map(b => indexByField.brand.get(b) || new Set())
+        .reduce(union, new Set())
+      result = intersect(result, u)
     }
+    // 5.5. По цветам
     if (filterColors.value.length) {
-      list = list.filter(g => g.variants.some(p => filterColors.value.includes(p.color)) )
+      const u = filterColors.value
+        .map(c => indexByField.color.get(c) || new Set())
+        .reduce(union, new Set())
+      result = intersect(result, u)
     }
+    // 5.6. По размерам
+    if (filterSizes.value.length) {
+      const u = filterSizes.value
+        .map(s => indexByField.size.get(s) || new Set())
+        .reduce(union, new Set())
+      result = intersect(result, u)
+    }
+    // 5.7. По цене — единичный проход по result
     if (filterPriceMin.value != null) {
-      list = list.filter(g => g.variants.some(v => v.price >= filterPriceMin.value))
+      result = new Set([...result].filter(g =>
+        g.variants.some(v => v.price >= filterPriceMin.value)
+      ))
     }
     if (filterPriceMax.value != null) {
-      list = list.filter(g => g.variants.some(v => v.price <= filterPriceMax.value))
-    }
-    if (filterSizes.value.length) {
-      list = list.filter(g => g.variants.some(p => filterSizes.value.includes(p.size_label)) )
+      result = new Set([...result].filter(g =>
+        g.variants.some(v => v.price <= filterPriceMax.value)
+      ))
     }
 
-    list.forEach(g => { g.totalSales = g.variants.reduce((sum, v) => sum + (v.count_sales||0), 0) })
-
-    const mod = (sortOrder.value === 'asc' ? 1 : -1)
+    // 5.8. Теперь сортируем и возвращаем массив
+    const arr = Array.from(result)
+    // пересчёт totalSales и minPriceVariant как раньше …
+    arr.forEach(g => {
+      g.totalSales = g.variants.reduce((sum, v) => sum + (v.count_sales||0), 0)
+      g.minPrice   = Math.min(...g.variants.map(v => v.price))
+      g.minDate    = g.variants.reduce((p, c) => p.created_at <= c.created_at ? p : c).created_at
+    })
+    const mod = sortOrder.value === 'asc' ? 1 : -1
     if (sortBy.value === 'price') {
-      list.sort((a, b) => mod * (a.minPrice - b.minPrice))
+      arr.sort((a, b) => mod * (a.minPrice - b.minPrice))
     } else if (sortBy.value === 'sales') {
-      list.sort((a, b) => mod * (a.totalSales - b.totalSales) || mod * (a.minPrice - b.minPrice))
+      arr.sort((a, b) => mod * (a.totalSales - b.totalSales) || mod * (a.minPrice - b.minPrice))
     } else {
-      list.sort((a, b) => mod * a.minDate.localeCompare(b.minDate))
+      arr.sort((a, b) => mod * a.minDate.localeCompare(b.minDate))
     }
-
-    return list
+    return arr
   })
 
   const groupedCartItems = computed(() => {
