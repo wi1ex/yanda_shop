@@ -116,6 +116,18 @@ export const useStore = defineStore('main', () => {
   const detailData          = ref(null)
   const detailLoading       = ref(false)
   const variants            = ref([])
+  const colorGroups         = ref([])
+  const distinctBrands      = ref([])
+  const distinctColors      = ref([])
+  const distinctSizes       = ref([])
+  const indexByField        = reactive({
+    category: new Map(),
+    subcat:   new Map(),
+    gender:   new Map(),
+    brand:    new Map(),
+    color:    new Map(),
+    size:     new Map(),
+  })
 
   // === ProfilePage ===
   const profile             = ref(null)
@@ -126,19 +138,6 @@ export const useStore = defineStore('main', () => {
   const settings            = ref([])
   const reviews             = ref([])
   const users               = ref([])
-
-  const colorGroups         = ref([])       // Array<{ color_sku, variants }>
-  const distinctBrands      = ref([])
-  const distinctColors      = ref([])
-  const distinctSizes       = ref([])
-  const indexByField        = reactive({
-    category: new Map(),  // Map<string, Set<group>>
-    subcat:   new Map(),
-    gender:   new Map(),
-    brand:    new Map(),
-    color:    new Map(),
-    size:     new Map(),
-  })
 
   // -------------------------------------------------
   // Watchers
@@ -488,14 +487,23 @@ export const useStore = defineStore('main', () => {
     if (selectedCategory.value) {
       result = intersect(result, indexByField.category.get(selectedCategory.value) || new Set())
     }
+
     // 5.2. По подкатегории
     if (filterSubcat.value) {
       result = intersect(result, indexByField.subcat.get(filterSubcat.value) || new Set())
     }
-    // 5.3. По полу
-    if (filterGender.value) {
-      result = intersect(result, indexByField.gender.get(filterGender.value) || new Set())
+
+    // 5.3. По полу (M или F + U)
+    if (['M','F'].includes(filterGender.value)) {
+      // все группы с нужным полом
+      const byGen    = indexByField.gender.get(filterGender.value) || new Set()
+      // плюс все unisex
+      const byUnisex = indexByField.gender.get('U') || new Set()
+      const allGen   = new Set(byGen)
+      byUnisex.forEach(g => allGen.add(g))
+      result = intersect(result, allGen)
     }
+
     // 5.4. По брендам
     if (filterBrands.value.length) {
       const u = filterBrands.value
@@ -503,6 +511,7 @@ export const useStore = defineStore('main', () => {
         .reduce(union, new Set())
       result = intersect(result, u)
     }
+
     // 5.5. По цветам
     if (filterColors.value.length) {
       const u = filterColors.value
@@ -510,6 +519,7 @@ export const useStore = defineStore('main', () => {
         .reduce(union, new Set())
       result = intersect(result, u)
     }
+
     // 5.6. По размерам
     if (filterSizes.value.length) {
       const u = filterSizes.value
@@ -517,6 +527,7 @@ export const useStore = defineStore('main', () => {
         .reduce(union, new Set())
       result = intersect(result, u)
     }
+
     // 5.7. По цене — единичный проход по result
     if (filterPriceMin.value != null) {
       result = new Set([...result].filter(g =>
@@ -529,14 +540,23 @@ export const useStore = defineStore('main', () => {
       ))
     }
 
-    // 5.8. Теперь сортируем и возвращаем массив
+    // 5.8. Теперь превращаем Set → Array, считаем по каждой группе все метрики и сохраняем в сам объект
     const arr = Array.from(result)
-    // пересчёт totalSales и minPriceVariant как раньше …
     arr.forEach(g => {
-      g.totalSales = g.variants.reduce((sum, v) => sum + (v.count_sales||0), 0)
-      g.minPrice   = Math.min(...g.variants.map(v => v.price))
-      g.minDate    = g.variants.reduce((p, c) => p.created_at <= c.created_at ? p : c).created_at
+      // общее число продаж
+      g.totalSales = g.variants.reduce((sum, v) => sum + (v.count_sales || 0), 0)
+      // «минимальная» вариация по цене
+      const minPriceVariant = g.variants.reduce((p, c) => p.price <= c.price ? p : c)
+      g.minPriceVariant = minPriceVariant
+      g.minPrice        = minPriceVariant.price
+      // «минимальная» вариация по дате
+      const minDateVariant = g.variants.reduce((p, c) =>
+        p.created_at <= c.created_at ? p : c
+      )
+      g.minDateVariant = minDateVariant
+      g.minDate        = minDateVariant.created_at
     })
+
     const mod = sortOrder.value === 'asc' ? 1 : -1
     if (sortBy.value === 'price') {
       arr.sort((a, b) => mod * (a.minPrice - b.minPrice))
