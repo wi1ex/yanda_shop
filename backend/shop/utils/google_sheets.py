@@ -194,24 +194,34 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
     if Model is None:
         raise ValueError(f"Unknown category {category}")
 
-    # 1) Собираем метаданные из модели
+    # 1) Метаданные из модели
     FIELD_MAX: Dict[str, Optional[int]] = {col.name: getattr(col.type, "length", None) for col in Model.__table__.columns}
+    # Колонки NUMERIC → (precision, scale)
     NUM_CONSTRAINTS: Dict[str, Tuple[int, int]] = {}
+    # ENUM- и NULLABLE-инфо
     ENUM_CONSTRAINTS: Dict[str, Set[str]] = {}
     NULLABLE: Dict[str, bool] = {}
+    # Колонки, для которых NOT NULL не валидируем (авто-PK, default, server_default)
+    DEFAULTABLE: Set[str] = set()
+
     for col in Model.__table__.columns:
-        # precision & scale для Numeric
-        if hasattr(col.type, "precision") and hasattr(col.type, "scale") and col.type.precision:
+        NULLABLE[col.name] = col.nullable
+
+        # PK или явный default – отключаем NOT NULL-проверку
+        if col.primary_key or col.default is not None or col.server_default is not None:
+            DEFAULTABLE.add(col.name)
+
+        # Numeric precision/scale
+        if getattr(col.type, "precision", None) and getattr(col.type, "scale", None) is not None:
             NUM_CONSTRAINTS[col.name] = (col.type.precision, col.type.scale)
+
         # ENUM
         if isinstance(col.type, SQLEnum):
             ENUM_CONSTRAINTS[col.name] = set(col.type.enums)
-        # NOT NULL
-        NULLABLE[col.name] = col.nullable
 
     per_row_errors: Dict[str, List[str]] = {}
 
-    # 2) Перебираем каждую строку
+    # 2) Валидация по строкам
     for idx, raw in enumerate(rows, start=1):
         sku = raw.get("variant_sku", "").strip()
         errs: List[str] = []
@@ -227,10 +237,11 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
             if err:
                 errs.append(err)
 
-        # 2.2) NOT NULL
+        # 2.2) NOT NULL (кроме DEFAULTABLE)
         for field, is_nullable in NULLABLE.items():
-            if not is_nullable and not raw.get(field, "").strip():
-                errs.append(f"Поле '{field}' не может быть пустым")
+            if not is_nullable and field not in DEFAULTABLE:
+                if not raw.get(field, "").strip():
+                    errs.append(f"Поле '{field}' не может быть пустым")
 
         # 2.3) ENUM
         for field, allowed in ENUM_CONSTRAINTS.items():
@@ -240,7 +251,8 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
 
         # 2.4) Проверка обязательных полей (OPTIONAL_EMPTY)
         data_strip = {k: v.strip() for k, v in raw.items() if k != "variant_sku"}
-        errs += validate_required_fields(data_strip, OPTIONAL_EMPTY)
+        allowed_empty = OPTIONAL_EMPTY.union(DEFAULTABLE)
+        errs += validate_required_fields(data_strip, allowed_empty)
 
         if errs:
             per_row_errors.setdefault(sku or f"<строка{idx}>", []).extend(errs)
@@ -275,7 +287,6 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
             val = clean.get(field)
             if val is None:
                 continue
-            # Формируем строку с фиксированным количеством дробных знаков
             formatted = f"{val:.{scale}f}"
             int_part, _, frac_part = formatted.partition('.')
             if len(int_part) > (prec - scale) or len(frac_part) > scale:
