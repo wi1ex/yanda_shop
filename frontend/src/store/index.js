@@ -496,48 +496,38 @@ export const useStore = defineStore('main', () => {
     // 5.3. По полу (M или F + U)
     if (['M','F'].includes(filterGender.value)) {
       // все группы с нужным полом
-      const byGen    = indexByField.gender.get(filterGender.value) || new Set()
+      const byGen = indexByField.gender.get(filterGender.value) || new Set()
       // плюс все unisex
       const byUnisex = indexByField.gender.get('U') || new Set()
-      const allGen   = new Set(byGen)
+      const allGen = new Set(byGen)
       byUnisex.forEach(g => allGen.add(g))
       result = intersect(result, allGen)
     }
 
     // 5.4. По брендам
     if (filterBrands.value.length) {
-      const u = filterBrands.value
-        .map(b => indexByField.brand.get(b) || new Set())
-        .reduce(union, new Set())
+      const u = filterBrands.value.map(b => indexByField.brand.get(b) || new Set()).reduce(union, new Set())
       result = intersect(result, u)
     }
 
     // 5.5. По цветам
     if (filterColors.value.length) {
-      const u = filterColors.value
-        .map(c => indexByField.color.get(c) || new Set())
-        .reduce(union, new Set())
+      const u = filterColors.value.map(c => indexByField.color.get(c) || new Set()).reduce(union, new Set())
       result = intersect(result, u)
     }
 
     // 5.6. По размерам
     if (filterSizes.value.length) {
-      const u = filterSizes.value
-        .map(s => indexByField.size.get(s) || new Set())
-        .reduce(union, new Set())
+      const u = filterSizes.value.map(s => indexByField.size.get(s) || new Set()).reduce(union, new Set())
       result = intersect(result, u)
     }
 
     // 5.7. По цене — единичный проход по result
     if (filterPriceMin.value != null) {
-      result = new Set([...result].filter(g =>
-        g.variants.some(v => v.price >= filterPriceMin.value)
-      ))
+      result = new Set([...result].filter(g => g.variants.some(v => v.price >= filterPriceMin.value)))
     }
     if (filterPriceMax.value != null) {
-      result = new Set([...result].filter(g =>
-        g.variants.some(v => v.price <= filterPriceMax.value)
-      ))
+      result = new Set([...result].filter(g => g.variants.some(v => v.price <= filterPriceMax.value)))
     }
 
     // 5.8. Теперь превращаем Set → Array, считаем по каждой группе все метрики и сохраняем в сам объект
@@ -550,9 +540,7 @@ export const useStore = defineStore('main', () => {
       g.minPriceVariant = minPriceVariant
       g.minPrice        = minPriceVariant.price
       // «минимальная» вариация по дате
-      const minDateVariant = g.variants.reduce((p, c) =>
-        p.created_at <= c.created_at ? p : c
-      )
+      const minDateVariant = g.variants.reduce((p, c) => p.created_at <= c.created_at ? p : c)
       g.minDateVariant = minDateVariant
       g.minDate        = minDateVariant.created_at
     })
@@ -565,6 +553,7 @@ export const useStore = defineStore('main', () => {
     } else {
       arr.sort((a, b) => mod * a.minDate.localeCompare(b.minDate))
     }
+
     return arr
   })
 
