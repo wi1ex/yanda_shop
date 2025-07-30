@@ -98,96 +98,121 @@ def get_sheet_urls() -> Tuple[Response, int]:
     return jsonify(urls), 200
 
 
-@admin_api.route("/import_and_preview_sheet", methods=["POST"])
+@admin_api.route("/sync_all", methods=["POST"])
 @admin_required
 @handle_errors
-@require_json("category")
-def import_and_preview_sheet() -> Tuple[Response, int]:
+def sync_all() -> Tuple[Any, int]:
     """
-    1) Скачивает CSV
-    2) preview_rows → если есть ошибки → 400 + ошибки
-    3) process_rows → возвращает статистику загрузки
+    Atomically:
+      1) preview_rows for shoes/clothing/accessories
+      2) preview_product_images for each provided ZIP
+      — if any errors: 400 + { sheet_errors, image_errors }
+      — else: process_rows + cleanup/upload images + 201 + { sheet_stats, image_stats }
     """
-    category = request.json["category"].lower()
-    if category not in ("shoes", "clothing", "accessories"):
-        return jsonify({"error": "unknown category"}), 400
+    categories = ("shoes", "clothing", "accessories")
 
-    url = get_sheet_url(category)
-    if not url:
-        return jsonify({"error": "sheet url not set"}), 400
+    # --- 1) Проверка таблиц ---
+    sheet_errors: Dict[str, Dict[str, Any]] = {}
+    sheets_data: Dict[str, List[Dict[str, str]]] = {}
 
-    # скачиваем и парсим CSV
-    try:
-        r = requests.get(url, timeout=30)
-        r.raise_for_status()
-        text = r.content.decode("utf-8-sig")
-        rows = list(csv.DictReader(io.StringIO(text)))
-    except Exception as e:
-        logger.exception("import_and_preview_sheet fetch failed for %s", category)
-        return jsonify({"error": str(e)}), 500
+    for cat in categories:
+        url = get_sheet_url(cat)
+        if not url:
+            sheet_errors[cat] = {
+                "total_rows": 0,
+                "invalid_count": 1,
+                "errors": [
+                    {"variant_sku": cat,
+                     "messages": ["sheet_url not set"]}
+                ]
+            }
+            continue
 
-    # 1) валидация
-    errors = preview_rows(category, rows)
-    if errors:
+        # Скачиваем CSV
+        try:
+            resp = requests.get(url, timeout=20)
+            resp.raise_for_status()
+            text = resp.content.decode("utf-8-sig")
+            rows = list(csv.DictReader(io.StringIO(text)))
+        except Exception as e:
+            logger.exception("sync_all: failed fetching sheet %s", cat)
+            return jsonify({"error": f"failed fetching sheet {cat}: {e}"}), 500
+
+        errors = preview_rows(cat, rows)
+        if errors:
+            sheet_errors[cat] = {
+                "total_rows": len(rows),
+                "invalid_count": len(errors),
+                "errors": errors
+            }
+        else:
+            sheets_data[cat] = rows
+
+    # --- 2) Проверка ZIP-архивов изображений ---
+    provided = {cat: request.files.get(f"file_{cat}") for cat in categories}
+    image_errors: Dict[str, Any] = {}
+    archives: Dict[str, Dict[str, Any]] = {}
+
+    for cat, zf in provided.items():
+        if not zf or not zf.filename.lower().endswith(".zip"):
+            continue
+        data = zf.stream.read()
+        report = preview_product_images(cat, data)
+        if report.get("errors"):
+            image_errors[cat] = report
+        else:
+            archives[cat] = {
+                "bytes": data,
+                "expected_map": report["expected_map"],
+                "folder": os.path.splitext(zf.filename)[0].lower()
+            }
+
+    # Если есть ошибки в таблицах или картинках — сразу вернём 400
+    if sheet_errors or image_errors:
         return jsonify({
             "status": "validation_failed",
-            "total_rows": len(rows),
-            "invalid_count": len(errors),
-            "errors": errors
+            "sheet_errors": sheet_errors,
+            "image_errors": image_errors
         }), 400
 
-    # 2) загрузка
-    added, updated, deleted, warns, warn_skus = process_rows(category, rows)
-    desc = (f"Добавлено:{added}. Обновлено:{updated}. Удалено:{deleted}. "
-            f"Ошибок:{warns}. SKU-проблемы:{','.join(warn_skus) or 'нет'}")
-    log_change(action_type=f"Импорт и проверка {category}.csv", description=desc)
+    # --- 3) Никаких ошибок — выполняем импорт таблиц и загрузку картинок ---
+    sheet_stats: Dict[str, Any] = {}
+    for cat, rows in sheets_data.items():
+        added, updated, deleted, warns, warn_skus = process_rows(cat, rows)
+        sheet_stats[cat] = {
+            "added": added,
+            "updated": updated,
+            "deleted": deleted,
+            "warns": warns,
+            "warn_skus": warn_skus
+        }
+        desc = (f"{cat}.csv → added={added}, updated={updated}, "
+                f"deleted={deleted}, warns={warns}, sku_warns={warn_skus or 'none'}")
+        log_change(action_type=f"Импорт {cat}.csv", description=desc)
+
+    image_stats: Dict[str, Any] = {}
+    for cat, info in archives.items():
+        folder = info["folder"]
+        expected = set(info["expected_map"].keys())
+
+        # удаляем лишние
+        deleted_count, warn_count = cleanup_product_images(folder, expected)
+        # загружаем новые
+        added_count, replaced_count = upload_product_images(folder, info["bytes"])
+
+        image_stats[cat] = {
+            "added": added_count,
+            "replaced": replaced_count,
+            "deleted": deleted_count,
+            "warns": warn_count
+        }
+        log_change(action_type=f"Импорт {cat}.zip", description=str(image_stats[cat]))
 
     return jsonify({
-        "status": "ok", "added": added, "updated": updated,
-        "deleted": deleted, "warns": warns, "warn_skus": warn_skus
+        "status": "ok",
+        "sheet_stats": sheet_stats,
+        "image_stats": image_stats
     }), 201
-
-
-@admin_api.route("/upload_and_preview_images", methods=["POST"])
-@admin_required
-@handle_errors
-def upload_and_preview_images() -> Tuple[Response, int]:
-    """
-    1) preview_product_images для каждого ZIP
-    2) если есть errors → 400 + описание
-    3) иначе cleanup + upload_product_images → 201 + статистика
-    """
-    provided = {cat: request.files.get(f"file_{cat}") for cat in ("shoes", "clothing", "accessories")}
-    if not any(provided.values()):
-        return jsonify({"error": "no archive provided"}), 400
-
-    archive_bytes = {}
-    preview_reports = {}
-    for cat, zf in provided.items():
-        if not zf or not zf.filename.lower().endswith(".zip"):
-            continue
-        archive_bytes[cat] = zf.stream.read()
-        report = preview_product_images(cat, archive_bytes[cat])
-        preview_reports[cat] = report
-    # собираем все ошибки
-    errs = sum(len(r.get("errors", [])) for r in preview_reports.values())
-    if errs:
-        return jsonify({"status": "validation_failed", "reports": preview_reports}), 400
-
-    # во всех папках: cleanup + upload
-    results = {}
-    for cat, zf in provided.items():
-        if not zf or not zf.filename.lower().endswith(".zip"):
-            continue
-        # чистка
-        folder = os.path.splitext(zf.filename)[0].lower()
-        expected = set(preview_reports[cat].get("expected_map", {}).keys())
-        deleted, warn = cleanup_product_images(folder, expected)
-        # загрузка
-        added, replaced = upload_product_images(folder, archive_bytes[cat])
-        results[cat] = {"added": added, "replaced": replaced, "deleted": deleted, "warns": warn}
-        log_change(action_type=f"Импорт и проверка {cat}.zip", description=str(results[cat]))
-    return jsonify({"status": "ok", "results": results}), 201
 
 
 @admin_api.route("/get_settings", methods=["GET"])

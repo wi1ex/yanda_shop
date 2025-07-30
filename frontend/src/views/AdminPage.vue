@@ -38,6 +38,7 @@
             </ul>
             <div v-else>Все в порядке</div>
           </div>
+          <div v-else>Все в порядке</div>
         </div>
       </div>
 
@@ -47,17 +48,12 @@
           <h4>{{ catLabel(cat) }}</h4>
           <div v-if="store.adminStore.previewZipLoading[cat]">…</div>
           <div v-else-if="store.adminStore.previewZipResult[cat]">
-            <div v-if="store.adminStore.previewZipResult[cat].error" class="error">{{ store.adminStore.previewZipResult[cat].error }}</div>
-            <div v-else>
-              <ul v-if="store.adminStore.previewZipResult[cat].errors?.length">
-                <li v-for="err in store.adminStore.previewZipResult[cat].errors" :key="err.sku_or_filename">
-                  <strong>{{ err.sku_or_filename }}</strong>: {{ err.messages.join('; ') }}
-                </li>
-              </ul>
-              <div v-else>
-                Все в порядке
-              </div>
-            </div>
+            <ul v-if="store.adminStore.previewZipResult[cat].errors?.length">
+              <li v-for="err in store.adminStore.previewZipResult[cat].errors" :key="err.sku_or_filename">
+                <strong>{{ err.sku_or_filename }}</strong>: {{ err.messages.join('; ') }}
+              </li>
+            </ul>
+            <div v-else>Все в порядке</div>
           </div>
         </div>
       </div>
@@ -334,25 +330,48 @@ function resetReviewForm() {
 
 async function onProcessAll() {
   isProcessing.value = true;
+  // Сбросить прошлые превью
+  Object.keys(store.adminStore.previewSheetResult).forEach(cat => {
+    store.adminStore.previewSheetResult[cat] = null;
+  });
+  Object.keys(store.adminStore.previewZipResult).forEach(cat => {
+    store.adminStore.previewZipResult[cat] = null;
+  });
+  // Включить загрузку
+  Object.keys(store.adminStore.previewSheetLoading).forEach(cat => {
+    store.adminStore.previewSheetLoading[cat] = true;
+  });
+  Object.keys(store.adminStore.previewZipLoading).forEach(cat => {
+    store.adminStore.previewZipLoading[cat] = !!zipPreviewFiles[cat];
+  });
+
   try {
-    // 1) таблички
-    for (const cat of ['shoes','clothing','accessories']) {
-      const ok = await store.adminStore.validateAndImportSheet(cat);
-      if (!ok) throw new Error('Ошибки в таблице');
-    }
-    // 2) картинки, если выбраны
+    // передаём object { shoes: File|null, clothing: File|null, accessories: File|null }
     const filesMap = { ...zipPreviewFiles };
-    const anyZip = Object.values(filesMap).some(f=>f);
-    if (anyZip) {
-      const ok2 = await store.adminStore.validateAndUploadImages(filesMap);
-      if (!ok2) throw new Error('Ошибки в изображениях');
-    }
-    // 3) успех
+    await store.adminStore.syncAll(filesMap);
     alert('Всё проверено и загружено без ошибок');
-  } catch {
+
+  } catch (e) {
+    const data = e.response?.data || {};
+    // Заполнить preview по таблицам
+    Object.entries(data.sheet_errors || {}).forEach(([cat, report]) => {
+      store.adminStore.previewSheetResult[cat] = report;
+    });
+    // Заполнить preview по картинкам
+    Object.entries(data.image_errors || {}).forEach(([cat, report]) => {
+      store.adminStore.previewZipResult[cat] = report;
+    });
     alert('Найдены ошибки – см. детали выше');
+
   } finally {
     isProcessing.value = false;
+    // Отключить все спиннеры
+    Object.keys(store.adminStore.previewSheetLoading).forEach(cat => {
+      store.adminStore.previewSheetLoading[cat] = false;
+    });
+    Object.keys(store.adminStore.previewZipLoading).forEach(cat => {
+      store.adminStore.previewZipLoading[cat] = false;
+    });
   }
 }
 

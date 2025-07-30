@@ -20,8 +20,7 @@ export const API = {
     setUserRole:              '/api/admin/set_user_role',               // GET    - установить пользователю роль
     getDailyVisits:           '/api/admin/get_daily_visits',            // GET    - статистика визитов по часам
     getLogs:                  '/api/admin/get_logs',                    // GET    - журнал
-    importAndPreviewSheet:    '/api/admin/import_and_preview_sheet',    // POST   - проверка и загрузка Sheets
-    uploadAndPreviewImages:   '/api/admin/upload_and_preview_images',   // POST   - проверка и загрузка ZIP
+    syncAll:                  '/api/admin/sync_all',                    // POST   - проверка и загрузка Sheets и ZIP
     getSettings:              '/api/admin/get_settings',                // GET    - получить список настроек
     updateSetting:            '/api/admin/update_setting',              // POST   - изменить список настроек
     deleteSetting:            '/api/admin/delete_setting',              // DELETE - удалить параметр настроек
