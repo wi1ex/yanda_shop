@@ -55,20 +55,15 @@ def _safe_remove(bucket: str, key: str, context: str) -> bool:
 # Product images: upload and cleanup
 def upload_product_images(folder: str, archive_bytes: bytes) -> Tuple[int, int]:
     """
-    Извлекает файлы из ZIP-архива и загружает их в MinIO под префиксом folder/.
+    Принимает гарантированно валидный ZIP. Загружает все файлы в MinIO.
     Возвращает (added_count, replaced_count).
     """
     context = "upload_product_images"
-    total_size = len(archive_bytes)
-    logger.info("%s START folder=%s size=%dB", context, folder, total_size)
+    logger.info("%s START folder=%s size=%dB", context, folder, len(archive_bytes))
 
-    try:
-        archive = zipfile.ZipFile(io.BytesIO(archive_bytes))
-    except zipfile.BadZipFile as exc:
-        logger.error("%s: invalid ZIP for %s: %s", context, folder, exc)
-        return 0, 0
+    archive = zipfile.ZipFile(io.BytesIO(archive_bytes))
+    added = replaced = 0
 
-    added_count = replaced_count = 0
     for info in archive.infolist():
         if info.is_dir():
             continue
@@ -76,20 +71,18 @@ def upload_product_images(folder: str, archive_bytes: bytes) -> Tuple[int, int]:
         filename = secure_filename(os.path.basename(info.filename))
         key = f"{folder}/{filename}"
 
-        try:
-            with archive.open(info) as stream:
-                if _safe_stat(BUCKET, key):
-                    replaced_count += 1
-                else:
-                    added_count += 1
+        # Считаем, что preview уже гарантировал, что таких ключей нет «лишних».
+        exists = _safe_stat(BUCKET, key)
+        if exists:
+            replaced += 1
+        else:
+            added += 1
 
-                minio_client.put_object(BUCKET, key, stream, length=info.file_size, part_size=10 * 1024 * 1024)
-                logger.info("%s: uploaded %s", context, key)
-        except Exception as exc:
-            logger.exception("%s: error processing %s: %s", context, key, exc_info=exc)
+        with archive.open(info) as stream:
+            minio_client.put_object(BUCKET, key, stream, length=info.file_size)
 
-    logger.info("%s END added=%d replaced=%d", context, added_count, replaced_count)
-    return added_count, replaced_count
+    logger.info("%s END added=%d replaced=%d", context, added, replaced)
+    return added, replaced
 
 
 def cleanup_product_images(folder: str, expected: Set[str]) -> Tuple[int, int]:

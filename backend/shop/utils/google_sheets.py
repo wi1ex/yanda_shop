@@ -1,19 +1,14 @@
-from datetime import datetime
 from typing import Dict, List, Tuple, Optional, Any, Set
-from zoneinfo import ZoneInfo
-from psycopg2.errors import StringDataRightTruncation
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.exc import DataError
 from .db_utils import session_scope
+from .product_serializer import model_by_category
 from .validators import (
-    parse_int, parse_float, normalize_str,
-    validate_sku, validate_gender, validate_category,
+    normalize_str, validate_sku, validate_gender, validate_category,
     validate_subcategory, validate_required_fields,
     validate_int_field, validate_float_field,
     validate_length, validate_and_correct_color,
     find_duplicate_skus, validate_count_images_consistency
 )
-from .product_serializer import model_by_category
 from ..core.logging import logger
 from ..models import AdminSetting
 
@@ -100,100 +95,11 @@ def get_sheet_url(category: str) -> Optional[str]:
         return None
 
 
-def validate_row(row: Dict[str, str]) -> Tuple[Optional[str], Optional[Dict[str, str]], Optional[str]]:
-    variant = row.get("variant_sku", "").strip()
-    # SKU
-    err = validate_sku(variant)
-    if err:
-        return variant, None, variant
-    # Gender
-    err = validate_gender(row.get("gender", "").strip(), VALID_GENDERS)
-    if err:
-        return variant, None, variant
-    # Category
-    err = validate_category(row.get("category", "").strip(), VALID_CATS)
-    if err:
-        return variant, None, variant
-    # Собираем данные и проверяем обязательные
-    data = {k: v.strip() for k, v in row.items() if k != "variant_sku"}
-    req_errs = validate_required_fields(data, OPTIONAL_EMPTY)
-    if req_errs:
-        return variant, None, variant
-
-    return variant, data, None
-
-
-def apply_creation(obj, data: Dict[str, str], warn_skus: List[str], context: str) -> Tuple[int, int]:
-    warns = 0
-    for field, val_str in data.items():
-        if not hasattr(obj, field):
-            continue
-        if field in INT_FIELDS:
-            val, err = validate_int_field(field, val_str)
-            if err:
-                warns += 1
-                warn_skus.append(obj.variant_sku)
-                logger.warning("%s: %s for %s", context, err, obj.variant_sku)
-                continue
-        elif field in FLOAT_FIELDS:
-            val, err = validate_float_field(field, val_str)
-            if err:
-                warns += 1
-                warn_skus.append(obj.variant_sku)
-                logger.warning("%s: %s for %s", context, err, obj.variant_sku)
-                continue
-        else:
-            val = normalize_str(val_str)
-
-        setattr(obj, field, val)
-    obj.color_sku = f"{obj.sku}_{obj.world_sku}"
-    return 1, warns
-
-
-def apply_update(obj, data: Dict[str, str], warn_skus: List[str], context: str) -> Tuple[int, int]:
-    updated = warns = 0
-    has_changes = False
-    for field, val_str in data.items():
-        if not hasattr(obj, field):
-            continue
-        if field in INT_FIELDS:
-            new_val, err = validate_int_field(field, val_str)
-            if err:
-                warns += 1
-                warn_skus.append(obj.variant_sku)
-                logger.warning("%s: %s for %s", context, err, obj.variant_sku)
-                continue
-        elif field in FLOAT_FIELDS:
-            new_val, err = validate_float_field(field, val_str)
-            if err:
-                warns += 1
-                warn_skus.append(obj.variant_sku)
-                logger.warning("%s: %s for %s", context, err, obj.variant_sku)
-                continue
-        else:
-            new_val = normalize_str(val_str)
-
-        if getattr(obj, field) != new_val:
-            setattr(obj, field, new_val)
-            has_changes = True
-
-    new_cs = f"{obj.sku}_{obj.world_sku}"
-    if obj.color_sku != new_cs:
-        obj.color_sku = new_cs
-        has_changes = True
-
-    if has_changes:
-        obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
-        updated = 1
-    return updated, warns
-
-
 def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, Any]]:
     logger.debug("preview_rows START category=%s rows=%d", category, len(rows))
     Model = model_by_category(category)
     if Model is None:
         raise ValueError(f"Unknown category {category}")
-
     # 1) Метаданные из модели
     FIELD_MAX: Dict[str, Optional[int]] = {col.name: getattr(col.type, "length", None) for col in Model.__table__.columns}
     # Колонки NUMERIC → (precision, scale)
@@ -203,29 +109,22 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
     NULLABLE: Dict[str, bool] = {}
     # Колонки, для которых NOT NULL не валидируем (авто-PK, default, server_default)
     DEFAULTABLE: Set[str] = set()
-
     for col in Model.__table__.columns:
         NULLABLE[col.name] = col.nullable
-
         # PK или явный default – отключаем NOT NULL-проверку
         if col.primary_key or col.default is not None or col.server_default is not None:
             DEFAULTABLE.add(col.name)
-
         # Numeric precision/scale
         if getattr(col.type, "precision", None) and getattr(col.type, "scale", None) is not None:
             NUM_CONSTRAINTS[col.name] = (col.type.precision, col.type.scale)
-
         # ENUM
         if isinstance(col.type, SQLEnum):
             ENUM_CONSTRAINTS[col.name] = set(col.type.enums)
-
     per_row_errors: Dict[str, List[str]] = {}
-
     # 2) Валидация по строкам
     for idx, raw in enumerate(rows, start=1):
         sku = raw.get("variant_sku", "").strip()
         errs: List[str] = []
-
         # 2.1) Базовая валидация SKU/Gender/Category/Subcategory
         for fn, arg in [
             (validate_sku, sku),
@@ -236,28 +135,23 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
             err = fn(arg)
             if err:
                 errs.append(err)
-
         # 2.2) NOT NULL (кроме DEFAULTABLE)
         for field, is_nullable in NULLABLE.items():
             if not is_nullable and field not in DEFAULTABLE:
                 if not raw.get(field, "").strip():
                     errs.append(f"Поле '{field}' не может быть пустым")
-
         # 2.3) ENUM
         for field, allowed in ENUM_CONSTRAINTS.items():
             val = raw.get(field, "").strip()
             if val and val not in allowed:
                 errs.append(f"Недопустимое значение '{val}' для поля '{field}'")
-
         # 2.4) Проверка обязательных полей (OPTIONAL_EMPTY)
         data_strip = {k: v.strip() for k, v in raw.items() if k != "variant_sku"}
         allowed_empty = OPTIONAL_EMPTY.union(DEFAULTABLE)
         errs += validate_required_fields(data_strip, allowed_empty)
-
         if errs:
             per_row_errors.setdefault(sku or f"<строка{idx}>", []).extend(errs)
             continue
-
         # 2.5) Нормализация и проверка чисел
         clean: Dict[str, Any] = {}
         for f, s in data_strip.items():
@@ -281,7 +175,6 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
         if errs:
             per_row_errors.setdefault(sku, []).extend(errs)
             continue
-
         # 2.6) Эмуляция ограничения precision/scale
         for field, (prec, scale) in NUM_CONSTRAINTS.items():
             val = clean.get(field)
@@ -291,14 +184,12 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
             int_part, _, frac_part = formatted.partition('.')
             if len(int_part) > (prec - scale) or len(frac_part) > scale:
                 errs.append(f"Число '{field}={val}' выходит за Numeric({prec},{scale})")
-
         # 2.7) Проверка длины VARCHAR
         for field, limit in FIELD_MAX.items():
             val = clean.get(field, normalize_str(raw.get(field, "")))
             err = validate_length(field, val, limit)
             if err:
                 errs.append(err)
-
         # 2.8) Валидация и автокоррекция цвета
         ok, corrected_color, err_msg = validate_and_correct_color(raw.get("color", "").strip())
         if not ok:
@@ -308,100 +199,67 @@ def preview_rows(category: str, rows: List[Dict[str, str]]) -> List[Dict[str, An
 
         if errs:
             per_row_errors.setdefault(sku, []).extend(errs)
-
     # 3) Дубликаты SKU
     for sku, idxs in find_duplicate_skus(rows).items():
         per_row_errors.setdefault(sku, []).append(f"Дублирование variant_sku в файле (строки {idxs})")
-
     # 4) Согласованность count_images
     for sku, msg in validate_count_images_consistency(rows).items():
         per_row_errors.setdefault(sku, []).append(msg)
-
     errors = [{"variant_sku": sku, "messages": msgs} for sku, msgs in per_row_errors.items()]
     logger.debug("preview_rows END errors=%d", len(errors))
     return errors
 
 
-def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, int, int, List[str]]:
+def process_rows(category: str, rows: List[Dict[str, str]]) -> Tuple[int, int, int]:
+    """
+    Получает гарантированно валидные rows и выполняет:
+      - удаление записей с пустыми данными
+      - создание новых
+      - обновление существующих
+    Возвращает кортеж (added, updated, deleted).
+    """
     context = "process_rows"
-    logger.debug("%s START cat=%s rows=%d", context, category, len(rows))
+    logger.debug("%s START category=%s rows=%d", context, category, len(rows))
     Model = model_by_category(category)
     if Model is None:
         raise ValueError(f"Unknown category {category}")
-
-    added = updated = deleted = warns = 0
-    warn_skus: List[str] = []
-
+    added = updated = deleted = 0
+    skus = [r.get("variant_sku", "").strip() for r in rows]
     with session_scope() as session:
-        existing = session.query(Model).filter(Model.variant_sku.in_([r.get("variant_sku", "").strip() for r in rows])).all()
-        exist_map = {o.variant_sku: o for o in existing}
-
+        # Подгружаем все существующие объекты одной операцией
+        existing = session.query(Model).filter(Model.variant_sku.in_(skus)).all()
+        exist_map = {obj.variant_sku: obj for obj in existing}
         for raw in rows:
             sku = raw.get("variant_sku", "").strip()
-            # Удаление
-            data_no = {k: v.strip() for k, v in raw.items() if k != "variant_sku"}
-            if sku and all(not v for v in data_no.values()):
-                obj = exist_map.get(sku)
+            data = {k: v.strip() for k, v in raw.items() if k != "variant_sku"}
+            # 1) Удаление: если все поля, кроме SKU, пустые
+            if all(not val for val in data.values()):
+                obj = exist_map.pop(sku, None)
                 if obj:
                     session.delete(obj)
                     deleted += 1
                 continue
-            # Минимальная валидация SKU
-            if validate_sku(sku):
-                warns += 1
-                warn_skus.append(sku)
-                continue
-            # Проверка обязательных
-            missing = [f for f, v in raw.items() if f != "variant_sku" and not v.strip() and f not in OPTIONAL_EMPTY]
-            if missing:
-                warns += 1
-                warn_skus.append(sku)
-                logger.warning("%s: missing fields %s for %s", context, missing, sku)
-                continue
-            # Подготовка clean
-            clean: Dict[str, Any] = {}
-            for f, s in raw.items():
-                if f == "variant_sku": continue
-                val = s.strip()
-                clean[f] = (parse_int(val) if f in INT_FIELDS else
-                            parse_float(val) if f in FLOAT_FIELDS else
-                            normalize_str(val))
-            # Валидация цвета
-            ok, corrected_color, err_msg = validate_and_correct_color(raw.get("color", "").strip())
-            if not ok:
-                warns += 1
-                warn_skus.append(sku)
-                logger.warning("%s: invalid color '%s' for %s — %s", context, raw.get("color"), sku, err_msg)
-                continue
-            clean["color"] = corrected_color
-            # Create or update
             obj = exist_map.get(sku)
-            try:
-                if obj is None:
-                    obj = Model(variant_sku=sku)
-                    for f, v in clean.items():
-                        if hasattr(obj, f):
-                            setattr(obj, f, v)
-                    obj.color_sku = f"{obj.sku}_{obj.world_sku}"
+            if obj is None:
+                # 2) Создание новой записи
+                try:
+                    obj = Model(variant_sku=sku, **data)
                     session.add(obj)
                     added += 1
-                else:
-                    for f, v in clean.items():
-                        if hasattr(obj, f):
-                            setattr(obj, f, v)
-                    obj.color_sku = f"{obj.sku}_{obj.world_sku}"
-                    obj.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
+                except Exception:
+                    logger.exception("%s: failed to create %s", context, sku)
+                    continue
+            else:
+                # 3) Обновление существующей записи
+                changed = False
+                for field, val in data.items():
+                    if hasattr(obj, field) and getattr(obj, field) != val:
+                        setattr(obj, field, val)
+                        changed = True
+                if changed:
                     updated += 1
-                with session.begin_nested():
-                    session.flush()
-            except (StringDataRightTruncation, DataError) as e:
-                warns += 1
-                warn_skus.append(sku)
-                logger.warning("%s: truncation for %s — %s", context, sku, e)
-                continue
-            except Exception:
-                logger.exception("%s: unexpected error for %s", context, sku)
-                raise
+        # Применяем все изменения
+        session.flush()
 
-    logger.debug("%s END added=%d updated=%d deleted=%d warns=%d", context, added, updated, deleted, warns)
-    return added, updated, deleted, warns, warn_skus
+    logger.debug("%s END added=%d updated=%d deleted=%d", context, added, updated, deleted)
+    return added, updated, deleted

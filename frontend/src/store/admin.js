@@ -4,6 +4,11 @@ import api from '@/services/api';
 import { API } from './apiRoutes';
 
 export const useAdminStore = defineStore('admin', () => {
+  const sheetStats = reactive({
+    shoes: null,
+    clothing: null,
+    accessories: null
+  });
   const previewSheetResult = reactive({
     shoes: null,
     clothing: null,
@@ -13,6 +18,11 @@ export const useAdminStore = defineStore('admin', () => {
     shoes: false,
     clothing: false,
     accessories: false,
+  });
+  const imageStats = reactive({
+    shoes: null,
+    clothing: null,
+    accessories: null
   });
   const previewZipResult = reactive({
     shoes: null,
@@ -108,14 +118,24 @@ export const useAdminStore = defineStore('admin', () => {
     Object.entries(filesMap).forEach(([cat, file]) => {
       if (file) form.append(`file_${cat}`, file);
     });
-    return api.post(API.admin.syncAll, form);
+    const { data } = await api.post(API.admin.syncAll, form);
+    // сохраняем статистику
+    sheetStats.shoes     = data.sheet_stats.shoes;
+    sheetStats.clothing  = data.sheet_stats.clothing;
+    sheetStats.accessories = data.sheet_stats.accessories;
+    imageStats.shoes     = data.image_stats.shoes;
+    imageStats.clothing  = data.image_stats.clothing;
+    imageStats.accessories = data.image_stats.accessories;
+    return data;
   }
 
   return {
     // State
+    sheetStats,
     previewSheetResult,
     previewSheetLoading,
 
+    imageStats,
     previewZipResult,
     previewZipLoading,
 
