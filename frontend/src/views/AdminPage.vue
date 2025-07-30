@@ -10,18 +10,16 @@
 
     <!-- Превью-проверка -->
     <section class="preview-section" v-if="selected==='preview'">
-      <h2>Превью: Sheets & Images</h2>
+      <h2>Проверка и загрузка данных</h2>
 
       <div class="combined-preview">
         <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="zip-input-block">
           <label>{{ catLabel(cat) }}.zip</label>
-          <input type="file" @change="onPreviewZip($event,cat)" accept=".zip" :ref="el => (previewZipInputs[cat].value = el)"/>
+          <input type="file" @change="onPreviewZip($event,cat)" accept=".zip" />
         </div>
 
-        <button @click="onPreviewAll"
-                :disabled="isAny(store.adminStore.previewSheetLoading) || isAny(store.adminStore.previewZipLoading) || !hasAnyZip"
-                :aria-busy="isAny(store.adminStore.previewSheetLoading) || isAny(store.adminStore.previewZipLoading)">
-          {{ (isAny(store.adminStore.previewSheetLoading)||isAny(store.adminStore.previewZipLoading)) ? 'Проверяем…' : 'Проверить всё' }}
+        <button @click="onProcessAll" :disabled="isProcessing" :aria-busy="isProcessing">
+          {{ isProcessing ? 'Загружаем…' : 'Загрузить данные' }}
         </button>
       </div>
 
@@ -63,52 +61,6 @@
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- Google Sheets -->
-    <section class="sheets-section" v-if="selected === 'sheets'">
-      <h2>Импорт из Google Sheets</h2>
-      <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="sheet-block">
-        <h3>{{ cat.charAt(0).toUpperCase() + cat.slice(1) }}</h3>
-
-        <!-- Режим редактирования ссылки -->
-        <template v-if="editingUrl[cat]">
-          <input type="text" v-model="store.adminStore.sheetUrls[cat]" :placeholder="`URL для ${cat}`" class="sheet-input"/>
-          <button type="button" @click="onSaveUrl(cat)" :disabled="store.adminStore.sheetSaveLoading[cat]" class="sheet-save">
-            {{ store.adminStore.sheetSaveLoading[cat] ? 'Сохранение…' : 'Сохранить ссылку' }}
-          </button>
-        </template>
-
-        <!-- Стандартный режим -->
-        <template v-else>
-          <button type="button" v-if="!store.adminStore.sheetUrls[cat]" @click="startEdit(cat)">
-            Загрузить ссылку
-          </button>
-          <button type="button" v-else @click="startEdit(cat)" :disabled="store.adminStore.sheetImportLoading[cat]">
-            Обновить ссылку
-          </button>
-
-          <button type="button" @click="store.adminStore.importSheet(cat)" :disabled="!store.adminStore.sheetUrls[cat] || store.adminStore.sheetImportLoading[cat] || editingUrl[cat]" class="sheet-import">
-            {{ store.adminStore.sheetImportLoading[cat] ? 'Обновление…' : 'Обновить данные' }}
-          </button>
-        </template>
-
-        <p v-if="store.adminStore.sheetResult[cat]" class="upload-result">
-          {{ store.adminStore.sheetResult[cat] }}
-        </p>
-      </div>
-    </section>
-
-    <!-- Загрузка ZIP -->
-    <section class="upload-section" v-if="selected === 'upload'">
-      <h2>Загрузить ZIP с изображениями</h2>
-      <form @submit.prevent="submitZip">
-        <input type="file" accept=".zip" @change="onZipSelected" ref="zipInput" />
-        <button type="submit" :disabled="!zipFile || store.adminStore.zipLoading">
-          {{ store.adminStore.zipLoading ? 'Загрузка…' : 'Загрузить ZIP' }}
-        </button>
-      </form>
-      <p v-if="store.adminStore.zipResult" class="upload-result">{{ store.adminStore.zipResult }}</p>
     </section>
 
     <!-- Логи изменений товаров/изображений -->
@@ -213,11 +165,11 @@
           <th>Значение</th>
           <th></th>
         </tr>
-        <tr v-for="s in filteredSettings" :key="s.key">
+        <tr v-for="s in localSettings" :key="s.key">
           <td>{{ s.key }}</td>
           <td><input v-model="s.value" /></td>
-          <td><button type="button" class="delete-icon" :disabled="s.key.startsWith('delivery_')" @click="deleteSetting(s.key)"
-                      :title="s.key.startsWith('delivery_') ? 'Нельзя удалить системный параметр' : 'Удалить параметр'">🗑️</button></td>
+          <td><button type="button" class="delete-icon" :disabled="s.key.startsWith('delivery_') || s.key.startsWith('sheet_url_')" @click="deleteSetting(s.key)"
+                      :title="s.key.startsWith('delivery_') || s.key.startsWith('sheet_url_') ? 'Нельзя удалить системный параметр' : 'Удалить параметр'">🗑️</button></td>
         </tr>
       </table>
 
@@ -314,9 +266,6 @@ const localSettings    = reactive([])
 const originalSnapshot = ref('')
 const savingAll        = ref(false)
 const saving           = ref(null)
-const zipFile          = ref(null)
-const zipInput         = ref(null)
-const editingUrl       = reactive({ shoes:false, clothing:false, accessories:false })
 const selectedDate     = ref(new Date().toISOString().slice(0, 10))
 const fileInput1       = ref(null)
 const fileInput2       = ref(null)
@@ -330,29 +279,19 @@ const pageSize         = 10
 const newSetting       = reactive({ key: '', value: '' })
 const reviewForm       = ref(null)
 const isLoading        = ref(false)
-const previewZipInputs = {
-  shoes: ref(null),
-  clothing: ref(null),
-  accessories: ref(null),
-}
+const isProcessing     = ref(false)
 const tabs             = [
-  { key:'preview',     label:'Проверка данных'      },
-  { key:'sheets',      label:'Загрузка таблиц'      },
-  { key:'upload',      label:'Загрузка изображений' },
-  { key:'logs',        label:'Логи сервера'         },
+  { key:'preview',     label:'Проверка и загрузка данных' },
+  { key:'logs',        label:'Логи сервера' },
   { key:'visits',      label:'Статистика посещений' },
   { key:'users',       label:'Список пользователей' },
   { key:'settings',    label:'Настройка переменных' },
-  { key:'all_reviews', label:'Список отзывов'       },
-  { key:'add_review',  label:'Добавить отзыв'       },
-  { key:'requests',    label:'Заявки клиентов'      },
+  { key:'all_reviews', label:'Список отзывов' },
+  { key:'add_review',  label:'Добавить отзыв' },
+  { key:'requests',    label:'Заявки клиентов' },
 ]
 
 const zipPreviewFiles = reactive({ shoes:null, clothing:null, accessories:null });
-
-const hasAnyZip = computed(() =>
-  Object.values(zipPreviewFiles).some(f=>f)
-);
 
 // Форма добавления отзыва
 const form = reactive({
@@ -369,14 +308,9 @@ const userColumns = computed(() => {
   return [...first, ...rest]
 })
 
-// Фильтруем параметры: убираем все, ключи которых начинаются на `sheet_url_`
-const filteredSettings = computed(() =>
-  localSettings.filter(s => !s.key.startsWith('sheet_url_'))
-)
-
 // Флаг: было ли хоть одно изменение?
 const hasSettingsChanged = computed(() =>
-  JSON.stringify(filteredSettings.value) !== originalSnapshot.value
+  JSON.stringify(localSettings) !== originalSnapshot.value
 )
 
 const maxTotal = computed(() => {
@@ -398,14 +332,28 @@ function resetReviewForm() {
   })
 }
 
-async function onPreviewAll() {
-  await store.adminStore.previewEverything(zipPreviewFiles)
-  // очистить реактивные файлы
-  Object.keys(zipPreviewFiles).forEach(cat => zipPreviewFiles[cat] = null)
-  // очистить сами инпуты
-  Object.values(previewZipInputs).forEach(refEl => {
-    if (refEl.value) refEl.value.value = ''
-  })
+async function onProcessAll() {
+  isProcessing.value = true;
+  try {
+    // 1) таблички
+    for (const cat of ['shoes','clothing','accessories']) {
+      const ok = await store.adminStore.validateAndImportSheet(cat);
+      if (!ok) throw new Error('Ошибки в таблице');
+    }
+    // 2) картинки, если выбраны
+    const filesMap = { ...zipPreviewFiles };
+    const anyZip = Object.values(filesMap).some(f=>f);
+    if (anyZip) {
+      const ok2 = await store.adminStore.validateAndUploadImages(filesMap);
+      if (!ok2) throw new Error('Ошибки в изображениях');
+    }
+    // 3) успех
+    alert('Всё проверено и загружено без ошибок');
+  } catch {
+    alert('Найдены ошибки – см. детали выше');
+  } finally {
+    isProcessing.value = false;
+  }
 }
 
 function onPreviewZip(e,cat) {
@@ -416,17 +364,9 @@ function catLabel(cat) {
   return cat.charAt(0).toUpperCase() + cat.slice(1);
 }
 
-function isAny(obj) {
-  return Object.values(obj).some(v => v);
-}
-
 function onFile(e, idx) {
   const f = e.target.files[0]
   if (f) files[idx] = f
-}
-
-function onZipSelected(e) {
-  zipFile.value = e.target.files[0]
 }
 
 function prevPage() {
@@ -494,15 +434,6 @@ async function onSubmitReview() {
   }
 }
 
-// Другие действия
-function submitZip() {
-  if (!zipFile.value) return
-  store.adminStore.uploadZip(zipFile.value).then(() => {
-    zipFile.value = null
-    zipInput.value.value = ''
-  })
-}
-
 // Функция удаления отзыва
 async function deleteReview(id) {
   if (confirm(`Удалить отзыв #${id}?`)) {
@@ -523,7 +454,7 @@ async function onDeleteRequest(id) {
 async function saveAllSettings() {
   savingAll.value = true
   try {
-    const changed = filteredSettings.value.filter(s => {
+    const changed = localSettings.filter(s => {
       const orig = JSON.parse(originalSnapshot.value)
         .find(o => o.key === s.key)
       return orig && orig.value !== s.value
@@ -562,16 +493,8 @@ async function onAddSetting() {
   saving.value = null
 }
 
-function startEdit(cat) {
-  editingUrl[cat] = true
-}
-
 function fetchVisits() {
   store.adminStore.loadVisits(selectedDate.value)
-}
-
-async function onSaveUrl(cat) {
-  if (await store.adminStore.saveSheetUrl(cat)) editingUrl[cat] = false
 }
 
 async function makeAdmin(userId) {
@@ -591,7 +514,6 @@ async function revokeAdmin(userId) {
 
 // При монтировании — подгрузим все по умолчанию
 onMounted(() => {
-  store.adminStore.loadSheetUrls()
   store.adminStore.loadLogs(pageSize, 0)
   store.adminStore.loadVisits(selectedDate.value)
   store.adminStore.fetchSettings()
@@ -604,10 +526,8 @@ onMounted(() => {
 watch(
   () => store.adminStore.settings,
   (newSettings) => {
-    const filtered = newSettings
-      .filter(s => !s.key.startsWith('sheet_url_'))
-    // Обновляем или добавляем
-    filtered.forEach(ns => {
+    // синхронизируем localSettings со всеми параметрами из бекенда
+    newSettings.forEach(ns => {
       const idx = localSettings.findIndex(ls => ls.key === ns.key)
       if (idx >= 0) {
         localSettings[idx].value = ns.value
@@ -615,13 +535,12 @@ watch(
         localSettings.push({ key: ns.key, value: ns.value })
       }
     })
-    // Убираем удалённые
+    // удаляем те, которых больше нет на бекенде
     for (let i = localSettings.length - 1; i >= 0; i--) {
-      if (!filtered.some(ns => ns.key === localSettings[i].key)) {
+      if (!newSettings.some(ns => ns.key === localSettings[i].key)) {
         localSettings.splice(i, 1)
       }
     }
-    // Снимок для кнопки «Сохранить всё»
     originalSnapshot.value = JSON.stringify(
       localSettings.map(s => ({ key: s.key, value: s.value }))
     )
@@ -633,13 +552,7 @@ watch(
 watch(selected, (tab) => {
   switch(tab) {
     case 'preview':
-      store.adminStore.loadSheetUrls()
-      break
-    case 'sheets':
-      store.adminStore.loadSheetUrls()
-      break
-    case 'upload':
-      // ничего не нужно грузить
+      // ничего не грузим
       break
     case 'logs':
       logPage.value = 1
@@ -767,31 +680,6 @@ watch(selected, (tab) => {
       cursor: not-allowed;
     }
   }
-}
-
-/* --- Секции CSV/ZIP и Google Sheets --- */
-.upload-section,
-.sheets-section {
-  margin-bottom: 24px;
-}
-
-.sheet-block {
-  margin-bottom: 20px;
-}
-
-.sheet-input {
-  width: 60%;
-  margin-right: 8px;
-}
-
-.sheet-save,
-.sheet-import {
-  margin-right: 8px;
-}
-
-.upload-result {
-  margin-top: 8px;
-  color: #bada55;
 }
 
 /* --- Секция логов изменений --- */
@@ -1173,32 +1061,6 @@ watch(selected, (tab) => {
     }
   }
 
-  /* Google Sheets */
-  .sheet-block {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .sheet-input {
-    width: 100% !important;
-    margin-right: 0;
-  }
-  .sheet-save,
-  .sheet-import {
-    width: 100%;
-  }
-
-  /* CSV/ZIP upload */
-  .upload-section form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .upload-section input,
-  .upload-section button {
-    width: 100%;
-  }
-
   /* Таблица логов */
   .logs-table {
     display: block;
@@ -1291,44 +1153,12 @@ watch(selected, (tab) => {
     margin: 0 8px;
   }
 
-  /* Google Sheets / ZIP */
-  .sheet-input {
-    width: 100% !important;
-    margin-bottom: 8px;
-  }
-  .sheet-save, .sheet-import, .upload-section button {
-    width: 100%;
-  }
-
   .tabs {
     flex-wrap: wrap;
     gap: 4px;
   }
   .tabs button {
     flex: 1 1 45%;
-  }
-
-  .sheet-block {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .sheet-input {
-    width: 100%;
-  }
-  .sheet-save,
-  .sheet-import {
-    width: 100%;
-  }
-
-  .upload-section form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .upload-section input,
-  .upload-section button {
-    width: 100%;
   }
 
   .logs-table {

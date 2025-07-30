@@ -354,5 +354,6 @@ def preview_product_images(folder: str, archive_bytes: bytes) -> Dict[str, Any]:
     return {
         "errors":          errors,
         "total_expected":  total_expected,
-        "total_processed": processed_count
+        "total_processed": processed_count,
+        "expected_map":    expected_map,
     }
