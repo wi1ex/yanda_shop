@@ -967,7 +967,7 @@ watch(selected, (tab) => {
       }
     }
   }
-  > table .delete-icon {
+  table .delete-icon {
     background: none;
     border: none;
     font-size: 1.1rem;
