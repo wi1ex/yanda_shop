@@ -17,7 +17,6 @@ from ..utils.jwt_utils import admin_required
 from ..utils.logging_utils import log_change
 from ..utils.route_utils import handle_errors, require_json
 from ..utils.cache_utils import load_delivery_options, load_parameters
-from ..utils.product_serializer import model_by_category
 from ..utils.storage_utils import (
     cleanup_product_images,
     upload_product_images,
@@ -121,10 +120,7 @@ def sync_all() -> Tuple[Any, int]:
             sheet_errors[cat] = {
                 "total_rows": 0,
                 "invalid_count": 1,
-                "errors": [
-                    {"variant_sku": cat,
-                     "messages": ["sheet_url not set"]}
-                ]
+                "errors": [{"variant_sku": cat, "messages": ["sheet_url not set"]}]
             }
             continue
 
@@ -167,27 +163,30 @@ def sync_all() -> Tuple[Any, int]:
                 "folder": os.path.splitext(zf.filename)[0].lower()
             }
 
-    # Если есть ошибки в таблицах или картинках — сразу вернём 400
+    # Если есть ошибки в таблицах или картинках — логируем и возвращаем 400
     if sheet_errors or image_errors:
+        # Общий лог о неудачной попытке синхронизации
+        log_change(
+            action_type="Синхронизация данных (неуспешно)",
+            description=f"Ошибки валидации: таблицы={list(sheet_errors.keys()) or 'нет'}, "
+                        f"изображения={list(image_errors.keys()) or 'нет'}"
+        )
         return jsonify({
             "status": "validation_failed",
             "sheet_errors": sheet_errors,
             "image_errors": image_errors
         }), 400
 
-    # --- 3) Никаких ошибок — выполняем импорт таблиц и загрузку картинок ---
+    # --- 3) Импорт таблиц и загрузка картинок ---
     sheet_stats: Dict[str, Any] = {}
     for cat, rows in sheets_data.items():
-        added, updated, deleted, warns, warn_skus = process_rows(cat, rows)
+        added, updated, deleted = process_rows(cat, rows)
         sheet_stats[cat] = {
             "added": added,
             "updated": updated,
             "deleted": deleted,
-            "warns": warns,
-            "warn_skus": warn_skus
         }
-        desc = (f"{cat}.csv → added={added}, updated={updated}, "
-                f"deleted={deleted}, warns={warns}, sku_warns={warn_skus or 'none'}")
+        desc = f"{cat}.csv → added={added}, updated={updated}, deleted={deleted}"
         log_change(action_type=f"Импорт {cat}.csv", description=desc)
 
     image_stats: Dict[str, Any] = {}
@@ -195,9 +194,7 @@ def sync_all() -> Tuple[Any, int]:
         folder = info["folder"]
         expected = set(info["expected_map"].keys())
 
-        # удаляем лишние
         deleted_count, warn_count = cleanup_product_images(folder, expected)
-        # загружаем новые
         added_count, replaced_count = upload_product_images(folder, info["bytes"])
 
         image_stats[cat] = {
@@ -207,6 +204,10 @@ def sync_all() -> Tuple[Any, int]:
             "warns": warn_count
         }
         log_change(action_type=f"Импорт {cat}.zip", description=str(image_stats[cat]))
+
+    # Лог успешной синхронизации
+    log_change(action_type="Синхронизация данных (успешно)",
+               description=f"sheet_stats={sheet_stats}, image_stats={image_stats}")
 
     return jsonify({
         "status": "ok",
