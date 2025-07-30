@@ -98,44 +98,17 @@ def get_sheet_urls() -> Tuple[Response, int]:
     return jsonify(urls), 200
 
 
-@admin_api.route("/update_sheet_url", methods=["POST"])
-@admin_required
-@handle_errors
-@require_json("category", "url")
-def update_sheet_url() -> Tuple[Response, int]:
-    """POST /api/admin/update_sheet_url {category, url}"""
-    data = request.get_json()
-    category = data["category"].lower()
-    url = data["url"].strip()
-
-    if category not in ("shoes", "clothing", "accessories"):
-        return jsonify({"error": "unknown category"}), 400
-
-    with session_scope() as session:
-        key = f"sheet_url_{category}"
-        setting = session.get(AdminSetting, key)
-        if setting:
-            setting.value = url
-        else:
-            session.add(AdminSetting(key=key, value=url))
-            setting = session.get(AdminSetting, key)
-        setting.updated_at = datetime.now(ZoneInfo("Europe/Moscow"))
-
-    log_change(action_type="Обновление URL таблицы", description=f"{category}: {url}")
-
-    logger.info("update_sheet_url: updated %s -> %s", category, url)
-    return jsonify({"status": "ok"}), 200
-
-
-@admin_api.route("/import_sheet", methods=["POST"])
+@admin_api.route("/import_and_preview_sheet", methods=["POST"])
 @admin_required
 @handle_errors
 @require_json("category")
-def import_sheet() -> Tuple[Response, int]:
-    """POST /api/admin/import_sheet {category}"""
-    data = request.get_json()
-    category = data["category"].lower()
-
+def import_and_preview_sheet() -> Tuple[Response, int]:
+    """
+    1) Скачивает CSV
+    2) preview_rows → если есть ошибки → 400 + ошибки
+    3) process_rows → возвращает статистику загрузки
+    """
+    category = request.json["category"].lower()
     if category not in ("shoes", "clothing", "accessories"):
         return jsonify({"error": "unknown category"}), 400
 
@@ -143,140 +116,78 @@ def import_sheet() -> Tuple[Response, int]:
     if not url:
         return jsonify({"error": "sheet url not set"}), 400
 
+    # скачиваем и парсим CSV
     try:
         r = requests.get(url, timeout=30)
         r.raise_for_status()
-        csv_text = r.content.decode("utf-8-sig")
-        rows = list(csv.DictReader(io.StringIO(csv_text)))
+        text = r.content.decode("utf-8-sig")
+        rows = list(csv.DictReader(io.StringIO(text)))
     except Exception as e:
-        logger.exception("import_sheet: fetch CSV failed for %s", category)
+        logger.exception("import_and_preview_sheet fetch failed for %s", category)
         return jsonify({"error": str(e)}), 500
 
-    added, updated, deleted, warns, warn_skus = process_rows(category, rows)
-
-    desc = (f"Добавлено: {added}. Изменено: {updated}. Удалено: {deleted}. Ошибки: {warns}. "
-            f"Проблемные SKU: {','.join(warn_skus) if warn_skus else 'нет'}")
-    log_change(action_type=f"Успешная загрузка {category}.csv", description=desc)
-
-    logger.info("import_sheet: %s added=%d updated=%d deleted=%d warns=%d", category, added, updated, deleted, warns)
-    return jsonify({"status": "ok",
-                    "added": added,
-                    "updated": updated,
-                    "deleted": deleted,
-                    "warns": warns,
-                    "warn_skus": warn_skus}), 201
-
-
-@admin_api.route("/preview_sheet", methods=["POST"])
-@admin_required
-@handle_errors
-@require_json("category")
-def preview_sheet() -> Tuple[Response, int]:
-    """
-    POST /api/admin/preview_sheet { category }
-    Возвращает SKU, не прошедшие валидацию ещё до обновления.
-    """
-    data = request.get_json()
-    category = data["category"].lower()
-    if category not in ("shoes", "clothing", "accessories"):
-        return jsonify({"error": "unknown category"}), 400
-
-    url = get_sheet_url(category)
-    if not url:
-        return jsonify({"error": "sheet url not set"}), 400
-
-    try:
-        r = requests.get(url, timeout=30)
-        r.raise_for_status()
-        csv_text = r.content.decode("utf-8-sig")
-        rows = list(csv.DictReader(io.StringIO(csv_text)))
-    except Exception as e:
-        logger.exception("preview_sheet: fetch CSV failed for %s", category)
-        return jsonify({"error": str(e)}), 500
-
+    # 1) валидация
     errors = preview_rows(category, rows)
+    if errors:
+        return jsonify({
+            "status": "validation_failed",
+            "total_rows": len(rows),
+            "invalid_count": len(errors),
+            "errors": errors
+        }), 400
 
-    description = f"category={category}, total_rows={len(rows)}, invalid_count={len(errors)}"
-    log_change(action_type="Проверка таблицы", description=description)
+    # 2) загрузка
+    added, updated, deleted, warns, warn_skus = process_rows(category, rows)
+    desc = (f"Добавлено:{added}. Обновлено:{updated}. Удалено:{deleted}. "
+            f"Ошибок:{warns}. SKU-проблемы:{','.join(warn_skus) or 'нет'}")
+    log_change(action_type=f"Импорт и проверка {category}.csv", description=desc)
 
     return jsonify({
-        "category": category,
-        "total_rows": len(rows),
-        "invalid_count": len(errors),
-        "errors": errors
-    }), 200
+        "status": "ok", "added": added, "updated": updated,
+        "deleted": deleted, "warns": warns, "warn_skus": warn_skus
+    }), 201
 
 
-@admin_api.route("/upload_images", methods=["POST"])
+@admin_api.route("/upload_and_preview_images", methods=["POST"])
 @admin_required
 @handle_errors
-def upload_images() -> Tuple[Response, int]:
-    """POST /api/admin/upload_images form-data: file(.zip)"""
-    z = request.files.get("file")
-    if not z or not z.filename.lower().endswith(".zip"):
-        return jsonify({"error": "file required and must be .zip"}), 400
-
-    folder = os.path.splitext(z.filename)[0].lower()
-    expected = set()
-    if folder in ("shoes", "clothing", "accessories"):
-        Model = model_by_category(folder)
-        with session_scope() as session:
-            for obj in session.query(Model).all():
-                cnt = getattr(obj, "count_images", 0) or 0
-                for i in range(1, cnt + 1):
-                    expected.add(f"{obj.color_sku}_{i}")
-
-    deleted, cleanup_warns = cleanup_product_images(folder, expected)
-    logger.debug("upload_images: cleanup done deleted=%d warns=%d", deleted, cleanup_warns)
-
-    archive_bytes = z.stream.read()
-    added, replaced = upload_product_images(folder, archive_bytes)
-    logger.debug("upload_images: upload done added=%d replaced=%d", added, replaced)
-
-    desc = (f"Добавлено: {added}. Изменено: {replaced}. "
-            f"Удалено: {deleted}. Ошибки при cleanup: {cleanup_warns}")
-    log_change(action_type=f"Успешная загрузка {z.filename}", description=desc)
-
-    logger.info("upload_images: finished filename=%s added=%d replaced=%d deleted=%d warns=%d",
-                z.filename, added, replaced, deleted, cleanup_warns)
-    return jsonify({"status": "ok", "added": added, "replaced": replaced, "deleted": deleted, "warns": cleanup_warns}), 201
-
-
-@admin_api.route("/preview_images", methods=["POST"])
-@admin_required
-@handle_errors
-def preview_images() -> Tuple[Response, int]:
+def upload_and_preview_images() -> Tuple[Response, int]:
     """
-    POST /api/admin/preview_images form-data: file_shoes, file_clothing, file_accessories
-    Возвращает для каждой категории результат preview_product_images.
-    Если ни одного файла не передано — 400.
+    1) preview_product_images для каждого ZIP
+    2) если есть errors → 400 + описание
+    3) иначе cleanup + upload_product_images → 201 + статистика
     """
-    result: Dict[str, Any] = {}
-    # Собираем только реально пришедшие файлы
-    provided = {folder: request.files.get(f"file_{folder}") for folder in ("shoes", "clothing", "accessories")}
-    # Если ни одного архива
-    if not any(f for f in provided.values()):
+    provided = {cat: request.files.get(f"file_{cat}") for cat in ("shoes", "clothing", "accessories")}
+    if not any(provided.values()):
         return jsonify({"error": "no archive provided"}), 400
 
-    for folder, zf in provided.items():
+    archive_bytes = {}
+    preview_reports = {}
+    for cat, zf in provided.items():
         if not zf or not zf.filename.lower().endswith(".zip"):
-            # пропущено намеренно, чтобы клиент увидел, что не прислал файл
-            result[folder] = {"skipped": True}
             continue
+        archive_bytes[cat] = zf.stream.read()
+        report = preview_product_images(cat, archive_bytes[cat])
+        preview_reports[cat] = report
+    # собираем все ошибки
+    errs = sum(len(r.get("errors", [])) for r in preview_reports.values())
+    if errs:
+        return jsonify({"status": "validation_failed", "reports": preview_reports}), 400
 
-        archive_bytes = zf.stream.read()
-        report = preview_product_images(folder, archive_bytes)
-        result[folder] = report
-
-    description = "; ".join(f"{folder}: expected={report.get('total_expected', 0)}, "
-                            f"processed={report.get('total_processed', 0)}, "
-                            f"invalid_count={len(report.get('errors', []))}"
-                            for folder, report in result.items())
-    log_change(action_type="Проверка изображений", description=description)
-
-    logger.info("preview_images: finished with folders %s",
-                ", ".join(f"{f}={'skipped' if 'skipped' in result[f] else 'ok'}" for f in result))
-    return jsonify(result), 200
+    # во всех папках: cleanup + upload
+    results = {}
+    for cat, zf in provided.items():
+        if not zf or not zf.filename.lower().endswith(".zip"):
+            continue
+        # чистка
+        folder = os.path.splitext(zf.filename)[0].lower()
+        expected = set(preview_reports[cat].get("expected_map", {}).keys())
+        deleted, warn = cleanup_product_images(folder, expected)
+        # загрузка
+        added, replaced = upload_product_images(folder, archive_bytes[cat])
+        results[cat] = {"added": added, "replaced": replaced, "deleted": deleted, "warns": warn}
+        log_change(action_type=f"Импорт и проверка {cat}.zip", description=str(results[cat]))
+    return jsonify({"status": "ok", "results": results}), 201
 
 
 @admin_api.route("/get_settings", methods=["GET"])
