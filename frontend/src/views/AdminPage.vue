@@ -22,14 +22,16 @@
       <h3>Результаты импорта</h3>
       <div v-for="cat in ['shoes','clothing','accessories']" :key="cat">
         <h4>{{ catLabel(cat) }}</h4>
-        <p>Добавлено: {{ store.adminStore.sheetStats[cat].added }}</p>
-        <p>Обновлено: {{ store.adminStore.sheetStats[cat].updated }}</p>
-        <p>Удалено: {{ store.adminStore.sheetStats[cat].deleted }}</p>
         <p>
-          Изобр.: добавлено {{ store.adminStore.imageStats[cat].added }},
-          заменено {{ store.adminStore.imageStats[cat].replaced }},
-          удалено {{ store.adminStore.imageStats[cat].deleted }},
-          предупреждений {{ store.adminStore.imageStats[cat].warns }}
+          Таблица - добавлено: {{ store.adminStore.sheetStats[cat].added }},
+          обновлено: {{ store.adminStore.sheetStats[cat].updated }},
+          удалено: {{ store.adminStore.sheetStats[cat].deleted }}
+        </p>
+        <p>
+          Изображения - добавлено: {{ store.adminStore.imageStats[cat].added }},
+          заменено: {{ store.adminStore.imageStats[cat].replaced }},
+          удалено: {{ store.adminStore.imageStats[cat].deleted }},
+          ошибок: {{ store.adminStore.imageStats[cat].warns }}
         </p>
       </div>
       <div class="sheet-preview-block">
