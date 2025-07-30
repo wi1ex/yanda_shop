@@ -132,7 +132,12 @@ def sync_all() -> Tuple[Any, int]:
             rows = list(csv.DictReader(io.StringIO(text)))
         except Exception as e:
             logger.exception("sync_all: failed fetching sheet %s", cat)
-            return jsonify({"error": f"failed fetching sheet {cat}: {e}"}), 500
+            sheet_errors[cat] = {
+                "total_rows": 0,
+                "invalid_count": 1,
+                "errors": [{"variant_sku": cat, "messages": [f"failed fetching sheet: {e}"]}]
+            }
+            continue
 
         errors = preview_rows(cat, rows)
         if errors:
