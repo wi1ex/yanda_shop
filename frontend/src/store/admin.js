@@ -4,35 +4,69 @@ import api from '@/services/api';
 import { API } from './apiRoutes';
 
 export const useAdminStore = defineStore('admin', () => {
+  // === 1. Статистика по таблицам ===
   const sheetStats = reactive({
-    shoes: null,
-    clothing: null,
-    accessories: null
+    shoes: {
+      added:   0,
+      updated: 0,
+      deleted: 0
+    },
+    clothing: {
+      added:   0,
+      updated: 0,
+      deleted: 0
+    },
+    accessories: {
+      added:   0,
+      updated: 0,
+      deleted: 0
+    }
   });
+
+  // === 2. Результаты превью таблиц ===
   const previewSheetResult = reactive({
-    shoes: null,
-    clothing: null,
-    accessories: null,
+    shoes:      null,
+    clothing:   null,
+    accessories:null,
   });
   const previewSheetLoading = reactive({
-    shoes: false,
-    clothing: false,
-    accessories: false,
+    shoes:      false,
+    clothing:   false,
+    accessories:false,
   });
+
+  // === 3. Статистика по картинкам ===
   const imageStats = reactive({
-    shoes: null,
-    clothing: null,
-    accessories: null
+    shoes: {
+      added:    0,
+      replaced: 0,
+      deleted:  0,
+      warns:    0
+    },
+    clothing: {
+      added:    0,
+      replaced: 0,
+      deleted:  0,
+      warns:    0
+    },
+    accessories: {
+      added:    0,
+      replaced: 0,
+      deleted:  0,
+      warns:    0
+    }
   });
+
+  // === 4. Результаты превью зипов ===
   const previewZipResult = reactive({
-    shoes: null,
-    clothing: null,
-    accessories: null,
+    shoes:      null,
+    clothing:   null,
+    accessories:null,
   });
   const previewZipLoading = reactive({
-    shoes: false,
-    clothing: false,
-    accessories: false,
+    shoes:      false,
+    clothing:   false,
+    accessories:false,
   });
 
   // Logs & visits
