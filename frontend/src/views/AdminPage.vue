@@ -20,7 +20,7 @@
         </button>
       </div>
       <h3>Результаты импорта</h3>
-      <div v-for="cat in ['shoes','clothing','accessories']" :key="cat">
+      <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" v-if="statsLoaded">
         <h4>{{ catLabel(cat) }}</h4>
         <p>
           Таблица - добавлено: {{ store.adminStore.sheetStats[cat].added }},
@@ -285,6 +285,7 @@ const newSetting       = reactive({ key: '', value: '' })
 const reviewForm       = ref(null)
 const isLoading        = ref(false)
 const isProcessing     = ref(false)
+const statsLoaded      = ref(false);
 const tabs             = [
   { key:'preview',     label:'Проверка и загрузка данных' },
   { key:'logs',        label:'Логи сервера' },
@@ -339,6 +340,7 @@ function resetReviewForm() {
 
 async function onProcessAll() {
   isProcessing.value = true;
+  statsLoaded.value = false;
   // Сбросить прошлые превью
   Object.keys(store.adminStore.previewSheetResult).forEach(cat => {
     store.adminStore.previewSheetResult[cat] = null;
@@ -358,6 +360,7 @@ async function onProcessAll() {
     // передаём object { shoes: File|null, clothing: File|null, accessories: File|null }
     const filesMap = { ...zipPreviewFiles };
     await store.adminStore.syncAll(filesMap);
+    statsLoaded.value = true;
     alert('Всё проверено и загружено без ошибок');
 
   } catch (e) {
@@ -725,6 +728,7 @@ watch(selected, (tab) => {
   .zip-preview-block {
     display: flex;
     flex-wrap: wrap;
+    margin-top: 2rem;
     gap: 1rem;
     .preview-result {
       flex: 1 1 30%;
@@ -1115,29 +1119,62 @@ watch(selected, (tab) => {
   .zip-preview-block,
   .pagination-controls,
   .date-picker {
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
   }
   .zip-input-block,
   .preview-result,
+  .combined-preview button,
   .pagination-controls button,
   .date-picker input,
   .date-picker .refresh-button {
-    flex: 1 1 100%;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    margin-bottom: .75rem;
+  }
+  .sheet-preview-block .preview-result,
+  .zip-preview-block .preview-result {
+    max-width: 100%;
+    margin-bottom: 1rem;
+  }
+  .logs-section .logs-table,
+  .users-section table,
+  .settings-section table {
+    display: block;
+    overflow-x: auto;
+    min-width: 100%;
   }
   .bar-chart {
-    height: 150px;
+    height: 150px !important;
+  }
+  .admin-review {
+    padding: .75rem !important;
   }
   .admin-review .review-header {
-    flex-direction: column;
-    gap: .25rem;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: .25rem !important;
   }
-  .tabs button {
-    font-size: .8rem;
-    padding: .5rem .75rem;
+  .photos {
+    justify-content: flex-start !important;
+    flex-wrap: wrap;
   }
   .admin-photo {
-    width: 60px;
-    height: 60px;
+    width: 60px !important;
+    height: 60px !important;
+  }
+  .tabs button {
+    flex: 1 1 45% !important;
+    font-size: .8rem !important;
+    padding: .5rem .75rem !important;
+  }
+  .add-review-section form {
+    max-width: 100% !important;
+  }
+  .requests-section .request-item {
+    padding: .75rem !important;
   }
 }
 
