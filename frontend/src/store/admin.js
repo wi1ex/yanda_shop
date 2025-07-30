@@ -103,55 +103,12 @@ export const useAdminStore = defineStore('admin', () => {
     await api.delete(`${API.admin.deleteRequest}/${id}`);
   }
 
-  // Combined preview + import for Sheets
-  async function validateAndImportSheet(category) {
-    previewSheetLoading[category] = true;
-    previewSheetResult[category] = null;
-    try {
-      await api.post(API.admin.importAndPreviewSheet, { category });
-      await loadLogs();
-      return true;
-    } catch (e) {
-      if (e.response?.status === 400 && e.response.data.status === 'validation_failed') {
-        previewSheetResult[category] = {
-          total_rows: e.response.data.total_rows,
-          invalid_count: e.response.data.invalid_count,
-          errors: e.response.data.errors,
-        };
-      }
-      return false;
-    }
-  }
-
-  // Combined preview + upload for ZIP images
-  async function validateAndUploadImages(filesMap) {
-    // очистим старые превью
-    Object.keys(previewZipResult).forEach(cat => previewZipResult[cat] = null);
-
-    // поставить loading-флаги
-    Object.keys(previewZipLoading).forEach(cat => {
-      previewZipLoading[cat] = !!filesMap[cat];
+  async function syncAll(filesMap) {
+    const form = new FormData();
+    Object.entries(filesMap).forEach(([cat, file]) => {
+      if (file) form.append(`file_${cat}`, file);
     });
-
-    try {
-      const form = new FormData();
-      Object.entries(filesMap).forEach(([cat, file]) => {
-        if (file) form.append(`file_${cat}`, file);
-      });
-      await api.post(API.admin.uploadAndPreviewImages, form);
-      await loadLogs();
-      return true;
-    } catch (e) {
-      if (e.response?.status === 400 && e.response.data.status === 'validation_failed') {
-        const reports = e.response.data.reports || {};
-        Object.entries(reports).forEach(([cat, report]) => {
-          if (previewZipResult[cat] !== undefined) {
-            previewZipResult[cat] = report;
-          }
-        });
-      }
-      return false;
-    }
+    return api.post(API.admin.syncAll, form);
   }
 
   return {
@@ -182,15 +139,12 @@ export const useAdminStore = defineStore('admin', () => {
     createReview,
     deleteReview,
 
-    loadSheetUrls,
-
     loadLogs,
     loadVisits,
 
     fetchRequests,
     deleteRequest,
 
-    validateAndImportSheet,
-    validateAndUploadImages,
+    syncAll,
   };
 });
