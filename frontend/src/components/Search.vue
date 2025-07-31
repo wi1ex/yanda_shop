@@ -4,7 +4,7 @@
       <form @submit.prevent="onSubmitRequest">
         <div class="request-div">
           <button type="button" class="close-btn" @click="toggleSearchClose()">
-            <img :src="icon_close" alt="Закрыть" />
+            <img :src="icon_close_white" alt="Закрыть" />
           </button>
           <h2>Не нашел что хотел?</h2>
           <p style="margin-bottom: 24px;">Загрузи изображение или добавь артикул товара, и мы выкупим это из официального магазина.</p>
@@ -37,7 +37,7 @@
 import { ref } from 'vue'
 import { useStore } from '@/store'
 import icon_paper_clip from "@/assets/images/paper_clip.svg";
-import icon_close from "@/assets/images/close.svg";
+import icon_close_white from "@/assets/images/close_white.svg";
 
 const store = useStore()
 const uploadedFileName = ref('')
@@ -91,15 +91,16 @@ function onSubmitRequest() {
 <style scoped lang="scss">
 .request-form {
   display: flex;
+  align-items: center;
+  justify-content: center;
   flex-direction: column;
-  position: relative;
-  margin-top: 96px;
-  padding: 203px 10px 40px;
-  background-image: url('@/assets/images/request-form.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: 20;
+  position: fixed;
+  inset: 0;
+  padding: 0 10px;
+  background-color: $black-25;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2000;
   form {
     display: flex;
     flex-direction: column;
@@ -108,10 +109,23 @@ function onSubmitRequest() {
       flex-direction: column;
       padding: 24px 10px;
       border-radius: 4px;
-      background-color: $black-70;
-      backdrop-filter: blur(10px);
+      background-color: $black-100;
       .close-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        align-self: flex-end;
+        margin-bottom: 24px;
+        width: 24px;
+        height: 24px;
         border: none;
+        background: none;
+        cursor: pointer;
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
       }
       h2 {
         margin: 0 0 16px;

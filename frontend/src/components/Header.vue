@@ -366,8 +366,22 @@ watch(
     gap: 4px;
     .dropdown-menu-search {
       display: flex;
+      margin-bottom: 40px;
+      width: calc(100% - 20px);
       button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 56px;
+        border-radius: 999px;
         border: none;
+        background-color: $grey-20;
+        color: $white-100;
+        font-size: 16px;
+        line-height: 100%;
+        letter-spacing: -0.64px;
+        cursor: pointer;
       }
     }
     .dropdown-menu-urls {
@@ -396,7 +410,7 @@ watch(
       }
     }
     .dropdown-menu-text {
-      width: 60%;
+      width: 55%;
       text-align: center;
       color: $black-40;
       font-size: 10px;
