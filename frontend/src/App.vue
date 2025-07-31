@@ -2,8 +2,8 @@
   <div class="app-container" v-if="store.userStore.user">
     <Header/>
     <Cart/>
+    <Search/>
     <router-view/>
-    <!-- Footer hidden on admin panel routes -->
     <Footer v-if="!isNoFooterRoute"/>
   </div>
 </template>
@@ -13,26 +13,27 @@ import { onMounted, watch, onBeforeUnmount, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStore } from '@/store/index.js'
 import Header from '@/components/Header.vue'
-import Footer from '@/components/Footer.vue'
 import Cart from '@/components/Cart.vue'
+import Search from '@/components/Search.vue'
+import Footer from '@/components/Footer.vue'
 
 const store = useStore()
 const route = useRoute()
 const isNoFooterRoute = computed(() => route.name === 'Admin')
-let prevOverflowCart
 
-// следим за открытием/закрытием корзины/меню
-watch(
-  () => store.cartStore.showCartDrawer,
-  (isOpen) => {
-    if (isOpen) {
-      prevOverflowCart = document.body.style.overflow
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = prevOverflowCart || ''
-    }
-  }
+let prevOverflow
+const anyOverlayOpen = computed(() =>
+  store.cartStore.showCartDrawer || store.globalStore.showSearch
 )
+
+watch(anyOverlayOpen, (isOpen) => {
+  if (isOpen) {
+    prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = prevOverflow || ''
+  }
+})
 
 onMounted(async () => {
   if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
