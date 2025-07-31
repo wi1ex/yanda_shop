@@ -21,28 +21,17 @@ const store = useStore()
 const route = useRoute()
 const isNoFooterRoute = computed(() => route.name === 'Admin')
 
-let prevOverflow
-watch(
-  [
-    () => store.cartStore.showCartDrawer,
-    () => store.globalStore.showSearch
-  ],
-  (newVals, oldVals) => {
-    const [isCartOpen, isSearchOpen] = newVals
-    const [wasCartOpen, wasSearchOpen] = oldVals
-    const nowOpen = isCartOpen || isSearchOpen
-    const wasOpen = wasCartOpen || wasSearchOpen
-    if (nowOpen && !wasOpen) {
-      prevOverflow = document.body.style.overflow
-      document.body.style.overflow = 'hidden'
-    }
-    else if (!nowOpen && wasOpen) {
-      document.body.style.overflow = prevOverflow || ''
-    }
-  }
+let initialOverflow = ''
+const anyOverlayOpen = computed(() =>
+  store.cartStore.showCartDrawer || store.globalStore.showSearch
 )
 
+watch(anyOverlayOpen, (isOpen) => {
+  document.body.style.overflow = isOpen ? 'hidden' : initialOverflow
+})
+
 onMounted(async () => {
+  initialOverflow = document.body.style.overflow || ''
   if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
     const tgUser = window.Telegram.WebApp.initDataUnsafe.user
     await store.userStore.initializeTelegramUser(tgUser)
@@ -52,10 +41,6 @@ onMounted(async () => {
   await store.productStore.fetchProducts()
   await store.globalStore.fetchParameters()
   await store.globalStore.fetchReviews()
-})
-
-onBeforeUnmount(() => {
-  document.body.style.overflow = prevOverflow || ''
 })
 </script>
 
