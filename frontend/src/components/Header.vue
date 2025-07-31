@@ -37,7 +37,7 @@
 
     <!-- Выпадающее меню -->
     <transition name="fade">
-      <nav v-if="menuOpen" class="dropdown-menu">
+      <nav v-if="store.globalStore.showMenu" class="dropdown-menu">
         <div class="dropdown-menu-top">
           <button type="button" class="dropdown-menu-btn" @click="toggleMenuClose()">
             Меню
@@ -123,11 +123,9 @@ import icon_logo_mail from '@/assets/images/logo_mail.svg'
 import icon_logo_instagram from '@/assets/images/logo_instagram.svg'
 import icon_arrow_up from "@/assets/images/arrow_up.svg";
 
-let prevOverflowMenu
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
-const menuOpen = ref(false)
 const openSubmenu = reactive({ M: false, F: false })
 const isAdmin = computed(() => store.userStore.user?.role === 'admin')
 const isIconWhite = computed(() => route.name === 'About' || route.name === 'Home')
@@ -163,12 +161,12 @@ function goToPage(page) {
 }
 
 function toggleMenu() {
-  menuOpen.value = !menuOpen.value
+  store.globalStore.showMenu = !store.globalStore.showMenu
 }
 
 function toggleMenuClose() {
-  if (menuOpen.value) {
-    menuOpen.value = false
+  if (store.globalStore.showMenu) {
+    store.globalStore.showMenu = false
     openSubmenu.M = openSubmenu.F = false
   }
 }
@@ -177,18 +175,6 @@ function toggleSearchOpen() {
   toggleMenuClose()
   store.globalStore.showSearch = true
 }
-
-watch(
-  () => menuOpen.value,
-  (isOpen) => {
-    if (isOpen) {
-      prevOverflowMenu = document.body.style.overflow
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = prevOverflowMenu || ''
-    }
-  }
-)
 
 </script>
 

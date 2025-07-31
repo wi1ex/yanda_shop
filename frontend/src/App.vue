@@ -23,11 +23,13 @@ const isNoFooterRoute = computed(() => route.name === 'Admin')
 
 let initialOverflow = ''
 const anyOverlayOpen = computed(() =>
-  store.cartStore.showCartDrawer || store.globalStore.showSearch
+  store.globalStore.showMenu ||
+  store.cartStore.showCartDrawer ||
+  store.globalStore.showSearch
 )
 
-watch(anyOverlayOpen, (isOpen) => {
-  document.body.style.overflow = isOpen ? 'hidden' : initialOverflow
+watch(anyOverlayOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : initialOverflow
 })
 
 onMounted(async () => {
