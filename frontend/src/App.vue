@@ -22,18 +22,25 @@ const route = useRoute()
 const isNoFooterRoute = computed(() => route.name === 'Admin')
 
 let prevOverflow
-const anyOverlayOpen = computed(() =>
-  store.cartStore.showCartDrawer || store.globalStore.showSearch
-)
-
-watch(anyOverlayOpen, (isOpen) => {
-  if (isOpen) {
-    prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-  } else {
-    document.body.style.overflow = prevOverflow || ''
+watch(
+  [
+    () => store.cartStore.showCartDrawer,
+    () => store.globalStore.showSearch
+  ],
+  (newVals, oldVals) => {
+    const [isCartOpen, isSearchOpen] = newVals
+    const [wasCartOpen, wasSearchOpen] = oldVals
+    const nowOpen = isCartOpen || isSearchOpen
+    const wasOpen = wasCartOpen || wasSearchOpen
+    if (nowOpen && !wasOpen) {
+      prevOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+    }
+    else if (!nowOpen && wasOpen) {
+      document.body.style.overflow = prevOverflow || ''
+    }
   }
-})
+)
 
 onMounted(async () => {
   if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
