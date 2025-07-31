@@ -123,7 +123,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRoute, useRouter } from 'vue-router'
 import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
@@ -228,7 +228,7 @@ function toggleSearchOpen() {
 function startTextSearch() {
   store.globalStore.showSearchQuery = true
   nextTick(() => {
-    if (searchInput.value) searchInput.value.focus()
+    searchInput.value?.focus()
   })
 }
 
