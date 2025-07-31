@@ -174,7 +174,7 @@ const icon_logo = computed(() => isIconWhite.value ? icon_logo_white : icon_logo
 
 // Вычисляем подсказки по бренду/названию
 const suggestions = computed(() => {
-  const q = globalStore.searchQuery.trim().toLowerCase()
+  const q = store.globalStore.searchQuery.trim().toLowerCase()
   if (!q) return []
   const seen = new Set()
   const out  = []
@@ -226,8 +226,8 @@ function toggleMenuOpen() {
 
 function toggleMenuClose() {
   store.globalStore.showMenu = false
-  globalStore.showSearchQuery = false
-  globalStore.searchQuery = ''
+  store.globalStore.showSearchQuery = false
+  store.globalStore.searchQuery = ''
   isInputFocused.value = false
   openSubmenu.M = openSubmenu.F = false
 }
@@ -239,7 +239,7 @@ function toggleSearchOpen() {
 
 // Начать текстовый поиск
 function startTextSearch() {
-  globalStore.showSearchQuery = true
+  store.globalStore.showSearchQuery = true
   isInputFocused.value = true
 }
 
