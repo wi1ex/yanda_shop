@@ -49,9 +49,7 @@
               <img :src="icon_search" alt="Поиск" />
               Поиск
             </div>
-
             <div @click="goToPage('Brands')" class="dropdown-link">Бренды</div>
-
             <div class="dropdown-link" :class="{ open: openSubmenu.M }" @click="toggleSubmenu('M')" :aria-expanded="openSubmenu.M">
               Мужчинам
               <img :src="icon_arrow_up" alt="" :style="{ transform: openSubmenu.M ? 'none' : 'rotate(180deg)'}"/>
@@ -63,7 +61,6 @@
                 </div>
               </div>
             </transition>
-
             <div class="dropdown-link" :class="{ open: openSubmenu.F }" @click="toggleSubmenu('F')" :aria-expanded="openSubmenu.F">
               Женщинам
               <img :src="icon_arrow_up" alt="" :style="{ transform: openSubmenu.F ? 'none' : 'rotate(180deg)'}"/>
@@ -75,9 +72,7 @@
                 </div>
               </div>
             </transition>
-
             <div @click="goToPage('About')" class="dropdown-link">О нас</div>
-
             <div v-if="isAdmin" @click="goToPage('Admin')" class="dropdown-link">Админ-панель</div>
           </div>
 
@@ -86,20 +81,16 @@
               <img :src="icon_search" alt="Поиск" />
               Поиск
             </div>
-
             <div v-else class="search-input-wrapper">
               <input type="text" v-model="store.globalStore.searchQuery" :placeholder="isInputFocused ? 'Введите запрос' : 'Поиск'"
                 @focus="isInputFocused = true" @blur="isInputFocused = false" autofocus/>
               <img :src="icon_close" alt="Очистить" class="search-clear-icon" v-if="store.globalStore.searchQuery"
                    @click="store.globalStore.searchQuery = ''; isInputFocused = true"/>
             </div>
-
             <div v-if="store.globalStore.searchQuery">
               <div v-if="suggestions.length">
                 <div v-for="(it, i) in suggestions" :key="i" class="dropdown-link" @click="onSelectSuggestion(it)">
-                  {{ it.brand }}
-                  ({{ it.gender==='M'?'мужская':it.gender==='F'?'женская':'унисекс' }}
-                  {{ it.category.toLowerCase() }})
+                  {{ it.brand }} ({{ it.gender==='M' ? 'мужская' : it.gender==='F' ? 'женская' : 'унисекс' }} {{ it.category.toLowerCase() }})
                   <img :src="icon_arrow_red" alt="Перейти" style="transform: rotate(180deg)" />
                 </div>
               </div>
@@ -114,7 +105,6 @@
           <div class="dropdown-menu-search">
             <button type="button" @click="toggleSearchOpen()">Поиск по фото</button>
           </div>
-
           <div class="dropdown-menu-urls">
             <a v-if="store.globalStore.parameters.url_social_email" :href="`mailto:${store.globalStore.parameters.url_social_email}`" rel="noopener">
               <img :src="icon_logo_mail" alt="Mail" />
@@ -177,8 +167,8 @@ const suggestions = computed(() => {
   const q = store.globalStore.searchQuery.trim().toLowerCase()
   if (!q) return []
   const seen = new Set()
-  const out  = []
-  for (const p of productStore.products) {
+  const out = []
+  for (const p of store.productStore.products) {
     if (
       p.name.toLowerCase().includes(q) ||
       p.brand.toLowerCase().includes(q)
@@ -246,8 +236,8 @@ function startTextSearch() {
 // Когда выбираем подсказку — сбрасываем всё и переходим в каталог
 function onSelectSuggestion(item) {
   toggleMenuClose()
-  productStore.filterGender = item.gender
-  productStore.filterBrands = [item.brand]
+  store.productStore.filterGender = item.gender
+  store.productStore.filterBrands = [item.brand]
   // category для роутинга
   router.push({
     name: 'Catalog',
