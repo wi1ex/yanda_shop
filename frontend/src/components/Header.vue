@@ -9,7 +9,7 @@
 
     <!-- Кнопка меню -->
     <div class="menu">
-      <button type="button" class="menu-btn" @click="toggleMenu()">
+      <button type="button" class="menu-btn" @click="toggleMenuOpen()">
         Меню
         <img :src="icon_menu_grey" alt="Меню" />
       </button>
@@ -44,35 +44,70 @@
             <img :src="icon_close" alt="Меню" />
           </button>
 
-          <div @click="goToPage('Brands')" class="dropdown-link">Бренды</div>
+          <div v-if="!store.globalStore.showSearchQuery">
+            <div class="dropdown-link" @click="startTextSearch">
+              <img :src="icon_search" alt="Поиск" />
+              Поиск
+            </div>
 
-          <div class="dropdown-link" :class="{ open: openSubmenu.M }" @click="toggleSubmenu('M')" :aria-expanded="openSubmenu.M">
-            Мужчинам
-            <img :src="icon_arrow_up" alt="" :style="{ transform: openSubmenu.M ? 'none' : 'rotate(180deg)'}"/>
+            <div @click="goToPage('Brands')" class="dropdown-link">Бренды</div>
+
+            <div class="dropdown-link" :class="{ open: openSubmenu.M }" @click="toggleSubmenu('M')" :aria-expanded="openSubmenu.M">
+              Мужчинам
+              <img :src="icon_arrow_up" alt="" :style="{ transform: openSubmenu.M ? 'none' : 'rotate(180deg)'}"/>
+            </div>
+            <transition name="submenu">
+              <div v-if="openSubmenu.M" class="dropdown-sublinks">
+                <div v-for="cat in store.productStore.categoryList" :key="`M-${cat}`" class="dropdown-sublink" @click="goToCategory('M', cat)">
+                  {{ cat }}
+                </div>
+              </div>
+            </transition>
+
+            <div class="dropdown-link" :class="{ open: openSubmenu.F }" @click="toggleSubmenu('F')" :aria-expanded="openSubmenu.F">
+              Женщинам
+              <img :src="icon_arrow_up" alt="" :style="{ transform: openSubmenu.F ? 'none' : 'rotate(180deg)'}"/>
+            </div>
+            <transition name="submenu">
+              <div v-if="openSubmenu.F" class="dropdown-sublinks">
+                <div v-for="cat in store.productStore.categoryList" :key="`F-${cat}`" class="dropdown-sublink" @click="goToCategory('F', cat)">
+                  {{ cat }}
+                </div>
+              </div>
+            </transition>
+
+            <div @click="goToPage('About')" class="dropdown-link">О нас</div>
+
+            <div v-if="isAdmin" @click="goToPage('Admin')" class="dropdown-link">Админ-панель</div>
           </div>
-          <transition name="submenu">
-            <div v-if="openSubmenu.M" class="dropdown-sublinks">
-              <div v-for="cat in store.productStore.categoryList" :key="`M-${cat}`" class="dropdown-sublink" @click="goToCategory('M', cat)">
-                {{ cat }}
+
+          <div v-else>
+            <div v-if="!store.globalStore.searchQuery && !isInputFocused" class="dropdown-link" @click="isInputFocused = true">
+              <img :src="icon_search" alt="Поиск" />
+              Поиск
+            </div>
+
+            <div v-else class="search-input-wrapper">
+              <input type="text" v-model="store.globalStore.searchQuery" :placeholder="isInputFocused ? 'Введите запрос' : 'Поиск'"
+                @focus="isInputFocused = true" @blur="isInputFocused = false" autofocus/>
+              <img :src="icon_close" alt="Очистить" class="search-clear-icon" v-if="store.globalStore.searchQuery"
+                   @click="store.globalStore.searchQuery = ''; isInputFocused = true"/>
+            </div>
+
+            <div v-if="store.globalStore.searchQuery">
+              <div v-if="suggestions.length">
+                <div v-for="(it, i) in suggestions" :key="i" class="dropdown-link" @click="onSelectSuggestion(it)">
+                  {{ it.brand }}
+                  ({{ it.gender==='M'?'мужская':it.gender==='F'?'женская':'унисекс' }}
+                  {{ it.category.toLowerCase() }})
+                  <img :src="icon_arrow_red" alt="Перейти" style="transform: rotate(180deg)" />
+                </div>
+              </div>
+              <div v-else class="dropdown-link">
+                Ничего не найдено по вашему запросу.
               </div>
             </div>
-          </transition>
-
-          <div class="dropdown-link" :class="{ open: openSubmenu.F }" @click="toggleSubmenu('F')" :aria-expanded="openSubmenu.F">
-            Женщинам
-            <img :src="icon_arrow_up" alt="" :style="{ transform: openSubmenu.F ? 'none' : 'rotate(180deg)'}"/>
           </div>
-          <transition name="submenu">
-            <div v-if="openSubmenu.F" class="dropdown-sublinks">
-              <div v-for="cat in store.productStore.categoryList" :key="`F-${cat}`" class="dropdown-sublink" @click="goToCategory('F', cat)">
-                {{ cat }}
-              </div>
-            </div>
-          </transition>
-
-          <div @click="goToPage('About')" class="dropdown-link">О нас</div>
-
-          <div v-if="isAdmin" @click="goToPage('Admin')" class="dropdown-link">Админ-панель</div>
         </div>
 
         <div class="dropdown-menu-bottom">
@@ -115,6 +150,7 @@ import icon_cart_grey from '@/assets/images/cart_grey.svg'
 import icon_cart_white from '@/assets/images/cart_white.svg'
 import icon_menu_grey from '@/assets/images/menu_grey.svg'
 import icon_close from '@/assets/images/close.svg'
+import icon_search from '@/assets/images/search.svg'
 import icon_logo_orange from '@/assets/images/logo_orange.svg'
 import icon_logo_white from '@/assets/images/logo_white.svg'
 import icon_logo_telegram from '@/assets/images/logo_telegram.svg'
@@ -122,10 +158,12 @@ import icon_logo_whatsapp from '@/assets/images/logo_whatsapp.svg'
 import icon_logo_mail from '@/assets/images/logo_mail.svg'
 import icon_logo_instagram from '@/assets/images/logo_instagram.svg'
 import icon_arrow_up from "@/assets/images/arrow_up.svg";
+import icon_arrow_red from '@/assets/images/arrow_red.svg'
 
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
+const isInputFocused = ref(false)
 const openSubmenu = reactive({ M: false, F: false })
 const isAdmin = computed(() => store.userStore.user?.role === 'admin')
 const isIconWhite = computed(() => route.name === 'About' || route.name === 'Home')
@@ -133,6 +171,28 @@ const icon_default_avatar = computed(() => isIconWhite.value ? icon_default_avat
 const icon_favorites = computed(() => isIconWhite.value ? icon_favorites_white : icon_favorites_grey)
 const icon_cart = computed(() => isIconWhite.value ? icon_cart_white : icon_cart_grey)
 const icon_logo = computed(() => isIconWhite.value ? icon_logo_white : icon_logo_orange)
+
+// Вычисляем подсказки по бренду/названию
+const suggestions = computed(() => {
+  const q = globalStore.searchQuery.trim().toLowerCase()
+  if (!q) return []
+  const seen = new Set()
+  const out  = []
+  for (const p of productStore.products) {
+    if (
+      p.name.toLowerCase().includes(q) ||
+      p.brand.toLowerCase().includes(q)
+    ) {
+      const key = `${p.brand}|||${p.gender}|||${p.category}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        out.push({ brand: p.brand, gender: p.gender, category: p.category })
+      }
+    }
+    if (out.length >= 10) break
+  }
+  return out
+})
 
 // переключить видимость подменю по полу
 function toggleSubmenu(gender) {
@@ -160,20 +220,39 @@ function goToPage(page) {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function toggleMenu() {
-  store.globalStore.showMenu = !store.globalStore.showMenu
+function toggleMenuOpen() {
+  store.globalStore.showMenu = true
 }
 
 function toggleMenuClose() {
-  if (store.globalStore.showMenu) {
-    store.globalStore.showMenu = false
-    openSubmenu.M = openSubmenu.F = false
-  }
+  store.globalStore.showMenu = false
+  globalStore.showSearchQuery = false
+  globalStore.searchQuery = ''
+  isInputFocused.value = false
+  openSubmenu.M = openSubmenu.F = false
 }
 
 function toggleSearchOpen() {
   toggleMenuClose()
   store.globalStore.showSearch = true
+}
+
+// Начать текстовый поиск
+function startTextSearch() {
+  globalStore.showSearchQuery = true
+  isInputFocused.value = true
+}
+
+// Когда выбираем подсказку — сбрасываем всё и переходим в каталог
+function onSelectSuggestion(item) {
+  toggleMenuClose()
+  productStore.filterGender = item.gender
+  productStore.filterBrands = [item.brand]
+  // category для роутинга
+  router.push({
+    name: 'Catalog',
+    query: { gender: item.gender, category: item.category, brand: item.brand }
+  })
 }
 
 </script>
@@ -324,6 +403,27 @@ function toggleSearchOpen() {
     }
     .dropdown-link:last-child {
       border-bottom: 1px solid $grey-87;
+    }
+    .search-input-wrapper {
+      position: relative;
+      margin: 0 10px 16px;
+      input {
+        width: 100%;
+        height: 40px;
+        padding: 0 36px 0 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 16px;
+      }
+      .search-clear-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
     }
     .dropdown-sublinks {
       display: flex;
