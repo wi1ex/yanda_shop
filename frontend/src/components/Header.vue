@@ -45,7 +45,7 @@
           </button>
 
           <div v-if="!store.globalStore.showSearchQuery">
-            <div class="dropdown-link" @click="startTextSearch">
+            <div class="dropdown-link search" @click="startTextSearch">
               <img :src="icon_search" alt="Поиск" />
               Поиск
             </div>
@@ -78,17 +78,17 @@
 
           <div v-else>
             <div class="search-input">
-              <input type="text" v-model="store.globalStore.searchQuery" placeholder="Введите запрос" />
+              <input type="text" ref="searchInput" v-model="store.globalStore.searchQuery" placeholder="Введите запрос" />
               <img :src="icon_close" alt="Очистить" @click="toggleSearchQueryClose"/>
             </div>
             <div v-if="store.globalStore.searchQuery">
               <div v-if="suggestions.length">
-                <div v-for="(it, i) in suggestions" :key="i" class="search-text" @click="onSelectSuggestion(it)">
+                <div v-for="(it, i) in suggestions" :key="i" class="dropdown-link search-text" @click="onSelectSuggestion(it)">
                   {{ it.brand }} ({{ it.gender==='M' ? 'мужская' : it.gender==='F' ? 'женская' : 'унисекс' }} {{ it.category.toLowerCase() }})
                   <img :src="icon_arrow_red" alt="Перейти" style="transform: rotate(180deg)" />
                 </div>
               </div>
-              <div v-else class="search-text">
+              <div v-else class="dropdown-link search-text" style="cursor: default;">
                 Ничего не найдено по вашему запросу.
               </div>
             </div>
@@ -147,6 +147,7 @@ import icon_arrow_red from '@/assets/images/arrow_red.svg'
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
+const searchInput = ref(null)
 const openSubmenu = reactive({ M: false, F: false })
 const isAdmin = computed(() => store.userStore.user?.role === 'admin')
 const isIconWhite = computed(() => route.name === 'About' || route.name === 'Home')
@@ -226,6 +227,9 @@ function toggleSearchOpen() {
 // Начать текстовый поиск
 function startTextSearch() {
   store.globalStore.showSearchQuery = true
+  nextTick(() => {
+    if (searchInput.value) searchInput.value.focus()
+  })
 }
 
 // Когда выбираем подсказку — сбрасываем всё и переходим в каталог
