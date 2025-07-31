@@ -5,10 +5,12 @@ import api from '@/services/api'
 import { API } from './apiRoutes'
 
 export const useGlobalStore = defineStore('global', () => {
-  const parameters = ref([])
-  const reviews = ref([])
-  const showMenu = ref(false)
-  const showSearch = ref(false);
+  const parameters      = ref([])
+  const reviews         = ref([])
+  const showMenu        = ref(false)
+  const showSearch      = ref(false);
+  const showSearchQuery = ref(false);
+  const searchQuery     = ref('')
 
   async function fetchParameters() {
     try {
