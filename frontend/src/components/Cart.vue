@@ -283,7 +283,9 @@ function goToCatalog() {
   border-radius: 4px;
 }
 .qty-btn {
-  @include flex-c-c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 24px;
   height: 24px;
   border: none;
