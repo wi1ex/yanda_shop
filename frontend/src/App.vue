@@ -48,16 +48,10 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 
-*{
-  scrollbar-width: none;
-  scroll-behavior: smooth;
-}
 .app-container {
   position: absolute;
   top: 0;
   width: 100%;
-  background-color: $grey-87;
-  font-family: Manrope-Medium;
 }
 
 </style>
