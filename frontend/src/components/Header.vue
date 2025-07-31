@@ -77,18 +77,18 @@
           </div>
 
           <div v-else>
-            <div class="search-input-wrapper">
+            <div class="search-input">
               <input type="text" v-model="store.globalStore.searchQuery" placeholder="Введите запрос" />
-              <img :src="icon_close" alt="Очистить" class="search-clear-icon" @click="toggleSearchQueryClose"/>
+              <img :src="icon_close" alt="Очистить" @click="toggleSearchQueryClose"/>
             </div>
             <div v-if="store.globalStore.searchQuery">
               <div v-if="suggestions.length">
-                <div v-for="(it, i) in suggestions" :key="i" class="dropdown-link" @click="onSelectSuggestion(it)">
+                <div v-for="(it, i) in suggestions" :key="i" class="search-text" @click="onSelectSuggestion(it)">
                   {{ it.brand }} ({{ it.gender==='M' ? 'мужская' : it.gender==='F' ? 'женская' : 'унисекс' }} {{ it.category.toLowerCase() }})
                   <img :src="icon_arrow_red" alt="Перейти" style="transform: rotate(180deg)" />
                 </div>
               </div>
-              <div v-else class="dropdown-link">
+              <div v-else class="search-text">
                 Ничего не найдено по вашему запросу.
               </div>
             </div>
@@ -389,26 +389,51 @@ function onSelectSuggestion(item) {
     .dropdown-link:last-child {
       border-bottom: 1px solid $grey-87;
     }
-    .search-input-wrapper {
+    .search {
+      justify-content: flex-start;
+      gap: 4px;
+      img {
+        width: 20px;
+        height: 20px;
+      }
+    }
+    .search-input {
+      display: flex;
       position: relative;
-      margin: 0 10px 16px;
       input {
         width: 100%;
-        height: 40px;
-        padding: 0 36px 0 12px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        font-size: 16px;
+        padding: 12px 50px 12px 10px;
+        outline: none;
+        box-shadow: none;
+        border: none;
+        border-top: 1px solid $grey-87;
+        border-bottom: 1px solid $grey-87;
+        color: $black-100;
+        font-family: Bounded;
+        font-size: 14px;
+        font-weight: 350;
+        line-height: 80%;
+        letter-spacing: -0.7px;
+        &::placeholder {
+          color: $black-40;
+        }
       }
-      .search-clear-icon {
+      img {
         position: absolute;
-        right: 12px;
+        right: 10px;
         top: 50%;
         transform: translateY(-50%);
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
         cursor: pointer;
       }
+    }
+    .search-text {
+      font-family: Manrope;
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 110%;
+      letter-spacing: -0.6px;
     }
     .dropdown-sublinks {
       display: flex;
