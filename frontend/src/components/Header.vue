@@ -74,7 +74,12 @@
 
           <div v-if="isAdmin" @click="goToPage('Admin')" class="dropdown-link">Админ-панель</div>
         </div>
+
         <div class="dropdown-menu-bottom">
+          <div class="dropdown-menu-search">
+            <button type="button" @click="toggleSearchOpen()">Поиск по фото</button>
+          </div>
+
           <div class="dropdown-menu-urls">
             <a v-if="store.globalStore.parameters.url_social_email" :href="`mailto:${store.globalStore.parameters.url_social_email}`" rel="noopener">
               <img :src="icon_logo_mail" alt="Mail" />
@@ -166,6 +171,11 @@ function toggleMenuClose() {
     menuOpen.value = false
     openSubmenu.M = openSubmenu.F = false
   }
+}
+
+function toggleSearchOpen() {
+  toggleMenuClose()
+  store.globalStore.showSearch = true
 }
 
 watch(
@@ -303,6 +313,7 @@ watch(
       letter-spacing: -0.7px;
       cursor: pointer;
       border-top: 1px solid $grey-87;
+      transition: all 0.25s ease-in-out;
       img {
         width: 16px;
         height: 16px;
@@ -353,6 +364,12 @@ watch(
     align-items: center;
     margin-bottom: 6px;
     gap: 4px;
+    .dropdown-menu-search {
+      display: flex;
+      button {
+        border: none;
+      }
+    }
     .dropdown-menu-urls {
       display: flex;
       justify-content: center;

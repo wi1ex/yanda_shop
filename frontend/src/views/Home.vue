@@ -129,13 +129,10 @@
         <div class="request-div">
           <h2>Не нашел что хотел?</h2>
           <p style="margin-bottom: 24px;">Загрузи изображение или добавь артикул товара, и мы выкупим это из официального магазина.</p>
-
           <input class="input-field" type="text" v-model="request.name" placeholder="Имя *" required/>
           <input class="input-field" type="email" v-model="request.email" placeholder="Почта *" required/>
           <input class="input-field" type="text" v-model="request.sku" placeholder="Артикул товара"/>
-
           <p>или</p>
-
           <label class="file-upload">
             <input type="file" @change="onFileChange" hidden />
             <div class="file-div">
@@ -146,7 +143,6 @@
               <span class="file-size">макс. 10 MB</span>
             </div>
           </label>
-
           <label class="checkbox-label">
             <input type="checkbox" v-model="request.agree"/>
             <span>Я согласен на <u>обработку персональных данных</u></span>

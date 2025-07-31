@@ -5,11 +5,10 @@ import api from '@/services/api'
 import { API } from './apiRoutes'
 
 export const useGlobalStore = defineStore('global', () => {
-  // Public settings & reviews
   const parameters = ref([])
   const reviews = ref([])
+  const showSearch = ref(false);
 
-  // Public data
   async function fetchParameters() {
     try {
       const { data } = await api.get(API.general.getParameters)
@@ -28,7 +27,6 @@ export const useGlobalStore = defineStore('global', () => {
     }
   }
 
-  // Contact form
   async function createRequest(formData) {
     try {
       await api.post(API.general.createRequest, formData)
@@ -40,6 +38,7 @@ export const useGlobalStore = defineStore('global', () => {
   return {
     parameters,
     reviews,
+    showSearch,
 
     // public data
     fetchParameters,
