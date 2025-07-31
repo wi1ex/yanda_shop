@@ -77,15 +77,9 @@
           </div>
 
           <div v-else>
-            <div v-if="!store.globalStore.searchQuery && !isInputFocused" class="dropdown-link" @click="isInputFocused = true">
-              <img :src="icon_search" alt="Поиск" />
-              Поиск
-            </div>
-            <div v-else class="search-input-wrapper">
-              <input type="text" v-model="store.globalStore.searchQuery" :placeholder="isInputFocused ? 'Введите запрос' : 'Поиск'"
-                @focus="isInputFocused = true" @blur="isInputFocused = false" autofocus/>
-              <img :src="icon_close" alt="Очистить" class="search-clear-icon" v-if="store.globalStore.searchQuery"
-                   @click="store.globalStore.searchQuery = ''; isInputFocused = true"/>
+            <div class="search-input-wrapper">
+              <input type="text" v-model="store.globalStore.searchQuery" placeholder="Введите запрос" />
+              <img :src="icon_close" alt="Очистить" class="search-clear-icon" @click="toggleSearchQueryClose"/>
             </div>
             <div v-if="store.globalStore.searchQuery">
               <div v-if="suggestions.length">
@@ -153,7 +147,6 @@ import icon_arrow_red from '@/assets/images/arrow_red.svg'
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
-const isInputFocused = ref(false)
 const openSubmenu = reactive({ M: false, F: false })
 const isAdmin = computed(() => store.userStore.user?.role === 'admin')
 const isIconWhite = computed(() => route.name === 'About' || route.name === 'Home')
@@ -214,12 +207,15 @@ function toggleMenuOpen() {
   store.globalStore.showMenu = true
 }
 
-function toggleMenuClose() {
-  store.globalStore.showMenu = false
+function toggleSearchQueryClose() {
   store.globalStore.showSearchQuery = false
   store.globalStore.searchQuery = ''
-  isInputFocused.value = false
   openSubmenu.M = openSubmenu.F = false
+}
+
+function toggleMenuClose() {
+  store.globalStore.showMenu = false
+  toggleSearchQueryClose()
 }
 
 function toggleSearchOpen() {
@@ -230,7 +226,6 @@ function toggleSearchOpen() {
 // Начать текстовый поиск
 function startTextSearch() {
   store.globalStore.showSearchQuery = true
-  isInputFocused.value = true
 }
 
 // Когда выбираем подсказку — сбрасываем всё и переходим в каталог
