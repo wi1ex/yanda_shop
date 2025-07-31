@@ -116,12 +116,7 @@
 | `/admin/set_user_role`    | GET    | Установить пользователю роль             |
 | `/admin/get_daily_visits` | GET    | Статистика посещений по часам (Redis)    |
 | `/admin/get_logs`         | GET    | Логи изменений (Postgres)                |
-| `/admin/get_sheet_urls`   | GET    | Текущие Google Sheets URL по категориям  |
-| `/admin/update_sheet_url` | POST   | Обновление URL Google Sheets             |
-| `/admin/import_sheet`     | POST   | Импорт данных из таблицы Google Sheets   |
-| `/admin/preview_sheet`    | POST   | Проверка данных из таблицы Google Sheets |
-| `/admin/upload_images`    | POST   | Загрузка ZIP-архива с фото в MinIO       |
-| `/admin/preview_images`   | POST   | Проверка ZIP-архива с фото в MinIO       |
+| `/admin/sync_all`         | POST   | Проверка и загрузка Sheets и ZIP         |
 | `/admin/get_settings`     | GET    | Список настроек                          |
 | `/admin/update_setting`   | POST   | Изменение настроек                       |
 | `/admin/delete_setting`   | DELETE | Удаление настроек                        |

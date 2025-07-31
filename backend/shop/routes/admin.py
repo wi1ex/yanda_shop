@@ -88,15 +88,6 @@ def get_logs() -> Tuple[Response, int]:
     return jsonify({"logs": result, "total": total}), 200
 
 
-@admin_api.route("/get_sheet_urls", methods=["GET"])
-@admin_required
-@handle_errors
-def get_sheet_urls() -> Tuple[Response, int]:
-    """GET /api/admin/get_sheet_urls"""
-    urls = {cat: get_sheet_url(cat) for cat in ("shoes", "clothing", "accessories")}
-    return jsonify(urls), 200
-
-
 @admin_api.route("/sync_all", methods=["POST"])
 @admin_required
 @handle_errors
