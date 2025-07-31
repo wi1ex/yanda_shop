@@ -317,13 +317,13 @@ function startAuto() {
   stopAuto()
   autoInterval = setInterval(() => {
     heroIndex.value = (heroIndex.value + 1) % heroSlides.length
-  }, 5000)
+  }, 10000)
 }
 
 function pauseAuto() {
   stopAuto()
   if (resumeTimeout) clearTimeout(resumeTimeout)
-  resumeTimeout = setTimeout(startAuto, 15000)
+  resumeTimeout = setTimeout(startAuto, 30000)
 }
 
 // === ручные навигации ===

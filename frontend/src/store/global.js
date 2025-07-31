@@ -7,6 +7,7 @@ import { API } from './apiRoutes'
 export const useGlobalStore = defineStore('global', () => {
   const parameters = ref([])
   const reviews = ref([])
+  const showMenu = ref(false)
   const showSearch = ref(false);
 
   async function fetchParameters() {
@@ -38,6 +39,7 @@ export const useGlobalStore = defineStore('global', () => {
   return {
     parameters,
     reviews,
+    showMenu,
     showSearch,
 
     // public data
