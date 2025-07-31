@@ -180,7 +180,9 @@ function toggleSearchOpen() {
 
 <style scoped lang="scss">
 .header {
-  @include flex-c-sb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   position: fixed;
   top: 0;
   width: calc(100% - 20px);
@@ -189,11 +191,15 @@ function toggleSearchOpen() {
   background-color: $black-25;
   z-index: 1000;
   .actions {
-    @include flex-c-l;
+    display: flex;
+    align-items: center;
+    justify-content: left;
     width: 114px;
     gap: 12px;
     .icon-btn {
-      @include flex-c-c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin: 0;
       padding: 0;
       background: none;
@@ -208,7 +214,9 @@ function toggleSearchOpen() {
         object-fit: cover;
       }
       .badge {
-        @include flex-c-c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         position: absolute;
         top: 31px;
         width: 14px;
@@ -233,9 +241,13 @@ function toggleSearchOpen() {
     }
   }
   .menu {
-    @include flex-c-c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     .menu-btn {
-      @include flex-c-c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 8px 16px;
       gap: 4px;
       background-color: white;
@@ -268,7 +280,9 @@ function toggleSearchOpen() {
     display: flex;
     flex-direction: column;
     .dropdown-menu-btn {
-      @include flex-c-c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       align-self: center;
       margin: 8px 0 64px;
       width: 96px;

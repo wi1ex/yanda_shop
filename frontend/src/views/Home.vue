@@ -1393,7 +1393,9 @@ onBeforeUnmount(() => {
       user-select: none;
     }
     &-number {
-      @include flex-e-c;
+      display: flex;
+      align-items: end;
+      justify-content: center;
       width: 32px;
       height: 32px;
       background-color: $black-100;
