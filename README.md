@@ -210,12 +210,10 @@ git reset --hard origin/main
 
 # Останавливаем прежние контейнеры и чистим ненужное
 docker-compose down
-docker builder prune --filter "until=72h" --force
-docker image prune --filter "until=72h" --force
-
-# Для полной очистки
-# docker-compose down --rmi all --volumes --remove-orphans
-# docker system prune --all --volumes --force
+docker network prune --filter "until=24h" --force
+docker container prune --filter "until=24h" --force
+docker image prune --all --filter "until=24h" --force
+docker builder prune --all --filter "until=24h" --force
 
 # Обновление SSL-сертификатов (только если нужно)
 certbot renew --noninteractive --standalone --agree-tos
