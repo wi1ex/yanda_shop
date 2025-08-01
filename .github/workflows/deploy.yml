@@ -28,6 +28,28 @@ jobs:
       MINIO_ROOT_USER:     ${{ secrets.MINIO_ROOT_USER }}
       MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
 
+      MAIL_PORT:           ${{ secrets.MAIL_PORT }}
+      MAIL_SERVER:         ${{ secrets.MAIL_SERVER }}
+      MAIL_USERNAME:       ${{ secrets.MAIL_USERNAME }}
+      MAIL_PASSWORD:       ${{ secrets.MAIL_PASSWORD }}
+      MAIL_USE_TLS:        ${{ secrets.MAIL_USE_TLS }}
+      MAIL_DEFAULT_SENDER: ${{ secrets.MAIL_DEFAULT_SENDER }}
+
+      OVERRIDE_HOSTNAME:   ${{ secrets.OVERRIDE_HOSTNAME }}
+      DKIM_SELECTOR:       ${{ secrets.DKIM_SELECTOR }}
+      POSTMASTER_ADDRESS:  ${{ secrets.POSTMASTER_ADDRESS }}
+      ENABLE_SPAMASSASSIN: ${{ secrets.ENABLE_SPAMASSASSIN }}
+      ENABLE_CLAMAV:       ${{ secrets.ENABLE_CLAMAV }}
+      ENABLE_AMAVIS:       ${{ secrets.ENABLE_AMAVIS }}
+      ENABLE_POSTGREY:     ${{ secrets.ENABLE_POSTGREY }}
+      ONE_DIR:             ${{ secrets.ONE_DIR }}
+      DMS_DEBUG:           ${{ secrets.DMS_DEBUG }}
+      LOG_LEVEL:           ${{ secrets.LOG_LEVEL }}
+
+      SSL_TYPE:            ${{ secrets.SSL_TYPE }}
+      SSL_CERT_PATH:       ${{ secrets.SSL_CERT_PATH }}
+      SSL_KEY_PATH:        ${{ secrets.SSL_KEY_PATH }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -63,6 +85,28 @@ jobs:
           MINIO_BUCKET=${MINIO_BUCKET}
           MINIO_ROOT_USER=${MINIO_ROOT_USER}
           MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+          
+          MAIL_PORT=${MAIL_PORT}
+          MAIL_SERVER=${MAIL_SERVER}
+          MAIL_USERNAME=${MAIL_USERNAME}
+          MAIL_PASSWORD=${MAIL_PASSWORD}
+          MAIL_USE_TLS=${MAIL_USE_TLS}
+          MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
+          
+          OVERRIDE_HOSTNAME=${OVERRIDE_HOSTNAME}
+          DKIM_SELECTOR=${DKIM_SELECTOR}
+          POSTMASTER_ADDRESS=${POSTMASTER_ADDRESS}
+          ENABLE_SPAMASSASSIN=${ENABLE_SPAMASSASSIN}
+          ENABLE_CLAMAV=${ENABLE_CLAMAV}
+          ENABLE_AMAVIS=${ENABLE_AMAVIS}
+          ENABLE_POSTGREY=${ENABLE_POSTGREY}
+          ONE_DIR=${ONE_DIR}
+          DMS_DEBUG=${DMS_DEBUG}
+          LOG_LEVEL=${LOG_LEVEL}
+          
+          SSL_TYPE=${SSL_TYPE}
+          SSL_CERT_PATH=${SSL_CERT_PATH}
+          SSL_KEY_PATH=${SSL_KEY_PATH}
           EOF
         shell: bash
 
@@ -85,10 +129,10 @@ jobs:
             git fetch --all
             git reset --hard origin/main
             docker-compose down
+            docker network prune --filter "until=24h" --force
             docker container prune --filter "until=24h" --force
             docker image prune --all --filter "until=24h" --force
             docker builder prune --all --filter "until=24h" --force
-            docker network prune --filter "until=24h" --force
             certbot renew --noninteractive --standalone --agree-tos
             docker-compose build --no-cache
             docker-compose up -d
