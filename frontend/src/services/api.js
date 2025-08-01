@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'https://shop.yanda.twc1.net'
+  baseURL: 'https://yandashop.ru'
 })
 
 api.interceptors.request.use(config => {
