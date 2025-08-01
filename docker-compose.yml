@@ -102,7 +102,7 @@ services:
     image: mailserver/docker-mailserver:latest
     container_name: mail
     env_file:
-      - .env-mail
+      - .env
     volumes:
       - maildata:/var/mail
       - mailstate:/var/mail-state
@@ -121,7 +121,7 @@ services:
     image: interlegis/alpine-rainloop:latest
     container_name: webmail
     env_file:
-      - .env-mail
+      - .env
     volumes:
       - webmaildata:/var/www/rainloop/data
       - ./mailserver/config/apache.conf:/etc/apache2/conf.d/server-name.conf:ro
