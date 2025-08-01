@@ -2,6 +2,7 @@ version: "3.8"
 services:
   db:
     image: postgres:17
+    container_name: db
     env_file: .env
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -17,6 +18,7 @@ services:
 
   redis:
     image: redis:7
+    container_name: redis
     env_file: .env
     command:
       - redis-server
@@ -34,6 +36,7 @@ services:
 
   minio:
     image: minio/minio:latest
+    container_name: minio
     env_file: .env
     command: server /data
     ports:
@@ -46,6 +49,7 @@ services:
 
   backend:
     build: ./backend
+    container_name: backend
     env_file: .env
     volumes:
       - ./backend:/app
@@ -61,6 +65,7 @@ services:
 
   bot:
     build: ./bot
+    container_name: bot
     env_file: .env
     depends_on:
       - backend
@@ -70,6 +75,7 @@ services:
 
   frontend:
     build: ./frontend
+    container_name: frontend
     depends_on:
       - backend
     networks:
@@ -78,6 +84,7 @@ services:
 
   proxy:
     build: ./nginx
+    container_name: proxy
     env_file: .env
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
@@ -87,6 +94,39 @@ services:
       - "443:443"
     depends_on:
       - frontend
+    networks:
+      - app-network
+    restart: always
+
+  mail:
+    image: mailserver/docker-mailserver:latest
+    container_name: mail
+    env_file:
+      - .env-mail
+    volumes:
+      - maildata:/var/mail
+      - mailstate:/var/mail-state
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./mailserver/config/:/tmp/docker-mailserver/
+    ports:
+      - "25:25"
+      - "143:143"
+      - "587:587"
+      - "993:993"
+    networks:
+      - app-network
+    restart: always
+
+  webmail:
+    image: interlegis/alpine-rainloop:latest
+    container_name: webmail
+    env_file:
+      - .env-mail
+    volumes:
+      - webmaildata:/var/www/rainloop/data
+      - ./mailserver/config/apache.conf:/etc/apache2/conf.d/server-name.conf:ro
+    depends_on:
+      - mail
     networks:
       - app-network
     restart: always
@@ -101,6 +141,12 @@ volumes:
   minio_data:
     external: true
     name: yanda_shop_minio_data
+  maildata:
+    name: yanda_shop_mail_data
+  mailstate:
+    name: yanda_shop_mail_state
+  webmaildata:
+    name: yanda_shop_webmail_data
 
 networks:
   app-network:
