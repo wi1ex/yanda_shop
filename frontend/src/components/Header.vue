@@ -165,7 +165,9 @@ const suggestions = computed(() => {
   for (const p of store.productStore.products) {
     if (
       p.name.toLowerCase().includes(q) ||
-      p.brand.toLowerCase().includes(q)
+      p.brand.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q) ||
+      p.subcategory.toLowerCase().includes(q)
     ) {
       const key = `${p.brand}|||${p.gender}|||${p.category}`
       if (!seen.has(key)) {
