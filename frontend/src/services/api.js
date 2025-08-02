@@ -1,5 +1,4 @@
 import axios from 'axios'
-import jwt_decode from 'jwt-decode'
 
 const api = axios.create({
   baseURL: 'https://yandashop.ru'
@@ -44,7 +43,8 @@ export function getJwtIdentity() {
   const token = localStorage.getItem('accessToken')
   if (!token) return null
   try {
-    const decoded = jwt_decode(token)
+    const payload = token.split('.')[1]
+    const decoded = JSON.parse(atob(payload))
     return decoded.sub
   } catch {
     console.error('Failed to decode JWT')
