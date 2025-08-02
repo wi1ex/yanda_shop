@@ -51,8 +51,7 @@ import { useStore } from '@/store/index.js'
 const store = useStore()
 </script>
 
-<style lang="scss">
-
+<style scoped lang="scss">
 
 .line-vert {
   position: absolute;
@@ -181,4 +180,5 @@ const store = useStore()
     }
   }
 }
+
 </style>

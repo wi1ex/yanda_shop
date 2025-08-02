@@ -173,8 +173,7 @@ function toggleFaq(id) {
 
 </script>
 
-<style lang="scss">
-
+<style scoped lang="scss">
 
 .line-vert {
   position: absolute;
@@ -540,4 +539,5 @@ function toggleFaq(id) {
     }
   }
 }
+
 </style>

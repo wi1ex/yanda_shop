@@ -256,6 +256,7 @@ function onProfileClick() {
 </script>
 
 <style scoped lang="scss">
+
 .header {
   display: flex;
   align-items: center;
