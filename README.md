@@ -100,31 +100,40 @@
 
 ### /api/product
 
-| Endpoint                    | Method | Description                             |
-| --------------------------- | ------ | --------------------------------------- |
-| `/product/list_products`    | GET    | Список товаров по категории             |
-| `/product/get_product`      | GET    | Детали товара по variant\_sku           |
-| `/product/get_cart`         | GET    | Загрузка корзины (из Redis)             |
-| `/product/save_cart`        | POST   | Сохранение корзины                      |
-| `/product/get_favorites`    | GET    | Избранное (загрузка)                    |
-| `/product/save_favorites`   | POST   | Избранное (сохранение)                  |
+| Endpoint                  | Method | Description                   |
+| ------------------------- | ------ | ----------------------------- |
+| `/product/list_products`  | GET    | Список товаров по категории   |
+| `/product/get_product`    | GET    | Детали товара по variant\_sku |
+| `/product/get_cart`       | GET    | Загрузка корзины (из Redis)   |
+| `/product/save_cart`      | POST   | Сохранение корзины            |
+| `/product/get_favorites`  | GET    | Избранное (загрузка)          |
+| `/product/save_favorites` | POST   | Избранное (сохранение)        |
+
+### /api/auth
+
+| Endpoint                          | Method | Description                   |
+|-----------------------------------| ------ |-------------------------------|
+| `/auth/request_registration_code` | POST   | Регистрация: запрос кода      |
+| `/auth/verify_registration_code`  | POST   | Регистрация: верификация кода |
+| `/auth/request_login_code`        | POST   | Авторизация: запрос кода      |
+| `/auth/verify_login_code`         | POST   | Авторизация: верификация кода |
 
 ### /api/admin
 
-| Endpoint                  | Method | Description                              |
-|---------------------------| ------ |------------------------------------------|
-| `/admin/set_user_role`    | GET    | Установить пользователю роль             |
-| `/admin/get_daily_visits` | GET    | Статистика посещений по часам (Redis)    |
-| `/admin/get_logs`         | GET    | Логи изменений (Postgres)                |
-| `/admin/sync_all`         | POST   | Проверка и загрузка Sheets и ZIP         |
-| `/admin/get_settings`     | GET    | Список настроек                          |
-| `/admin/update_setting`   | POST   | Изменение настроек                       |
-| `/admin/delete_setting`   | DELETE | Удаление настроек                        |
-| `/admin/create_review`    | POST   | Создание отзыва                          |
-| `/admin/delete_review`    | DELETE | Удаление отзыва                          |
-| `/admin/list_requests`    | GET    | Список заявок на поиск товара            |
-| `/admin/delete_request`   | DELETE | Удаление заявки на поиск товара          |
-| `/admin/list_users`       | GET    | Список пользователей                     |
+| Endpoint                  | Method | Description                           |
+|---------------------------| ------ |---------------------------------------|
+| `/admin/set_user_role`    | GET    | Установить пользователю роль          |
+| `/admin/get_daily_visits` | GET    | Статистика посещений по часам (Redis) |
+| `/admin/get_logs`         | GET    | Логи изменений (Postgres)             |
+| `/admin/sync_all`         | POST   | Проверка и загрузка Sheets и ZIP      |
+| `/admin/get_settings`     | GET    | Список настроек                       |
+| `/admin/update_setting`   | POST   | Изменение настроек                    |
+| `/admin/delete_setting`   | DELETE | Удаление настроек                     |
+| `/admin/create_review`    | POST   | Создание отзыва                       |
+| `/admin/delete_review`    | DELETE | Удаление отзыва                       |
+| `/admin/list_requests`    | GET    | Список заявок на поиск товара         |
+| `/admin/delete_request`   | DELETE | Удаление заявки на поиск товара       |
+| `/admin/list_users`       | GET    | Список пользователей                  |
 
 ---
 
