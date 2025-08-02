@@ -1,8 +1,9 @@
 from flask import Flask, jsonify
+from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from .core.config import SQLALCHEMY_DATABASE_URI, CORS_ORIGINS, SECRET_KEY, JWT_SECRET_KEY
+from .core import config
 from .core.logging import setup_logging, logger
 from .models import db
 from .utils.cache_utils import load_delivery_options, load_parameters
@@ -11,6 +12,7 @@ from .routes.product import product_api
 from .routes.admin import admin_api
 from .routes.auth import auth_bp
 
+mail = Mail()
 
 def create_app() -> Flask:
     context = "create_app"
@@ -20,22 +22,14 @@ def create_app() -> Flask:
     try:
         # ——— Flask и конфигурация ————————————————————————————————
         app = Flask(__name__)
-        app.config.update({
-            "SQLALCHEMY_DATABASE_URI":        SQLALCHEMY_DATABASE_URI,
-            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
-            "SECRET_KEY":                     SECRET_KEY,
-            "JWT_SECRET_KEY":                 JWT_SECRET_KEY,
-            "JWT_TOKEN_LOCATION":             ["headers"],
-            "JWT_HEADER_NAME":                "Authorization",
-            "JWT_HEADER_TYPE":                "Bearer",
-            "JWT_ACCESS_TOKEN_EXPIRES":       3600,
-        })
+        app.config.from_object(config)
         logger.debug("%s: Flask app configured", context)
 
         # ——— Расширения —————————————————————————————————————————
         db.init_app(app)
         Migrate(app, db)
-        CORS(app, resources={r"/api/*": {"origins": CORS_ORIGINS}})
+        CORS(app, resources={r"/api/*": {"origins": config.CORS_ORIGINS}})
+        mail.init_app(app)
         logger.debug("%s: Extensions initialized", context)
 
         # ——— JWT менеджер и ошибки —————————————————————————
