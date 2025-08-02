@@ -82,8 +82,7 @@ function onBrandClick(brand) {
 }
 </script>
 
-<style lang="scss">
-
+<style scoped lang="scss">
 
 .line-vert {
   position: absolute;
@@ -196,4 +195,5 @@ function onBrandClick(brand) {
     }
   }
 }
+
 </style>

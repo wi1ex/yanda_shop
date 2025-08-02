@@ -199,6 +199,7 @@ const store = useStore()
 </script>
 
 <style scoped lang="scss">
+
 .about-page {
   width: 100%;
   background-color: $grey-87;
@@ -619,4 +620,5 @@ const store = useStore()
     font-size: 15px;
   }
 }
+
 </style>

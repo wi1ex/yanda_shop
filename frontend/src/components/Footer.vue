@@ -168,6 +168,7 @@ function goToGender(gender) {
 </script>
 
 <style scoped lang="scss">
+
 .footer-content {
   display: flex;
   flex-direction: column;
@@ -338,4 +339,5 @@ function goToGender(gender) {
     margin-bottom: 16px;
   }
 }
+
 </style>

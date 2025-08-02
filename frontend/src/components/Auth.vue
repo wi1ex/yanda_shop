@@ -120,7 +120,7 @@ async function onSuccess() {
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 
 .auth-modal-backdrop {
   position: fixed;
