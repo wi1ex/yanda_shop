@@ -19,6 +19,10 @@
         <strong>Фамилия:</strong> {{ store.userStore.user.last_name }}
       </p>
     </div>
+
+    <button v-if="store.userStore.isAuthenticated" class="logout-btn" @click="store.userStore.logout()">
+      Выйти
+    </button>
   </div>
 </template>
 
