@@ -1,7 +1,6 @@
 from typing import Any
 from redis import Redis
 from redis.exceptions import ConnectionError
-from flask_mail import Mail
 from minio import Minio
 from tenacity import (
     retry,
@@ -23,9 +22,6 @@ from .core.config import (
 
 # Constants & Context
 _context = "extensions"
-
-# Flask-Mail Initialization
-mail = Mail()
 
 # Redis Client Initialization
 try:
