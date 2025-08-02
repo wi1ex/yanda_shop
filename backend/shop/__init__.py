@@ -1,18 +1,16 @@
 from flask import Flask, jsonify
-from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from .core import config
 from .core.logging import setup_logging, logger
+from .extensions import mail
 from .models import db
 from .utils.cache_utils import load_delivery_options, load_parameters
 from .routes.general import general_api
 from .routes.product import product_api
 from .routes.admin import admin_api
 from .routes.auth import auth_bp
-
-mail = Mail()
 
 def create_app() -> Flask:
     context = "create_app"

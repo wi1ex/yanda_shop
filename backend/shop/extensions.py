@@ -1,4 +1,5 @@
 from typing import Any
+from flask_mail import Mail
 from redis import Redis
 from redis.exceptions import ConnectionError
 from minio import Minio
@@ -22,6 +23,8 @@ from .core.config import (
 
 # Constants & Context
 _context = "extensions"
+
+mail = Mail()
 
 # Redis Client Initialization
 try:
