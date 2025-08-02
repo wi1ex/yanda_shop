@@ -5,6 +5,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any, Dict, Tuple, List
 from flask import Blueprint, jsonify, request, Response
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 from .auth import make_tokens
 from ..core.logging import logger
@@ -12,6 +13,7 @@ from ..core.config import BACKEND_URL
 from ..utils.db_utils import session_scope
 from ..models import Users, ChangeLog, Review, RequestItem
 from ..extensions import redis_client, minio_client, BUCKET
+from ..utils.redis_utils import track_visit_counts
 from ..utils.route_utils import handle_errors, require_args, require_json
 from ..utils.storage_utils import upload_request_file
 
@@ -38,6 +40,7 @@ def save_user() -> Tuple[Response, int]:
     logger.debug("save_user: payload=%s", data)
     raw_id = data["id"]
     is_tg = False
+
     # Determine if Telegram user (numeric)
     try:
         int(raw_id)
@@ -52,7 +55,6 @@ def save_user() -> Tuple[Response, int]:
         last_name  = data.get("last_name")
         username   = data.get("username")
         photo_url  = data.get("photo_url")
-
         try:
             with session_scope() as session:
                 tg_user = session.get(Users, user_id)
@@ -65,11 +67,12 @@ def save_user() -> Tuple[Response, int]:
                         last_visit=now,
                     )
                     session.add(tg_user)
+
                     session.add(ChangeLog(
                         author_id=user_id,
                         author_name=username,
                         action_type="Регистрация",
-                        description=f"Новый Telegram-пользователь: {first_name} {last_name}",
+                        description=f"Успешная регистрация TG-пользователя: {first_name} {last_name}",
                         timestamp=now,
                     ))
                 else:
@@ -83,6 +86,13 @@ def save_user() -> Tuple[Response, int]:
                     if updated:
                         session.merge(tg_user)
 
+                    session.add(ChangeLog(
+                        author_id=user_id,
+                        author_name=username,
+                        action_type="Авторизация",
+                        description=f"Успешный вход в TG-аккаунт: {first_name} {last_name}",
+                        timestamp=now,
+                    ))
                 # Avatar handling
                 if photo_url:
                     filename = secure_filename(photo_url.split("/")[-1])
@@ -102,44 +112,37 @@ def save_user() -> Tuple[Response, int]:
                                 tg_user.avatar_url = filename
                             except Exception as exc:
                                 logger.warning("save_user: failed upload new avatar %s: %s", new_key, exc)
+
+                # Redis: track visit counts
+                track_visit_counts(raw_id)
+
+                role = tg_user.role
+                username = tg_user.username
+                tokens = make_tokens(str(user_id), username, role)
+                return jsonify({"status": "ok", "access_token": tokens["access_token"], "refresh_token": tokens["refresh_token"]}), 201
+
         except Exception:
             logger.exception("save_user: Postgres error")
             return jsonify({"error": "internal server error"}), 500
 
-    # Redis: track visit counts
-    try:
-        now = datetime.now(ZoneInfo("Europe/Moscow"))
-        date_str = now.strftime("%Y-%m-%d")
-        hour_str = now.strftime("%H")
-        total_key = f"visits:{date_str}:{hour_str}:total"
-        unique_key = f"visits:{date_str}:{hour_str}:unique"
-
-        redis_client.incr(total_key)
-        redis_client.sadd(unique_key, raw_id)
-        ttl = 60 * 60 * 24 * 365
-        redis_client.expire(total_key, ttl)
-        redis_client.expire(unique_key, ttl)
-
-        logger.debug("save_user: Redis visit counters updated for %r", raw_id)
-        return jsonify({"status": "ok"}), 201
-    except Exception:
-        logger.exception("save_user: Redis error")
-        return jsonify({"error": "internal redis error"}), 500
-
 
 @general_api.route("/get_user_profile", methods=["GET"])
+@jwt_required()
 @handle_errors
 @require_args("user_id")
 def get_user_profile() -> Tuple[Response, int]:
     """
     GET /api/general/get_user_profile?user_id=<int>
-    Returns user profile and tokens if admin.
     """
     uid_str = request.args["user_id"]
     try:
         uid = int(uid_str)
     except ValueError:
         return jsonify({"error": "invalid user_id"}), 400
+
+    current = int(get_jwt_identity())
+    if current != uid:
+        return jsonify({"error": "Access denied"}), 403
 
     with session_scope() as session:
         u = session.get(Users, uid)
@@ -155,8 +158,6 @@ def get_user_profile() -> Tuple[Response, int]:
             "photo_url":  f"{BACKEND_URL}/{BUCKET}/users/{u.user_id}_{u.avatar_url}" if u.avatar_url else None,
             "created_at": u.created_at.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d %H:%M:%S"),
         }
-        if u.role == "admin":
-            profile["access_token"], profile["refresh_token"] = make_tokens(str(u.user_id), u.username, u.role)
 
     return jsonify(profile), 200
 

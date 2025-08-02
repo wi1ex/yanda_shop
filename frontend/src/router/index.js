@@ -33,15 +33,21 @@ const router = createRouter({
 // глобальный guard вместо beforeEnter на одном маршруте
 router.beforeEach(async (to, from, next) => {
   const store = useStore()
-  if (to.name === 'Admin') {
-    // если нет токенов или server-side проверка провалилась — домой
-    const ok = store.userStore.accessToken && store.userStore.refreshToken && await store.userStore.verifyAdminAccess()
-    if (!ok) return next({ name: 'Home' })
+
+  if (to.name === 'Profile' && !store.userStore.isAuthenticated()) {
+    store.userStore.openAuth()
+    return next(false)
   }
+
+  if (to.name === 'Admin' && (!store.userStore.isAuthenticated() || !await store.userStore.verifyAdminAccess())) {
+    return next({ name: 'Home' })
+  }
+
   if (to.name === 'Home') {
     store.productStore.selectedCategory = ''
     store.productStore.clearFilters()
   }
+
   next()
 })
 

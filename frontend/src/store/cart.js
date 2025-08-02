@@ -1,5 +1,3 @@
-// src/store/cart.js
-
 import { defineStore } from 'pinia';
 import { ref, computed, watch } from 'vue';
 import api from '@/services/api';
@@ -7,13 +5,11 @@ import { API } from './apiRoutes';
 import { useUserStore } from './user';
 
 export const useCartStore = defineStore('cart', () => {
-  // State
-
   // Cart contents
   const cartOrder = ref([]);
   const cart = ref({ count: 0, total: 0, items: [] });
   const cartLoaded = ref(false);
-  const showCartDrawer = ref(false);
+  const showCart = ref(false);
 
   // Favorites
   const favorites = ref({ items: [], count: 0 });
@@ -26,7 +22,7 @@ export const useCartStore = defineStore('cart', () => {
   watch(
     () => userStore.user.id,
     (newId) => {
-      if (newId && userStore.isTelegramUserId(newId)) {
+      if (newId && userStore.isAuthenticated(newId)) {
         loadCartFromServer();
         loadFavoritesFromServer();
       } else {
@@ -42,7 +38,7 @@ export const useCartStore = defineStore('cart', () => {
 
   async function loadCartFromServer() {
     const userId = userStore.user.id;
-    if (!userId || !userStore.isTelegramUserId(userId)) {
+    if (!userStore.isAuthenticated()) {
       cartLoaded.value = true;
       return;
     }
@@ -68,7 +64,7 @@ export const useCartStore = defineStore('cart', () => {
 
   async function saveCartToServer() {
     const userId = userStore.user.id;
-    if (!userId || !userStore.isTelegramUserId(userId)) return;
+    if (!userStore.isAuthenticated()) return;
 
     const payload = {
       user_id: userId,
@@ -86,11 +82,11 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   function openCartDrawer() {
-    showCartDrawer.value = true;
+    showCart.value = true;
   }
 
   function closeCartDrawer() {
-    showCartDrawer.value = false;
+    showCart.value = false;
   }
 
   function addToCart(product) {
@@ -188,7 +184,7 @@ export const useCartStore = defineStore('cart', () => {
 
   async function loadFavoritesFromServer() {
     const userId = userStore.user.id;
-    if (!userId || !userStore.isTelegramUserId(userId)) {
+    if (!userStore.isAuthenticated()) {
       favoritesLoaded.value = true;
       return;
     }
@@ -208,7 +204,7 @@ export const useCartStore = defineStore('cart', () => {
 
   async function saveFavoritesToServer() {
     const userId = userStore.user.id;
-    if (!userId || !userStore.isTelegramUserId(userId)) return;
+    if (!userStore.isAuthenticated()) return;
 
     const payload = {
       user_id: userId,
@@ -245,7 +241,7 @@ export const useCartStore = defineStore('cart', () => {
     cartOrder,
     cart,
     cartLoaded,
-    showCartDrawer,
+    showCart,
     openCartDrawer,
     closeCartDrawer,
     addToCart,

@@ -1,4 +1,3 @@
-// src/store/global.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '@/services/api'
@@ -43,6 +42,8 @@ export const useGlobalStore = defineStore('global', () => {
     reviews,
     showMenu,
     showSearch,
+    showSearchQuery,
+    searchQuery,
 
     // public data
     fetchParameters,

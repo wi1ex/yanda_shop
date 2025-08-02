@@ -23,3 +23,10 @@ MINIO_HOST: str = os.environ["MINIO_HOST"]
 MINIO_ROOT_USER: str = os.environ["MINIO_ROOT_USER"]
 MINIO_ROOT_PASSWORD: str = os.environ["MINIO_ROOT_PASSWORD"]
 MINIO_BUCKET: str = os.environ["MINIO_BUCKET"]
+
+MAIL_SERVER = os.environ.get("MAIL_SERVER")
+MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
+MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "True").lower() in ("true", "1", "t")
+MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
+MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
+MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER")
