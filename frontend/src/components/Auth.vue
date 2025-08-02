@@ -4,6 +4,10 @@
       <div class="auth-modal">
         <button class="close-btn" @click="onClose">×</button>
 
+        <button v-if="store.userStore.isAuthenticated" class="logout-btn" @click="onLogout">
+          Выйти
+        </button>
+
         <h2 v-if="mode === 'register'">Регистрация</h2>
         <h2 v-else>Вход</h2>
 
@@ -54,6 +58,17 @@ const error = ref('')
 function onClose() {
   store.userStore.closeAuth()
   reset()
+}
+
+// Вызывается при клике на «Выйти»
+async function onLogout() {
+  try {
+    await store.userStore.logout()
+    store.userStore.closeAuth()
+    reset()
+  } catch (e) {
+    console.error('Logout failed', e)
+  }
 }
 
 function toggleMode() {
@@ -123,12 +138,14 @@ async function onSuccess() {
 <style scoped lang="scss">
 
 .auth-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: fixed;
+  inset: 0;
+  padding: 22px 0;
+  background-color: $white-100;
   z-index: 2000;
 }
 .auth-modal {

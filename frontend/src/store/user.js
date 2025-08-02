@@ -8,12 +8,12 @@ export const useUserStore = defineStore('user', () => {
   const accessToken = ref(localStorage.getItem('accessToken') || '')
   const refreshToken = ref(localStorage.getItem('refreshToken') || '')
   const user = ref({
-    id: null,
+    id:         null,
     first_name: '',
-    last_name: '',
-    username: '',
-    role: 'visitor',
-    photo_url: null
+    last_name:  '',
+    username:   '',
+    role:       'visitor',
+    photo_url:  null
   })
 
   // Profile state
@@ -50,6 +50,23 @@ export const useUserStore = defineStore('user', () => {
 
 
   // Auth & initialization
+
+  async function logout() {
+    accessToken.value  = ''
+    refreshToken.value = ''
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    // сбросим user & profile
+    user.value = {
+      id:         null,
+      first_name: '',
+      last_name:  '',
+      username:   '',
+      role:       'visitor',
+      photo_url:  null
+    }
+    profile.value = null
+  }
 
   // запрос регистрации
   async function requestRegistrationCode(email, username, first_name, last_name) {
@@ -198,6 +215,7 @@ export const useUserStore = defineStore('user', () => {
     isAuthenticated,
 
     // auth/init
+    logout,
     requestRegistrationCode,
     verifyRegistrationCode,
     requestLoginCode,
