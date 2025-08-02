@@ -17,8 +17,7 @@
 
     <!-- Иконки действий -->
     <div class="actions">
-<!--      <div @click="goToPage('Profile')" class="icon-btn" title="Профиль">-->
-      <div class="icon-btn" title="Профиль">
+      <div class="icon-btn" title="Профиль" @click="onProfileClick()">
         <img :src="store.userStore.user.photo_url || icon_default_avatar" alt="Профиль" class="avatar" />
       </div>
       <div @click="goToPage('Favorites')" class="icon-btn" title="Избранное">
@@ -244,6 +243,14 @@ function onSelectSuggestion(item) {
     name: 'Catalog',
     query: { gender: item.gender, category: item.category, brand: item.brand }
   })
+}
+
+function onProfileClick() {
+  if (store.userStore.isAuthenticated()) {
+    goToPage('Profile')
+  } else {
+    store.userStore.openAuth()
+  }
 }
 
 </script>

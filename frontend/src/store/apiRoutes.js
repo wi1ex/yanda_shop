@@ -1,5 +1,10 @@
-// src/store/apiRoutes.js
 export const API = {
+  auth: {
+    requestRegistrationCode:  '/api/auth/request_registration_code',    // POST   - Регистрация: запрос кода
+    verifyRegistrationCode:   '/api/auth/verify_registration_code',     // POST   - Регистрация: верификация кода
+    requestLoginCode:         '/api/auth/request_login_code',           // POST   - Авторизация: запрос кода
+    verifyLoginCode:          '/api/auth/verify_login_code',            // POST   - Авторизация: верификация кода
+  },
   general: {
     healthCheck:              '/api/general',                           // GET    - health check
     saveUser:                 '/api/general/save_user',                 // POST   - сохранить/обновить Telegram-пользователя

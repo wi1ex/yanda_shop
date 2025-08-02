@@ -1,6 +1,7 @@
 <template>
   <div class="app-container" v-if="store.userStore.user">
     <Header/>
+    <Auth/>
     <Cart/>
     <Search/>
     <router-view/>
@@ -12,7 +13,9 @@
 import { onMounted, watch, onBeforeUnmount, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStore } from '@/store/index.js'
+import { getJwtIdentity } from '@/services/api'
 import Header from '@/components/Header.vue'
+import Auth from '@/components/Auth.vue'
 import Cart from '@/components/Cart.vue'
 import Search from '@/components/Search.vue'
 import Footer from '@/components/Footer.vue'
@@ -24,7 +27,8 @@ const isNoFooterRoute = computed(() => route.name === 'Admin')
 let initialOverflow = ''
 const anyOverlayOpen = computed(() =>
   store.globalStore.showMenu ||
-  store.cartStore.showCartDrawer ||
+  store.userStore.showAuth ||
+  store.cartStore.showCart ||
   store.globalStore.showSearch
 )
 
@@ -37,6 +41,21 @@ onMounted(async () => {
   if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
     const tgUser = window.Telegram.WebApp.initDataUnsafe.user
     await store.userStore.initializeTelegramUser(tgUser)
+  } else if (localStorage.getItem('accessToken')) {
+    const userId = parseInt(getJwtIdentity(), 10)
+    if (userId) {
+      const pd = await store.userStore.fetchUserProfile(userId)
+      if (pd) {
+        store.userStore.user = {
+          id:         pd.user_id,
+          first_name: pd.first_name,
+          last_name:  pd.last_name,
+          username:   pd.username,
+          role:       pd.role,
+          photo_url:  pd.photo_url
+        }
+      }
+    }
   } else {
     await store.userStore.initializeVisitorUser()
   }

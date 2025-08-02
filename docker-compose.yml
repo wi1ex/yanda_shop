@@ -26,6 +26,8 @@ services:
       - "${REDIS_PASSWORD}"
       - --appendonly
       - "yes"
+      - --appendfsync
+      - "everysec"
     ports:
       - "6379:6379"
     volumes:

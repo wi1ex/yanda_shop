@@ -1,8 +1,6 @@
-// src/store/user.js
-
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import api from '@/services/api'
+import api, { getJwtIdentity } from '@/services/api'
 import { API } from './apiRoutes'
 
 export const useUserStore = defineStore('user', () => {
@@ -22,11 +20,15 @@ export const useUserStore = defineStore('user', () => {
   const profile = ref(null)
   const profileLoading = ref(false)
   const profileError = ref('')
+  const showAuth = ref(false)
 
   // Helpers
-  function isTelegramUserId(id) {
-    const n = parseInt(id, 10)
-    return !isNaN(n) && String(n) === String(id)
+  function openAuth() {
+    showAuth.value = true
+  }
+
+  function closeAuth() {
+    showAuth.value = false
   }
 
   function setTokens({ access, refresh = '' }) {
@@ -36,7 +38,66 @@ export const useUserStore = defineStore('user', () => {
     localStorage.setItem('refreshToken', refresh)
   }
 
+  function isAuthenticated(id = user.value.id) {
+    const token = accessToken.value
+    if (!token) return false
+    // Попробуем получить user_id из JWT
+    const jwtId = getJwtIdentity()    // строка или null
+    if (!jwtId) return false
+    // Ид из стора может быть числом или строкой — приведём к строке
+    return String(id) === String(jwtId)
+  }
+
+
   // Auth & initialization
+
+  // запрос регистрации
+  async function requestRegistrationCode(email, username, first_name, last_name) {
+    return api.post(API.auth.requestRegistrationCode, { email, username, first_name, last_name })
+  }
+
+  // запрос кода для входа
+  async function requestLoginCode(email) {
+    return api.post(API.auth.requestLoginCode, { email })
+  }
+
+  // верификация регистрации/авторизации
+  async function verifyCode(endpoint, email, code) {
+    const { data } = await api.post(endpoint, { email, code })
+    if (!data?.access_token || !data?.refresh_token) {
+      console.error('No tokens returned', data)
+      return null
+    }
+    setTokens({ access: data.access_token, refresh: data.refresh_token })
+
+    const userId = parseInt(getJwtIdentity(), 10)
+    if (!userId) {
+      console.error('No user_id in token')
+      return null
+    }
+    const pd = await fetchUserProfile(userId)
+    if (!pd) return null
+    return {
+      id:         pd.user_id,
+      first_name: pd.first_name,
+      last_name:  pd.last_name,
+      username:   pd.username,
+      role:       pd.role,
+      photo_url:  pd.photo_url
+    }
+  }
+
+  // переписываем регистрации и логин через общую функцию
+  async function verifyRegistrationCode(email, code) {
+    const profile = await verifyCode(API.auth.verifyRegistrationCode, email, code)
+    if (profile) user.value = profile
+  }
+
+  async function verifyLoginCode(email, code) {
+    const profile = await verifyCode(API.auth.verifyLoginCode, email, code)
+    if (profile) user.value = profile
+  }
+
   async function verifyAdminAccess() {
     try {
       await api.get(API.admin.getSettings)
@@ -47,11 +108,13 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function saveUserToServer(payload) {
-    if (!payload?.id) return
+    if (!payload?.id) return null
     try {
-      await api.post(API.general.saveUser, payload)
+      const { data } = await api.post(API.general.saveUser, payload)
+      return data
     } catch (e) {
       console.error('Failed to save Telegram user:', e)
+      return null
     }
   }
 
@@ -84,11 +147,16 @@ export const useUserStore = defineStore('user', () => {
     }
 
     try {
-      await saveUserToServer(payload)
+      const data = await saveUserToServer(payload)
+      if (data && data.access_token && data.refresh_token) {
+        setTokens({ access: data.access_token, refresh: data.refresh_token })
+      } else {
+        console.error('No tokens returned for Telegram user', data)
+        return
+      }
+
       const pd = await fetchUserProfile(tgUser.id)
-
       if (!pd) return
-
       user.value = {
         id: pd.user_id,
         first_name: pd.first_name,
@@ -96,13 +164,6 @@ export const useUserStore = defineStore('user', () => {
         username: pd.username,
         role: pd.role,
         photo_url: pd.photo_url
-      }
-
-      if (pd.access_token) {
-        setTokens({
-          access: pd.access_token,
-          refresh: pd.refresh_token || ''
-        })
       }
     } catch (e) {
       console.error('Error initializing Telegram user:', e)
@@ -128,12 +189,19 @@ export const useUserStore = defineStore('user', () => {
     profile,
     profileLoading,
     profileError,
+    showAuth,
 
     // helpers
-    isTelegramUserId,
+    openAuth,
+    closeAuth,
     setTokens,
+    isAuthenticated,
 
     // auth/init
+    requestRegistrationCode,
+    verifyRegistrationCode,
+    requestLoginCode,
+    verifyLoginCode,
     verifyAdminAccess,
     saveUserToServer,
     fetchUserProfile,

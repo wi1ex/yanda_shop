@@ -1,4 +1,3 @@
-// src/store/index.js
 import { useProductStore } from './product';
 import { useCartStore }    from './cart';
 import { useUserStore }    from './user';

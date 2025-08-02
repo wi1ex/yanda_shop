@@ -1,5 +1,3 @@
-// src/store/product.js
-
 import { defineStore } from 'pinia';
 import { ref, reactive, computed, watch } from 'vue';
 import api from '@/services/api';

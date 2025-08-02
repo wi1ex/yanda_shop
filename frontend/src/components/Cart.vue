@@ -1,6 +1,6 @@
 <template>
   <transition name="drawer">
-    <div v-if="store.cartStore.showCartDrawer" class="cart-drawer-overlay" @click.self="store.cartStore.closeCartDrawer()">
+    <div v-if="store.cartStore.showCart" class="cart-drawer-overlay" @click.self="store.cartStore.closeCartDrawer()">
       <div class="cart-drawer">
 
         <div class="cart-header">
@@ -67,7 +67,7 @@
         </div>
 
         <div class="cart-action" v-if="store.cartStore.cart.items.length">
-          <button type="button" v-if="store.userStore.isTelegramUserId(store.userStore.user?.id)" class="action-button" @click="store.cartStore.checkout">
+          <button type="button" v-if="store.userStore.isAuthenticated()" class="action-button" @click="store.cartStore.checkout">
             Оформить заказ
           </button>
           <button type="button" v-else class="action-button" @click="onRegister">

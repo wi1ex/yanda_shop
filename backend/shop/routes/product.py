@@ -1,5 +1,6 @@
 from typing import Tuple, Dict, Any, List
 from flask import Blueprint, request, jsonify, Response
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..core.logging import logger
 from ..models import Shoe, Clothing, Accessory
 from ..utils.cache_utils import cache_get, cache_set
@@ -69,6 +70,7 @@ def get_product() -> Tuple[Response, int]:
 
 
 @product_api.route("/get_cart", methods=["GET"])
+@jwt_required()
 @handle_errors
 @require_args("user_id")
 def get_cart() -> Tuple[Response, int]:
@@ -76,45 +78,55 @@ def get_cart() -> Tuple[Response, int]:
     GET /api/product/get_cart?user_id=<id>
     Возвращает содержимое корзины из Redis.
     """
-    uid = int(request.args["user_id"])
+    uid_str = request.args["user_id"]
+    try:
+        uid = int(uid_str)
+    except ValueError:
+        return jsonify({"error": "invalid user_id"}), 400
     logger.debug("get_cart: user_id=%d", uid)
+
+    current = int(get_jwt_identity())
+    if current != uid:
+        return jsonify({"error": "Access denied"}), 403
 
     key = f"cart:{uid}"
     payload = cache_get(key) or {"items": []}
     records = payload.get("items", [])
 
-    result_items: List[Dict[str, Any]] = []
-    total = 0
+    # Собираем список SKU и пометок доставки
+    skus = [rec.get("variant_sku") for rec in records]
+    # Затем загружаем товары разом
     with session_scope() as session:
-        for rec in records:
-            sku = rec.get("variant_sku")
-            label = rec.get("delivery_label")
-            logger.debug("get_cart: processing sku=%r label=%r", sku, label)
+        shoes       = session.query(Shoe).filter(Shoe.variant_sku.in_(skus)).all()
+        clothing    = session.query(Clothing).filter(Clothing.variant_sku.in_(skus)).all()
+        accessories = session.query(Accessory).filter(Accessory.variant_sku.in_(skus)).all()
+        obj_map = {obj.variant_sku: obj for obj in shoes + clothing + accessories}
 
-            obj = (
-                session.query(Shoe).filter_by(variant_sku=sku).first() or
-                session.query(Clothing).filter_by(variant_sku=sku).first() or
-                session.query(Accessory).filter_by(variant_sku=sku).first()
-            )
-            if not obj:
-                logger.warning("get_cart: item %r not found, skipping", sku)
-                continue
+    total = 0
+    result_items = []
+    for rec in records:
+        sku = rec.get("variant_sku")
+        label = rec.get("delivery_label")
+        obj = obj_map.get(sku)
+        if not obj:
+            logger.warning("get_cart: item %r not found, skipping", sku)
+            continue
 
-            data = serialize_product(obj)
-            opt = next((o for o in data["delivery_options"] if o["label"] == label), None)
-            price = obj.price * (opt["multiplier"] if opt else 1)
-            unit_price = round(price)
-            data["unit_price"] = unit_price
-            data["delivery_option"] = opt
+        data = serialize_product(obj)
+        opt = next((o for o in data["delivery_options"] if o["label"] == label), None)
+        unit_price = round(obj.price * (opt["multiplier"] if opt else 1))
+        data["unit_price"] = unit_price
+        data["delivery_option"] = opt
 
-            result_items.append(data)
-            total += unit_price
+        result_items.append(data)
+        total += unit_price
 
     logger.info("get_cart: returning %d items, total=%d", len(result_items), total)
     return jsonify({"items": result_items, "count": len(result_items), "total": total}), 200
 
 
 @product_api.route("/save_cart", methods=["POST"])
+@jwt_required()
 @handle_errors
 @require_json("user_id", "items")
 def save_cart() -> Tuple[Response, int]:
@@ -123,9 +135,17 @@ def save_cart() -> Tuple[Response, int]:
     JSON {user_id: int, items: List[...] }
     """
     data = request.get_json()
-    uid = int(data["user_id"])
+    uid_str = data["user_id"]
     items = data["items"]
+    try:
+        uid = int(uid_str)
+    except ValueError:
+        return jsonify({"error": "invalid user_id"}), 400
     logger.debug("save_cart: user_id=%d items=%d", uid, len(items))
+
+    current = int(get_jwt_identity())
+    if current != uid:
+        return jsonify({"error": "Access denied"}), 403
 
     key = f"cart:{uid}"
     cache_set(key, {"items": items}, ttl_seconds=60*60*24*365)
@@ -135,6 +155,7 @@ def save_cart() -> Tuple[Response, int]:
 
 
 @product_api.route("/get_favorites", methods=["GET"])
+@jwt_required()
 @handle_errors
 @require_args("user_id")
 def get_favorites() -> Tuple[Response, int]:
@@ -142,8 +163,16 @@ def get_favorites() -> Tuple[Response, int]:
     GET /api/product/get_favorites?user_id=<id>
     Возвращает избранное из Redis.
     """
-    uid = int(request.args["user_id"])
+    uid_str = request.args["user_id"]
+    try:
+        uid = int(uid_str)
+    except ValueError:
+        return jsonify({"error": "invalid user_id"}), 400
     logger.debug("get_favorites: user_id=%d", uid)
+
+    current = int(get_jwt_identity())
+    if current != uid:
+        return jsonify({"error": "Access denied"}), 403
 
     key = f"favorites:{uid}"
     payload = cache_get(key) or {"items": [], "count": 0}
@@ -153,6 +182,7 @@ def get_favorites() -> Tuple[Response, int]:
 
 
 @product_api.route("/save_favorites", methods=["POST"])
+@jwt_required()
 @handle_errors
 @require_json("user_id", "items")
 def save_favorites() -> Tuple[Response, int]:
@@ -161,11 +191,19 @@ def save_favorites() -> Tuple[Response, int]:
     JSON {user_id: int, items: List[...] }
     """
     data = request.get_json()
-    uid = int(data["user_id"])
+    uid_str = data["user_id"]
     items = data["items"]
-    payload = {"items": items, "count": len(items)}
+    try:
+        uid = int(uid_str)
+    except ValueError:
+        return jsonify({"error": "invalid user_id"}), 400
     logger.debug("save_favorites: user_id=%d items=%d", uid, len(items))
 
+    current = int(get_jwt_identity())
+    if current != uid:
+        return jsonify({"error": "Access denied"}), 403
+
+    payload = {"items": items, "count": len(items)}
     key = f"favorites:{uid}"
     cache_set(key, payload, ttl_seconds=60*60*24*365)
 

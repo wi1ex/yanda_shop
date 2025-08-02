@@ -4,8 +4,6 @@ from flask_jwt_extended import get_jwt_identity, get_jwt
 from ..models import ChangeLog
 from ..utils.db_utils import session_scope
 
-MOSCOW = ZoneInfo("Europe/Moscow")
-
 def log_change(action_type: str, description: str) -> None:
     """
     Добавляет запись в ChangeLog.
@@ -14,6 +12,7 @@ def log_change(action_type: str, description: str) -> None:
     author_id = get_jwt_identity()
     claims = get_jwt()
     author_name = claims.get("username", "<unknown>")
+    now = datetime.now(ZoneInfo("Europe/Moscow"))
 
     with session_scope() as session:
         session.add(
@@ -22,6 +21,6 @@ def log_change(action_type: str, description: str) -> None:
                 author_name=author_name,
                 action_type=action_type,
                 description=description,
-                timestamp=datetime.now(MOSCOW),
+                timestamp=now,
             )
         )

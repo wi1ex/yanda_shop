@@ -16,8 +16,6 @@ class Users(db.Model):
     password_hash  = db.Column(db.String, nullable=True)
     email          = db.Column(db.String(100), nullable=True)
     email_verified = db.Column(db.Boolean, nullable=True)
-    phone          = db.Column(db.String(100), nullable=True)
-    phone_verified = db.Column(db.Boolean, nullable=True)
     date_of_birth  = db.Column(db.Date, nullable=True)
     gender         = db.Column(db.String(100), nullable=True)
     mailing        = db.Column(db.Boolean, nullable=True)
