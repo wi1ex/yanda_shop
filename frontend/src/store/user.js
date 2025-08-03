@@ -19,8 +19,6 @@ export const useUserStore = defineStore('user', () => {
   // Profile state
   const profile = ref(null)
   const profileLoaded = ref(false)
-  const profileLoading = ref(false)
-  const profileError = ref('')
   const showAuth = ref(false)
 
   // Helpers
@@ -122,24 +120,16 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function fetchUserProfile(userId) {
-    profileLoading.value = true
-    profileError.value = ''
-    try {
-      const { data } = await api.get(API.general.getUserProfile, {
-        params: { user_id: userId }
-      })
-      user.value = {
-        id:         data.user_id,
-        first_name: data.first_name,
-        last_name:  data.last_name,
-        username:   data.username,
-        role:       data.role,
-        photo_url:  data.photo_url
-      }
-    } catch (e) {
-      profileError.value = e.response?.status === 404 ? 'Пользователь не найден' : `Ошибка ${e.response?.status || e.message}`
-    } finally {
-      profileLoading.value = false
+    const { data } = await api.get(API.general.getUserProfile, {
+      params: { user_id: userId }
+    })
+    user.value = {
+      id:         data.user_id,
+      first_name: data.first_name,
+      last_name:  data.last_name,
+      username:   data.username,
+      role:       data.role,
+      photo_url:  data.photo_url
     }
   }
 
@@ -189,8 +179,6 @@ export const useUserStore = defineStore('user', () => {
     user,
     profile,
     profileLoaded,
-    profileLoading,
-    profileError,
     showAuth,
 
     // helpers

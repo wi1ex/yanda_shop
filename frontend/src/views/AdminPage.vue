@@ -193,6 +193,25 @@
       </div>
     </section>
 
+    <!-- Все заявки -->
+    <section class="requests-section" v-if="selected === 'requests'">
+      <h2>Заявки клиентов</h2>
+      <ul v-if="store.adminStore.requests.length" class="requests-list">
+        <li v-for="r in store.adminStore.requests" :key="r.id" class="request-item">
+          <div class="request-header">
+            <strong>#{{ r.id }}</strong>
+            <span>{{ r.name }}</span>
+            <span>{{ r.email || '—' }}</span>
+            <span class="date">{{ new Date(r.created_at).toLocaleString() }}</span>
+          </div>
+          <p>Артикул: {{ r.sku || '—' }}</p>
+          <a v-if="r.file_url" :href="r.file_url" target="_blank">Файл</a>
+          <button @click="onDeleteRequest(r.id)">Удалить</button>
+        </li>
+      </ul>
+      <p v-else>Заявок пока нет.</p>
+    </section>
+
     <!-- Все отзывы -->
     <section class="all-reviews-section" v-if="selected === 'all_reviews'">
       <h2>Все отзывы</h2>
@@ -240,25 +259,6 @@
       </form>
     </section>
 
-    <!-- Все заявки -->
-    <section class="requests-section" v-if="selected === 'requests'">
-      <h2>Заявки клиентов</h2>
-      <ul v-if="store.adminStore.requests.length" class="requests-list">
-        <li v-for="r in store.adminStore.requests" :key="r.id" class="request-item">
-          <div class="request-header">
-            <strong>#{{ r.id }}</strong>
-            <span>{{ r.name }}</span>
-            <span>{{ r.email || '—' }}</span>
-            <span class="date">{{ new Date(r.created_at).toLocaleString() }}</span>
-          </div>
-          <p>Артикул: {{ r.sku || '—' }}</p>
-          <a v-if="r.file_url" :href="r.file_url" target="_blank">Файл</a>
-          <button @click="onDeleteRequest(r.id)">Удалить</button>
-        </li>
-      </ul>
-      <p v-else>Заявок пока нет.</p>
-    </section>
-
   </div>
 </template>
 
@@ -292,9 +292,9 @@ const tabs             = [
   { key:'visits',      label:'Статистика посещений' },
   { key:'users',       label:'Список пользователей' },
   { key:'settings',    label:'Настройка переменных' },
+  { key:'requests',    label:'Заявки клиентов' },
   { key:'all_reviews', label:'Список отзывов' },
   { key:'add_review',  label:'Добавить отзыв' },
-  { key:'requests',    label:'Заявки клиентов' },
 ]
 
 const zipPreviewFiles = reactive({ shoes:null, clothing:null, accessories:null });
@@ -654,6 +654,7 @@ watch(selected, (tab) => {
 /* ===== Tabs ===== */
 .tabs {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 5px;
   padding-bottom: 10px;
   border-bottom: 1px solid $grey-20;
