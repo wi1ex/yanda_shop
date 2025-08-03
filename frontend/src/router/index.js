@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { watch } from 'vue'
 import Home from '@/views/Home.vue'
 import CatalogPage from '@/views/CatalogPage.vue'
 import ProductPage from '@/views/ProductPage.vue'
@@ -33,6 +34,20 @@ const router = createRouter({
 // глобальный guard вместо beforeEnter на одном маршруте
 router.beforeEach(async (to, from, next) => {
   const store = useStore()
+
+  if (!store.userStore.profileLoaded) {
+    await new Promise(resolve => {
+      const stop = watch(
+        () => store.userStore.profileLoaded,
+        loaded => {
+          if (loaded) {
+            stop()
+            resolve()
+          }
+        }
+      )
+    })
+  }
 
   if (to.name === 'Profile' && !store.userStore.isAuthenticated()) {
     store.userStore.openAuth()
