@@ -1,16 +1,27 @@
 <template>
   <div class="profile-page">
     <div class="line-vert"></div>
-    <h1>Профиль пользователя</h1>
-    <div class="profile-info">
-      <img :src="store.userStore.user.photo_url || icon_default_avatar_grey" alt="avatar" />
-      <p>Никнейм: {{ store.userStore.user.username }}</p>
-      <p>Имя: {{ store.userStore.user.first_name }}</p>
-      <p>Фамилия: {{ store.userStore.user.last_name }}</p>
+    <h1 class="section-title">ЛИЧНЫЙ КАБИНЕТ</h1>
+
+    <button type="button" class="back-button" @click="goBack">
+      <img :src="icon_arrow_grey" alt="arrow back" />
+      Назад
+    </button>
+
+    <div class="line-hor"></div>
+
+    <div class="profile-menu">
+      <button type="button" @click="onLogout()">Мой профиль</button>
+      <button type="button" @click="onLogout()">Заказы</button>
+      <button type="button" @click="onLogout()">Мои адреса</button>
+      <button type="button" @click="onLogout()">Выйти из профиля</button>
     </div>
-    <button @click="onLogout()">Выйти</button>
   </div>
   <div class="line-hor"></div>
+<!--<img :src="store.userStore.user.photo_url || icon_default_avatar_grey" alt="avatar" />-->
+<!--<p>Никнейм: {{ store.userStore.user.username }}</p>-->
+<!--<p>Имя: {{ store.userStore.user.first_name }}</p>-->
+<!--<p>Фамилия: {{ store.userStore.user.last_name }}</p>-->
 </template>
 
 <script setup>
@@ -18,9 +29,19 @@ import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 
 import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
+import icon_arrow_grey from "@/assets/images/arrow_grey.svg";
 
 const store  = useStore()
 const router = useRouter()
+
+function goBack() {
+  if (window.history.length > 1) {
+    router.back()
+  } else {
+    router.push({ name: 'Home' })
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 
 async function onLogout() {
   await store.userStore.logout()
@@ -50,19 +71,40 @@ async function onLogout() {
 
 .profile-page {
   margin-top: 120px;
-  .profile-info {
-    background-color: #252a3b;
-    padding: 20px;
-    border-radius: 8px;
+  .section-title {
+    margin: 120px 0 64px;
+    color: $black-100;
+    font-family: Bounded;
+    font-weight: 400;
+    font-size: 64px;
+    line-height: 90%;
+    letter-spacing: -5.12px;
+    z-index: 20;
+  }
+  .back-button {
+    display: flex;
+    align-items: center;
+    margin: 0 10px 10px;
+    padding: 0;
+    width: fit-content;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: $black-100;
+    font-size: 16px;
+    line-height: 100%;
+    letter-spacing: -0.64px;
+    cursor: pointer;
     img {
-      width: 80px;
-      height: 80px;
-      border-radius: 100%;
+      width: 24px;
+      height: 24px;
       object-fit: cover;
     }
-    p {
-      margin: 8px 0;
-      font-size: 16px;
+  }
+  .profile-menu {
+
+    button {
+
     }
   }
 }
