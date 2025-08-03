@@ -45,7 +45,7 @@ def create_app() -> Flask:
 
         @jwt.expired_token_loader
         def _expired_token(header, payload):
-            logger.warning("%s: JWT expired token", context, header, payload)
+            logger.warning("%s: JWT expired token — header=%s, payload=%s", context, header, payload)
             return jsonify({"error": "Token has expired"}), 401
 
         logger.debug("%s: JWT callbacks registered", context)
