@@ -1,7 +1,6 @@
 import axios from 'axios'
 import { useUserStore } from '@/store/user';
 
-const userStore = useUserStore();
 const api = axios.create({
   baseURL: 'https://yandashop.ru'
 })
@@ -34,7 +33,9 @@ api.interceptors.response.use(null, async err => {
       return api(original)
     } catch (_e) {
       // refresh тоже упал — вынудим разлогиниться
+      const userStore = useUserStore();
       await userStore.logout()
+      window.location.href = '/'
     }
   }
   return Promise.reject(err)

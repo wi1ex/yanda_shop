@@ -10,7 +10,7 @@
     <div v-else class="profile-info">
       <img :src="store.userStore.user.photo_url || icon_default_avatar_grey" alt="avatar" class="profile-avatar"/>
       <p v-if="store.userStore.user.username">
-        <strong>Username:</strong> {{ store.userStore.user.username }}
+        <strong>Никнейм:</strong> {{ store.userStore.user.username }}
       </p>
       <p v-if="store.userStore.user.first_name">
         <strong>Имя:</strong> {{ store.userStore.user.first_name }}
