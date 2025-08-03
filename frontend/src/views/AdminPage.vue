@@ -622,7 +622,7 @@ watch(selected, (tab) => {
   color: $black-100;
   h1 {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin: 0 0 20px;
   }
   section {
     margin: 2rem 0;
@@ -638,7 +638,7 @@ watch(selected, (tab) => {
     }
   }
   .no-data {
-    color: #bbb;
+    color: $grey-87;
     text-align: center;
     font-style: italic;
     padding: .5rem 0;
@@ -646,31 +646,20 @@ watch(selected, (tab) => {
 }
 /* ===== Tabs ===== */
 .tabs {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #444;
-  &::-webkit-scrollbar {
-    height: 4px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.2);
-    border-radius: 2px;
-  }
+  display: grid;
+  gap: 5px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid $grey-20;
   button {
     flex: 0 0 auto;
-    padding: 0.6rem 1rem;
-    background: #333;
-    color: #fff;
+    padding: 10px;
+    background-color: $grey-20;
+    color: $white-100;
     border: none;
     border-radius: 4px;
-    white-space: nowrap;
-    transition: background 0.2s;
+    transition: background 0.25s ease-in-out;
     &.active {
-      background: #007bff;
+      background-color: $red-active;
     }
   }
 }
@@ -683,63 +672,59 @@ watch(selected, (tab) => {
   h3 {
     font-size: 1.2rem;
     margin: 1.5rem 0 1rem;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid $grey-20;
     padding-bottom: .5rem;
   }
   .combined-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 2rem;
+    display: grid;
+    gap: 10px;
+    margin-bottom: 20px;
     .zip-input-block {
-      flex: 1 1 30%;
-      min-width: 200px;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 5px;
       label {
         font-weight: bold;
       }
       input[type="file"] {
         padding: .5rem;
-        background: #1e222b;
-        border: 1px solid #444;
+        background-color: $black-100;
+        border: 1px solid $grey-20;
         border-radius: 4px;
-        color: #fff;
+        color: $white-100;
       }
     }
     button {
       flex: 1 1 120px;
       align-self: flex-end;
       padding: .75rem 1.25rem;
-      background: #007bff;
-      color: #fff;
+      background-color: $red-active;
+      color: $white-100;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       transition: background .2s;
       &:disabled {
-        background: #555;
+        background-color: $grey-20;
         cursor: not-allowed;
       }
     }
   }
   .sheet-preview-block,
   .zip-preview-block {
-    display: flex;
-    flex-wrap: wrap;
-    margin-top: 2rem;
-    gap: 1rem;
+    display: grid;
+    margin-top: 20px;
+    gap: 10px;
     .preview-result {
       flex: 1 1 30%;
       min-width: 200px;
-      background: #252a3b;
+      background-color: $grey-20;
       padding: 1rem;
       border-radius: 8px;
       h4 {
         margin: 0 0 .5rem;
         font-size: 1rem;
-        color: #fff;
+        color: $white-100;
       }
       p {
         margin: .3rem 0;
@@ -747,14 +732,14 @@ watch(selected, (tab) => {
       }
       ul {
         margin: .5rem 0 0 1rem;
-        color: #ddd;
+        color: $grey-87;
         list-style: disc;
       }
       li {
         margin-bottom: .3rem;
       }
       .error {
-        color: #e94f37;
+        color: $red-active;
       }
     }
   }
@@ -769,26 +754,24 @@ watch(selected, (tab) => {
     overflow-x: auto;
     min-width: 600px;
     th, td {
-      border: 1px solid #444;
+      border: 1px solid $grey-20;
       padding: .6rem;
       text-align: left;
-      font-size: .9rem;
-      word-break: break-word;
-      hyphens: auto;
+      font-size: .8rem;
     }
     thead {
-      background: #333;
-      color: #fff;
+      background-color: $grey-20;
+      color: $white-100;
     }
   }
   .loading-logs {
-    color: #bbb;
+    color: $grey-87;
     font-style: italic;
     text-align: center;
     padding: 1rem 0;
   }
   .no-logs {
-    color: #bbb;
+    color: $grey-87;
     text-align: center;
     padding: .5rem 0;
     font-style: italic;
@@ -800,19 +783,19 @@ watch(selected, (tab) => {
     gap: .5rem;
     button {
       padding: .5rem 1rem;
-      background: #007bff;
-      color: #fff;
+      background-color: $red-active;
+      color: $white-100;
       border: none;
       border-radius: 4px;
       cursor: pointer;
       &:disabled {
-        background: #ccc;
-        color: #666;
+        background-color: $grey-87;
+        color: $grey-20;
         cursor: not-allowed;
       }
     }
     span {
-      color: #eee;
+      color: $white-100;
       font-size: .9rem;
       align-self: center;
     }
@@ -834,42 +817,41 @@ watch(selected, (tab) => {
     input, .refresh-button {
       flex: 1 1 120px;
       padding: .5rem;
-      border: 1px solid #444;
+      border: 1px solid $grey-20;
       border-radius: 4px;
-      background: #1e222b;
-      color: #fff;
+      background-color: $black-100;
+      color: $white-100;
     }
     .refresh-button {
-      background: #007bff;
+      background-color: $red-active;
       cursor: pointer;
     }
   }
   .loading-visits {
-    color: #bbb;
+    color: $grey-87;
     font-style: italic;
   }
   .chart-wrapper {
-    overflow-x: auto;
     margin-bottom: 1rem;
   }
   .bar-chart {
     display: flex;
     align-items: flex-end;
     height: 300px;
-    border-left: 1px solid #666;
-    border-bottom: 1px solid #666;
+    border-left: 1px solid $grey-20;
+    border-bottom: 1px solid $grey-20;
   }
   .bar {
     flex: 1;
     margin: 0 2px;
-    background: #2196F3;
+    background-color: $red-active;
     position: relative;
     display: flex;
     flex-direction: column-reverse;
     align-items: center;
   }
   .bar-value {
-    color: #fff;
+    color: $white-100;
     font-size: 12px;
     padding: 2px;
   }
@@ -877,10 +859,10 @@ watch(selected, (tab) => {
     position: absolute;
     bottom: -18px;
     font-size: 12px;
-    color: #ccc;
+    color: $grey-87;
   }
   .no-data {
-    color: #bbb;
+    color: $grey-87;
     font-style: italic;
     text-align: center;
     padding: 1rem 0;
@@ -896,16 +878,14 @@ watch(selected, (tab) => {
     min-width: 600px;
     margin-bottom: 1rem;
     th, td {
-      border: 1px solid #444;
+      border: 1px solid $grey-20;
       padding: .6rem;
       text-align: left;
-      font-size: .9rem;
-      word-break: break-word;
-      hyphens: auto;
+      font-size: .8rem;
     }
     thead {
-      background: #333;
-      color: #fff;
+      background-color: $grey-20;
+      color: $white-100;
     }
   }
 }
@@ -916,7 +896,7 @@ watch(selected, (tab) => {
     border-collapse: collapse;
     margin-bottom: 1rem;
     th, td {
-      border: 1px solid #444;
+      border: 1px solid $grey-20;
       padding: .6rem;
       text-align: left;
       font-size: .9rem;
@@ -924,39 +904,37 @@ watch(selected, (tab) => {
       hyphens: auto;
     }
     thead {
-      background: #333;
-      color: #fff;
+      background-color: $grey-20;
+      color: $white-100;
     }
   }
   .btn-save-all {
     padding: .75rem 1.5rem;
-    background: #007bff;
-    color: #fff;
+    background-color: $red-active;
+    color: $white-100;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     &:disabled {
-      background: #ccc;
+      background-color: $grey-87;
       cursor: not-allowed;
     }
   }
   .add-setting {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .5rem;
-    margin-top: 1rem;
+    display: grid;
+    gap: 5px;
+    margin-top: 10px;
     input {
-      flex: 1 1 200px;
       padding: .5rem;
-      border: 1px solid #444;
+      border: 1px solid $grey-20;
       border-radius: 4px;
-      background: #1e222b;
-      color: #fff;
+      background-color: $black-100;
+      color: $white-100;
     }
     button {
       padding: .5rem 1rem;
-      background: #007bff;
-      color: #fff;
+      background-color: $red-active;
+      color: $white-100;
       border: none;
       border-radius: 4px;
       cursor: pointer;
@@ -965,10 +943,10 @@ watch(selected, (tab) => {
       background: none;
       border: none;
       font-size: 1.1rem;
-      color: #e94f37;
+      color: $red-active;
       cursor: pointer;
       &:disabled {
-        color: #666;
+        color: $grey-30;
         cursor: not-allowed;
       }
     }
@@ -977,10 +955,10 @@ watch(selected, (tab) => {
     background: none;
     border: none;
     font-size: 1.1rem;
-    color: #e94f37;
+    color: $red-active;
     cursor: pointer;
     &:disabled {
-      color: #666;
+      color: $grey-30;
       cursor: not-allowed;
     }
   }
@@ -992,8 +970,7 @@ watch(selected, (tab) => {
     padding: 0;
   }
   .admin-review {
-    background: #252a3b;
-    padding: 1rem;
+    background-color: #252a3b$grey-20
     border-radius: 6px;
     margin-bottom: 1rem;
     .review-header {
@@ -1002,13 +979,13 @@ watch(selected, (tab) => {
       justify-content: space-between;
       margin-bottom: .5rem;
       .review-date {
-        color: #aaa;
+        color: $grey-87;
         font-size: .9rem;
       }
     }
     p {
       margin: .3rem 0;
-      color: #ddd;
+      color: $grey-87;
     }
     .photos {
       display: flex;
@@ -1023,14 +1000,14 @@ watch(selected, (tab) => {
       border-radius: 4px;
     }
     .review-link a {
-      color: #4caf50;
+      color: $red-active;
       text-decoration: none;
     }
     .delete-btn {
       margin-top: .5rem;
       padding: .5rem 1rem;
-      background: #e94f37;
-      color: #fff;
+      background-color: $red-active;
+      color: $white-100;
       border: none;
       border-radius: 4px;
       cursor: pointer;
@@ -1044,29 +1021,29 @@ watch(selected, (tab) => {
     gap: 1rem;
     max-width: 400px;
     input, textarea {
-      width: 100%;
-      padding: .5rem;
-      border: 1px solid #444;
+      width: calc(100% - 10px);
+      padding: 5px;
+      border: 1px solid $grey-20;
       border-radius: 4px;
-      background: #1e222b;
-      color: #fff;
+      background-color: $black-100;
+      color: $white-100;
     }
     .photos-inputs input {
       margin-top: .5rem;
     }
     button {
       padding: .75rem 1.5rem;
-      background: #007bff;
-      color: #fff;
+      background-color: $red-active;
+      color: $white-100;
       border: none;
       border-radius: 6px;
       cursor: pointer;
     }
     .error {
-      color: #e94f37;
+      color: $red-error;
     }
     .success {
-      color: #4caf50;
+      color: $red-active;
     }
   }
 }
@@ -1076,7 +1053,7 @@ watch(selected, (tab) => {
     list-style: none;
     padding: 0;
     .request-item {
-      background: #252a3b;
+      background-color: $grey-20;
       padding: 1rem;
       border-radius: 6px;
       margin-bottom: 1rem;
@@ -1087,24 +1064,24 @@ watch(selected, (tab) => {
         margin-bottom: .5rem;
         .date {
           margin-left: auto;
-          color: #aaa;
+          color: $white-100;
         }
       }
       p {
         margin: .3rem 0;
-        color: #ddd;
+        color: $grey-87;
         word-break: break-word;
         hyphens: auto;
       }
       a {
-        color: #4caf50;
+        color: $red-active;
         text-decoration: none;
         margin-right: 1rem;
       }
       button {
         padding: .5rem 1rem;
-        background: #e94f37;
-        color: #fff;
+        background-color: $red-active;
+        color: $white-100;
         border: none;
         border-radius: 4px;
         cursor: pointer;
