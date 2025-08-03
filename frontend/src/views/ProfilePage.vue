@@ -20,7 +20,7 @@
       </p>
     </div>
 
-    <button v-if="store.userStore.isAuthenticated" class="logout-btn" @click="store.userStore.logout()">
+    <button v-if="store.userStore.isAuthenticated" class="logout-btn" @click="onLogout()">
       Выйти
     </button>
   </div>
@@ -28,10 +28,22 @@
 
 <script setup>
 import { useStore } from '@/store/index.js'
+import { useRouter } from 'vue-router'
 
 import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
 
 const store  = useStore()
+const router = useRouter()
+
+async function onLogout() {
+  try {
+    await store.userStore.logout()
+    router.push({ name: 'Home' })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  } catch (e) {
+    console.error('Logout failed', e)
+  }
+}
 
 </script>
 
