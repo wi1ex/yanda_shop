@@ -168,6 +168,9 @@ export const useProductStore = defineStore('product', () => {
       groups[p.color_sku].variants.push(p);
     });
     const all = Object.values(groups);
+    all.forEach(g => {
+      g.minPriceVariant = g.variants.reduce((prev, cur) => prev.price <= cur.price ? prev : cur);
+    });
     colorGroups.value = all;
 
     // reset indices
