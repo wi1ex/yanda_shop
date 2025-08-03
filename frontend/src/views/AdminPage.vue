@@ -970,7 +970,7 @@ watch(selected, (tab) => {
     padding: 0;
   }
   .admin-review {
-    background-color: #252a3b$grey-20
+    background-color: $grey-20;
     border-radius: 6px;
     margin-bottom: 1rem;
     .review-header {
