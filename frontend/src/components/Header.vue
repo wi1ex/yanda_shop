@@ -266,7 +266,6 @@ function onProfileClick() {
   width: calc(100% - 20px);
   height: 72px;
   padding: 10px;
-  background-color: $black-25;
   z-index: 1000;
   .actions {
     display: flex;
