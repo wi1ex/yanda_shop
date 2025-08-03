@@ -18,6 +18,7 @@ export const useUserStore = defineStore('user', () => {
 
   // Profile state
   const profile = ref(null)
+  const profileLoaded = ref(false)
   const profileLoading = ref(false)
   const profileError = ref('')
   const showAuth = ref(false)
@@ -86,22 +87,7 @@ export const useUserStore = defineStore('user', () => {
       return null
     }
     setTokens({ access: data.access_token, refresh: data.refresh_token })
-
-    const userId = parseInt(getJwtIdentity(), 10)
-    if (!userId) {
-      console.error('No user_id in token')
-      return null
-    }
-    const pd = await fetchUserProfile(userId)
-    if (!pd) return null
-    return {
-      id:         pd.user_id,
-      first_name: pd.first_name,
-      last_name:  pd.last_name,
-      username:   pd.username,
-      role:       pd.role,
-      photo_url:  pd.photo_url
-    }
+    await initializeWebUser()
   }
 
   // переписываем регистрации и логин через общую функцию
@@ -138,17 +124,20 @@ export const useUserStore = defineStore('user', () => {
   async function fetchUserProfile(userId) {
     profileLoading.value = true
     profileError.value = ''
-
     try {
       const { data } = await api.get(API.general.getUserProfile, {
         params: { user_id: userId }
       })
-      return data
+      user.value = {
+        id:         data.user_id,
+        first_name: data.first_name,
+        last_name:  data.last_name,
+        username:   data.username,
+        role:       data.role,
+        photo_url:  data.photo_url
+      }
     } catch (e) {
-      profileError.value =
-        e.response?.status === 404
-          ? 'Пользователь не найден'
-          : `Ошибка ${e.response?.status || e.message}`
+      profileError.value = e.response?.status === 404 ? 'Пользователь не найден' : `Ошибка ${e.response?.status || e.message}`
     } finally {
       profileLoading.value = false
     }
@@ -162,7 +151,6 @@ export const useUserStore = defineStore('user', () => {
       username: tgUser.username,
       photo_url: tgUser.photo_url || null
     }
-
     try {
       const data = await saveUserToServer(payload)
       if (data && data.access_token && data.refresh_token) {
@@ -171,26 +159,22 @@ export const useUserStore = defineStore('user', () => {
         console.error('No tokens returned for Telegram user', data)
         return
       }
-
-      const pd = await fetchUserProfile(tgUser.id)
-      if (!pd) return
-      user.value = {
-        id: pd.user_id,
-        first_name: pd.first_name,
-        last_name: pd.last_name,
-        username: pd.username,
-        role: pd.role,
-        photo_url: pd.photo_url
-      }
+      await fetchUserProfile(tgUser.id)
     } catch (e) {
       console.error('Error initializing Telegram user:', e)
+    }
+  }
+
+  async function initializeWebUser() {
+    const userId = parseInt(getJwtIdentity(), 10)
+    if (userId) {
+      await fetchUserProfile(userId)
     }
   }
 
   async function initializeVisitorUser() {
     const stored = localStorage.getItem('visitorId')
     const id = stored || crypto.randomUUID()
-
     if (!stored) {
       localStorage.setItem('visitorId', id)
     }
@@ -204,6 +188,7 @@ export const useUserStore = defineStore('user', () => {
     refreshToken,
     user,
     profile,
+    profileLoaded,
     profileLoading,
     profileError,
     showAuth,
@@ -224,6 +209,7 @@ export const useUserStore = defineStore('user', () => {
     saveUserToServer,
     fetchUserProfile,
     initializeTelegramUser,
+    initializeWebUser,
     initializeVisitorUser,
   }
 })

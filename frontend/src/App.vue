@@ -42,23 +42,11 @@ onMounted(async () => {
     const tgUser = window.Telegram.WebApp.initDataUnsafe.user
     await store.userStore.initializeTelegramUser(tgUser)
   } else if (localStorage.getItem('accessToken')) {
-    const userId = parseInt(getJwtIdentity(), 10)
-    if (userId) {
-      const pd = await store.userStore.fetchUserProfile(userId)
-      if (pd) {
-        store.userStore.user = {
-          id:         pd.user_id,
-          first_name: pd.first_name,
-          last_name:  pd.last_name,
-          username:   pd.username,
-          role:       pd.role,
-          photo_url:  pd.photo_url
-        }
-      }
-    }
+    await store.userStore.initializeWebUser()
   } else {
     await store.userStore.initializeVisitorUser()
   }
+  store.userStore.profileLoaded = true
   await store.productStore.fetchProducts()
   await store.globalStore.fetchParameters()
   await store.globalStore.fetchReviews()
