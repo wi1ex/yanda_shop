@@ -51,7 +51,7 @@ export const useUserStore = defineStore('user', () => {
 
   // Auth & initialization
 
-  function logout() {
+  async function logout() {
     accessToken.value  = ''
     refreshToken.value = ''
     localStorage.removeItem('accessToken')

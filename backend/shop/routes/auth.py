@@ -197,18 +197,22 @@ def request_login_code():
     # проверяем, что пользователь есть
     with session_scope() as session:
         user = session.query(Users).filter_by(email=email).first()
-    if not user:
-        return jsonify({"error": "Пользователь не найден"}), 404
+        if not user:
+            return jsonify({"error": "Пользователь не найден"}), 404
+        user_id = user.user_id
+        username = user.username
+        first_name = user.first_name
+        last_name = user.last_name
 
     code = ''.join(secrets.choice(string.digits) for _ in range(6))
     key = f"email_login:{email}"
-    redis_client.setex(key, 600, f"{code}|{user.username}")
+    redis_client.setex(key, 600, f"{code}|{username}")
 
     msg = Message(
         subject="Код входа на Yanda Shop",
         recipients=[email],
         body=(
-            f"Здравствуйте, {user.username}!\n\n"
+            f"Здравствуйте, {username}!\n\n"
             f"Ваш код входа: {code}\n"
             f"Он действителен 10 минут.\n\n"
             "Если вы не запрашивали, просто проигнорируйте."
@@ -218,10 +222,10 @@ def request_login_code():
 
     with session_scope() as session:
         session.add(ChangeLog(
-            author_id=user.user_id,
-            author_name=user.username,
+            author_id=user_id,
+            author_name=username,
             action_type="Авторизация",
-            description=f"Попытка входа в аккаунт: {user.first_name} {user.last_name}",
+            description=f"Попытка входа в аккаунт: {first_name} {last_name}",
             timestamp=now,
         ))
 
@@ -252,6 +256,8 @@ def verify_login_code():
     # получаем пользователя из БД
     with session_scope() as session:
         user = session.query(Users).filter_by(email=email).first()
+        if not user:
+            return jsonify({"error": "Пользователь не найден"}), 404
         user.last_visit = now
 
         session.add(ChangeLog(
@@ -261,8 +267,6 @@ def verify_login_code():
             description=f"Успешный вход в аккаунт: {user.first_name} {user.last_name}",
             timestamp=now,
         ))
-    if not user:
-        return jsonify({"error": "Пользователь не найден"}), 404
 
     # Redis: track visit counts
     track_visit_counts(str(user.user_id))
