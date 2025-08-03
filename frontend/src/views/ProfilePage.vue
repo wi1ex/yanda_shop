@@ -17,7 +17,7 @@
       <button type="button" @click="onLogout()">Выйти из профиля</button>
     </div>
   </div>
-  <div class="line-hor"></div>
+  <div class="line-hor" style="margin-top: 96px;"></div>
 <!--<img :src="store.userStore.user.photo_url || icon_default_avatar_grey" alt="avatar" />-->
 <!--<p>Никнейм: {{ store.userStore.user.username }}</p>-->
 <!--<p>Имя: {{ store.userStore.user.first_name }}</p>-->
@@ -72,13 +72,14 @@ async function onLogout() {
 .profile-page {
   margin-top: 120px;
   .section-title {
-    margin: 120px 0 64px;
+    margin: 96px 0 40px;
+    text-align: center;
     color: $black-100;
     font-family: Bounded;
     font-weight: 400;
-    font-size: 64px;
+    font-size: 32px;
     line-height: 90%;
-    letter-spacing: -5.12px;
+    letter-spacing: -2.24px;
     z-index: 20;
   }
   .back-button {
@@ -102,9 +103,31 @@ async function onLogout() {
     }
   }
   .profile-menu {
-
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding: 10px 10px 0;
+    z-index: 20;
     button {
-
+      display: flex;
+      padding: 16px 8px;
+      border: none;
+      border-bottom: 1px solid $white-100;
+      background-color: $grey-95;
+      color: $grey-20;
+      font-family: Bounded;
+      font-size: 16px;
+      font-weight: 350;
+      line-height: 80%;
+      letter-spacing: -0.8px;
+      cursor: pointer;
+    }
+    button:first-child {
+      border-radius: 4px 4px 0 0;
+    }
+    button:last-child {
+      border-radius: 0 0 4px 4px;
+      border-bottom: none;
     }
   }
 }
