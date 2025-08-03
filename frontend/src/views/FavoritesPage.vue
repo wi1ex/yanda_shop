@@ -56,10 +56,10 @@ const favoritesLoading = ref(false)
 // вычисляем реальный список products по каждому color_sku
 const favoriteProducts = computed(() =>
   store.cartStore.favorites.items
-      .slice().reverse()
-      .map(cs => store.productStore.colorGroups.find(g => g.color_sku === cs))
-      .filter(Boolean)
-      .map(g => g.minPriceVariant)
+    .slice().reverse()
+    .map(cs => store.productStore.colorGroups.find(g => g.color_sku === cs))
+    .filter(Boolean)
+    .map(g => g.minPriceVariant)
 )
 
 function formatPrice(val) {
