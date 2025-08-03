@@ -112,7 +112,7 @@
 
       <div class="date-picker">
         <label for="visit-date">Дата:</label>
-        <input type="date" id="visit-date" v-model="selectedDate" @change="fetchVisits" />
+        <input type="date" id="visit-date" v-model="selectedDate" @click="openDatePicker" @change="fetchVisits" />
         <button type="button" class="refresh-button" @click="fetchVisits">Обновить</button>
       </div>
 
@@ -526,6 +526,13 @@ async function onAddSetting() {
 
 function fetchVisits() {
   store.adminStore.loadVisits(selectedDate.value)
+}
+
+function openDatePicker(event) {
+  const input = event.target
+  if (typeof input.showPicker === 'function') {
+    input.showPicker()
+  }
 }
 
 async function makeAdmin(userId) {
@@ -970,9 +977,11 @@ watch(selected, (tab) => {
     padding: 0;
   }
   .admin-review {
+    padding: 10px;
     background-color: $grey-20;
     border-radius: 6px;
     margin-bottom: 1rem;
+    color: $white-100;
     .review-header {
       display: flex;
       flex-wrap: wrap;
