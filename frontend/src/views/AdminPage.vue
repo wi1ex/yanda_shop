@@ -617,9 +617,9 @@ watch(selected, (tab) => {
    Container & Headings
    ===================== */
 .admin-page {
-  margin-top: 12vh;
-  padding: 2vw;
-  color: #fff;
+  margin-top: 120px;
+  padding: 10px;
+  color: $black-100;
   h1 {
     text-align: center;
     margin-bottom: 1.5rem;
@@ -1114,67 +1114,8 @@ watch(selected, (tab) => {
 }
 /* ===== Responsive Enhancements ===== */
 @media (max-width: 600px) {
-  .combined-preview,
-  .sheet-preview-block,
-  .zip-preview-block,
-  .pagination-controls,
-  .date-picker {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-  }
-  .zip-input-block,
-  .preview-result,
-  .combined-preview button,
-  .pagination-controls button,
-  .date-picker input,
-  .date-picker .refresh-button {
-    flex: 1 1 100% !important;
-    width: 100% !important;
-    box-sizing: border-box;
-    margin-bottom: .75rem;
-  }
-  .sheet-preview-block .preview-result,
-  .zip-preview-block .preview-result {
-    max-width: 100%;
-    margin-bottom: 1rem;
-  }
-  .logs-section .logs-table,
-  .users-section table,
-  .settings-section table {
-    display: block;
-    overflow-x: auto;
-    min-width: 100%;
-  }
-  .bar-chart {
-    height: 150px !important;
-  }
-  .admin-review {
-    padding: .75rem !important;
-  }
-  .admin-review .review-header {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: .25rem !important;
-  }
-  .photos {
-    justify-content: flex-start !important;
-    flex-wrap: wrap;
-  }
-  .admin-photo {
-    width: 60px !important;
-    height: 60px !important;
-  }
-  .tabs button {
-    flex: 1 1 45% !important;
-    font-size: .8rem !important;
-    padding: .5rem .75rem !important;
-  }
-  .add-review-section form {
-    max-width: 100% !important;
-  }
-  .requests-section .request-item {
-    padding: .75rem !important;
+  .admin-page {
+    margin-top: 96px;
   }
 }
 
