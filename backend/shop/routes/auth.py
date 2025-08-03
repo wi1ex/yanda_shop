@@ -162,6 +162,10 @@ def verify_registration_code():
         session.flush()
         user_id = str(user.user_id)
 
+    # Redis: track visit counts
+    track_visit_counts(str(user_id))
+
+    with session_scope() as session:
         session.add(ChangeLog(
             author_id=user_id,
             author_name=username,
@@ -251,27 +255,33 @@ def verify_login_code():
     if code != stored_code:
         return jsonify({"error": "Неверный код"}), 400
 
-    redis_client.delete(key)
-
     # получаем пользователя из БД
     with session_scope() as session:
         user = session.query(Users).filter_by(email=email).first()
         if not user:
             return jsonify({"error": "Пользователь не найден"}), 404
         user.last_visit = now
+        user_id = user.user_id
+        username = user.username
+        first_name = user.first_name
+        last_name = user.last_name
+        role = user.role
 
+    # Redis: track visit counts
+    track_visit_counts(str(user_id))
+
+    redis_client.delete(key)
+
+    with session_scope() as session:
         session.add(ChangeLog(
-            author_id=user.user_id,
-            author_name=user.username,
+            author_id=user_id,
+            author_name=username,
             action_type="Авторизация",
-            description=f"Успешный вход в аккаунт: {user.first_name} {user.last_name}",
+            description=f"Успешный вход в аккаунт: {first_name} {last_name}",
             timestamp=now,
         ))
 
-    # Redis: track visit counts
-    track_visit_counts(str(user.user_id))
-
-    tokens = make_tokens(str(user.user_id), user.username, user.role)
+    tokens = make_tokens(str(user_id), username, role)
     access_token, refresh_token = tokens["access_token"], tokens["refresh_token"]
     return jsonify({
         "access_token": access_token,
