@@ -8,18 +8,59 @@ export const useUserStore = defineStore('user', () => {
   const accessToken = ref(localStorage.getItem('accessToken') || '')
   const refreshToken = ref(localStorage.getItem('refreshToken') || '')
   const user = ref({
-    id:         null,
-    first_name: '',
-    last_name:  '',
-    username:   '',
-    role:       'visitor',
-    photo_url:  null
+    id:             null,
+    first_name:     '',
+    last_name:      '',
+    middle_name:    '',
+    username:       '',
+    role:           'visitor',
+    phone:          '',
+    email:          '',
+    date_of_birth:  '',
+    gender:         '',
+    photo_url:      null,
   })
 
   // Profile state
-  const profile = ref(null)
   const profileLoaded = ref(false)
-  const showAuth = ref(false)
+  const showAuth      = ref(false)
+
+  // Добавляем заказы и адреса
+  const orders       = ref([])
+  const orderDetail  = ref(null)
+  const addresses    = ref([])
+
+  // ORDERS
+  async function fetchOrders() {
+    const { data } = await api.get(API.general.getUserOrders)
+    orders.value = data.orders
+    return orders.value
+  }
+
+  async function fetchOrder(id) {
+    const { data } = await api.get(`${API.general.getUserOrder}/${id}`)
+    orderDetail.value = data.order
+    return orderDetail.value
+  }
+
+  // ADDRESSES
+  async function fetchAddresses() {
+    const { data } = await api.get(API.general.listAddresses)
+    addresses.value = data.addresses
+    return addresses.value
+  }
+
+  async function addAddress(payload) {
+    await api.post(API.general.createAddress, payload)
+  }
+
+  async function updateAddress(id, payload) {
+    await api.put(`${API.general.updateAddress}/${id}`, payload)
+  }
+
+  async function deleteAddress(id) {
+    await api.delete(`${API.general.deleteAddress}/${id}`)
+  }
 
   // Helpers
   function openAuth() {
@@ -55,16 +96,20 @@ export const useUserStore = defineStore('user', () => {
     refreshToken.value = ''
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
-    // сбросим user & profile
+    // сбросим user
     user.value = {
-      id:         null,
-      first_name: '',
-      last_name:  '',
-      username:   '',
-      role:       'visitor',
-      photo_url:  null
+      id:             null,
+      first_name:     '',
+      last_name:      '',
+      middle_name:    '',
+      username:       '',
+      role:           'visitor',
+      phone:          '',
+      email:          '',
+      date_of_birth:  '',
+      gender:         '',
+      photo_url:      null,
     }
-    profile.value = null
   }
 
   // запрос регистрации
@@ -124,13 +169,24 @@ export const useUserStore = defineStore('user', () => {
       params: { user_id: userId }
     })
     user.value = {
-      id:         data.user_id,
-      first_name: data.first_name,
-      last_name:  data.last_name,
-      username:   data.username,
-      role:       data.role,
-      photo_url:  data.photo_url
+      id:             data.user_id,
+      first_name:     data.first_name,
+      last_name:      data.last_name,
+      middle_name:    data.middle_name,
+      username:       data.username,
+      role:           data.role,
+      phone:          data.phone,
+      email:          data.email,
+      date_of_birth:  data.date_of_birth,
+      gender:         data.gender,
+      photo_url:      data.photo_url
     }
+  }
+
+  async function updateProfile(formData) {
+    await api.put(API.general.updateProfile, formData)
+    const userId = parseInt(getJwtIdentity(), 10)
+    await fetchUserProfile(userId)
   }
 
   async function initializeTelegramUser(tgUser) {
@@ -177,9 +233,19 @@ export const useUserStore = defineStore('user', () => {
     accessToken,
     refreshToken,
     user,
-    profile,
     profileLoaded,
     showAuth,
+    orders,
+    orderDetail,
+    addresses,
+
+    // orders/addresses
+    fetchOrders,
+    fetchOrder,
+    fetchAddresses,
+    addAddress,
+    updateAddress,
+    deleteAddress,
 
     // helpers
     openAuth,
@@ -196,6 +262,7 @@ export const useUserStore = defineStore('user', () => {
     verifyAdminAccess,
     saveUserToServer,
     fetchUserProfile,
+    updateProfile,
     initializeTelegramUser,
     initializeWebUser,
     initializeVisitorUser,

@@ -53,10 +53,10 @@ def handle_errors(fn):
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         context = fn.__name__
-        logger.info("%s START", context)
+        logger.debug("%s START", context)
         try:
             result = fn(*args, **kwargs)
-            logger.info("%s END", context)
+            logger.debug("%s END", context)
             return result
         except Exception:
             logger.exception("%s: unexpected error", context)

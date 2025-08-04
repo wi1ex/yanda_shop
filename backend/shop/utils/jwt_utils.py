@@ -14,7 +14,7 @@ def admin_required(fn):
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         context = "admin_required"
-        logger.info("%s START function=%s", context, fn.__name__)
+        logger.debug("%s START function=%s", context, fn.__name__)
 
         # 1) Проверка валидности токена
         try:
@@ -38,7 +38,7 @@ def admin_required(fn):
             return jsonify({"error": "Admin access required"}), 403
 
         # 4) Успех
-        logger.info("%s END: access granted for %s", context, fn.__name__)
+        logger.debug("%s END: access granted for %s", context, fn.__name__)
         return fn(*args, **kwargs)
 
     return wrapper
