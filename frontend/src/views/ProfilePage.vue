@@ -3,7 +3,7 @@
     <div class="line-vert"></div>
     <h1 class="section-title">ЛИЧНЫЙ КАБИНЕТ</h1>
 
-    <button type="button" v-else class="back-button" @click="goBack()">
+    <button type="button" class="back-button" @click="goBack()">
       <img :src="icon_arrow_grey" alt="arrow back" />
       {{ currentSection ? 'Мой кабинет' : 'Назад' }}
     </button>
