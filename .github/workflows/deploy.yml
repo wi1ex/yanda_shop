@@ -65,9 +65,9 @@ jobs:
             backend:
               - 'backend/**'
             others:
-              - '**/*'
               - '!frontend/**'
               - '!backend/**'
+              - '**/*'
 
       # 2) SSH-ключ и known_hosts
       - name: Prepare SSH
