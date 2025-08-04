@@ -146,49 +146,45 @@ jobs:
 
       - name: Copy .env to server
         run: |
-          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
-            ./.env \
-            "${{ secrets.SERVER_USER }}"@"${{ secrets.SERVER_HOST }}":/root/app/yanda_shop/.env
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes ./.env "${{ secrets.SERVER_USER }}"@"${{ secrets.SERVER_HOST }}":/root/app/yanda_shop/.env
         shell: bash
 
       # 4) Деплой по SSH
       - name: Deploy via SSH
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
-              -l "${{ secrets.SERVER_USER }}" "${{ secrets.SERVER_HOST }}" <<EOF
-            set -euo pipefail
-            cd /root/app/yanda_shop
-            git fetch --all
-            git reset --hard origin/main
-  
-            if [ "${{ steps.changes.outputs.others }}" = "true" ]; then
-              echo "🔄 Root-level changes → full rebuild of all services"
-              docker-compose down
-              docker network prune --filter "until=24h" --force
-              docker container prune --filter "until=24h" --force
-              docker image prune --all --filter "until=24h" --force
-              docker builder prune --all --filter "until=24h" --force
-              certbot renew --noninteractive --standalone --agree-tos
-              docker-compose build --no-cache
-              docker-compose up -d
-              docker-compose run --rm backend flask db upgrade
-            fi
-  
-            if [ "${{ steps.changes.outputs.others }}" = "false" ] && [ "${{ steps.changes.outputs.backend }}" = "true" ]; then
-              echo "⚙️  Rebuilding backend..."
-              docker-compose build backend
-              docker-compose rm -sf backend
-              docker-compose up -d backend
-            fi
-          
-            if [ "${{ steps.changes.outputs.others }}" = "false" ] && [ "${{ steps.changes.outputs.frontend }}" = "true" ]; then
-              echo "⚙️  Rebuilding frontend..."
-              docker-compose build frontend
-              docker-compose rm -sf frontend
-              docker-compose up -d frontend
-            fi
-  
-            # Показываем статус
-            docker-compose ps
-            EOF
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -l "${{ secrets.SERVER_USER }}" "${{ secrets.SERVER_HOST }}" <<EOF
+          set -euo pipefail
+          cd /root/app/yanda_shop
+          git fetch --all
+          git reset --hard origin/main
+
+          if [ "${{ steps.changes.outputs.others }}" = "true" ]; then
+            echo "🔄 Root-level changes → full rebuild of all services"
+            docker-compose down
+            docker network prune --filter "until=24h" --force
+            docker container prune --filter "until=24h" --force
+            docker image prune --all --filter "until=24h" --force
+            docker builder prune --all --filter "until=24h" --force
+            certbot renew --noninteractive --standalone --agree-tos
+            docker-compose build --no-cache
+            docker-compose up -d
+            docker-compose run --rm backend flask db upgrade
+          fi
+
+          if [ "${{ steps.changes.outputs.others }}" = "false" ] && [ "${{ steps.changes.outputs.backend }}" = "true" ]; then
+            echo "⚙️  Rebuilding backend..."
+            docker-compose build backend
+            docker-compose rm -sf backend
+            docker-compose up -d backend
+          fi
+        
+          if [ "${{ steps.changes.outputs.others }}" = "false" ] && [ "${{ steps.changes.outputs.frontend }}" = "true" ]; then
+            echo "⚙️  Rebuilding frontend..."
+            docker-compose build frontend
+            docker-compose rm -sf frontend
+            docker-compose up -d frontend
+          fi
+
+          docker-compose ps
+          EOF
         shell: bash
