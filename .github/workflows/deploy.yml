@@ -53,21 +53,38 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # 1) Определяем, что изменилось
-      - name: Detect changed paths
+      - name: Detect changed paths between pushes
         id: changes
-        uses: dorny/paths-filter@v2
-        with:
-          filters: |
-            frontend:
-              - 'frontend/**'
-            backend:
-              - 'backend/**'
-            others:
-              - '!frontend/**'
-              - '!backend/**'
-              - '**/*'
+        run: |
+          git fetch --no-tags --prune origin main
+          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          FRONT=false
+          if echo "$CHANGED" | grep -qE '^frontend/'; then
+            FRONT=true
+          fi
+          echo "frontend=$FRONT" >> $GITHUB_OUTPUT
+
+          BACK=false
+          if echo "$CHANGED" | grep -qE '^backend/'; then
+            BACK=true
+          fi
+          echo "backend=$BACK" >> $GITHUB_OUTPUT
+
+          OTHER=false
+          while IFS= read -r file; do
+            if [[ ! "$file" =~ ^frontend/ ]] && [[ ! "$file" =~ ^backend/ ]]; then
+              OTHER=true
+              break
+            fi
+          done <<< "$CHANGED"
+          echo "others=$OTHER" >> $GITHUB_OUTPUT
 
       # 2) SSH-ключ и known_hosts
       - name: Prepare SSH
