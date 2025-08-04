@@ -173,7 +173,7 @@ const store = useStore()
 const router = useRouter()
 
 // UI-state
-const currentSection = ref(null)  // null | 'profile' | 'orders' | 'addresses'
+const currentSection = ref(null)
 const titles = {
   profile: 'Мой профиль',
   orders: 'К заказам',
