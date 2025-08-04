@@ -231,7 +231,7 @@ async function onLogout() {
 }
 
 function goBack() {
-  if (currentSection) {
+  if (currentSection.value) {
     currentSection.value = null
   } else {
     if (window.history.length > 1) {
