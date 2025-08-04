@@ -14,7 +14,7 @@
 
     <div class="line-hor"></div>
 
-    <div class="profile-menu">
+    <div class="profile-menu" v-if="!currentSection">
       <button type="button" @click="select('profile')">Мой профиль</button>
       <button type="button" @click="select('orders')">Заказы</button>
       <button type="button" @click="select('addresses')">Мои адреса</button>
@@ -27,7 +27,9 @@
       <div class="card photo">
         <label>Фото профиля</label>
         <div class="photo-row">
-          <div class="avatar" :style="{ backgroundImage: `url(${user.photo_url || icon_default_avatar_grey})` }"></div>
+          <div class="avatar">
+            <img :src="store.userStore.user.photo_url || icon_default_avatar_grey" alt="">
+          </div>
           <button v-if="!hasPhoto" @click="triggerFile">Загрузить</button>
           <template v-else>
             <button @click="triggerFile">Изменить</button>
@@ -430,35 +432,6 @@ watch(
       border-radius: 0 0 4px 4px;
       border-bottom: none;
     }
-  }
-  .menu {
-    button {
-      display: block;
-      width: 100%;
-      padding: 16px;
-      font-family: Bounded;
-      font-size: 16px;
-      line-height: 100%;
-      letter-spacing: -0.64px;
-      color: $grey-20;
-      background-color: $grey-95;
-      border: none;
-      margin-bottom: 1px;
-      cursor: pointer;
-      &.exit {
-        margin-top: 16px;
-        background: none;
-        color: $black-100;
-      }
-    }
-  }
-  .badge {
-    display: inline-block;
-    background-color: #FF5E5E;
-    color: #FFFFFF;
-    border-radius: 8px;
-    padding: 2px 6px;
-    margin-left: 8px;
   }
   .subheader {
     display: flex;
