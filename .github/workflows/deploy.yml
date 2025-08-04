@@ -144,7 +144,6 @@ jobs:
             git fetch --all
             git reset --hard origin/main
   
-            rebuilt=false
             if [ "${{ steps.changes.outputs.others }}" = "true" ]; then
               echo "🔄 Root-level changes → full rebuild of all services"
               docker-compose down
@@ -156,16 +155,15 @@ jobs:
               docker-compose build --no-cache
               docker-compose up -d
               docker-compose run --rm backend flask db upgrade
-              rebuilt=true
             fi
   
-            if [ "$rebuilt" = "false" && "${{ steps.changes.outputs.backend }}" = "true" ]; then
+            if [ "${{ steps.changes.outputs.others }}" = "false" && "${{ steps.changes.outputs.backend }}" = "true" ]; then
               echo "⚙️  Rebuilding backend..."
               docker-compose build backend
               docker-compose up -d --force-recreate backend
             fi
           
-            if [ "$rebuilt" = "false" && "${{ steps.changes.outputs.frontend }}" = "true" ]; then
+            if [ "${{ steps.changes.outputs.others }}" = "false" && "${{ steps.changes.outputs.frontend }}" = "true" ]; then
               echo "⚙️  Rebuilding frontend..."
               docker-compose build frontend
               docker-compose up -d --force-recreate frontend
