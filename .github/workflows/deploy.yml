@@ -64,6 +64,10 @@ jobs:
               - 'frontend/**'
             backend:
               - 'backend/**'
+            others:
+              - '**/*'
+              - '!frontend/**'
+              - '!backend/**'
 
       # 2) SSH-ключ и known_hosts
       - name: Prepare SSH
@@ -140,25 +144,8 @@ jobs:
             git fetch --all
             git reset --hard origin/main
   
-            # Если правки в frontend/ — rebuild only frontend
             rebuilt=false
-            if [ "${{ steps.changes.outputs.frontend }}" = "true" ]; then
-              echo "⚙️  Rebuilding frontend..."
-              docker-compose build frontend
-              docker-compose up -d frontend
-              rebuilt=true
-            fi
-  
-            # Если правки в backend/ — rebuild only backend
-            if [ "${{ steps.changes.outputs.backend }}" = "true" ]; then
-              echo "⚙️  Rebuilding backend..."
-              docker-compose build backend
-              docker-compose up -d backend
-              rebuilt=true
-            fi
-  
-            # Если ни frontend, ни backend — считаем это «root change»
-            if [ "$rebuilt" = "false" ]; then
+            if [ "${{ steps.changes.outputs.others }}" = "true" ]; then
               echo "🔄 Root-level changes → full rebuild of all services"
               docker-compose down
               docker network prune --filter "until=24h" --force
@@ -169,6 +156,19 @@ jobs:
               docker-compose build --no-cache
               docker-compose up -d
               docker-compose run --rm backend flask db upgrade
+              rebuilt=true
+            fi
+  
+            if [ "$rebuilt" = "false" && "${{ steps.changes.outputs.backend }}" = "true" ]; then
+              echo "⚙️  Rebuilding backend..."
+              docker-compose build backend
+              docker-compose up -d --force-recreate backend
+            fi
+          
+            if [ "$rebuilt" = "false" && "${{ steps.changes.outputs.frontend }}" = "true" ]; then
+              echo "⚙️  Rebuilding frontend..."
+              docker-compose build frontend
+              docker-compose up -d --force-recreate frontend
             fi
   
             # Показываем статус
