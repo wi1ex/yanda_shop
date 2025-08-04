@@ -89,14 +89,21 @@
 
 ### /api/general
 
-| Endpoint                    | Method | Description                             |
-| --------------------------- | ------ |-----------------------------------------|
-| `/general/`                 | GET    | Health check                            |
-| `/general/save_user`        | POST   | Сохранение инфо о пользователе Telegram |
-| `/general/get_user_profile` | GET    | Профиль пользователя                    |
-| `/general/get_parameters`   | GET    | Общие параметры                         |
-| `/general/list_reviews`     | GET    | Список отзывов                          |
-| `/general/create_request`   | POST   | Заявка на поиск товара                  |
+| Endpoint                    | Method | Description                        |
+|-----------------------------|--------|------------------------------------|
+| `/general/`                 | GET    | Health check                       |
+| `/general/save_user`        | POST   | Сохранить/обновить TG-пользователя |
+| `/general/get_user_profile` | GET    | Получить данные профиля            |
+| `/general/update_profile`   | PUT    | обновить данные профиля            |
+| `/general/get_parameters`   | GET    | получить публичные настройки       |
+| `/general/list_reviews`     | GET    | получить список отзывов            |
+| `/general/create_request`   | POST   | отправить заявку на поиск товара   |
+| `/general/get_user_orders`  | GET    | получить список заказов            |
+| `/general/get_user_order`   | GET    | получить детали заказа             |
+| `/general/list_addresses`   | GET    | получить список адресов            |
+| `/general/add_address`      | POST   | добавить адрес                     |
+| `/general/update_address`   | PUT    | обновить данные дареса             |
+| `/general/delete_address`   | DELETE | удалить адрес                      |
 
 ### /api/product
 

@@ -14,7 +14,7 @@ def load_parameters() -> None:
     Вызывать при старте и после изменений в админке.
     """
     context = "load_parameters"
-    logger.info("%s START", context)
+    logger.debug("%s START", context)
     try:
         with session_scope() as session:
             settings = session.query(AdminSetting).filter(
@@ -25,7 +25,7 @@ def load_parameters() -> None:
             ).all()
             payload = {s.key: s.value or "" for s in settings}
             redis_client.set("parameters", json.dumps(payload))
-            logger.info("%s END loaded_count=%d", context, len(payload))
+            logger.debug("%s END loaded_count=%d", context, len(payload))
     except Exception as exc:
         logger.exception("%s: failed to load parameters", context, exc_info=exc)
 
@@ -37,7 +37,7 @@ def load_delivery_options() -> None:
     После обновления настроек доставки нужно вызвать снова.
     """
     context = "load_delivery_options"
-    logger.info("%s START", context)
+    logger.debug("%s START", context)
     opts: List[Dict[str, Any]] = []
 
     try:
@@ -65,7 +65,7 @@ def load_delivery_options() -> None:
         return
 
     redis_client.set("delivery_options", json.dumps(opts))
-    logger.info("%s END loaded_count=%d", context, len(opts))
+    logger.debug("%s END loaded_count=%d", context, len(opts))
 
 
 # Cache utils: Redis JSON access
@@ -75,14 +75,14 @@ def cache_get(key: str):
     Если ключ не найден или при ошибке — возвращает None.
     """
     context = "cache_get"
-    logger.info("%s START key=%s", context, key)
+    logger.debug("%s START key=%s", context, key)
     raw = redis_client.get(key)
     if not raw:
         logger.debug("%s: key not found %s", context, key)
         return None
     try:
         value = json.loads(raw)
-        logger.info("%s END loaded", context)
+        logger.debug("%s END loaded", context)
         return value
     except json.JSONDecodeError:
         logger.exception("%s: JSON decode error for key %s", context, key)
@@ -94,11 +94,11 @@ def cache_set(key: str, value, ttl_seconds: int):
     Сохранить в Redis значение value (сериализует в JSON) с TTL в секундах.
     """
     context = "cache_set"
-    logger.info("%s START key=%s ttl=%s", context, key, ttl_seconds)
+    logger.debug("%s START key=%s ttl=%s", context, key, ttl_seconds)
     try:
         payload = json.dumps(value)
         redis_client.set(key, payload)
         redis_client.expire(key, ttl_seconds)
-        logger.info("%s END stored", context)
+        logger.debug("%s END stored", context)
     except Exception:
         logger.exception("%s: failed to set key %s", context, key)

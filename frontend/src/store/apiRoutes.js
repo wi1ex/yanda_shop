@@ -1,11 +1,18 @@
 export const API = {
   general: {
     healthCheck:              '/api/general',                           // GET    - health check
-    saveUser:                 '/api/general/save_user',                 // POST   - сохранить/обновить Telegram-пользователя
-    getUserProfile:           '/api/general/get_user_profile',          // GET    - получить профиль
+    saveUser:                 '/api/general/save_user',                 // POST   - сохранить/обновить TG-пользователя
+    getUserProfile:           '/api/general/get_user_profile',          // GET    - получить данные профиля
+    updateProfile:            '/api/general/update_profile',            // PUT    - обновить данные профиля
     getParameters:            '/api/general/get_parameters',            // GET    - получить публичные настройки
     listReviews:              '/api/general/list_reviews',              // GET    - получить список отзывов
     createRequest:            '/api/general/create_request',            // POST   - отправить заявку на поиск товара
+    getUserOrders:            '/api/general/get_user_orders',           // GET    - получить список заказов
+    getUserOrder:             '/api/general/get_user_order',            // GET    - получить детали заказа
+    listAddresses:            '/api/general/list_addresses',            // GET    - получить список адресов
+    createAddress:            '/api/general/add_address',               // POST   - добавить адрес
+    updateAddress:            '/api/general/update_address',            // PUT    - обновить данные дареса
+    deleteAddress:            '/api/general/delete_address',            // DELETE - удалить адрес
   },
   product: {
     listProducts:             '/api/product/list_products',             // GET    - список товаров

@@ -35,6 +35,7 @@ admin_api: Blueprint = Blueprint("admin_api", __name__, url_prefix="/api/admin")
 def get_daily_visits() -> Tuple[Response, int]:
     """GET /api/admin/get_daily_visits?date=YYYY-MM-DD"""
     date_str = request.args.get("date", datetime.now(ZoneInfo("Europe/Moscow")).strftime("%Y-%m-%d"))
+    logger.debug("get_daily_visits: date=%s", date_str)
     pipe = redis_client.pipeline()
     for h in range(24):
         hour = f"{h:02d}"
@@ -48,6 +49,7 @@ def get_daily_visits() -> Tuple[Response, int]:
         unique = int(resp[2 * h + 1] or 0)
         hours.append({"hour": f"{h:02d}", "total": total, "unique": unique})
 
+    logger.debug("get_daily_visits: returning stats for date=%s", date_str)
     return jsonify({"date": date_str, "hours": hours}), 200
 
 
@@ -68,6 +70,7 @@ def get_logs() -> Tuple[Response, int]:
     limit = min(limit, 100)
     offset = max(offset, 0)
 
+    logger.debug("get_logs: limit=%d offset=%d", limit, offset)
     with session_scope() as session:
         total = session.query(func.count(ChangeLog.id)).scalar()
         logs_qs = session.query(ChangeLog).order_by(ChangeLog.timestamp.desc()).offset(offset).limit(limit).all()
@@ -85,6 +88,7 @@ def get_logs() -> Tuple[Response, int]:
             for lg in logs_qs
         ]
 
+    logger.debug("get_logs: returned %d logs (total=%d)", len(result), total)
     return jsonify({"logs": result, "total": total}), 200
 
 
@@ -100,6 +104,7 @@ def sync_all() -> Tuple[Any, int]:
       — else: process_rows + cleanup/upload images + 201 + { sheet_stats, image_stats }
     """
     categories = ("shoes", "clothing", "accessories")
+    logger.debug("sync_all: start sync for categories %s", categories)
 
     # --- 1) Проверка таблиц ---
     sheet_errors: Dict[str, Dict[str, Any]] = {}
@@ -142,6 +147,7 @@ def sync_all() -> Tuple[Any, int]:
 
     # --- 2) Проверка ZIP-архивов изображений ---
     provided = {cat: request.files.get(f"file_{cat}") for cat in categories}
+    logger.debug("sync_all: start sync for files=%s", list(provided.keys()))
     image_errors: Dict[str, Any] = {}
     archives: Dict[str, Dict[str, Any]] = {}
 
@@ -158,6 +164,7 @@ def sync_all() -> Tuple[Any, int]:
                 "expected_map": report["expected_map"],
                 "folder": os.path.splitext(zf.filename)[0].lower()
             }
+    logger.debug("sync_all: sheet_errors=%s, image_errors=%s", sheet_errors.keys(), image_errors.keys())
 
     # Если есть ошибки в таблицах или картинках — логируем и возвращаем 400
     if sheet_errors or image_errors:
@@ -167,11 +174,13 @@ def sync_all() -> Tuple[Any, int]:
             description=f"Ошибки валидации: таблицы={list(sheet_errors.keys()) or 'нет'}, "
                         f"изображения={list(image_errors.keys()) or 'нет'}"
         )
+        logger.warning("sync_all: validation failed, sheets=%s, images=%s", sheet_errors, image_errors)
         return jsonify({
             "status": "validation_failed",
             "sheet_errors": sheet_errors,
             "image_errors": image_errors
         }), 400
+    logger.debug("sync_all: processing %d valid sheets, %d archives", len(sheets_data), len(archives))
 
     # --- 3) Импорт таблиц и загрузка картинок ---
     sheet_stats: Dict[str, Any] = {}
@@ -204,7 +213,7 @@ def sync_all() -> Tuple[Any, int]:
     # Лог успешной синхронизации
     log_change(action_type="Синхронизация данных (успешно)",
                description=f"sheet_stats={sheet_stats}, image_stats={image_stats}")
-
+    logger.debug("sync_all: completed successfully, sheet_stats=%s, image_stats=%s", sheet_stats, image_stats)
     return jsonify({
         "status": "ok",
         "sheet_stats": sheet_stats,
@@ -221,7 +230,7 @@ def get_settings() -> Tuple[Response, int]:
         settings_objs = session.query(AdminSetting).order_by(AdminSetting.key).all()
         data: List[Dict[str, Any]] = [{"key": s.key, "value": s.value} for s in settings_objs]
 
-    logger.info("get_settings: returned %d entries", len(data))
+    logger.debug("get_settings: returned %d entries", len(data))
     return jsonify({"settings": data}), 200
 
 
@@ -232,6 +241,7 @@ def get_settings() -> Tuple[Response, int]:
 def update_setting() -> Tuple[Response, int]:
     """POST /api/admin/update_setting {key, value}"""
     data = request.get_json()
+    logger.debug("update_setting: payload=%s", data)
     key = data["key"]
     value = data["value"]
     new_key = False
@@ -255,7 +265,7 @@ def update_setting() -> Tuple[Response, int]:
     description = f"{key}: {value}" if new_key else f"{key}: {old_value} -> {value}"
     log_change(action_type=action_type, description=description)
 
-    logger.info("update_setting: %s -> %s", key, value)
+    logger.debug("update_setting: %s -> %s", key, value)
     return jsonify({"status": "ok"}), 200
 
 
@@ -267,14 +277,16 @@ def delete_setting(key: str) -> Tuple[Response, int]:
     DELETE /api/admin/delete_setting/<key>
     Удаляет AdminSetting по ключу и обновляет кеш параметров.
     """
-
+    logger.debug("delete_setting: called for key=%s", key)
     # защита системных delivery_ параметров
     if key.startswith("delivery_"):
+        logger.warning("delete_setting: attempt to delete protected key=%s", key)
         return jsonify({"error": "protected setting"}), 400
 
     with session_scope() as session:
         setting = session.get(AdminSetting, key)
         if not setting:
+            logger.warning("delete_setting: key=%s not found", key)
             return jsonify({"error": "not found"}), 404
         old_value = setting.value
         session.delete(setting)
@@ -285,7 +297,7 @@ def delete_setting(key: str) -> Tuple[Response, int]:
 
     log_change(action_type="Удаление параметра", description=f"{key}: {old_value}")
 
-    logger.info("delete_setting: %s deleted", key)
+    logger.debug("delete_setting: %s deleted", key)
     return jsonify({"status": "deleted"}), 200
 
 
@@ -301,12 +313,15 @@ def create_review() -> Tuple[Response, int]:
         "shop_response": "Ответ магазина",
         "link_url": "Ссылка",
     }
+    logger.debug("create_review: form data=%s", {k: form[k] for k in required_fields})
     for fld, fld_name in required_fields.items():
         if not form.get(fld, "").strip():
+            logger.warning("create_review: missing field %s", fld)
             return jsonify({"error": f'Поле "{fld_name}" не заполнено'}), 400
 
     photos = [request.files.get(f"photo{i}") for i in range(1, 4)]
     if not any(photos):
+        logger.warning("create_review: no photos attached")
         return jsonify({"error": "Необходимо прикрепить хотя бы одну фотографию"}), 400
 
     with session_scope() as session:
@@ -320,7 +335,7 @@ def create_review() -> Tuple[Response, int]:
         session.add(review)
         session.flush()
         saved = upload_review_images(review.id, photos)
-        logger.info("create_review: saved review_id=%d photos=%d", review.id, saved)
+        logger.debug("create_review: saved review_id=%d photos=%d", review.id, saved)
         review_id = review.id
 
     log_change(action_type="Создание отзыва", description=f"id={review_id}")
@@ -336,6 +351,7 @@ def delete_review(review_id: int) -> Tuple[Response, int]:
     with session_scope() as session:
         rev = session.get(Review, review_id)
         if not rev:
+            logger.warning("delete_review: review_id=%d not found", review_id)
             return jsonify({"error": "not found"}), 404
         session.delete(rev)
 
@@ -344,7 +360,7 @@ def delete_review(review_id: int) -> Tuple[Response, int]:
     log_change(action_type="Удаление отзыва", description=f"id={review_id}")
 
     logger.debug("delete_review: cleanup removed=%d", removed)
-    logger.info("delete_review: %d deleted", review_id)
+    logger.debug("delete_review: %d deleted", review_id)
     return jsonify({"status": "deleted"}), 200
 
 
@@ -355,6 +371,7 @@ def list_users() -> Tuple[Response, int]:
     """GET /api/admin/list_users"""
     hidden_fields = {"avatar_url", "password_hash", "email_verified", "updated_at"}
     users_list: List[Dict[str, Any]] = []
+    logger.debug("list_users: called")
 
     with session_scope() as session:
         users = session.query(Users).order_by(Users.user_id).all()
@@ -370,6 +387,7 @@ def list_users() -> Tuple[Response, int]:
                 row[name] = val
             users_list.append(row)
 
+    logger.debug("list_users: returned %d users", len(users_list))
     return jsonify({"users": users_list}), 200
 
 
@@ -381,6 +399,7 @@ def list_requests() -> Tuple[Response, int]:
     GET /api/admin/list_requests
     Возвращает все заявки.
     """
+    logger.debug("list_requests: called")
     data = []
     with session_scope() as session:
         items = session.query(RequestItem).order_by(RequestItem.created_at.desc()).all()
@@ -399,6 +418,8 @@ def list_requests() -> Tuple[Response, int]:
                 "file_url":   file_url,
                 "created_at": r.created_at.isoformat()
             })
+
+    logger.debug("list_requests: returned %d requests", len(data))
     return jsonify({"requests": data}), 200
 
 
@@ -410,12 +431,15 @@ def delete_request(request_id: int) -> Tuple[Response, int]:
     DELETE /api/admin/delete_request/<request_id>
     Удаляет заявку и её файл.
     """
+    logger.debug("delete_request: request_id=%d", request_id)
     with session_scope() as session:
         r = session.get(RequestItem, request_id)
         if not r:
+            logger.warning("delete_request: request_id=%d not found", request_id)
             return jsonify({"error": "not found"}), 404
         session.delete(r)
     cleanup_request_files(request_id)
+    logger.debug("delete_request: %d deleted", request_id)
     return jsonify({"status": "deleted"}), 200
 
 
@@ -426,19 +450,22 @@ def delete_request(request_id: int) -> Tuple[Response, int]:
 def set_user_role() -> Tuple[Response, int]:
     """POST /api/admin/set_user_role {author_id, author_name, user_id, role}"""
     data = request.get_json()
+    logger.debug("set_user_role: payload=%s", data)
     user_id = data["user_id"]
     new_role = data["role"]
 
     if new_role not in ("admin", "customer"):
+        logger.warning("set_user_role: invalid role %s", new_role)
         return jsonify({"error": "invalid input"}), 400
 
     with session_scope() as session:
         user = session.get(Users, user_id)
         if not user:
+            logger.warning("set_user_role: user_id=%s not found", user_id)
             return jsonify({"error": "user not found"}), 404
         user.role = new_role
         desc = f"Пользователю {user.username} {user.first_name} {user.last_name} назначена роль {new_role}"
 
     log_change(action_type="Назначение роли", description=desc)
-
+    logger.debug("set_user_role: user_id=%s role set to %s", user_id, new_role)
     return jsonify({"status": "ok"}), 200

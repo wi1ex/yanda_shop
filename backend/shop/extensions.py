@@ -36,7 +36,7 @@ try:
         socket_connect_timeout=5,
         socket_keepalive=True,
     )
-    logger.info("%s: Redis client initialized for %s:%d", _context, REDIS_HOST, REDIS_PORT)
+    logger.debug("%s: Redis client initialized for %s:%d", _context, REDIS_HOST, REDIS_PORT)
 except Exception as e:
     logger.exception("%s: failed to initialize Redis client", _context)
     raise
@@ -70,7 +70,7 @@ try:
         secret_key=MINIO_ROOT_PASSWORD,
         secure=False,
     )
-    logger.info("%s: MinIO client initialized for host %s", _context, MINIO_HOST)
+    logger.debug("%s: MinIO client initialized for host %s", _context, MINIO_HOST)
 except Exception:
     logger.exception("%s: failed to initialize MinIO client", _context)
     raise
@@ -90,7 +90,7 @@ def ensure_bucket_exists() -> None:
     try:
         if not minio_client.bucket_exists(BUCKET):
             minio_client.make_bucket(BUCKET)
-            logger.info("%s: Created MinIO bucket %s", _context, BUCKET)
+            logger.debug("%s: Created MinIO bucket %s", _context, BUCKET)
         else:
             logger.debug("%s: MinIO bucket %s already exists", _context, BUCKET)
     except Exception:
@@ -100,7 +100,7 @@ def ensure_bucket_exists() -> None:
 # Guarantee Bucket on Startup
 try:
     ensure_bucket_exists()
-    logger.info("%s: ensure_bucket_exists completed", _context)
+    logger.debug("%s: ensure_bucket_exists completed", _context)
 except Exception:
     logger.error("%s: could not ensure bucket existence", _context)
     raise

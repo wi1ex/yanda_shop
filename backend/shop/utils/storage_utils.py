@@ -59,7 +59,7 @@ def upload_product_images(folder: str, archive_bytes: bytes) -> Tuple[int, int]:
     Возвращает (added_count, replaced_count).
     """
     context = "upload_product_images"
-    logger.info("%s START folder=%s size=%dB", context, folder, len(archive_bytes))
+    logger.debug("%s START folder=%s size=%dB", context, folder, len(archive_bytes))
 
     archive = zipfile.ZipFile(io.BytesIO(archive_bytes))
     added = replaced = 0
@@ -81,7 +81,7 @@ def upload_product_images(folder: str, archive_bytes: bytes) -> Tuple[int, int]:
         with archive.open(info) as stream:
             minio_client.put_object(BUCKET, key, stream, length=info.file_size)
 
-    logger.info("%s END added=%d replaced=%d", context, added, replaced)
+    logger.debug("%s END added=%d replaced=%d", context, added, replaced)
     return added, replaced
 
 
@@ -92,7 +92,7 @@ def cleanup_product_images(folder: str, expected: Set[str]) -> Tuple[int, int]:
     Возвращает (deleted_count, warning_count).
     """
     context = "cleanup_product_images"
-    logger.info("%s START folder=%s expected_count=%d", context, folder, len(expected))
+    logger.debug("%s START folder=%s expected_count=%d", context, folder, len(expected))
 
     try:
         objects = minio_client.list_objects(BUCKET, prefix=f"{folder}/", recursive=True)
@@ -112,7 +112,7 @@ def cleanup_product_images(folder: str, expected: Set[str]) -> Tuple[int, int]:
         else:
             warning_count += 1
 
-    logger.info("%s END deleted=%d warnings=%d", context, deleted_count, warning_count)
+    logger.debug("%s END deleted=%d warnings=%d", context, deleted_count, warning_count)
     return deleted_count, warning_count
 
 
@@ -123,7 +123,7 @@ def upload_review_images(review_id: int, files: List) -> int:
     Возвращает количество успешно сохранённых файлов.
     """
     context = "upload_review_images"
-    logger.info("%s START review_id=%d files_count=%d", context, review_id, len(files))
+    logger.debug("%s START review_id=%d files_count=%d", context, review_id, len(files))
 
     saved = 0
     for idx, file in enumerate(files, start=1):
@@ -138,13 +138,13 @@ def upload_review_images(review_id: int, files: List) -> int:
         try:
             minio_client.put_object(BUCKET, key, file.stream, length=-1, part_size=10 * 1024 * 1024)
             saved += 1
-            logger.info("%s: uploaded %s", context, key)
+            logger.debug("%s: uploaded %s", context, key)
         except S3Error as err:
             logger.warning("%s: MinIO error on %s: %s", context, key, err)
         except Exception as exc:
             logger.exception("%s: unexpected error uploading %s", context, key, exc_info=exc)
 
-    logger.info("%s END review_id=%d saved=%d", context, review_id, saved)
+    logger.debug("%s END review_id=%d saved=%d", context, review_id, saved)
     return saved
 
 
@@ -154,7 +154,7 @@ def cleanup_review_images() -> int:
     Возвращает общее число удалённых объектов.
     """
     context = "cleanup_review_images"
-    logger.info("%s START", context)
+    logger.debug("%s START", context)
 
     with session_scope() as session:
         existing_ids = {r.id for r in session.query(Review.id).all()}
@@ -181,7 +181,7 @@ def cleanup_review_images() -> int:
         if not valid and _safe_remove(BUCKET, obj.object_name, context):
             deleted_count += 1
 
-    logger.info("%s END removed=%d", context, deleted_count)
+    logger.debug("%s END removed=%d", context, deleted_count)
     return deleted_count
 
 
@@ -196,7 +196,7 @@ def upload_request_file(request_id: int, file) -> None:
     try:
         # length=-1 и part_size как в других
         minio_client.put_object(BUCKET, key, file.stream, length=-1, part_size=10 * 1024 * 1024)
-        logger.info("%s: uploaded %s", context, key)
+        logger.debug("%s: uploaded %s", context, key)
     except Exception as exc:
         logger.exception("%s: failed to upload %s", context, key, exc_info=exc)
 
@@ -219,7 +219,7 @@ def cleanup_request_files(request_id: int) -> int:
                 logger.warning("%s: could not remove %s", context, obj.object_name)
     except Exception as exc:
         logger.error("%s: list_objects failed for %s: %s", context, prefix, exc)
-    logger.info("%s: total removed=%d", context, removed)
+    logger.debug("%s: total removed=%d", context, removed)
     return removed
 
 

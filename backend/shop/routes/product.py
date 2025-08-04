@@ -37,7 +37,7 @@ def list_products() -> Tuple[Response, int]:
             for obj in objs:
                 result.append(serialize_product(obj))
 
-    logger.info("list_products: returned %d items", len(result))
+    logger.debug("list_products: returned %d items", len(result))
     return jsonify(result), 200
 
 
@@ -65,7 +65,7 @@ def get_product() -> Tuple[Response, int]:
             return jsonify({"error": "not found"}), 404
         data = serialize_product(obj)
 
-    logger.info("get_product: found product %s/%s", category, variant_sku)
+    logger.debug("get_product: found product %s/%s", category, variant_sku)
     return jsonify(data), 200
 
 
@@ -79,14 +79,17 @@ def get_cart() -> Tuple[Response, int]:
     Возвращает содержимое корзины из Redis.
     """
     uid_str = request.args["user_id"]
+    logger.debug("get_cart: raw user_id=%r", uid_str)
     try:
         uid = int(uid_str)
     except ValueError:
+        logger.warning("get_cart: invalid user_id param %r", uid_str)
         return jsonify({"error": "invalid user_id"}), 400
     logger.debug("get_cart: user_id=%d", uid)
 
     current = int(get_jwt_identity())
     if current != uid:
+        logger.warning("get_cart: access denied for token %d vs param %d", current, uid)
         return jsonify({"error": "Access denied"}), 403
 
     key = f"cart:{uid}"
@@ -121,7 +124,7 @@ def get_cart() -> Tuple[Response, int]:
         result_items.append(data)
         total += unit_price
 
-    logger.info("get_cart: returning %d items, total=%d", len(result_items), total)
+    logger.debug("get_cart: returning %d items, total=%d", len(result_items), total)
     return jsonify({"items": result_items, "count": len(result_items), "total": total}), 200
 
 
@@ -137,20 +140,23 @@ def save_cart() -> Tuple[Response, int]:
     data = request.get_json()
     uid_str = data["user_id"]
     items = data["items"]
+    logger.debug("save_cart: payload=%s", data)
     try:
         uid = int(uid_str)
     except ValueError:
+        logger.warning("save_cart: invalid user_id param %r", uid_str)
         return jsonify({"error": "invalid user_id"}), 400
     logger.debug("save_cart: user_id=%d items=%d", uid, len(items))
 
     current = int(get_jwt_identity())
     if current != uid:
+        logger.warning("save_cart: access denied for token %d vs param %d", current, uid)
         return jsonify({"error": "Access denied"}), 403
 
     key = f"cart:{uid}"
     cache_set(key, {"items": items}, ttl_seconds=60*60*24*365)
 
-    logger.info("save_cart: saved %d items for user %d", len(items), uid)
+    logger.debug("save_cart: saved %d items for user %d", len(items), uid)
     return jsonify({"status": "ok"}), 200
 
 
@@ -164,20 +170,23 @@ def get_favorites() -> Tuple[Response, int]:
     Возвращает избранное из Redis.
     """
     uid_str = request.args["user_id"]
+    logger.debug("get_favorites: raw user_id=%r", uid_str)
     try:
         uid = int(uid_str)
     except ValueError:
+        logger.warning("get_favorites: invalid user_id param %r", uid_str)
         return jsonify({"error": "invalid user_id"}), 400
     logger.debug("get_favorites: user_id=%d", uid)
 
     current = int(get_jwt_identity())
     if current != uid:
+        logger.warning("get_favorites: access denied for token %d vs param %d", current, uid)
         return jsonify({"error": "Access denied"}), 403
 
     key = f"favorites:{uid}"
     payload = cache_get(key) or {"items": [], "count": 0}
 
-    logger.info("get_favorites: returning %d items", payload.get("count", 0))
+    logger.debug("get_favorites: returning %d items", payload.get("count", 0))
     return jsonify(payload), 200
 
 
@@ -193,19 +202,22 @@ def save_favorites() -> Tuple[Response, int]:
     data = request.get_json()
     uid_str = data["user_id"]
     items = data["items"]
+    logger.debug("save_favorites: payload=%s", data)
     try:
         uid = int(uid_str)
     except ValueError:
+        logger.warning("save_favorites: invalid user_id param %r", uid_str)
         return jsonify({"error": "invalid user_id"}), 400
     logger.debug("save_favorites: user_id=%d items=%d", uid, len(items))
 
     current = int(get_jwt_identity())
     if current != uid:
+        logger.warning("save_favorites: access denied for token %d vs param %d", current, uid)
         return jsonify({"error": "Access denied"}), 403
 
     payload = {"items": items, "count": len(items)}
     key = f"favorites:{uid}"
     cache_set(key, payload, ttl_seconds=60*60*24*365)
 
-    logger.info("save_favorites: saved %d items for user %d", len(items), uid)
+    logger.debug("save_favorites: saved %d items for user %d", len(items), uid)
     return jsonify({"status": "ok"}), 200

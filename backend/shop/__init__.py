@@ -15,7 +15,7 @@ from .routes.auth import auth_bp
 def create_app() -> Flask:
     context = "create_app"
     setup_logging()
-    logger.info("%s START", context)
+    logger.debug("%s START", context)
 
     try:
         # ——— Flask и конфигурация ————————————————————————————————
@@ -65,5 +65,5 @@ def create_app() -> Flask:
         logger.exception("%s: Error during app initialization", context)
         raise
 
-    logger.info("%s END", context)
+    logger.debug("%s END", context)
     return app
