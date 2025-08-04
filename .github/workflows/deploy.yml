@@ -54,7 +54,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Write SSH key and known_hosts
+      # 1) Определяем, что изменилось
+      - name: Detect changed paths
+        id: changes
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+
+      # 2) SSH-ключ и known_hosts
+      - name: Prepare SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
@@ -63,6 +75,7 @@ jobs:
           chmod 600 ~/.ssh/known_hosts
         shell: bash
 
+      # 3) Собираем .env и копируем на сервер
       - name: Create .env from Secrets
         run: |
           cat > .env <<EOF
@@ -112,31 +125,53 @@ jobs:
 
       - name: Copy .env to server
         run: |
-          scp -i ~/.ssh/deploy_key \
-            -o StrictHostKeyChecking=yes \
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
             ./.env \
             "${{ secrets.SERVER_USER }}"@"${{ secrets.SERVER_HOST }}":/root/app/yanda_shop/.env
         shell: bash
 
+      # 4) Деплой по SSH
       - name: Deploy via SSH
         run: |
-          ssh -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=yes \
-              -l "${{ secrets.SERVER_USER }}" \
-              "${{ secrets.SERVER_HOST }}" << 'EOF'
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
+              -l "${{ secrets.SERVER_USER }}" "${{ secrets.SERVER_HOST }}" << 'EOF'
             set -euo pipefail
             cd /root/app/yanda_shop
             git fetch --all
             git reset --hard origin/main
-            docker-compose down
-            docker network prune --filter "until=24h" --force
-            docker container prune --filter "until=24h" --force
-            docker image prune --all --filter "until=24h" --force
-            docker builder prune --all --filter "until=24h" --force
-            certbot renew --noninteractive --standalone --agree-tos
-            docker-compose build --no-cache
-            docker-compose up -d
-            docker-compose run --rm backend flask db upgrade
+  
+            # Если правки в frontend/ — rebuild only frontend
+            rebuilt=false
+            if [ "${{ steps.changes.outputs.frontend }}" = "true" ]; then
+              echo "⚙️  Rebuilding frontend..."
+              docker-compose build frontend
+              docker-compose up -d frontend
+              rebuilt=true
+            fi
+  
+            # Если правки в backend/ — rebuild only backend
+            if [ "${{ steps.changes.outputs.backend }}" = "true" ]; then
+              echo "⚙️  Rebuilding backend..."
+              docker-compose build backend
+              docker-compose up -d backend
+              rebuilt=true
+            fi
+  
+            # Если ни frontend, ни backend — считаем это «root change»
+            if [ "$rebuilt" = "false" ]; then
+              echo "🔄 Root-level changes → full rebuild of all services"
+              docker-compose down
+              docker network prune --filter "until=24h" --force
+              docker container prune --filter "until=24h" --force
+              docker image prune --all --filter "until=24h" --force
+              docker builder prune --all --filter "until=24h" --force
+              certbot renew --noninteractive --standalone --agree-tos
+              docker-compose build --no-cache
+              docker-compose up -d
+              docker-compose run --rm backend flask db upgrade
+            fi
+  
+            # Показываем статус
             docker-compose ps
-          EOF
+            EOF
         shell: bash
