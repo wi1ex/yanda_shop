@@ -3,13 +3,9 @@
     <div class="line-vert"></div>
     <h1 class="section-title">ЛИЧНЫЙ КАБИНЕТ</h1>
 
-    <button type="button" v-if="!currentSection" class="back-button" @click="goBack">
+    <button type="button" v-else class="back-button" @click="goBack()">
       <img :src="icon_arrow_grey" alt="arrow back" />
-      Назад
-    </button>
-    <button type="button" v-else class="back-button" @click="goBack">
-      <img :src="icon_arrow_grey" alt="arrow back" />
-      {{ titles[currentSection] }}
+      {{ currentSection ? 'Мой кабинет' : 'Назад' }}
     </button>
 
     <div class="line-hor"></div>
@@ -176,11 +172,6 @@ const router = useRouter()
 
 // UI-state
 const currentSection = ref(null)
-const titles = {
-  profile: 'Мой профиль',
-  orders: 'К заказам',
-  addresses: 'Мои адреса'
-}
 
 // PROFILE
 const form = reactive({
@@ -240,12 +231,16 @@ async function onLogout() {
 }
 
 function goBack() {
-  if (window.history.length > 1) {
-    router.back()
+  if (currentSection) {
+    currentSection.value = null
   } else {
-    router.push({ name: 'Home' })
+    if (window.history.length > 1) {
+      router.back()
+    } else {
+      router.push({ name: 'Home' })
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
-  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // PROFILE: загрузка файла
