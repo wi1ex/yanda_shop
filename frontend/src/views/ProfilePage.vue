@@ -533,7 +533,7 @@ watch(
       background-color: $black-100;
       color: #FFFFFF;
       font-family: Bounded;
-      font-size: 26px;
+      font-size: 16px;
       line-height: 100%;
       letter-spacing: -0.64px;
       border: none;
