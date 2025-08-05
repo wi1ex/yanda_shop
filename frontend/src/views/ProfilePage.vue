@@ -58,13 +58,13 @@
       <!-- Дата рождения -->
       <div class="card">
         <label class="card-label">Дата рождения</label>
-        <input v-model="form.date_of_birth" placeholder="ДД / ММ / ГГГГ" />
+        <input class="info" v-model="form.date_of_birth" placeholder="ДД / ММ / ГГГГ" @input="onDateInput" />
       </div>
       <!-- Контакты -->
       <div class="card">
         <label class="card-label">Контакты</label>
-        <input v-model="form.phone" placeholder="Телефон*" />
-        <input v-model="form.email" placeholder="Почта*" />
+        <input class="info" v-model="form.phone" placeholder="Телефон*" @input="onPhoneInput" />
+        <input class="info" v-model="form.email" placeholder="Почта*" type="email"/>
       </div>
       <!-- Кнопка Сохранить -->
       <button type="button" class="save" @click="saveProfile">Сохранить</button>
@@ -329,6 +329,45 @@ async function deleteAddress(id) {
   addressFormVisible.value = false
 }
 
+function onDateInput(e) {
+  let digits = e.target.value.replace(/\D/g, '').slice(0, 8)
+  const dd = digits.slice(0, 2)
+  const mm = digits.slice(2, 4)
+  const yy = digits.slice(4, 8)
+
+  let formatted = ''
+  if (dd) formatted = dd
+  if (mm) formatted += ' / ' + mm
+  if (yy) formatted += ' / ' + yy
+
+  e.target.value = formatted
+  form.date_of_birth = formatted
+}
+
+// Телефон: ровно 11 цифр, начинаем с «8», рисуем скобки и дефисы
+function onPhoneInput(e) {
+  // только цифры, первые 11 символов
+  let d = e.target.value.replace(/\D/g, '').slice(0, 11)
+  // если пользователь не ввёл «8», принудительно ставим
+  if (!d.startsWith('8')) d = '8' + d.slice(1)
+
+  const c1 = d.slice(0, 1)      // «8»
+  const c2 = d.slice(1, 4)      // код
+  const c3 = d.slice(4, 7)      // первые 3
+  const c4 = d.slice(7, 9)      // следующие 2
+  const c5 = d.slice(9, 11)     // последние 2
+
+  let formatted = c1
+  if (c2)  formatted += ` (${c2}`
+  if (c2.length === 3) formatted += `)`
+  if (c3)  formatted += ` ${c3}`
+  if (c4)  formatted += `-${c4}`
+  if (c5)  formatted += `-${c5}`
+
+  e.target.value = formatted
+  form.phone = formatted
+}
+
 watch(
   () => store.userStore.user,
   u => {
@@ -432,14 +471,34 @@ watch(
   .content {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    h2 {
+      margin: 10px;
+      color: $black-100;
+      font-family: Bounded;
+      font-size: 24px;
+      font-weight: 250;
+      line-height: 80%;
+      letter-spacing: -1.2px;
+      z-index: 20;
+    }
+    p {
+      margin: 6px 10px 40px;
+      color: $grey-20;
+      font-size: 15px;
+      line-height: 110%;
+      letter-spacing: -0.6px;
+      z-index: 20;
+    }
     .card {
       display: flex;
       flex-direction: column;
+      position: relative;
+      margin-bottom: 10px;
       padding: 20px 10px;
       width: calc(100% - 20px);
       border-radius: 4px;
       background-color: $white-100;
+      z-index: 20;
       .card-label {
         margin-bottom: 24px;
         color: $grey-20;
@@ -459,6 +518,8 @@ watch(
         }
         button {
           display: flex;
+          align-items: center;
+          justify-content: center;
           padding: 0 24px;
           height: 40px;
           border: none;
@@ -484,12 +545,17 @@ watch(
         margin-bottom: 15px;
         padding: 21px 10px 8px;
         width: calc(100% - 20px);
+        outline: none;
+        box-shadow: none;
         border: none;
         border-bottom: 1px solid $grey-20;
         color: $grey-20;
         font-size: 15px;
         line-height: 100%;
         letter-spacing: -0.6px;
+        &::placeholder {
+          color: $black-40;
+        }
       }
       .gender {
         display: flex;
@@ -503,34 +569,38 @@ watch(
           line-height: 100%;
           letter-spacing: -0.6px;
           input[type="radio"] {
+            margin: 0;
             appearance: none;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #ccc;
+            width: 20px;
+            height: 20px;
+            border: 1px solid $black-40;
             border-radius: 50%;
-            background-color: #fff;
+            background: none;
           }
           input[type="radio"]:checked {
-            background-color: #FF5E5E;
-            box-shadow: inset 0 0 0 4px #fff;
+            border-color: $black-100;
+            background-color: $black-100;
+            box-shadow: inset 0 0 0 4px $white-100;
           }
         }
       }
     }
     .save {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 24px;
       width: 100%;
-      padding: 16px;
-      background-color: $black-100;
-      color: #FFFFFF;
-      font-family: Bounded;
+      height: 56px;
+      border: none;
+      border-radius: 4px;
+      background-color: $grey-20;
+      color: $white-100;
       font-size: 16px;
       line-height: 100%;
       letter-spacing: -0.64px;
-      border: none;
-      border-radius: 4px;
-      margin-top: 8px;
       cursor: pointer;
+      z-index: 20;
     }
 
     .orders {
