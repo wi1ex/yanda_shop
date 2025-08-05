@@ -88,7 +88,6 @@
             <tr v-for="log in store.adminStore.logs" :key="log.id">
               <td>{{ log.id }}</td>
               <td>{{ log.author_id }}</td>
-              <td>{{ log.author_name }}</td>
               <td>{{ log.action_type }}</td>
               <td>{{ log.description }}</td>
               <td>{{ log.timestamp }}</td>
