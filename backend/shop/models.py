@@ -33,7 +33,6 @@ class ChangeLog(db.Model):
     __tablename__  = 'change_logs'
     id             = db.Column(db.Integer, primary_key=True)
     author_id      = db.Column(db.BigInteger, nullable=False)
-    author_name    = db.Column(db.String(50), nullable=False)
     action_type    = db.Column(db.String(50), nullable=False)
     description    = db.Column(db.Text, nullable=False)
     timestamp      = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
