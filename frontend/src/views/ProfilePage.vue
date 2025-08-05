@@ -56,7 +56,7 @@
       <!-- Дата рождения -->
       <div class="card">
         <label class="card-label">Дата рождения</label>
-        <input class="info" v-model="form.date_of_birth" placeholder="__ / __ / ____" @input="onDateInput" />
+        <input class="info" type="date" v-model="form.date_of_birth" :max="new Date().toISOString().split('T')[0]" />
       </div>
       <!-- Контакты -->
       <div class="card">
@@ -184,30 +184,20 @@ const form = reactive({
   phone:         '',
   email:         '',
 })
-const isLoaded = ref(false)
 const fileInput = ref()
 const hasPhoto = computed(() => !!store.userStore.user.photo_url)
 
 const formDirty = computed(() => {
-  if (!isLoaded.value) return false
-
   const u = store.userStore.user
-  const normPhone = v => String(v || '').replace(/\D/g, '')
-  const normDate  = v => {
-    const [d,m,y] = String(v||'').split(/\D+/)
-    return y && m && d
-      ? `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
-      : ''
-  }
-
+  const normPhone = v => String(v||'').replace(/\D/g, '')
   return (
-    form.first_name    !== (u.first_name    || '') ||
-    form.last_name     !== (u.last_name     || '') ||
-    form.middle_name   !== (u.middle_name   || '') ||
-    form.gender        !== (u.gender        || '') ||
-    normDate(form.date_of_birth) !== (u.date_of_birth    || '') ||
-    normPhone(form.phone)       !== (u.phone            || '') ||
-    form.email         !== (u.email         || '')
+    form.first_name  !== (u.first_name  || '') ||
+    form.last_name   !== (u.last_name   || '') ||
+    form.middle_name !== (u.middle_name || '') ||
+    form.gender      !== (u.gender      || '') ||
+    form.date_of_birth !== (u.date_of_birth || '') ||
+    normPhone(form.phone) !== (u.phone  || '') ||
+    form.email       !== (u.email       || '')
   )
 })
 
@@ -342,44 +332,6 @@ async function deleteAddress(id) {
   addressFormVisible.value = false
 }
 
-function formatDate(iso = '') {
-  if (typeof iso !== 'string' || !iso) return ''
-  const [y, m, d] = iso.split('-')
-  return `${d} / ${m} / ${y}`
-}
-
-function validateDate(dd, mm, yyyy) {
-  const day   = Number(dd)
-  const month = Number(mm)
-  const year  = Number(yyyy)
-  const thisYear = new Date().getFullYear()
-  return (
-    day   >=1  && day   <=31 &&
-    month >=1  && month <=12 &&
-    year  >=1900 && year  <= thisYear
-  )
-}
-
-function onDateInput(e) {
-  let digits = e.target.value.replace(/\D/g, '').slice(0,8)
-  const dd = digits.slice(0,2), mm = digits.slice(2,4), yy = digits.slice(4,8)
-  let out = ''
-  if (dd) out = dd
-  if (mm) out += ' / ' + mm
-  if (yy) out += ' / ' + yy
-  e.target.value = out
-
-  if (dd.length===2 && mm.length===2 && yy.length===4) {
-    if (validateDate(dd, mm, yy)) {
-      form.date_of_birth = out
-    } else {
-      // например, выставить `dateError.value = true` и подсветить поле красным
-    }
-  } else {
-    form.date_of_birth = out
-  }
-}
-
 function formatPhone(raw = '') {
   raw = String(raw || '')
   let d = raw.replace(/\D/g, '').slice(0, 11)
@@ -415,10 +367,9 @@ watch(
     form.last_name     = u.last_name     || ''
     form.middle_name   = u.middle_name   || ''
     form.gender        = u.gender        || ''
-    form.date_of_birth = formatDate(u.date_of_birth)
+    form.date_of_birth = u.date_of_birth || ''
     form.phone         = formatPhone(u.phone)
     form.email         = u.email         || ''
-    isLoaded.value     = true
   },
   { immediate: true }
 )
