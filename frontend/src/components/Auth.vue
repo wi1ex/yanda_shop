@@ -9,7 +9,6 @@
 
         <div v-if="step === 1">
           <div v-if="mode === 'register'">
-            <input v-model="form.username"    placeholder="Никнейм" />
             <input v-model="form.first_name"  placeholder="Имя" />
             <input v-model="form.last_name"   placeholder="Фамилия" />
             <input v-model="form.email"       placeholder="E-mail" />
@@ -48,7 +47,7 @@ import { useStore } from '@/store/index.js'
 const store = useStore()
 const mode  = ref('register') // 'register' или 'login'
 const step  = ref(1)
-const form  = ref({ email: '', username: '', first_name: '', last_name: '', code: '' })
+const form  = ref({ email: '', first_name: '', last_name: '', code: '' })
 const error = ref('')
 
 function onClose() {
@@ -63,7 +62,7 @@ function toggleMode() {
 
 function reset() {
   step.value = 1
-  form.value = { email: '', username: '', first_name: '', last_name: '', code: '' }
+  form.value = { email: '', first_name: '', last_name: '', code: '' }
   error.value = ''
 }
 
@@ -72,7 +71,6 @@ async function sendRegisterCode() {
   try {
     await store.userStore.requestRegistrationCode(
       form.value.email,
-      form.value.username,
       form.value.first_name,
       form.value.last_name
     )

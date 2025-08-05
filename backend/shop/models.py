@@ -9,14 +9,11 @@ db = SQLAlchemy()
 class Users(db.Model):
     __tablename__  = 'users'
     user_id        = db.Column(db.BigInteger, primary_key=True)
-    username       = db.Column(db.String(50), nullable=False)
     first_name     = db.Column(db.String(50), nullable=False)
     last_name      = db.Column(db.String(50), nullable=False)
     middle_name    = db.Column(db.String(50), nullable=True)
     role           = db.Column(db.String(50), default='customer', nullable=False)
     avatar_url     = db.Column(db.String(200), nullable=True)
-
-    password_hash  = db.Column(db.String, nullable=True)
     phone          = db.Column(db.String(50), nullable=True)
     email          = db.Column(db.String(50), nullable=True)
     email_verified = db.Column(db.Boolean, nullable=True)
@@ -26,7 +23,6 @@ class Users(db.Model):
     loyalty_points = db.Column(db.Integer, nullable=True)
     total_spent    = db.Column(db.Integer, nullable=True)
     order_count    = db.Column(db.Integer, nullable=True)
-
     last_visit     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     created_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at     = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),

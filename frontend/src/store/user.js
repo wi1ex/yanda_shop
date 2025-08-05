@@ -12,7 +12,6 @@ export const useUserStore = defineStore('user', () => {
     first_name:     '',
     last_name:      '',
     middle_name:    '',
-    username:       '',
     role:           'visitor',
     phone:          '',
     email:          '',
@@ -22,8 +21,9 @@ export const useUserStore = defineStore('user', () => {
   })
 
   // Profile state
-  const profileLoaded = ref(false)
-  const showAuth      = ref(false)
+  const isTelegramWebApp = ref(false)
+  const profileLoaded    = ref(false)
+  const showAuth         = ref(false)
 
   // Добавляем заказы и адреса
   const orders       = ref([])
@@ -102,7 +102,6 @@ export const useUserStore = defineStore('user', () => {
       first_name:     '',
       last_name:      '',
       middle_name:    '',
-      username:       '',
       role:           'visitor',
       phone:          '',
       email:          '',
@@ -113,8 +112,8 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // запрос регистрации
-  async function requestRegistrationCode(email, username, first_name, last_name) {
-    return api.post(API.auth.requestRegistrationCode, { email, username, first_name, last_name })
+  async function requestRegistrationCode(email, first_name, last_name) {
+    return api.post(API.auth.requestRegistrationCode, { email, first_name, last_name })
   }
 
   // запрос кода для входа
@@ -173,7 +172,6 @@ export const useUserStore = defineStore('user', () => {
       first_name:     data.first_name,
       last_name:      data.last_name,
       middle_name:    data.middle_name,
-      username:       data.username,
       role:           data.role,
       phone:          data.phone,
       email:          data.email,
@@ -194,7 +192,6 @@ export const useUserStore = defineStore('user', () => {
       id: tgUser.id,
       first_name: tgUser.first_name,
       last_name: tgUser.last_name,
-      username: tgUser.username,
       photo_url: tgUser.photo_url || null
     }
     try {
@@ -233,6 +230,7 @@ export const useUserStore = defineStore('user', () => {
     accessToken,
     refreshToken,
     user,
+    isTelegramWebApp,
     profileLoaded,
     showAuth,
     orders,

@@ -36,7 +36,7 @@ def save_user() -> Tuple[Response, int]:
     """
     POST /api/general/save_user
     JSON body must include "id"; optional fields:
-      first_name, last_name, username, photo_url
+      first_name, last_name, photo_url
     """
     data: Dict[str, Any] = request.get_json()
     logger.debug("save_user: payload=%s", data)
@@ -44,7 +44,6 @@ def save_user() -> Tuple[Response, int]:
     user_id = int(raw_id)
     first_name = data.get("first_name")
     last_name = data.get("last_name")
-    username = data.get("username")
     photo_url = data.get("photo_url")
     now = datetime.now(ZoneInfo("Europe/Moscow"))
     try:
@@ -56,14 +55,12 @@ def save_user() -> Tuple[Response, int]:
                     user_id=user_id,
                     first_name=first_name,
                     last_name=last_name,
-                    username=username,
                     last_visit=now,
                 )
                 session.add(tg_user)
 
                 session.add(ChangeLog(
                     author_id=user_id,
-                    author_name=username,
                     action_type="Регистрация",
                     description=f"Успешная регистрация TG-пользователя: {first_name} {last_name}",
                     timestamp=now,
@@ -71,7 +68,7 @@ def save_user() -> Tuple[Response, int]:
             else:
                 existing_user = True
                 updated = False
-                for fld in ("first_name", "last_name", "username"):
+                for fld in ("first_name", "last_name"):
                     val = data.get(fld)
                     if val and getattr(tg_user, fld) != val:
                         setattr(tg_user, fld, val)
@@ -82,7 +79,6 @@ def save_user() -> Tuple[Response, int]:
 
                 session.add(ChangeLog(
                     author_id=user_id,
-                    author_name=username,
                     action_type="Авторизация",
                     description=f"Успешный вход в TG-аккаунт: {first_name} {last_name}",
                     timestamp=now,
@@ -111,8 +107,7 @@ def save_user() -> Tuple[Response, int]:
             track_visit_counts(raw_id)
 
             role = tg_user.role
-            username = tg_user.username
-            tokens = make_tokens(str(user_id), username, role)
+            tokens = make_tokens(str(user_id), role)
             logger.debug("save_user: user_id=%d tokens issued, is_new=%s", user_id, not existing_user)
             return jsonify({
                 "status": "ok",
@@ -157,7 +152,6 @@ def get_user_profile() -> Tuple[Response, int]:
             "first_name": u.first_name,
             "last_name": u.last_name,
             "middle_name": u.middle_name,
-            "username": u.username,
             "role": u.role,
             "phone": u.phone,
             "email": u.email,
@@ -200,7 +194,6 @@ def update_profile() -> Tuple[Response, int]:
             "first_name",
             "last_name",
             "middle_name",
-            "username",
             "phone",
             "email",
             "date_of_birth",

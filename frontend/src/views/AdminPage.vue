@@ -305,7 +305,7 @@ const form = reactive({
 })
 
 // Вычисляем список колонок по ключам первого пользователя
-const preferredColumns = ['user_id', 'username', 'first_name', 'last_name', 'gender', 'date_of_birth', 'order_count', 'total_spent']
+const preferredColumns = ['user_id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'order_count', 'total_spent']
 const userColumns = computed(() => {
   if (!store.adminStore.users.length) return []
   const cols = Object.keys(store.adminStore.users[0])

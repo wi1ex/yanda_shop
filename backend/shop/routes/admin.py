@@ -464,7 +464,7 @@ def set_user_role() -> Tuple[Response, int]:
             logger.warning("set_user_role: user_id=%s not found", user_id)
             return jsonify({"error": "user not found"}), 404
         user.role = new_role
-        desc = f"Пользователю {user.username} {user.first_name} {user.last_name} назначена роль {new_role}"
+        desc = f"Пользователю {user.first_name} {user.last_name} назначена роль {new_role}"
 
     log_change(action_type="Назначение роли", description=desc)
     logger.debug("set_user_role: user_id=%s role set to %s", user_id, new_role)
