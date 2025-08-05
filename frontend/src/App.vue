@@ -40,6 +40,7 @@ onMounted(async () => {
   initialOverflow = document.body.style.overflow || ''
   if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
     const tgUser = window.Telegram.WebApp.initDataUnsafe.user
+    store.userStore.isTelegramWebApp = true
     await store.userStore.initializeTelegramUser(tgUser)
   } else if (localStorage.getItem('accessToken')) {
     await store.userStore.initializeWebUser()

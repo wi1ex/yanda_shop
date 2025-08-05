@@ -24,11 +24,11 @@ auth_bp: Blueprint = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 
 # Internal helpers
-def make_tokens(user_id: str, username: str, role: str) -> Dict[str, str]:
+def make_tokens(user_id: str, role: str) -> Dict[str, str]:
     """
     Генерирует пару access/refresh токенов для заданного user_id и роли.
     """
-    claims = {"role": role, "username": username}
+    claims = {"role": role}
     access_token = create_access_token(
         identity=user_id,
         additional_claims=claims,
@@ -54,10 +54,9 @@ def refresh() -> Tuple[Response, int]:
     user_id = get_jwt_identity()
     claims = get_jwt()
     role = claims.get("role", "")
-    username = claims.get("username", "")
     logger.debug("refresh: user_id=%s", user_id)
 
-    claims = {"role": role, "username": username}
+    claims = {"role": role}
     access_token = create_access_token(
         identity=user_id,
         additional_claims=claims,
@@ -70,16 +69,12 @@ def refresh() -> Tuple[Response, int]:
 # Регистрация: запрос кода
 @auth_bp.route("/request_registration_code", methods=["POST"])
 @handle_errors
-@require_json("email", "username", "first_name", "last_name")
+@require_json("email", "first_name", "last_name")
 def request_registration_code() -> Tuple[Response, int]:
     data = request.get_json()
     logger.debug("request_registration_code: payload=%s", data)
     raw_email = data["email"].lower().strip()
-    username, first_name, last_name = (
-        data["username"].strip(),
-        data["first_name"].strip(),
-        data["last_name"].strip(),
-    )
+    first_name, last_name = data["first_name"].strip(), data["last_name"].strip()
     now = datetime.now(ZoneInfo("Europe/Moscow"))
 
     # Нормализация и валидация e-mail
@@ -94,19 +89,15 @@ def request_registration_code() -> Tuple[Response, int]:
     # проверяем, что пользователя с таким e-mail ещё нет
     with session_scope() as session:
         exists_email = session.query(Users).filter_by(email=email).first()
-        exists_username = session.query(Users).filter_by(username=username).first()
     if exists_email:
         logger.debug("request_registration_code: registration attempt with existing email %s", email)
         return jsonify({"error": "Пользователь с таким e-mail уже зарегистрирован"}), 400
-    if exists_username:
-        logger.debug("request_registration_code: registration attempt with existing username %s", username)
-        return jsonify({"error": "Пользователь с таким никнеймом уже зарегистрирован"}), 400
 
     # Генерация кода и отправка письма
     logger.debug("request_registration_code: generating code for %s", email)
     code = ''.join(secrets.choice(string.digits) for _ in range(6))
     key  = f"email_reg:{email}"
-    redis_client.setex(key, 600, "|".join([code, username, first_name, last_name]))
+    redis_client.setex(key, 600, "|".join([code, first_name, last_name]))
     logger.debug("request_registration_code: stored code in redis key=%s", key)
 
     # шлём письмо
@@ -114,7 +105,7 @@ def request_registration_code() -> Tuple[Response, int]:
         subject="Код подтверждения регистрации на Yanda Shop",
         recipients=[email],
         body=(
-            f"Здравствуйте, {username}!\n\n"
+            f"Здравствуйте, {first_name}!\n\n"
             f"Ваш код регистрации: {code}\n"
             "Он действителен 10 минут.\n\n"
             "Если вы не запрашивали, просто проигнорируйте."
@@ -126,7 +117,6 @@ def request_registration_code() -> Tuple[Response, int]:
     with session_scope() as session:
         session.add(ChangeLog(
             author_id=0,
-            author_name=username,
             action_type="Регистрация",
             description=f"Попытка регистрации пользователя: {first_name} {last_name}",
             timestamp=now,
@@ -153,7 +143,7 @@ def verify_registration_code():
         logger.warning("verify_registration_code: no code found in redis for %s", email)
         return jsonify({"error": "Код не найден или истёк"}), 400
 
-    stored_code, username, first_name, last_name = stored.split("|", 3)
+    stored_code, first_name, last_name = stored.split("|", 2)
     if code != stored_code:
         logger.warning("verify_registration_code: invalid code %s for %s", code, email)
         return jsonify({"error": "Неверный код"}), 400
@@ -164,7 +154,6 @@ def verify_registration_code():
     # создаём пользователя
     with session_scope() as session:
         user = Users(
-            username=username,
             first_name=first_name,
             last_name=last_name,
             email=email,
@@ -182,14 +171,13 @@ def verify_registration_code():
     with session_scope() as session:
         session.add(ChangeLog(
             author_id=user_id,
-            author_name=username,
             action_type="Регистрация",
             description=f"Успешная регистрация пользователя: {first_name} {last_name}",
             timestamp=now,
         ))
     logger.debug("verify_registration_code: change log saved for user_id=%s", user_id)
 
-    tokens = make_tokens(user_id, username, "customer")
+    tokens = make_tokens(user_id, "customer")
     access_token, refresh_token = tokens["access_token"], tokens["refresh_token"]
     logger.debug("verify_registration_code: tokens issued for new user_id=%s", user_id)
     return jsonify({
@@ -224,21 +212,20 @@ def request_login_code():
             logger.debug("request_login_code: login attempt for unknown email %s", email)
             return jsonify({"error": "Пользователь не найден"}), 404
         user_id = user.user_id
-        username = user.username
         first_name = user.first_name
         last_name = user.last_name
 
     logger.debug("request_login_code: generating code for user_id=%d", user_id)
     code = ''.join(secrets.choice(string.digits) for _ in range(6))
     key = f"email_login:{email}"
-    redis_client.setex(key, 600, f"{code}|{username}")
+    redis_client.setex(key, 600, code)
     logger.debug("request_login_code: stored login code in redis key=%s", key)
 
     msg = Message(
         subject="Код входа на Yanda Shop",
         recipients=[email],
         body=(
-            f"Здравствуйте, {username}!\n\n"
+            f"Здравствуйте, {first_name}!\n\n"
             f"Ваш код входа: {code}\n"
             f"Он действителен 10 минут.\n\n"
             "Если вы не запрашивали, просто проигнорируйте."
@@ -250,7 +237,6 @@ def request_login_code():
     with session_scope() as session:
         session.add(ChangeLog(
             author_id=user_id,
-            author_name=username,
             action_type="Авторизация",
             description=f"Попытка входа в аккаунт: {first_name} {last_name}",
             timestamp=now,
@@ -277,8 +263,7 @@ def verify_login_code():
         logger.warning("verify_login_code: no code in redis for %s", email)
         return jsonify({"error": "Код не найден или истёк"}), 400
 
-    stored_code, username = stored.split("|", 1)
-    if code != stored_code:
+    if code != stored:
         logger.warning("verify_login_code: invalid code %s for %s", code, email)
         return jsonify({"error": "Неверный код"}), 400
 
@@ -290,7 +275,6 @@ def verify_login_code():
             return jsonify({"error": "Пользователь не найден"}), 404
         user.last_visit = now
         user_id = user.user_id
-        username = user.username
         first_name = user.first_name
         last_name = user.last_name
         role = user.role
@@ -305,14 +289,13 @@ def verify_login_code():
     with session_scope() as session:
         session.add(ChangeLog(
             author_id=user_id,
-            author_name=username,
             action_type="Авторизация",
             description=f"Успешный вход в аккаунт: {first_name} {last_name}",
             timestamp=now,
         ))
     logger.debug("verify_login_code: change log saved for successful login user_id=%d", user_id)
 
-    tokens = make_tokens(str(user_id), username, role)
+    tokens = make_tokens(str(user_id), role)
     access_token, refresh_token = tokens["access_token"], tokens["refresh_token"]
     logger.debug("verify_login_code: tokens issued for user_id=%s", user_id)
     return jsonify({

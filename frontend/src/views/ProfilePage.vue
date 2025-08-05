@@ -14,60 +14,53 @@
       <button type="button" @click="select('profile')">Мой профиль</button>
       <button type="button" @click="select('orders')">Заказы</button>
       <button type="button" @click="select('addresses')">Мои адреса</button>
-      <button type="button" @click="onLogout()">Выйти из профиля</button>
+      <button type="button" @click="onLogout()" v-if="!store.userStore.isTelegramWebApp">Выйти из профиля</button>
     </div>
 
     <!-- Контент секции -->
-    <div v-if="currentSection==='profile'" class="content profile">
+    <div v-if="currentSection==='profile'" class="content">
       <!-- Фото + загрузка -->
-      <div class="card photo">
+      <div class="card">
         <label>Фото профиля</label>
         <div class="photo-row">
-          <div class="avatar">
-            <img :src="store.userStore.user.photo_url || icon_default_avatar_grey" alt="">
+          <img :src="store.userStore.user.photo_url || icon_default_avatar_grey" alt="">
+          <button type="button" v-if="!hasPhoto" @click="triggerFile">Загрузить</button>
+          <div v-else>
+            <button type="button" @click="triggerFile">Изменить</button>
+            <button type="button" class="text" @click="removePhoto">Удалить</button>
           </div>
-          <button v-if="!hasPhoto" @click="triggerFile">Загрузить</button>
-          <template v-else>
-            <button @click="triggerFile">Изменить</button>
-            <button class="text" @click="removePhoto">Удалить</button>
-          </template>
           <input type="file" ref="fileInput" class="visually-hidden" @change="onFileChange" />
         </div>
       </div>
-
       <!-- Личные данные -->
-      <div class="card info">
+      <div class="card">
         <label>Личная информация</label>
-        <input v-model="form.last_name" placeholder="Фамилия*" />
-        <input v-model="form.first_name" placeholder="Имя*" />
-        <input v-model="form.middle_name" placeholder="Отчество*" />
-        <input v-model="form.username" placeholder="Никнейм*" />
+        <input class="info" v-model="form.last_name" placeholder="Фамилия*" />
+        <input class="info" v-model="form.first_name" placeholder="Имя*" />
+        <input class="info" v-model="form.middle_name" placeholder="Отчество*" />
       </div>
-
       <!-- Пол -->
-      <div class="card gender">
+      <div class="card">
         <label>Пол</label>
-        <label><input type="radio" value="male"   v-model="form.gender" /> Мужчина</label>
+        <label><input type="radio" value="male" v-model="form.gender" /> Мужчина</label>
         <label><input type="radio" value="female" v-model="form.gender" /> Женщина</label>
       </div>
-
       <!-- Дата рождения -->
-      <div class="card dob">
+      <div class="card">
         <label>Дата рождения</label>
         <input v-model="form.date_of_birth" placeholder="ДД / ММ / ГГГГ" />
       </div>
-
       <!-- Контакты -->
-      <div class="card contacts">
+      <div class="card">
         <label>Контакты</label>
         <input v-model="form.phone" placeholder="Телефон*" />
         <input v-model="form.email" placeholder="Почта*" />
       </div>
-
-      <button class="save" @click="saveProfile">Сохранить</button>
+      <!-- Кнопка Сохранить -->
+      <button type="button" class="save" @click="saveProfile">Сохранить</button>
     </div>
 
-    <div v-if="currentSection==='orders'" class="content orders">
+    <div v-if="currentSection==='orders'" class="content">
       <div v-if="!orders.length" class="empty">
         У тебя нет оформленных заказов.
       </div>
@@ -98,7 +91,7 @@
             <p>Доставка: {{ orderDetail.delivery_type }}</p>
             <p>Адрес: {{ orderDetail.delivery_address }}</p>
           </div>
-          <div class="info-block cost">
+          <div class="info-block">
             <p>Сумма товаров: {{ orderDetail.subtotal }} ₽</p>
             <p>Курьер: {{ orderDetail.delivery_price }} ₽</p>
             <p class="bold">Итог: {{ orderDetail.total }} ₽</p>
@@ -115,22 +108,22 @@
               </div>
             </div>
           </div>
-          <button v-if="orderDetail.canRepeat" class="repeat" @click="repeatOrder(orderDetail.id)">Повторить заказ</button>
+          <button type="button" v-if="orderDetail.canRepeat" class="repeat" @click="repeatOrder(orderDetail.id)">Повторить заказ</button>
         </div>
       </div>
     </div>
 
-    <div v-if="currentSection==='addresses'" class="content addresses">
+    <div v-if="currentSection==='addresses'" class="content">
       <div v-if="!addresses.length" class="empty">
         У тебя нет сохранённых адресов.
-        <button class="add-btn" @click="editAddress()">Добавить адрес</button>
+        <button type="button" class="add-btn" @click="editAddress()">Добавить адрес</button>
       </div>
       <div v-else>
         <div v-for="a in addresses" :key="a.id" class="addr-item" @click="selectAddress(a.id)">
           <label><input type="radio" :value="a.id" v-model="selectedAddress" /> {{ a.full }}</label>
-          <button class="edit" @click.stop="editAddress(a)">›</button>
+          <button type="button" class="edit" @click.stop="editAddress(a)">›</button>
         </div>
-        <button class="add-btn" @click="editAddress()">Добавить адрес</button>
+        <button type="button" class="add-btn" @click="editAddress()">Добавить адрес</button>
       </div>
 
       <!-- Форма адреса -->
@@ -149,9 +142,9 @@
         <label>Комментарий курьеру</label>
         <textarea v-model="addressForm.comment" placeholder="Комментарий курьеру"></textarea>
         <div class="buttons">
-          <button class="save" @click="saveAddress">Сохранить</button>
-          <button class="cancel" @click="cancelAddress">Отменить</button>
-          <button v-if="addressForm.id" class="delete" @click="deleteAddress(addressForm.id)">Удалить адрес</button>
+          <button type="button" class="save" @click="saveAddress">Сохранить</button>
+          <button type="button" class="cancel" @click="cancelAddress">Отменить</button>
+          <button type="button" v-if="addressForm.id" class="delete" @click="deleteAddress(addressForm.id)">Удалить адрес</button>
         </div>
       </div>
     </div>
@@ -178,7 +171,6 @@ const form = reactive({
   first_name: '',
   last_name: '',
   middle_name: '',
-  username: '',
   gender: '',
   date_of_birth: '',
   phone: '',
@@ -334,7 +326,6 @@ watch(
       first_name:    u.first_name,
       last_name:     u.last_name,
       middle_name:   u.middle_name,
-      username:      u.username,
       gender:        u.gender,
       date_of_birth: u.date_of_birth,
       phone:         u.phone,
@@ -428,33 +419,6 @@ watch(
       border-bottom: none;
     }
   }
-  .subheader {
-    display: flex;
-    align-items: center;
-    margin-bottom: 16px;
-    .back-button {
-      display: flex;
-      align-items: center;
-      background: none;
-      border: none;
-      font-family: Bounded;
-      font-size: 16px;
-      line-height: 100%;
-      letter-spacing: -0.64px;
-      color: $black-100;
-      cursor: pointer;
-      img {
-        width: 24px;
-        height: 24px;
-        margin-right: 8px;
-      }
-    }
-  }
-  .divider {
-    height: 1px;
-    background-color: $white-100;
-    margin-bottom: 24px;
-  }
   .content {
     .card {
       background-color: #FFFFFF;
@@ -470,63 +434,57 @@ watch(
         color: $black-70;
         margin-bottom: 8px;
       }
-    }
-    .photo-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      .avatar {
-        width: 96px;
-        height: 96px;
-        border-radius: 50%;
-        background-size: cover;
-        background-position: center;
-      }
-      button {
-        padding: 12px 24px;
-        border-radius: 24px;
-        font-family: Bounded;
-        font-size: 16px;
-        line-height: 100%;
-        letter-spacing: -0.64px;
-        background-color: $black-100;
-        color: #FFFFFF;
-        border: none;
-        cursor: pointer;
-        &.text {
-          background: none;
-          color: $grey-30;
-        }
-      }
-    }
-    input,
-    textarea {
-      width: 100%;
-      border: none;
-      border-bottom: 1px solid $grey-90;
-      padding: 8px 0;
-      margin-bottom: 16px;
-      font-family: Bounded;
-      font-size: 16px;
-      line-height: 100%;
-      letter-spacing: -0.64px;
-    }
-    .gender {
-      display: flex;
-      gap: 32px;
-      label {
+      .photo-row {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 16px;
+        img {
+          width: 96px;
+          height: 96px;
+          border-radius: 50%;
+          background-size: cover;
+        }
+        button {
+          padding: 12px 24px;
+          border-radius: 24px;
+          font-family: Bounded;
+          font-size: 16px;
+          line-height: 100%;
+          letter-spacing: -0.64px;
+          background-color: $black-100;
+          color: #FFFFFF;
+          border: none;
+          cursor: pointer;
+          &.text {
+            background: none;
+            color: $grey-30;
+          }
+        }
+        input {
+          width: 100%;
+          border: none;
+          border-bottom: 1px solid $grey-90;
+          padding: 8px 0;
+          margin-bottom: 16px;
+          font-family: Bounded;
+          font-size: 16px;
+          line-height: 100%;
+          letter-spacing: -0.64px;
+        }
+      }
+      .info {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid $grey-90;
+        padding: 8px 0;
+        margin-bottom: 16px;
         font-family: Bounded;
         font-size: 16px;
         line-height: 100%;
         letter-spacing: -0.64px;
       }
     }
-    .save,
-    .add-btn,
-    .repeat {
+    .save {
       display: block;
       width: 100%;
       padding: 16px;
@@ -541,7 +499,24 @@ watch(
       margin-top: 8px;
       cursor: pointer;
     }
+
     .orders {
+      .add-btn,
+      .repeat {
+        display: block;
+        width: 100%;
+        padding: 16px;
+        background-color: $black-100;
+        color: #FFFFFF;
+        font-family: Bounded;
+        font-size: 16px;
+        line-height: 100%;
+        letter-spacing: -0.64px;
+        border: none;
+        border-radius: 4px;
+        margin-top: 8px;
+        cursor: pointer;
+      }
       .order-card {
         position: relative;
         background-color: #FFFFFF;
@@ -560,9 +535,6 @@ watch(
           font-size: 14px;
           line-height: 100%;
           color: #FFFFFF;
-          &.completed {
-            background-color: #4CAF50;
-          }
         }
         .preview img {
           width: 40px;
