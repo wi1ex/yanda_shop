@@ -50,7 +50,6 @@ def save_user() -> Tuple[Response, int]:
         with session_scope() as session:
             tg_user = session.get(Users, user_id)
             if not tg_user:
-                existing_user = False
                 tg_user = Users(
                     user_id=user_id,
                     first_name=first_name,
@@ -65,34 +64,9 @@ def save_user() -> Tuple[Response, int]:
                     description=f"Успешная регистрация TG-пользователя: {first_name} {last_name}",
                     timestamp=now,
                 ))
-            else:
-                existing_user = True
-                updated = False
-                for fld in ("first_name", "last_name"):
-                    val = data.get(fld)
-                    if val and getattr(tg_user, fld) != val:
-                        setattr(tg_user, fld, val)
-                        updated = True
-                tg_user.last_visit = now
-                if updated:
-                    session.merge(tg_user)
 
-                session.add(ChangeLog(
-                    author_id=user_id,
-                    action_type="Авторизация",
-                    description=f"Успешный вход в TG-аккаунт: {first_name} {last_name}",
-                    timestamp=now,
-                ))
-            # Avatar handling
-            if photo_url:
-                filename = secure_filename(photo_url.split("/")[-1])
-                if tg_user.avatar_url != filename:
-                    if tg_user.avatar_url:
-                        old_key = f"users/{user_id}_{tg_user.avatar_url}"
-                        try:
-                            minio_client.remove_object(BUCKET, old_key)
-                        except Exception as exc:
-                            logger.warning("save_user: failed remove old avatar %s: %s", old_key, exc)
+                if photo_url:
+                    filename = secure_filename(photo_url.split("/")[-1])
                     resp = requests.get(photo_url, timeout=10)
                     if resp.ok:
                         content = resp.content
@@ -102,13 +76,22 @@ def save_user() -> Tuple[Response, int]:
                             tg_user.avatar_url = filename
                         except Exception as exc:
                             logger.warning("save_user: failed upload new avatar %s: %s", new_key, exc)
+            else:
+                tg_user.last_visit = now
+
+                session.add(ChangeLog(
+                    author_id=user_id,
+                    action_type="Авторизация",
+                    description=f"Успешный вход в TG-аккаунт: {first_name} {last_name}",
+                    timestamp=now,
+                ))
 
             # Redis: track visit counts
             track_visit_counts(raw_id)
 
             role = tg_user.role
             tokens = make_tokens(str(user_id), role)
-            logger.debug("save_user: user_id=%d tokens issued, is_new=%s", user_id, not existing_user)
+            logger.debug("save_user: user_id=%d tokens issued", user_id)
             return jsonify({
                 "status": "ok",
                 "access_token": tokens["access_token"],
@@ -255,6 +238,8 @@ def upload_avatar() -> Tuple[Response, int]:
             minio_client.put_object(BUCKET, new_key, file, file.content_length)
             old_avatar_url = u.avatar_url
             u.avatar_url = filename
+            session.merge(u)
+            session.flush()
             logger.debug("upload_avatar: uploaded new avatar %s", new_key)
         except Exception as exc:
             logger.error("upload_avatar: failed upload new avatar %s: %s", new_key, exc)
@@ -292,6 +277,8 @@ def delete_avatar() -> Tuple[Response, int]:
 
         old_avatar_url = u.avatar_url
         u.avatar_url = None
+        session.merge(u)
+        session.flush()
 
         log_change("Удаление аватара", f"{old_avatar_url} → None")
         return jsonify({"status": "ok", "photo_url": None}), 200

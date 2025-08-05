@@ -176,31 +176,38 @@ const currentSection = ref(null)
 
 // PROFILE
 const form = reactive({
-  first_name: '',
-  last_name: '',
-  middle_name: '',
-  gender: '',
+  first_name:    '',
+  last_name:     '',
+  middle_name:   '',
+  gender:        '',
   date_of_birth: '',
-  phone: '',
-  email: '',
+  phone:         '',
+  email:         '',
 })
+const isLoaded = ref(false)
 const fileInput = ref()
 const hasPhoto = computed(() => !!store.userStore.user.photo_url)
 
 const formDirty = computed(() => {
+  if (!isLoaded.value) return false
+
   const u = store.userStore.user
-  // для всех полей, кроме телефона
-  const normText  = v => v ?? ''
-  // для телефона — оставляем только цифры
-  const normPhone = v => (v ?? '').replace(/\D/g, '')
+  // нормализация только цифр для телефона
+  const normPhone = v => (v||'').replace(/\D/g, '')
+  // дата в ISO тоже нормализуем для сравнения
+  const normDate  = v => {
+    const [d,m,y] = (v||'').split(/\D+/)
+    return y && m && d ? `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}` : ''
+  }
+
   return (
-    form.first_name       !== normText(u.first_name)    ||
-    form.last_name        !== normText(u.last_name)     ||
-    form.middle_name      !== normText(u.middle_name)   ||
-    form.gender           !== normText(u.gender)        ||
-    form.date_of_birth    !== normText(u.date_of_birth) ||
-    normPhone(form.phone) !== normPhone(u.phone)        ||
-    form.email            !== normText(u.email)
+    form.first_name    !== (u.first_name    || '') ||
+    form.last_name     !== (u.last_name     || '') ||
+    form.middle_name   !== (u.middle_name   || '') ||
+    form.gender        !== (u.gender        || '') ||
+    normDate(form.date_of_birth) !== (u.date_of_birth || '') ||
+    normPhone(form.phone)       !== (u.phone          || '') ||
+    form.email         !== (u.email         || '')
   )
 })
 
@@ -336,48 +343,68 @@ async function deleteAddress(id) {
 }
 
 function formatDate(iso = '') {
-  // ожидаем iso = "YYYY-MM-DD"
   if (!iso) return ''
-  const [y, m, d] = iso.split('-')
+  const [y,m,d] = iso.split('-')
   return `${d} / ${m} / ${y}`
+}
+
+function validateDate(dd, mm, yyyy) {
+  const day   = parseInt(dd, 10)
+  const month = parseInt(mm, 10)
+  const year  = parseInt(yyyy, 10)
+  const thisYear = new Date().getFullYear()
+  return (
+    day  >= 1 && day  <= 31 &&
+    month>= 1 && month<= 12 &&
+    year >= 1900 && year <= thisYear
+  )
 }
 
 function onDateInput(e) {
   let digits = e.target.value.replace(/\D/g, '').slice(0, 8)
-  const dd = digits.slice(0, 2)
-  const mm = digits.slice(2, 4)
-  const yy = digits.slice(4, 8)
+  const dd = digits.slice(0,2), mm = digits.slice(2,4), yy = digits.slice(4,8)
+  let out = ''
+  if (dd) out = dd
+  if (mm) out += ' / ' + mm
+  if (yy) out += ' / ' + yy
 
-  let formatted = ''
-  if (dd) formatted = dd
-  if (mm) formatted += ' / ' + mm
-  if (yy) formatted += ' / ' + yy
-
-  e.target.value = formatted
-  form.date_of_birth = formatted
+  e.target.value = out
+  // валидность
+  if (dd.length===2 && mm.length>=2 && yy.length===4) {
+    if (validateDate(dd, mm, yy)) {
+      form.date_of_birth = out
+    } else {
+      // можно, например, подсветить красным, но не сохранять
+    }
+  } else {
+    form.date_of_birth = out
+  }
 }
 
-// Телефон: ровно 11 цифр, начинаем с «8», рисуем скобки и дефисы
-function onPhoneInput(e) {
-  let d = e.target.value.replace(/\D/g, '').slice(0, 11)
-  if (d) {
-    if (d[0] === '8') {
-      // ничего не делаем
-    } else {
-      // первый символ не 8 – вставляем перед всеми цифрами
-      d = '8' + d
-    }
-  }
-  // разбиваем и форматируем, как раньше
-  const c1 = d.slice(0,1), c2 = d.slice(1,4), c3 = d.slice(4,7), c4 = d.slice(7,9), c5 = d.slice(9,11)
-  let formatted = ''
-  if (c1) formatted = c1
-  if (c2) formatted += ` (${c2}`
-  if (c2.length === 3) formatted += `)`
-  if (c3) formatted += ` ${c3}`
-  if (c4) formatted += `-${c4}`
-  if (c5) formatted += `-${c5}`
+function formatPhone(raw = '') {
+  // приводим «сырые» цифры к нужному виду
+  let d = raw.replace(/\D/g, '').slice(0, 11)
+  // если набрали хотя бы 1 цифру и она не «8» — вставляем «8» перед всеми
+  if (d && d[0] !== '8') d = '8' + d
+  const [c1, c2, c3, c4, c5] = [
+    d.slice(0,1),
+    d.slice(1,4),
+    d.slice(4,7),
+    d.slice(7,9),
+    d.slice(9,11),
+  ]
+  let out = ''
+  if (c1) out = c1
+  if (c2) out += ` (${c2}`
+  if (c2.length === 3) out += `)`
+  if (c3) out += ` ${c3}`
+  if (c4) out += `-${c4}`
+  if (c5) out += `-${c5}`
+  return out
+}
 
+function onPhoneInput(e) {
+  const formatted = formatPhone(e.target.value)
   e.target.value = formatted
   form.phone = formatted
 }
@@ -385,15 +412,16 @@ function onPhoneInput(e) {
 watch(
   () => store.userStore.user,
   u => {
-    Object.assign(form, {
-      first_name:    u.first_name,
-      last_name:     u.last_name,
-      middle_name:   u.middle_name,
-      gender:        u.gender,
-      date_of_birth: formatDate(u.date_of_birth),
-      phone:         u.phone,
-      email:         u.email,
-    })
+    if (!u.id) return
+    // инициализируем форму из стора один раз
+    form.first_name    = u.first_name
+    form.last_name     = u.last_name
+    form.middle_name   = u.middle_name
+    form.gender        = u.gender
+    form.date_of_birth = formatDate(u.date_of_birth)  // см. ниже
+    form.phone         = formatPhone(u.phone)         // см. ниже
+    form.email         = u.email
+    isLoaded.value     = true
   },
   { immediate: true }
 )

@@ -78,7 +78,6 @@ def get_logs() -> Tuple[Response, int]:
             {
                 "id": lg.id,
                 "author_id": lg.author_id,
-                "author_name": lg.author_name,
                 "action_type": lg.action_type,
                 "description": lg.description,
                 "timestamp": lg.timestamp
@@ -448,7 +447,7 @@ def delete_request(request_id: int) -> Tuple[Response, int]:
 @handle_errors
 @require_json("user_id", "role")
 def set_user_role() -> Tuple[Response, int]:
-    """POST /api/admin/set_user_role {author_id, author_name, user_id, role}"""
+    """POST /api/admin/set_user_role {author_id, user_id, role}"""
     data = request.get_json()
     logger.debug("set_user_role: payload=%s", data)
     user_id = data["user_id"]
