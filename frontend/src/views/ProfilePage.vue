@@ -186,17 +186,21 @@ const form = reactive({
 })
 const fileInput = ref()
 const hasPhoto = computed(() => !!store.userStore.user.photo_url)
+
 const formDirty = computed(() => {
   const u = store.userStore.user
-  const norm = v => v ?? ''
+  // для всех полей, кроме телефона
+  const normText  = v => v ?? ''
+  // для телефона — оставляем только цифры
+  const normPhone = v => (v ?? '').replace(/\D/g, '')
   return (
-    form.first_name    !== norm(u.first_name)    ||
-    form.last_name     !== norm(u.last_name)     ||
-    form.middle_name   !== norm(u.middle_name)   ||
-    form.gender        !== norm(u.gender)        ||
-    form.date_of_birth !== norm(u.date_of_birth) ||
-    form.phone         !== norm(u.phone)         ||
-    form.email         !== norm(u.email)
+    form.first_name       !== normText(u.first_name)    ||
+    form.last_name        !== normText(u.last_name)     ||
+    form.middle_name      !== normText(u.middle_name)   ||
+    form.gender           !== normText(u.gender)        ||
+    form.date_of_birth    !== normText(u.date_of_birth) ||
+    normPhone(form.phone) !== normPhone(u.phone)        ||
+    form.email            !== normText(u.email)
   )
 })
 
@@ -386,7 +390,7 @@ watch(
       email:         u.email,
     })
   },
-  { immediate: true, deep: true }
+  { immediate: true }
 )
 
 </script>
