@@ -27,10 +27,8 @@
         <div class="photo-row">
           <img :src="store.userStore.user.photo_url || icon_default_avatar_grey" alt="">
           <button type="button" v-if="!hasPhoto" @click="triggerFile">Загрузить</button>
-          <div v-else>
-            <button type="button" @click="triggerFile">Изменить</button>
-            <button type="button" class="text" @click="removePhoto">Удалить</button>
-          </div>
+          <button type="button" v-if="hasPhoto" @click="triggerFile">Изменить</button>
+          <button type="button" v-if="hasPhoto" class="text" @click="removePhoto">Удалить</button>
           <input type="file" ref="fileInput" class="visually-hidden" @change="onFileChange" />
         </div>
       </div>
@@ -58,7 +56,7 @@
       <!-- Дата рождения -->
       <div class="card">
         <label class="card-label">Дата рождения</label>
-        <input class="info" v-model="form.date_of_birth" placeholder="ДД / ММ / ГГГГ" @input="onDateInput" />
+        <input class="info" v-model="form.date_of_birth" placeholder="__ / __ / ____" @input="onDateInput" />
       </div>
       <!-- Контакты -->
       <div class="card">
