@@ -310,6 +310,7 @@ const subcatNameToFileKey = {
   'Сандалии':           'Sandals',
   'Сапоги':             'Boots',
   'Слипоны':            'Slip_ons',
+  'Тапочки':            'Slippers',
   'Топсайдеры':         'Topsiders',
   'Туфли':              'Shoes',
   'Шлепки':             'Flip_flops',
