@@ -255,7 +255,6 @@ def upload_avatar() -> Tuple[Response, int]:
             minio_client.put_object(BUCKET, new_key, file, file.content_length)
             old_avatar_url = u.avatar_url
             u.avatar_url = filename
-            session.merge(u)
             logger.debug("upload_avatar: uploaded new avatar %s", new_key)
         except Exception as exc:
             logger.error("upload_avatar: failed upload new avatar %s: %s", new_key, exc)
@@ -293,7 +292,6 @@ def delete_avatar() -> Tuple[Response, int]:
 
         old_avatar_url = u.avatar_url
         u.avatar_url = None
-        session.merge(u)
 
         log_change("Удаление аватара", f"{old_avatar_url} → None")
         return jsonify({"status": "ok", "photo_url": None}), 200
