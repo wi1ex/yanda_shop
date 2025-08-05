@@ -19,15 +19,18 @@
 
 ## 1. Сервисы Docker-Compose
 
-| Сервис       | Назначение               | Порт   |
-| ------------ | ------------------------ | ------ |
-| **db**       | PostgreSQL               | 5432   |
-| **redis**    | Redis                    | 6379   |
-| **minio**    | S3-хранилище (MinIO)     | 9000   |
-| **backend**  | Flask-REST API           | 8000   |
-| **bot**      | Telegram-бот             | –      |
-| **frontend** | Vue.js SPA               | –      |
-| **proxy**    | Nginx + SSL              | 80,443 |
+
+| Сервис       | Назначение               | Публикуемый порт   | Внутренний порт   |
+| ------------ | ------------------------ |--------------------|-------------------|
+| **db**       | PostgreSQL               | —                  | 5432              |
+| **redis**    | Redis                    | —                  | 6379              |
+| **minio**    | S3-хранилище (MinIO)     | —                  | 9000              |
+| **backend**  | Flask-REST API           | —                  | 8000              |
+| **bot**      | Telegram-бот             | —                  | —                 |
+| **frontend** | Vue.js SPA               | —                  | —                 |
+| **proxy**    | Nginx + SSL              | 80, 443            | 80, 443           |
+| **mail**     | Docker Mailserver        | 25, 143, 587, 993  | 25, 143, 587, 993 |
+| **webmail**  | RainLoop Webmail         | —                  | —                 |
 
 ### Архитектурная схема
 
