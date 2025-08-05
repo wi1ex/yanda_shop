@@ -188,14 +188,15 @@ const fileInput = ref()
 const hasPhoto = computed(() => !!store.userStore.user.photo_url)
 const formDirty = computed(() => {
   const u = store.userStore.user
+  const norm = v => v ?? ''
   return (
-    form.first_name    !== u.first_name    ||
-    form.last_name     !== u.last_name     ||
-    form.middle_name   !== u.middle_name   ||
-    form.gender        !== u.gender        ||
-    form.date_of_birth !== u.date_of_birth ||
-    form.phone         !== u.phone         ||
-    form.email         !== u.email
+    form.first_name    !== norm(u.first_name)    ||
+    form.last_name     !== norm(u.last_name)     ||
+    form.middle_name   !== norm(u.middle_name)   ||
+    form.gender        !== norm(u.gender)        ||
+    form.date_of_birth !== norm(u.date_of_birth) ||
+    form.phone         !== norm(u.phone)         ||
+    form.email         !== norm(u.email)
   )
 })
 
@@ -347,24 +348,27 @@ function onDateInput(e) {
 
 // Телефон: ровно 11 цифр, начинаем с «8», рисуем скобки и дефисы
 function onPhoneInput(e) {
-  // только цифры, первые 11 символов
+  // оставляем только цифры и обрезаем до 11
   let d = e.target.value.replace(/\D/g, '').slice(0, 11)
-  // если пользователь не ввёл «8», принудительно ставим
-  if (!d.startsWith('8')) d = '8' + d.slice(1)
-
-  const c1 = d.slice(0, 1)      // «8»
+  // если есть хотя бы одна цифра, гарантируем, что она начинается с «8»
+  if (d && !d.startsWith('8')) {
+    d = '8' + d.slice(1)
+  }
+  // разбиваем на группы
+  const c1 = d.slice(0, 1)      // первая цифра «8» или ''
   const c2 = d.slice(1, 4)      // код
   const c3 = d.slice(4, 7)      // первые 3
   const c4 = d.slice(7, 9)      // следующие 2
   const c5 = d.slice(9, 11)     // последние 2
-
-  let formatted = c1
-  if (c2)  formatted += ` (${c2}`
+  // собираем форматированную строку, но только из непустых групп
+  let formatted = ''
+  if (c1) formatted = c1
+  if (c2) formatted += ` (${c2}`
   if (c2.length === 3) formatted += `)`
-  if (c3)  formatted += ` ${c3}`
-  if (c4)  formatted += `-${c4}`
-  if (c5)  formatted += `-${c5}`
-
+  if (c3) formatted += ` ${c3}`
+  if (c4) formatted += `-${c4}`
+  if (c5) formatted += `-${c5}`
+  // запись в инпут и в ваш store
   e.target.value = formatted
   form.phone = formatted
 }
