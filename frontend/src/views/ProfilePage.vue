@@ -19,9 +19,11 @@
 
     <!-- Контент секции -->
     <div v-if="currentSection==='profile'" class="content">
+      <h2>Мой профиль</h2>
+      <p>Твои личные данные важны для покупок,<br>поэтому проверяй их актуальность.</p>
       <!-- Фото + загрузка -->
       <div class="card">
-        <label>Фото профиля</label>
+        <label class="card-label">Фото профиля</label>
         <div class="photo-row">
           <img :src="store.userStore.user.photo_url || icon_default_avatar_grey" alt="">
           <button type="button" v-if="!hasPhoto" @click="triggerFile">Загрузить</button>
@@ -34,25 +36,33 @@
       </div>
       <!-- Личные данные -->
       <div class="card">
-        <label>Личная информация</label>
+        <label class="card-label">Личная информация</label>
         <input class="info" v-model="form.last_name" placeholder="Фамилия*" />
         <input class="info" v-model="form.first_name" placeholder="Имя*" />
         <input class="info" v-model="form.middle_name" placeholder="Отчество*" />
       </div>
       <!-- Пол -->
       <div class="card">
-        <label>Пол</label>
-        <label><input type="radio" value="male" v-model="form.gender" /> Мужчина</label>
-        <label><input type="radio" value="female" v-model="form.gender" /> Женщина</label>
+        <label class="card-label">Пол</label>
+        <div class="gender">
+          <label class="gender-label">
+            <input type="radio" value="male" v-model="form.gender" />
+            Мужчина
+          </label>
+          <label class="gender-label">
+            <input type="radio" value="female" v-model="form.gender" />
+            Женщина
+          </label>
+        </div>
       </div>
       <!-- Дата рождения -->
       <div class="card">
-        <label>Дата рождения</label>
+        <label class="card-label">Дата рождения</label>
         <input v-model="form.date_of_birth" placeholder="ДД / ММ / ГГГГ" />
       </div>
       <!-- Контакты -->
       <div class="card">
-        <label>Контакты</label>
+        <label class="card-label">Контакты</label>
         <input v-model="form.phone" placeholder="Телефон*" />
         <input v-model="form.email" placeholder="Почта*" />
       </div>
@@ -420,68 +430,91 @@ watch(
     }
   }
   .content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     .card {
-      background-color: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 10px;
+      width: calc(100% - 20px);
       border-radius: 4px;
-      padding: 16px;
-      margin-bottom: 16px;
-      label {
-        display: block;
-        font-family: Bounded;
+      background-color: $white-100;
+      .card-label {
+        margin-bottom: 24px;
+        color: $grey-20;
         font-size: 16px;
-        line-height: 80%;
-        letter-spacing: -0.8px;
-        color: $black-70;
-        margin-bottom: 8px;
+        line-height: 110%;
+        letter-spacing: -0.64px;
       }
       .photo-row {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 24px;
         img {
-          width: 96px;
-          height: 96px;
-          border-radius: 50%;
-          background-size: cover;
+          width: 120px;
+          height: 120px;
+          object-fit: cover;
+          border-radius: 999px;
         }
         button {
-          padding: 12px 24px;
-          border-radius: 24px;
-          font-family: Bounded;
+          display: flex;
+          padding: 0 24px;
+          height: 40px;
+          border: none;
+          border-radius: 999px;
+          background-color: $grey-20;
+          color: $white-100;
           font-size: 16px;
           line-height: 100%;
           letter-spacing: -0.64px;
-          background-color: $black-100;
-          color: #FFFFFF;
-          border: none;
           cursor: pointer;
           &.text {
+            margin-left: -8px;
+            padding: 0;
             background: none;
-            color: $grey-30;
+            color: $black-100;
           }
         }
         input {
-          width: 100%;
-          border: none;
-          border-bottom: 1px solid $grey-90;
-          padding: 8px 0;
-          margin-bottom: 16px;
-          font-family: Bounded;
-          font-size: 16px;
-          line-height: 100%;
-          letter-spacing: -0.64px;
+          display: none;
         }
       }
       .info {
-        width: 100%;
+        margin-bottom: 15px;
+        padding: 21px 10px 8px;
+        width: calc(100% - 20px);
         border: none;
-        border-bottom: 1px solid $grey-90;
-        padding: 8px 0;
-        margin-bottom: 16px;
-        font-family: Bounded;
-        font-size: 16px;
+        border-bottom: 1px solid $grey-20;
+        color: $grey-20;
+        font-size: 15px;
         line-height: 100%;
-        letter-spacing: -0.64px;
+        letter-spacing: -0.6px;
+      }
+      .gender {
+        display: flex;
+        gap: 24px;
+        .gender-label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: $black-100;
+          font-size: 15px;
+          line-height: 100%;
+          letter-spacing: -0.6px;
+          input[type="radio"] {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            background-color: #fff;
+          }
+          input[type="radio"]:checked {
+            background-color: #FF5E5E;
+            box-shadow: inset 0 0 0 4px #fff;
+          }
+        }
       }
     }
     .save {
