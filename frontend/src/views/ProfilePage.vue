@@ -65,7 +65,7 @@
         <input class="info" v-model="form.email" placeholder="Почта*" type="email"/>
       </div>
       <!-- Кнопка Сохранить -->
-      <button type="button" class="save" @click="saveProfile">Сохранить</button>
+      <button type="button" v-if="formDirty" class="save" @click="saveProfile">Сохранить</button>
     </div>
 
     <div v-if="currentSection==='orders'" class="content">
@@ -183,12 +183,21 @@ const form = reactive({
   date_of_birth: '',
   phone: '',
   email: '',
-  photo_url: null,
-  _file: null,
-  _remove: false,
 })
 const fileInput = ref()
-const hasPhoto = computed(() => !!form.photo_url)
+const hasPhoto = computed(() => !!store.userStore.user.photo_url)
+const formDirty = computed(() => {
+  const u = store.userStore.user
+  return (
+    form.first_name    !== u.first_name    ||
+    form.last_name     !== u.last_name     ||
+    form.middle_name   !== u.middle_name   ||
+    form.gender        !== u.gender        ||
+    form.date_of_birth !== u.date_of_birth ||
+    form.phone         !== u.phone         ||
+    form.email         !== u.email
+  )
+})
 
 // ORDERS
 const orders      = ref([])
@@ -248,28 +257,22 @@ function triggerFile() {
   fileInput.value.click()
 }
 
-function onFileChange(e) {
-  form._file = e.target.files[0]
+async function onFileChange(e) {
+  const file = e.target.files[0]
+  if (file) {
+    await store.userStore.uploadAvatar(file)
+  }
 }
 
-function removePhoto() {
-  form.photo_url = null;
-  form._remove = true
+async function removePhoto() {
+  await store.userStore.deleteAvatar()
 }
 
 // PROFILE: сохранить
 async function saveProfile() {
   const fd = new FormData()
   for (const [k, v] of Object.entries(form)) {
-    if (k === '_file' && v) {
-      fd.append('photo', v)
-    }
-    else if (k.startsWith('_')) {
-      continue
-    }
-    else {
-      fd.append(k, v ?? '')
-    }
+    fd.append(k, v ?? '')
   }
   await store.userStore.updateProfile(fd)
 }
@@ -377,12 +380,9 @@ watch(
       date_of_birth: u.date_of_birth,
       phone:         u.phone,
       email:         u.email,
-      photo_url:     u.photo_url,
-      _file:         null,
-      _remove:       false,
     })
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 )
 
 </script>

@@ -187,6 +187,18 @@ export const useUserStore = defineStore('user', () => {
     await fetchUserProfile(userId)
   }
 
+  async function uploadAvatar(file) {
+    const fd = new FormData()
+    fd.append('photo', file)
+    const { data } = await api.post(API.general.uploadAvatar, fd)
+    user.value.photo_url = data.photo_url
+  }
+
+  async function deleteAvatar() {
+    await api.delete(API.general.deleteAvatar)
+    user.value.photo_url = null
+  }
+
   async function initializeTelegramUser(tgUser) {
     const payload = {
       id: tgUser.id,
@@ -261,6 +273,8 @@ export const useUserStore = defineStore('user', () => {
     saveUserToServer,
     fetchUserProfile,
     updateProfile,
+    uploadAvatar,
+    deleteAvatar,
     initializeTelegramUser,
     initializeWebUser,
     initializeVisitorUser,

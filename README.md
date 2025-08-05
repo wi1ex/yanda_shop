@@ -93,6 +93,8 @@
 | `/general/save_user`        | POST   | Сохранить/обновить TG-пользователя |
 | `/general/get_user_profile` | GET    | Получить данные профиля            |
 | `/general/update_profile`   | PUT    | обновить данные профиля            |
+| `/general/upload_avatar`    | POST   | обновить фото профиля              |
+| `/general/delete_avatar`    | DELETE | удалить фото профиля               |
 | `/general/get_parameters`   | GET    | получить публичные настройки       |
 | `/general/list_reviews`     | GET    | получить список отзывов            |
 | `/general/create_request`   | POST   | отправить заявку на поиск товара   |

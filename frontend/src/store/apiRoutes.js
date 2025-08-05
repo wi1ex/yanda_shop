@@ -4,6 +4,8 @@ export const API = {
     saveUser:                 '/api/general/save_user',                 // POST   - сохранить/обновить TG-пользователя
     getUserProfile:           '/api/general/get_user_profile',          // GET    - получить данные профиля
     updateProfile:            '/api/general/update_profile',            // PUT    - обновить данные профиля
+    uploadAvatar:             '/api/general/upload_avatar',             // POST   - обновить фото профиля
+    deleteAvatar:             '/api/general/delete_avatar',             // DELETE - удалить фото профиля
     getParameters:            '/api/general/get_parameters',            // GET    - получить публичные настройки
     listReviews:              '/api/general/list_reviews',              // GET    - получить список отзывов
     createRequest:            '/api/general/create_request',            // POST   - отправить заявку на поиск товара

@@ -171,16 +171,12 @@ def get_user_profile() -> Tuple[Response, int]:
 def update_profile() -> Tuple[Response, int]:
     """
     PUT /api/general/update_profile
-    Form-data: все поля профиля + опционально photo
+    Form-data: все поля профиля
     Логирует каждое изменение через log_change.
     """
     user_id = int(get_jwt_identity())
     logger.debug("update_profile: start for user_id=%d", user_id)
-
-    # Берём и form-data, и файл
     data = request.form.to_dict()
-    file = request.files.get("photo")
-
     changed_fields = []
 
     with session_scope() as session:
@@ -189,45 +185,30 @@ def update_profile() -> Tuple[Response, int]:
             logger.warning("update_profile: user %d not found", user_id)
             return jsonify({"error": "not found"}), 404
 
-        # 1) Обновляем текстовые поля
-        for fld in (
-            "first_name",
-            "last_name",
-            "middle_name",
-            "phone",
-            "email",
-            "date_of_birth",
-            "gender"
-        ):
+        dob_str = data.get("date_of_birth")
+        if dob_str:
+            try:
+                # ожидаем формат "DD / MM / YYYY" или "DD/MM/YYYY"
+                norm = dob_str.replace(" ", "")
+                dob = datetime.strptime(norm, "%d/%m/%Y").date()
+            except ValueError:
+                logger.warning("update_profile: invalid date_of_birth %r for user %d", dob_str, user_id)
+                return jsonify({"error": "Неверный формат date_of_birth, ожидается ДД/ММ/ГГГГ"}), 400
+
+            if u.date_of_birth != dob:
+                old = u.date_of_birth
+                u.date_of_birth = dob
+                changed_fields.append(f"date_of_birth: '{old}' → '{dob}'")
+                logger.debug("update_profile: date_of_birth changed from %r to %r", old, dob)
+
+        # Обновляем остальные текстовые поля
+        for fld in ("first_name", "last_name", "middle_name", "phone", "email", "gender"):
             if fld in data and data[fld] != "" and getattr(u, fld) != data[fld]:
                 old = getattr(u, fld)
                 new = data[fld]
                 setattr(u, fld, new)
                 changed_fields.append(f"{fld}: '{old}' → '{new}'")
                 logger.debug("update_profile: field %s changed from %r to %r", fld, old, new)
-
-        # 2) Обработка фото
-        if file:
-            # удаляем старый аватар
-            if u.avatar_url:
-                old_key = f"users/{user_id}_{u.avatar_url}"
-                try:
-                    minio_client.remove_object(BUCKET, old_key)
-                    logger.debug("update_profile: removed old avatar %s", old_key)
-                except Exception as exc:
-                    logger.warning("update_profile: failed remove old avatar %s: %s", old_key, exc)
-
-            # сохраняем новый
-            filename = secure_filename(file.filename)
-            new_key = f"users/{user_id}_{filename}"
-            try:
-                minio_client.put_object(BUCKET, new_key, file, file.content_length)
-                u.avatar_url = filename
-                changed_fields.append("avatar_url")
-                logger.debug("update_profile: uploaded new avatar %s", new_key)
-            except Exception as exc:
-                logger.error("update_profile: failed upload new avatar %s: %s", new_key, exc)
-                return jsonify({"error": "avatar upload failed"}), 500
 
     # После выхода из session_scope() — логируем через log_change
     if changed_fields:
@@ -238,6 +219,84 @@ def update_profile() -> Tuple[Response, int]:
         logger.debug("update_profile: no changes detected for user_id=%d", user_id)
 
     return jsonify({"status": "ok"}), 200
+
+
+@general_api.route("/upload_avatar", methods=["POST"])
+@jwt_required()
+@handle_errors
+def upload_avatar() -> Tuple[Response, int]:
+    user_id = int(get_jwt_identity())
+    logger.debug("upload_avatar: start for user_id=%d", user_id)
+
+    file = request.files.get("photo")
+    if not file:
+        logger.warning("upload_avatar: no file provided for user_id=%d", user_id)
+        return jsonify({"error": "photo file is required"}), 400
+
+    with session_scope() as session:
+        u = session.get(Users, user_id)
+        if not u:
+            logger.warning("upload_avatar: user %d not found", user_id)
+            return jsonify({"error": "not found"}), 404
+
+        # удаляем старый
+        if u.avatar_url:
+            old_key = f"users/{user_id}_{u.avatar_url}"
+            try:
+                minio_client.remove_object(BUCKET, old_key)
+                logger.debug("upload_avatar: removed old avatar %s", old_key)
+            except Exception as exc:
+                logger.warning("upload_avatar: failed removing old avatar %s: %s", old_key, exc)
+
+        # загружаем новый
+        filename = secure_filename(file.filename)
+        new_key = f"users/{user_id}_{filename}"
+        try:
+            minio_client.put_object(BUCKET, new_key, file, file.content_length)
+            old_avatar_url = u.avatar_url
+            u.avatar_url = filename
+            session.merge(u)
+            logger.debug("upload_avatar: uploaded new avatar %s", new_key)
+        except Exception as exc:
+            logger.error("upload_avatar: failed upload new avatar %s: %s", new_key, exc)
+            return jsonify({"error": "avatar upload failed"}), 500
+
+        # логируем
+        log_change("Обновление аватара", f"{old_avatar_url} → {filename}")
+        url = f"{BACKEND_URL}/{BUCKET}/users/{u.user_id}_{filename}"
+        return jsonify({"photo_url": url}), 200
+
+
+@general_api.route("/delete_avatar", methods=["DELETE"])
+@jwt_required()
+@handle_errors
+def delete_avatar() -> Tuple[Response, int]:
+    user_id = int(get_jwt_identity())
+    logger.debug("delete_avatar: start for user_id=%d", user_id)
+
+    with session_scope() as session:
+        u = session.get(Users, user_id)
+        if not u:
+            logger.warning("delete_avatar: user %d not found", user_id)
+            return jsonify({"error": "not found"}), 404
+
+        if not u.avatar_url:
+            logger.debug("delete_avatar: no avatar to delete for user_id=%d", user_id)
+            return jsonify({"status": "ok", "photo_url": None}), 200
+
+        old_key = f"users/{user_id}_{u.avatar_url}"
+        try:
+            minio_client.remove_object(BUCKET, old_key)
+            logger.debug("delete_avatar: removed avatar %s", old_key)
+        except Exception as exc:
+            logger.warning("delete_avatar: failed remove %s: %s", old_key, exc)
+
+        old_avatar_url = u.avatar_url
+        u.avatar_url = None
+        session.merge(u)
+
+        log_change("Удаление аватара", f"{old_avatar_url} → None")
+        return jsonify({"status": "ok", "photo_url": None}), 200
 
 
 @general_api.route("/get_parameters", methods=["GET"])
