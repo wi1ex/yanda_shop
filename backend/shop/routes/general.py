@@ -262,7 +262,7 @@ def upload_avatar() -> Tuple[Response, int]:
 
         # логируем
         log_change("Обновление аватара", f"{old_avatar_url} → {filename}")
-        url = f"{BACKEND_URL}/{BUCKET}/users/{u.user_id}_{filename}"
+        url = f"{BACKEND_URL}/{BUCKET}/users/{user_id}_{filename}"
         return jsonify({"photo_url": url}), 200
 
 
