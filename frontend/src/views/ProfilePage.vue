@@ -335,6 +335,13 @@ async function deleteAddress(id) {
   addressFormVisible.value = false
 }
 
+function formatDate(iso = '') {
+  // ожидаем iso = "YYYY-MM-DD"
+  if (!iso) return ''
+  const [y, m, d] = iso.split('-')
+  return `${d} / ${m} / ${y}`
+}
+
 function onDateInput(e) {
   let digits = e.target.value.replace(/\D/g, '').slice(0, 8)
   const dd = digits.slice(0, 2)
@@ -352,19 +359,17 @@ function onDateInput(e) {
 
 // Телефон: ровно 11 цифр, начинаем с «8», рисуем скобки и дефисы
 function onPhoneInput(e) {
-  // оставляем только цифры и обрезаем до 11
   let d = e.target.value.replace(/\D/g, '').slice(0, 11)
-  // если есть хотя бы одна цифра, гарантируем, что она начинается с «8»
-  if (d && !d.startsWith('8')) {
-    d = '8' + d.slice(1)
+  if (d) {
+    if (d[0] === '8') {
+      // ничего не делаем
+    } else {
+      // первый символ не 8 – вставляем перед всеми цифрами
+      d = '8' + d
+    }
   }
-  // разбиваем на группы
-  const c1 = d.slice(0, 1)      // первая цифра «8» или ''
-  const c2 = d.slice(1, 4)      // код
-  const c3 = d.slice(4, 7)      // первые 3
-  const c4 = d.slice(7, 9)      // следующие 2
-  const c5 = d.slice(9, 11)     // последние 2
-  // собираем форматированную строку, но только из непустых групп
+  // разбиваем и форматируем, как раньше
+  const c1 = d.slice(0,1), c2 = d.slice(1,4), c3 = d.slice(4,7), c4 = d.slice(7,9), c5 = d.slice(9,11)
   let formatted = ''
   if (c1) formatted = c1
   if (c2) formatted += ` (${c2}`
@@ -372,7 +377,7 @@ function onPhoneInput(e) {
   if (c3) formatted += ` ${c3}`
   if (c4) formatted += `-${c4}`
   if (c5) formatted += `-${c5}`
-  // запись в инпут и в ваш store
+
   e.target.value = formatted
   form.phone = formatted
 }
@@ -385,7 +390,7 @@ watch(
       last_name:     u.last_name,
       middle_name:   u.middle_name,
       gender:        u.gender,
-      date_of_birth: u.date_of_birth,
+      date_of_birth: formatDate(u.date_of_birth),
       phone:         u.phone,
       email:         u.email,
     })
