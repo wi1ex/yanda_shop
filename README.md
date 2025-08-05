@@ -1,7 +1,5 @@
 # Yanda Shop
 
-> 🚀 Готовое к продакшену решение интернет-магазина: backend и frontend, интеграция с Telegram‑ботом, контейнеризация через Docker & Docker‑Compose.
-
 ---
 
 ## ✨ Оглавление
@@ -313,17 +311,13 @@ sudo sysctl --system
 ```bash
 # Перейдите в корень проекта
 cd path/to/yanda_shop
-
 # Сгенерируйте ED25519-ключ (без пароля):
 ssh-keygen -t ed25519 -f github_deploy_key -N ""
-
 # создаём папку ~/.ssh, если её нет
 mkdir -p ~/.ssh && chmod 700 ~/.ssh
-
 # добавляем публичный ключ в авторизованные
 cat ~/github_deploy_key.pub >> ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/authorized_keys
-
 # чтобы GitHub Actions мог «доверять» вашему серверу
 ssh-keyscan -H SERVER_HOST > known_hosts.txt
 ```
@@ -343,63 +337,7 @@ Settings → Secrets and variables → Actions → New repository secret
 | SERVER\_HOST      | IP вашего сервера (например, `1.2.3.4`)           |
 | SERVER\_USER      | имя SSH-пользователя (обычно `root`)              |
 
-В корне репозитория заведите файл `.github/workflows/deploy.yml` со следующим содержимым:
-
-```yaml
-name: Deploy on push to main
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    env:
-      BACKEND_URL: ${{ secrets.BACKEND_URL }}
-      # etc.
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Write SSH key and known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
-        shell: bash
-
-      - name: Create .env from Secrets
-        run: |
-          cat > .env <<EOF
-          BACKEND_URL=${BACKEND_URL}
-          # etc.
-          EOF
-        shell: bash
-
-      - name: Copy .env to server
-        run: |
-          scp -i ~/.ssh/deploy_key \
-            -o StrictHostKeyChecking=yes \
-            ./.env \
-            "${{ secrets.SERVER_USER }}"@"${{ secrets.SERVER_HOST }}":/root/app/yanda_shop/.env
-        shell: bash
-
-      - name: Deploy via SSH
-        run: |
-          ssh -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=yes \
-              -l "${{ secrets.SERVER_USER }}" \
-              "${{ secrets.SERVER_HOST }}" << 'EOF'
-            set -euo pipefail
-            # all scripts..
-          EOF
-        shell: bash
-```
-
+В корне репозитория заведите файл `.github/workflows/deploy.yml`
 После успешной настройки **удалите** из папки `/root/app/yanda_shop` все временные артефакты:
 
 ```bash
