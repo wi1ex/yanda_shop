@@ -1,9 +1,10 @@
 <template>
   <transition name="fade">
     <div class="auth-modal-backdrop" @click.self="onClose" v-if="store.userStore.showAuth">
+      <button class="close-btn" @click="onClose">
+        <img :src="icon_close" alt="Закрыть" />
+      </button>
       <div class="auth-modal">
-        <button class="close-btn" @click="onClose">×</button>
-
         <h2 v-if="mode === 'register'">Регистрация</h2>
         <h2 v-else>Вход</h2>
 
@@ -44,11 +45,14 @@
 import { ref } from 'vue'
 import { useStore } from '@/store/index.js'
 
+import icon_close from "@/assets/images/close.svg";
+
 const store = useStore()
-const mode  = ref('register') // 'register' или 'login'
+
 const step  = ref(1)
-const form  = ref({ email: '', first_name: '', last_name: '', code: '' })
 const error = ref('')
+const mode  = ref('register')
+const form  = ref({ email: '', first_name: '', last_name: '', code: '' })
 
 function onClose() {
   store.userStore.closeAuth()
@@ -127,58 +131,68 @@ async function onSuccess() {
   justify-content: center;
   position: fixed;
   inset: 0;
-  padding: 22px 0;
+  padding: 20px 10px;
   background-color: $white-100;
   z-index: 2000;
-}
-.auth-modal {
-  background: #fff;
-  padding: 24px;
-  border-radius: 8px;
-  width: 320px;
-  position: relative;
-}
-.close-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-}
-.auth-modal input {
-  width: 100%;
-  margin: 8px 0;
-  padding: 8px;
-  box-sizing: border-box;
-}
-.auth-modal button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 12px;
-  cursor: pointer;
-}
-.error {
-  color: red;
-  margin-top: 8px;
-  text-align: center;
-}
-.switch-mode {
-  text-align: center;
-  margin-top: 12px;
-}
-.switch-mode button {
-  background: none;
-  border: none;
-  color: #007bff;
-  cursor: pointer;
+  .close-btn {
+    display: flex;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    img {
+      width: 24px;
+      height: 24px;
+      object-fit: cover;
+    }
+  }
+  .auth-modal {
+    display: flex;
+    position: relative;
+    background: #fff;
+    padding: 24px;
+    width: 100%;
+    height: 100%;
+    input {
+      width: 100%;
+      margin: 8px 0;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 12px;
+      cursor: pointer;
+    }
+    .error {
+      color: red;
+      margin-top: 8px;
+      text-align: center;
+    }
+    .switch-mode {
+      text-align: center;
+      margin-top: 12px;
+      button {
+        background: none;
+        border: none;
+        color: #007bff;
+        cursor: pointer;
+      }
+    }
+  }
 }
 
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.25s ease-in-out;
 }
-.fade-enter-from, .fade-leave-to {
+
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 
