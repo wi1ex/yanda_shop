@@ -137,11 +137,11 @@ async function onSuccess() {
   .close-btn {
     display: flex;
     position: absolute;
-    top: 8px;
-    right: 8px;
-    background: none;
+    top: 20px;
+    right: 10px;
+    padding: 0;
     border: none;
-    font-size: 20px;
+    background: none;
     cursor: pointer;
     img {
       width: 24px;
@@ -151,9 +151,9 @@ async function onSuccess() {
   }
   .auth-modal {
     display: flex;
-    position: relative;
-    background: #fff;
-    padding: 24px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     height: 100%;
     input {
