@@ -373,14 +373,14 @@ const addressFormDirty = computed(() => {
   const orig = store.userStore.addresses.find(a => a.id === addressForm.id)
   if (!orig) return false
   return (
-    addressForm.city               !== orig.city              ||
-    addressForm.street             !== orig.street            ||
-    addressForm.house              !== orig.house             ||
-    (addressForm.apartment || '')  !== (orig.apartment || '') ||
-    (addressForm.intercom  || '')  !== (orig.intercom  || '') ||
-    (addressForm.entrance  || '')  !== (orig.entrance  || '') ||
-    (addressForm.floor     || '')  !== (orig.floor     || '') ||
-    (addressForm.comment   || '')  !== (orig.comment   || '')
+    addressForm.city              !== orig.city              ||
+    addressForm.street            !== orig.street            ||
+    addressForm.house             !== orig.house             ||
+    (addressForm.apartment || '') !== (orig.apartment || '') ||
+    (addressForm.intercom  || '') !== (orig.intercom  || '') ||
+    (addressForm.entrance  || '') !== (orig.entrance  || '') ||
+    (addressForm.floor     || '') !== (orig.floor     || '') ||
+    (addressForm.comment   || '') !== (orig.comment   || '')
   )
 })
 
@@ -628,6 +628,7 @@ watch(
       flex-direction: column;
       margin-bottom: 40px;
       gap: 10px;
+      z-index: 20;
       .address {
         display: flex;
         align-items: center;
