@@ -17,11 +17,9 @@
       <button type="button" @click="onLogout()" v-if="!store.userStore.isTelegramWebApp">Выйти из профиля</button>
     </div>
 
-    <!-- Контент секции -->
     <div v-if="currentSection==='profile'" class="content">
       <h2>Мой профиль</h2>
       <p>Твои личные данные важны для покупок,<br>поэтому проверяй их актуальность.</p>
-      <!-- Фото + загрузка -->
       <div class="card">
         <label class="card-label">Фото профиля</label>
         <div class="photo-row">
@@ -32,14 +30,12 @@
           <input type="file" ref="fileInput" class="visually-hidden" @change="onFileChange" />
         </div>
       </div>
-      <!-- Личные данные -->
       <div class="card">
         <label class="card-label">Личная информация</label>
         <input class="info" v-model="form.last_name" placeholder="Фамилия*" />
         <input class="info" v-model="form.first_name" placeholder="Имя*" />
         <input class="info" v-model="form.middle_name" placeholder="Отчество*" />
       </div>
-      <!-- Пол -->
       <div class="card">
         <label class="card-label">Пол</label>
         <div class="gender">
@@ -53,78 +49,76 @@
           </label>
         </div>
       </div>
-      <!-- Дата рождения -->
       <div class="card">
         <label class="card-label">Дата рождения</label>
         <input class="info" type="date" ref="dateInput" v-model="form.date_of_birth" @click="openCalendar" :max="maxDate" />
       </div>
-      <!-- Контакты -->
       <div class="card">
         <label class="card-label">Контакты</label>
         <input class="info" v-model="form.phone" placeholder="Телефон*" @input="onPhoneInput" />
         <input class="info" v-model="form.email" placeholder="Почта*" type="email"/>
       </div>
-      <!-- Кнопка Сохранить -->
       <button type="button" v-if="formDirty" class="action-button" @click="saveProfile">Сохранить</button>
     </div>
 
     <div v-if="currentSection==='orders'" class="content">
-      <h2 :style="{ marginBottom: (orders.length || orderDetail) ? '40px' : '' }">Мои заказы</h2>
-      <p v-if="!orders.length && !orderDetail">У тебя нет оформленных заказов.</p>
+      <h2>Мои заказы</h2>
+      <p v-if="!orders.length">У тебя нет оформленных заказов.</p>
       <button type="button" v-if="!orders.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
-      <div v-if="orders.length">
-        <h2>Мои заказы</h2>
-        <div v-for="o in orders" :key="o.id" class="order-card" @click="loadOrder(o.id)">
-          <div class="status" :class="o.status">{{ o.statusLabel }}</div>
-          <div class="preview">
-            <img v-for="it in o.items.slice(0,3)" :src="it.image_url" :key="it.sku"  alt="image"/>
-          </div>
-          <div class="timeline">
-            <span v-for="(d, idx) in o.datesFormated" :key="idx">{{ d }}</span>
-          </div>
-          <div class="total">Итог: {{ o.total }} ₽</div>
-        </div>
+<!--      <div v-if="orders.length">-->
+<!--        <h2>Мои заказы</h2>-->
+<!--        <div v-for="o in orders" :key="o.id" class="order-card" @click="loadOrder(o.id)">-->
+<!--          <div class="status" :class="o.status">{{ o.statusLabel }}</div>-->
+<!--          <div class="preview">-->
+<!--            <img v-for="it in o.items.slice(0,3)" :src="it.image_url" :key="it.sku"  alt="image"/>-->
+<!--          </div>-->
+<!--          <div class="timeline">-->
+<!--            <span v-for="(d, idx) in o.datesFormated" :key="idx">{{ d }}</span>-->
+<!--          </div>-->
+<!--          <div class="total">Итог: {{ o.total }} ₽</div>-->
+<!--        </div>-->
 
-        <!-- Детали заказа -->
-        <div v-if="orderDetail" class="order-detail">
-          <h2>#{{ orderDetail.id }} <span class="status">{{ orderDetail.statusLabel }}</span></h2>
-          <div class="timeline-full">
-            <div v-for="(stage, idx) in orderDetail.timeline" :key="idx" class="stage">
-              <div class="dot" :class="{done: stage.done}"></div>
-              <div class="line" v-if="idx<orderDetail.timeline.length-1"></div>
-              <p>{{ stage.label }}<br/><small>{{ stage.date }}</small></p>
-            </div>
-          </div>
-          <div class="info-block">
-            <p>Оплата: {{ orderDetail.payment_method }}</p>
-            <p>Доставка: {{ orderDetail.delivery_type }}</p>
-            <p>Адрес: {{ orderDetail.delivery_address }}</p>
-          </div>
-          <div class="info-block">
-            <p>Сумма товаров: {{ orderDetail.subtotal }} ₽</p>
-            <p>Курьер: {{ orderDetail.delivery_price }} ₽</p>
-            <p class="bold">Итог: {{ orderDetail.total }} ₽</p>
-          </div>
-          <div class="items">
-            <div v-for="it in orderDetail.items" :key="it.sku" class="item">
-              <img :src="it.image_url"  alt="image"/>
-              <div>
-                <p class="title">{{ it.brand }} {{ it.name }}</p>
-                <p>Артикул: {{ it.sku }}</p>
-                <p>Кол-во: {{ it.qty }}</p>
-                <p>Размер: {{ it.size }}</p>
-                <p>Доставка: {{ it.delivery_period }}</p>
-              </div>
-            </div>
-          </div>
-          <button type="button" v-if="orderDetail.canRepeat" class="repeat" @click="repeatOrder(orderDetail.id)">Повторить заказ</button>
-        </div>
-      </div>
+<!--        <div v-if="orderDetail" class="order-detail">-->
+<!--          <h2>#{{ orderDetail.id }} <span class="status">{{ orderDetail.statusLabel }}</span></h2>-->
+<!--          <div class="timeline-full">-->
+<!--            <div v-for="(stage, idx) in orderDetail.timeline" :key="idx" class="stage">-->
+<!--              <div class="dot" :class="{done: stage.done}"></div>-->
+<!--              <div class="line" v-if="idx<orderDetail.timeline.length-1"></div>-->
+<!--              <p>{{ stage.label }}<br/><small>{{ stage.date }}</small></p>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--          <div class="info-block">-->
+<!--            <p>Оплата: {{ orderDetail.payment_method }}</p>-->
+<!--            <p>Доставка: {{ orderDetail.delivery_type }}</p>-->
+<!--            <p>Адрес: {{ orderDetail.delivery_address }}</p>-->
+<!--          </div>-->
+<!--          <div class="info-block">-->
+<!--            <p>Сумма товаров: {{ orderDetail.subtotal }} ₽</p>-->
+<!--            <p>Курьер: {{ orderDetail.delivery_price }} ₽</p>-->
+<!--            <p class="bold">Итог: {{ orderDetail.total }} ₽</p>-->
+<!--          </div>-->
+<!--          <div class="items">-->
+<!--            <div v-for="it in orderDetail.items" :key="it.sku" class="item">-->
+<!--              <img :src="it.image_url"  alt="image"/>-->
+<!--              <div>-->
+<!--                <p class="title">{{ it.brand }} {{ it.name }}</p>-->
+<!--                <p>Артикул: {{ it.sku }}</p>-->
+<!--                <p>Кол-во: {{ it.qty }}</p>-->
+<!--                <p>Размер: {{ it.size }}</p>-->
+<!--                <p>Доставка: {{ it.delivery_period }}</p>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--          <button type="button" v-if="orderDetail.canRepeat" class="repeat" @click="repeatOrder(orderDetail.id)">Повторить заказ</button>-->
+<!--        </div>-->
+<!--      </div>-->
     </div>
 
     <div v-if="currentSection==='addresses'" class="content">
-      <h2>Мои адреса</h2>
-      <p v-if="!addresses.length">У тебя нет сохранённых адресов.</p>
+      <h2 :style="{ marginBottom: (addresses.length || addressFormVisible) ? '40px' : '' }">
+        Мои адреса{{ addresses.length ? ` [ ${addresses.length} ]` : '' }}
+      </h2>
+      <p v-if="!addresses.length && !addressFormVisible">У тебя нет сохранённых адресов.</p>
       <button type="button" v-if="!addressFormVisible" class="action-button" @click="editAddress()">Добавить адрес</button>
       <div v-if="addresses.length">
         <h2>Мои адреса</h2>
@@ -135,7 +129,6 @@
         <button type="button" class="add-btn" @click="editAddress()">Добавить адрес</button>
       </div>
 
-      <!-- Форма адреса -->
       <div v-if="addressFormVisible" class="card">
         <label class="card-label">Добавить новый адрес</label>
         <input class="info" v-model="addressForm.city" placeholder="Город*" />
@@ -153,8 +146,8 @@
       </div>
       <div v-if="addressFormVisible" class="buttons">
         <button type="button" class="action-button" @click="saveAddress">Сохранить</button>
-        <button type="button" class="cancel" @click="cancelAddress">Отменить</button>
-        <button type="button" v-if="addressForm.id" class="delete" @click="deleteAddress(addressForm.id)">Удалить адрес</button>
+        <button type="button" class="default-button" @click="cancelAddress">Отменить</button>
+        <button type="button" v-if="addressForm.id" class="action-button" @click="deleteAddress(addressForm.id)">Удалить адрес</button>
       </div>
     </div>
   </div>
@@ -512,6 +505,11 @@ watch(
         line-height: 110%;
         letter-spacing: -0.64px;
       }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
       .photo-row {
         display: flex;
         align-items: center;
@@ -591,6 +589,13 @@ watch(
         }
       }
     }
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
     .action-button {
       display: flex;
       align-items: center;
@@ -608,7 +613,19 @@ watch(
       cursor: pointer;
       z-index: 20;
     }
-
+    .default-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: none;
+      color: $black-100;
+      font-size: 16px;
+      line-height: 100%;
+      letter-spacing: -0.64px;
+      cursor: pointer;
+      z-index: 20;
+    }
   }
 }
 
