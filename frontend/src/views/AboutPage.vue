@@ -175,7 +175,7 @@
 
 <script setup>
 import { useStore } from '@/store/index.js'
-import about_image1 from '@/assets/images/about_image1.png'
+import about_image1 from '@/assets/images/about_image1.webp'
 import about_image2 from '@/assets/images/about_image2.png'
 import about_image3 from '@/assets/images/about_image3.png'
 import about_image4 from '@/assets/images/about_image4.png'
