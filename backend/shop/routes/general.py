@@ -1,4 +1,5 @@
 import io
+import os
 import re
 import json
 import requests
@@ -231,11 +232,13 @@ def upload_avatar() -> Tuple[Response, int]:
                 logger.warning("upload_avatar: failed removing old avatar %s: %s", old_key, exc)
 
         # загружаем новый
-        content = file.read()
         filename = secure_filename(file.filename)
+        name, ext = os.path.splitext(filename)
+        filename = f"{name}{ext.lower()}"
         new_key = f"users/{user_id}_{filename}"
+        content = file.read()
         try:
-            minio_client.put_object(BUCKET, new_key, io.BytesIO(content), len(content))
+            minio_client.put_object(BUCKET, new_key, io.BytesIO(content), len(content), content_type=file.mimetype)
             old_avatar_url = u.avatar_url
             u.avatar_url = filename
             session.merge(u)
