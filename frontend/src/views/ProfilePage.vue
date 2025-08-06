@@ -160,9 +160,15 @@
         <input class="info" v-model="addressForm.comment" placeholder="Комментарий курьеру" >
       </div>
       <div v-if="addressFormVisible" class="buttons">
-        <button type="button" v-if="!addressForm.id" class="action-button" @click="saveAddress">Сохранить</button>
-        <button type="button" v-if="!addressForm.id" class="default-button" @click="cancelAddress">Отменить</button>
-        <button type="button" v-if="addressForm.id" class="action-button" @click="deleteAddress(addressForm.id)">Удалить адрес</button>
+        <button type="button" class="action-button" @click="saveAddress">
+          {{ addressForm.id ? 'Сохранить изменения' : 'Сохранить' }}
+        </button>
+        <button type="button" class="default-button" @click="cancelAddress">
+          Отменить
+        </button>
+        <button type="button" v-if="addressForm.id" class="action-button" @click="deleteAddress(addressForm.id)">
+          Удалить адрес
+        </button>
       </div>
     </div>
   </div>
@@ -381,7 +387,7 @@ function cancelAddress() {
 }
 
 async function saveAddress() {
-  if(addressForm.id)
+  if (addressForm.id)
     await store.userStore.updateAddress(addressForm.id, addressForm)
   else
     await store.userStore.addAddress(addressForm)
