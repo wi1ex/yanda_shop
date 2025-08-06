@@ -161,7 +161,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, nextTick } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 
@@ -173,7 +173,6 @@ const router = useRouter()
 
 // UI-state
 const currentSection = ref(null)
-const isLoaded = ref(false)
 
 // PROFILE
 const form = reactive({
@@ -262,17 +261,16 @@ function goCatalog() {
 // PROFILE
 const formDirty = computed(() => {
   console.log(form, store.userStore.user)
-  if (!isLoaded.value) return false
   const u = store.userStore.user
   const normPhone = v => String(v || '').replace(/\D/g, '')
   return (
-    form.first_name       !== (u.first_name    || '') ||
-    form.last_name        !== (u.last_name     || '') ||
-    form.middle_name      !== (u.middle_name   || '') ||
-    form.gender           !== (u.gender        || '') ||
-    form.date_of_birth    !== (u.date_of_birth || '') ||
-    form.email            !== (u.email         || '') ||
-    normPhone(form.phone) !== (u.phone         || '')
+    form.first_name       !== (u.first_name       || '') ||
+    form.last_name        !== (u.last_name        || '') ||
+    form.middle_name      !== (u.middle_name      || '') ||
+    form.gender           !== (u.gender           || '') ||
+    form.date_of_birth    !== (u.date_of_birth    || '') ||
+    form.email            !== (u.email            || '') ||
+    normPhone(form.phone) !== (normPhone(u.phone) || '')
   )
 })
 
@@ -301,16 +299,6 @@ async function saveProfile() {
     fd.append(k, v ?? '')
   }
   await store.userStore.updateProfile(fd)
-  // Сразу после сохранения сбросим форму из стора
-  const u = store.userStore.user
-  form.first_name    = u.first_name    || ''
-  form.last_name     = u.last_name     || ''
-  form.middle_name   = u.middle_name   || ''
-  form.gender        = u.gender        || ''
-  form.date_of_birth = u.date_of_birth || ''
-  form.email         = u.email         || ''
-  form.phone         = formatPhone(u.phone)
-  await nextTick()
 }
 
 function formatPhone(raw = '') {
@@ -400,8 +388,7 @@ watch(
     form.gender        = u.gender        || ''
     form.date_of_birth = u.date_of_birth || ''
     form.email         = u.email         || ''
-    form.phone         = formatPhone(u.phone)
-    isLoaded.value     = true
+    form.phone         = u.phone         || ''
   },
   { immediate: true }
 )
