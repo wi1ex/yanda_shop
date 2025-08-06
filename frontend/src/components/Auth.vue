@@ -111,12 +111,17 @@ async function checkCode() {
     width: 100%;
     height: 100%;
     h2 {
-      color: grey;
-      margin-top: 8px;
-      text-align: center;
+      margin: 16px 0;
+      color: $black-100;
+      font-family: Bounded;
+      font-size: 24px;
+      font-style: normal;
+      font-weight: 250;
+      line-height: 80%;
+      letter-spacing: -1.2px;
     }
     input {
-      margin-bottom: 15px;
+      margin: 40px 0 55px;
       padding: 21px 10px 8px;
       width: calc(100% - 20px);
       outline: none;
@@ -124,36 +129,53 @@ async function checkCode() {
       border: none;
       border-bottom: 1px solid $grey-20;
       color: $grey-20;
-      font-size: 15px;
+      font-size: 16px;
       line-height: 100%;
-      letter-spacing: -0.6px;
+      letter-spacing: -0.64px;
       &::placeholder {
         color: $black-40;
       }
     }
     button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 24px;
       width: 100%;
-      padding: 10px;
-      margin-top: 12px;
+      border: none;
+      border-radius: 4px;
+      background-color: $grey-20;
+      color: $white-100;
+      font-family: Manrope;
+      font-size: 16px;
+      line-height: 100%;
+      letter-spacing: -0.64px;
       cursor: pointer;
     }
     .text {
-      color: black;
-      margin-top: 8px;
-      text-align: center;
+      margin: 0;
+      color: $grey-20;
+      font-family: Manrope;
+      font-size: 15px;
+      line-height: 110%;
+      letter-spacing: -0.6px;
     }
     .info {
-      color: grey;
-      margin-top: 8px;
-      text-align: center;
+      margin: 24px 0;
+      color: $black-40;
+      font-family: Manrope;
+      font-size: 14px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 100%;
+      letter-spacing: -0.56px;
       a {
-        color: grey;
+        color: $black-40;
       }
     }
     .error {
-      color: red;
-      margin-top: 8px;
-      text-align: center;
+      margin: 0;
+      color: $red-error;
     }
   }
 }
