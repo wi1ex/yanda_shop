@@ -36,7 +36,7 @@
       </div>
       <div class="sheet-preview-block">
         <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="preview-result">
-          <h4>{{ catLabel(cat) }}</h4>
+          <h4>{{ catLabel(cat) }}.csv</h4>
           <div v-if="store.adminStore.previewSheetLoading[cat]">…</div>
           <div v-else-if="store.adminStore.previewSheetResult[cat]">
             <p>Всего строк: {{ store.adminStore.previewSheetResult[cat].total_rows }}</p>
@@ -52,7 +52,7 @@
       </div>
       <div class="zip-preview-block">
         <div v-for="cat in ['shoes','clothing','accessories']" :key="cat" class="preview-result">
-          <h4>{{ catLabel(cat) }}</h4>
+          <h4>{{ catLabel(cat) }}.zip</h4>
           <div v-if="store.adminStore.previewZipLoading[cat]">…</div>
           <div v-else-if="store.adminStore.previewZipResult[cat]">
             <p>Всего ожидается: {{ store.adminStore.previewZipResult[cat].total_expected }}</p>
@@ -78,7 +78,6 @@
             <tr>
               <th>ID</th>
               <th>Автор (ID)</th>
-              <th>Ник автора</th>
               <th>Тип действия</th>
               <th>Описание</th>
               <th>Дата</th>
@@ -304,7 +303,19 @@ const form = reactive({
 })
 
 // Вычисляем список колонок по ключам первого пользователя
-const preferredColumns = ['user_id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'order_count', 'total_spent']
+const preferredColumns = [
+    'user_id',
+    'first_name',
+    'last_name',
+    'middle_name',
+    'gender',
+    'phone',
+    'email',
+    'date_of_birth',
+    'order_count',
+    'total_spent',
+    'loyalty_points',
+]
 const userColumns = computed(() => {
   if (!store.adminStore.users.length) return []
   const cols = Object.keys(store.adminStore.users[0])
@@ -730,15 +741,17 @@ watch(selected, (tab) => {
       border-radius: 8px;
       h4 {
         margin: 0 0 .5rem;
-        font-size: 1rem;
+        font-size: 1.5rem;
         color: $white-100;
       }
       p {
         margin: .3rem 0;
-        font-size: .9rem;
+        font-size: 1rem;
+        color: $white-100;
       }
       ul {
-        margin: .5rem 0 0 1rem;
+        margin: 0;
+        padding: 1rem;
         color: $grey-87;
         list-style: disc;
       }
@@ -759,7 +772,6 @@ watch(selected, (tab) => {
     margin-bottom: 1rem;
     display: block;
     overflow-x: auto;
-    min-width: 600px;
     th, td {
       border: 1px solid $grey-20;
       padding: .6rem;
@@ -882,7 +894,6 @@ watch(selected, (tab) => {
     border-collapse: collapse;
     display: block;
     overflow-x: auto;
-    min-width: 600px;
     margin-bottom: 1rem;
     th, td {
       border: 1px solid $grey-20;
