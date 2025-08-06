@@ -172,11 +172,11 @@ def update_profile() -> Tuple[Response, int]:
 
         dob_str = data.get("date_of_birth")
         if dob_str:
-            if re.match(r"^\d{4}-\d{2}-\d{2}$", dob_str):
+            try:
                 dob = datetime.fromisoformat(dob_str).date()
-            else:
-                norm = dob_str.replace(" ", "")
-                dob = datetime.strptime(norm, "%d/%m/%Y").date()
+            except ValueError:
+                logger.warning("update_profile: invalid date_of_birth format")
+                return jsonify({"error": "Неверный формат date_of_birth"}), 400
 
             if u.date_of_birth != dob:
                 old = u.date_of_birth
