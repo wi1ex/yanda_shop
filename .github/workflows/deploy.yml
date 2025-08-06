@@ -177,14 +177,14 @@ jobs:
 
           if [ "${{ steps.changes.outputs.others }}" = "false" ] && [ "${{ steps.changes.outputs.backend }}" = "true" ]; then
             echo "⚙️  Rebuilding backend..."
-            docker-compose build backend
+            docker-compose build --no-cache backend
             docker-compose rm -sf backend
             docker-compose up -d backend
           fi
         
           if [ "${{ steps.changes.outputs.others }}" = "false" ] && [ "${{ steps.changes.outputs.frontend }}" = "true" ]; then
             echo "⚙️  Rebuilding frontend..."
-            docker-compose build frontend
+            docker-compose build --no-cache frontend
             docker-compose rm -sf frontend
             docker-compose up -d frontend
           fi
