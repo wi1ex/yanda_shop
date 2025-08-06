@@ -5,7 +5,7 @@
 
     <button type="button" class="back-button" @click="goBack()">
       <img :src="icon_arrow_grey" alt="arrow back" />
-      {{ currentSection ? 'Мой кабинет' : 'Назад' }}
+      {{ backLabel }}
     </button>
 
     <div class="line-hor"></div>
@@ -65,15 +65,14 @@
         <input class="info" v-model="form.email" placeholder="Почта*" type="email"/>
       </div>
       <!-- Кнопка Сохранить -->
-      <button type="button" v-if="formDirty" class="save" @click="saveProfile">Сохранить</button>
+      <button type="button" v-if="formDirty" class="action-button" @click="saveProfile">Сохранить</button>
     </div>
 
     <div v-if="currentSection==='orders'" class="content">
-      <div v-if="!orders.length">
-        <h2>Мои заказы</h2>
-        <p>У тебя нет оформленных заказов.</p>
-      </div>
-      <div v-else>
+      <h2>Мои заказы</h2>
+      <p v-if="!orders.length">У тебя нет оформленных заказов.</p>
+      <button type="button" v-if="!orders.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
+      <div v-if="orders.length">
         <h2>Мои заказы</h2>
         <div v-for="o in orders" :key="o.id" class="order-card" @click="loadOrder(o.id)">
           <div class="status" :class="o.status">{{ o.statusLabel }}</div>
@@ -124,12 +123,10 @@
     </div>
 
     <div v-if="currentSection==='addresses'" class="content">
-      <div v-if="!addresses.length">
-        <h2>Мои адреса</h2>
-        <p>У тебя нет сохранённых адресов.</p>
-        <button type="button" class="add-btn" @click="editAddress()">Добавить адрес</button>
-      </div>
-      <div v-else>
+      <h2>Мои адреса</h2>
+      <p v-if="!addresses.length">У тебя нет сохранённых адресов.</p>
+      <button type="button" v-if="!addressFormVisible" class="action-button" @click="editAddress()">Добавить адрес</button>
+      <div v-if="addresses.length">
         <h2>Мои адреса</h2>
         <div v-for="a in addresses" :key="a.id" class="addr-item" @click="selectAddress(a.id)">
           <label><input type="radio" :value="a.id" v-model="selectedAddress" /> {{ a.full }}</label>
@@ -139,22 +136,21 @@
       </div>
 
       <!-- Форма адреса -->
-      <div v-if="addressFormVisible" class="card form">
-        <label>Город*</label><input v-model="addressForm.city" placeholder="Город*" />
-        <label>Улица*</label><input v-model="addressForm.street" placeholder="Улица*" />
-        <label>Дом*</label><input v-model="addressForm.house" placeholder="Дом*" />
+      <div v-if="addressFormVisible" class="card">
+        <input class="info" v-model="addressForm.city" placeholder="Город*" />
+        <input class="info" v-model="addressForm.street" placeholder="Улица*" />
+        <input class="info" v-model="addressForm.house" placeholder="Дом, строение, корпус*" />
         <div class="row">
-          <input v-model="addressForm.apartment" placeholder="Квартира" />
-          <input v-model="addressForm.intercom" placeholder="Домофон" />
+          <input class="info" v-model="addressForm.apartment" placeholder="Квартира" />
+          <input class="info" v-model="addressForm.intercom" placeholder="Домофон" />
         </div>
         <div class="row">
-          <input v-model="addressForm.entrance" placeholder="Подъезд" />
-          <input v-model="addressForm.floor" placeholder="Этаж" />
+          <input class="info" v-model="addressForm.entrance" placeholder="Подъезд" />
+          <input class="info" v-model="addressForm.floor" placeholder="Этаж" />
         </div>
-        <label>Комментарий курьеру</label>
-        <textarea v-model="addressForm.comment" placeholder="Комментарий курьеру"></textarea>
+        <input class="info" v-model="addressForm.comment" placeholder="Комментарий курьеру" >
         <div class="buttons">
-          <button type="button" class="save" @click="saveAddress">Сохранить</button>
+          <button type="button" class="action-button" @click="saveAddress">Сохранить</button>
           <button type="button" class="cancel" @click="cancelAddress">Отменить</button>
           <button type="button" v-if="addressForm.id" class="delete" @click="deleteAddress(addressForm.id)">Удалить адрес</button>
         </div>
@@ -177,6 +173,7 @@ const router = useRouter()
 
 // UI-state
 const currentSection = ref(null)
+const isLoaded = ref(false)
 
 // PROFILE
 const form = reactive({
@@ -213,6 +210,13 @@ const addressForm         = reactive({
 })
 
 // Смена раздела
+const backLabel = computed(() => {
+  if (orderDetail.value)        return 'К заказам'
+  if (addressFormVisible.value) return 'К адресам'
+  if (currentSection.value)     return 'Мой кабинет'
+  return 'Назад'
+})
+
 async function select(sec) {
   currentSection.value = sec
   orderDetail.value = null
@@ -233,7 +237,11 @@ async function onLogout() {
 }
 
 function goBack() {
-  if (currentSection.value) {
+  if (orderDetail.value !== null) {
+    orderDetail.value = null
+  } else if (addressFormVisible.value) {
+    addressFormVisible.value = false
+  } else if (currentSection.value) {
     currentSection.value = null
   } else {
     if (window.history.length > 1) {
@@ -241,12 +249,19 @@ function goBack() {
     } else {
       router.push({ name: 'Home' })
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function goCatalog() {
+  currentSection.value = null
+  router.push({ name: 'Catalog' })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // PROFILE
 const formDirty = computed(() => {
+  if (!isLoaded.value) return false
   const u = store.userStore.user
   const normPhone = v => String(v||'').replace(/\D/g, '')
   return (
@@ -299,23 +314,21 @@ async function saveProfile() {
 }
 
 function formatPhone(raw = '') {
-  raw = String(raw || '')
-  let d = raw.replace(/\D/g, '').slice(0, 11)
-  if (d && d[0] !== '8') d = '8' + d
-  const [c1, c2, c3, c4, c5] = [
-    d.slice(0,1),
-    d.slice(1,4),
-    d.slice(4,7),
-    d.slice(7,9),
-    d.slice(9,11),
-  ]
+  // оставляем только цифры и обрезаем до 11
+  const d = raw.replace(/\D/g, '').slice(0, 11)
+  const c1 = d.slice(0, 1)       // «8»
+  const c2 = d.slice(1, 4)       // код оператора
+  const c3 = d.slice(4, 7)       // первые 3
+  const c4 = d.slice(7, 9)       // следующие 2
+  const c5 = d.slice(9, 11)      // последние 2
   let out = ''
-  if (c1) out = c1
-  if (c2) out += ` (${c2}`
-  if (c2.length === 3) out += `)`
-  if (c3) out += ` ${c3}`
-  if (c4) out += `-${c4}`
-  if (c5) out += `-${c5}`
+
+  if (c1) out += c1
+  if (c2.length > 0) out += ' (' + c2
+  if (c2.length === 3) out += ')'
+  if (c3.length > 0) out += ' ' + c3
+  if (c4.length > 0) out += '-' + c4
+  if (c5.length > 0) out += '-' + c5
   return out
 }
 
@@ -340,7 +353,7 @@ function selectAddress(id) {
 }
 
 function editAddress(a = null) {
-  if(a){
+  if (a) {
     Object.assign(addressForm, a)
   } else {
     Object.assign(addressForm, {
@@ -388,6 +401,7 @@ watch(
     form.date_of_birth = u.date_of_birth || ''
     form.phone         = formatPhone(u.phone)
     form.email         = u.email         || ''
+    isLoaded.value     = true
   },
   { immediate: true }
 )
@@ -590,7 +604,7 @@ watch(
         }
       }
     }
-    .save {
+    .action-button {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -608,170 +622,6 @@ watch(
       z-index: 20;
     }
 
-    .orders {
-      .add-btn,
-      .repeat {
-        display: block;
-        width: 100%;
-        padding: 16px;
-        background-color: $black-100;
-        color: #FFFFFF;
-        font-family: Bounded;
-        font-size: 16px;
-        line-height: 100%;
-        letter-spacing: -0.64px;
-        border: none;
-        border-radius: 4px;
-        margin-top: 8px;
-        cursor: pointer;
-      }
-      .order-card {
-        position: relative;
-        background-color: #FFFFFF;
-        border-radius: 4px;
-        padding: 16px;
-        margin-bottom: 16px;
-        cursor: pointer;
-        .status {
-          position: absolute;
-          top: 16px;
-          right: 16px;
-          background-color: $grey-90;
-          border-radius: 12px;
-          padding: 4px 8px;
-          font-family: Bounded;
-          font-size: 14px;
-          line-height: 100%;
-          color: #FFFFFF;
-        }
-        .preview img {
-          width: 40px;
-          height: 40px;
-          border-radius: 4px;
-          margin-right: 8px;
-        }
-        .timeline {
-          display: flex;
-          gap: 8px;
-          font-family: Bounded;
-          font-size: 12px;
-          line-height: 100%;
-          color: $grey-87;
-          margin: 16px 0;
-        }
-        .total {
-          font-family: Bounded;
-          font-size: 18px;
-          line-height: 100%;
-          text-align: right;
-        }
-      }
-    }
-    .order-detail {
-      .timeline-full {
-        display: flex;
-        align-items: center;
-        margin-bottom: 16px;
-        .stage {
-          text-align: center;
-          flex: 1;
-          .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background-color: $grey-90;
-            margin: 0 auto;
-            &.done {
-              background-color: #4CAF50;
-            }
-          }
-          .line {
-            height: 2px;
-            background-color: $grey-90;
-            margin: 4px auto;
-          }
-          p {
-            font-family: Bounded;
-            font-size: 12px;
-            line-height: 100%;
-            margin-top: 4px;
-          }
-        }
-      }
-      .info-block {
-        background-color: #FFFFFF;
-        border-radius: 4px;
-        padding: 16px;
-        margin-bottom: 16px;
-        p {
-          margin: 4px 0;
-        }
-        &.cost .bold {
-          font-weight: 600;
-        }
-      }
-      .items .item {
-        display: flex;
-        background-color: #FFFFFF;
-        border-radius: 4px;
-        padding: 16px;
-        margin-bottom: 16px;
-        img {
-          width: 80px;
-          height: 80px;
-          border-radius: 4px;
-        }
-        .title {
-          font-family: Bounded;
-          font-size: 16px;
-          font-weight: 500;
-          line-height: 100%;
-          margin-bottom: 4px;
-        }
-      }
-    }
-    .addresses {
-      .addr-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: #FFFFFF;
-        border-radius: 4px;
-        padding: 16px;
-        margin-bottom: 8px;
-        label {
-          font-family: Bounded;
-          font-size: 16px;
-          line-height: 100%;
-        }
-        .edit {
-          background: none;
-          border: none;
-          font-size: 24px;
-          color: $grey-87;
-          cursor: pointer;
-        }
-      }
-      .form {
-        .row {
-          display: flex;
-          gap: 16px;
-        }
-        .buttons {
-          display: flex;
-          gap: 8px;
-          margin-top: 16px;
-          .cancel {
-            background: none;
-            color: $grey-87;
-          }
-          .delete {
-            background-color: #FF5E5E;
-            color: #FFFFFF;
-          }
-        }
-      }
-    }
   }
 }
 
