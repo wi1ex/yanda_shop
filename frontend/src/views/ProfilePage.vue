@@ -160,7 +160,7 @@
         <input class="info" v-model="addressForm.comment" placeholder="Комментарий курьеру" >
       </div>
       <div v-if="addressFormVisible" class="buttons">
-        <button type="button" class="action-button" @click="saveAddress">
+        <button type="button" class="action-button" v-if="!addressForm.id || addressFormDirty" @click="saveAddress">
           {{ addressForm.id ? 'Сохранить изменения' : 'Сохранить' }}
         </button>
         <button type="button" class="default-button" @click="cancelAddress">
@@ -357,6 +357,33 @@ function repeatOrder(id) {
 }
 
 // ADDRESSES
+const addressFormDirty = computed(() => {
+  if (!addressForm.id) {
+    return Boolean(
+      addressForm.city      ||
+      addressForm.street    ||
+      addressForm.house     ||
+      addressForm.apartment ||
+      addressForm.intercom  ||
+      addressForm.entrance  ||
+      addressForm.floor     ||
+      addressForm.comment
+    )
+  }
+  const orig = store.userStore.addresses.find(a => a.id === addressForm.id)
+  if (!orig) return false
+  return (
+    addressForm.city               !== orig.city              ||
+    addressForm.street             !== orig.street            ||
+    addressForm.house              !== orig.house             ||
+    (addressForm.apartment || '')  !== (orig.apartment || '') ||
+    (addressForm.intercom  || '')  !== (orig.intercom  || '') ||
+    (addressForm.entrance  || '')  !== (orig.entrance  || '') ||
+    (addressForm.floor     || '')  !== (orig.floor     || '') ||
+    (addressForm.comment   || '')  !== (orig.comment   || '')
+  )
+})
+
 async function selectAddress(id) {
   await store.userStore.setPrimaryAddress(id)
   await store.userStore.fetchAddresses()
