@@ -17,13 +17,13 @@
         <p class="text">{{ form.email }}</p>
         <p class="text">Введи код из сообщения.</p>
         <input v-model="form.code" placeholder="Введи код" />
+        <p class="error" v-if="error">{{ error }}</p>
         <p class="info">
           Не получили код? Обратись в нашу
           <a v-if="store.globalStore.parameters.url_social_email" :href="`mailto:${store.globalStore.parameters.url_social_email}`" rel="noopener">
             службу поддержки
           </a>
         </p>
-        <p class="error" v-if="error">{{ error }}</p>
         <button @click="checkCode">Подтвердить номер</button>
         <p class="info">Нажимая на кнопку «Подтвердить номер», я даю согласие на обработку своих персональных данных в соответствии с политикой обработки персональных данных</p>
       </div>
@@ -112,7 +112,7 @@ async function checkCode() {
     height: 100%;
     text-align: center;
     h2 {
-      margin: 16px 0;
+      margin: 0;
       color: $black-100;
       font-family: Bounded;
       font-size: 24px;
@@ -150,28 +150,30 @@ async function checkCode() {
       border-radius: 4px;
       background-color: $grey-20;
       color: $white-100;
-      font-family: Manrope;
       font-size: 16px;
       line-height: 100%;
       letter-spacing: -0.64px;
       cursor: pointer;
     }
+    .email {
+      margin: 16px 0 0;
+      color: $black-100;
+      font-size: 16px;
+      line-height: 110%;
+      letter-spacing: -0.64px;
+    }
     .text {
-      margin: 0;
+      margin: 16px 0 0;
       width: 75%;
       color: $grey-20;
-      font-family: Manrope;
       font-size: 15px;
       line-height: 110%;
       letter-spacing: -0.6px;
     }
     .info {
-      margin: 24px 0;
+      margin: 24px 0 0;
       color: $black-40;
-      font-family: Manrope;
       font-size: 14px;
-      font-style: normal;
-      font-weight: 500;
       line-height: 100%;
       letter-spacing: -0.56px;
       a {
@@ -181,6 +183,9 @@ async function checkCode() {
     .error {
       margin: 0;
       color: $red-error;
+      font-size: 14px;
+      line-height: 100%;
+      letter-spacing: -0.56px;
     }
   }
 }
