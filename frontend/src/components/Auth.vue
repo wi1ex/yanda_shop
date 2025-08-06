@@ -110,6 +110,7 @@ async function checkCode() {
     justify-content: center;
     width: 100%;
     height: 100%;
+    text-align: center;
     h2 {
       margin: 16px 0;
       color: $black-100;
@@ -121,8 +122,9 @@ async function checkCode() {
       letter-spacing: -1.2px;
     }
     input {
-      margin: 40px 0 55px;
+      margin: 40px 0 15px;
       padding: 21px 10px 8px;
+      text-align: center;
       width: calc(100% - 20px);
       outline: none;
       box-shadow: none;
@@ -140,8 +142,10 @@ async function checkCode() {
       display: flex;
       align-items: center;
       justify-content: center;
+      margin-top: 40px;
       padding: 0 24px;
       width: 100%;
+      height: 56px;
       border: none;
       border-radius: 4px;
       background-color: $grey-20;
@@ -154,6 +158,7 @@ async function checkCode() {
     }
     .text {
       margin: 0;
+      width: 75%;
       color: $grey-20;
       font-family: Manrope;
       font-size: 15px;

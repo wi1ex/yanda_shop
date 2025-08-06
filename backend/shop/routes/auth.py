@@ -93,12 +93,13 @@ def request_code() -> Tuple[Response, int]:
     # Определяем, новый пользователь или существующий
     with session_scope() as session:
         user = session.query(Users).filter_by(email=email).first()
+        user_id = user.user_id if user else None
 
-    is_new = user is None
+    is_new = user_id is None
     if is_new:
         logger.debug("request_code: no existing user for %s", email)
     else:
-        logger.debug("request_code: existing user found id=%s for %s", user.user_id, email)
+        logger.debug("request_code: existing user found id=%s for %s", user_id, email)
 
     # Генерация и хранение кода
     code = ''.join(secrets.choice(string.digits) for _ in range(6))
@@ -126,7 +127,7 @@ def request_code() -> Tuple[Response, int]:
     action = "Регистрация" if is_new else "Авторизация"
     with session_scope() as session:
         session.add(ChangeLog(
-            author_id=0 if is_new else user.user_id,
+            author_id=0 if is_new else user_id,
             action_type=action,
             description=f"Попытка {action.lower()} по e-mail: {email}",
             timestamp=now,
@@ -169,8 +170,6 @@ def verify_code() -> Tuple[Response, int]:
         user = session.query(Users).filter_by(email=email).first()
         if not user:
             user = Users(
-                first_name="",
-                last_name="",
                 email=email,
                 email_verified=True,
                 last_visit=now
@@ -178,16 +177,18 @@ def verify_code() -> Tuple[Response, int]:
             session.add(user)
             session.flush()
             user_id = str(user.user_id)
-            logger.debug("verify_code: created new user_id=%s for %s", user_id, email)
+            role = "customer"
             action = "Регистрация"
+            logger.debug("verify_code: created new user_id=%s for %s", user_id, email)
         else:
             user.last_visit = now
             user_id = str(user.user_id)
-            logger.debug("verify_code: existing user_id=%s logged in", user_id)
+            role = str(user.role)
             action = "Авторизация"
+            logger.debug("verify_code: existing user_id=%s logged in", user_id)
 
         session.add(ChangeLog(
-            author_id=user.user_id,
+            author_id=user_id,
             action_type=action,
             description=f"Успешная {action.lower()}: {email}",
             timestamp=now,
@@ -199,7 +200,7 @@ def verify_code() -> Tuple[Response, int]:
     logger.debug("verify_code: visit count tracked for user_id=%s", user_id)
 
     # Генерация токенов
-    tokens = make_tokens(user_id, getattr(user, "role", "customer"))
+    tokens = make_tokens(user_id, role)
     logger.debug("verify_code: tokens issued for user_id=%s", user_id)
 
     return jsonify({
