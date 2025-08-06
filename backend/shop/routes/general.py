@@ -231,10 +231,11 @@ def upload_avatar() -> Tuple[Response, int]:
                 logger.warning("upload_avatar: failed removing old avatar %s: %s", old_key, exc)
 
         # загружаем новый
+        content = file.read()
         filename = secure_filename(file.filename)
         new_key = f"users/{user_id}_{filename}"
         try:
-            minio_client.put_object(BUCKET, new_key, file, file.content_length)
+            minio_client.put_object(BUCKET, new_key, io.BytesIO(content), len(content))
             old_avatar_url = u.avatar_url
             u.avatar_url = filename
             session.merge(u)
@@ -246,7 +247,7 @@ def upload_avatar() -> Tuple[Response, int]:
 
         # логируем
         log_change("Обновление аватара", f"{old_avatar_url} → {filename}")
-        url = f"{BACKEND_URL}/{BUCKET}/users/{user_id}_{filename}"
+        url = f"{BACKEND_URL}/{BUCKET}/{new_key}"
         return jsonify({"photo_url": url}), 200
 
 

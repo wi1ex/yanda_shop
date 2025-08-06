@@ -26,9 +26,9 @@
         <label class="card-label">Фото профиля</label>
         <div class="photo-row">
           <img :src="store.userStore.user.photo_url || icon_default_avatar_grey" alt="">
-          <button type="button" v-if="!hasPhoto" @click="triggerFile">Загрузить</button>
-          <button type="button" v-if="hasPhoto" @click="triggerFile">Изменить</button>
-          <button type="button" v-if="hasPhoto" class="text" @click="removePhoto">Удалить</button>
+          <button type="button" v-if="!store.userStore.user.photo_url" @click="triggerFile">Загрузить</button>
+          <button type="button" v-if="store.userStore.user.photo_url" @click="triggerFile">Изменить</button>
+          <button type="button" v-if="store.userStore.user.photo_url" class="text" @click="removePhoto">Удалить</button>
           <input type="file" ref="fileInput" class="visually-hidden" @change="onFileChange" />
         </div>
       </div>
@@ -56,7 +56,7 @@
       <!-- Дата рождения -->
       <div class="card">
         <label class="card-label">Дата рождения</label>
-        <input class="info" type="date" v-model="form.date_of_birth" :max="new Date().toISOString().split('T')[0]" />
+        <input class="info" type="date" ref="dateInput" v-model="form.date_of_birth" @click="openCalendar" :max="maxDate" />
       </div>
       <!-- Контакты -->
       <div class="card">
@@ -185,7 +185,8 @@ const form = reactive({
   email:         '',
 })
 const fileInput = ref()
-const hasPhoto = computed(() => !!store.userStore.user.photo_url)
+const dateInput = ref(null)
+const maxDate = new Date().toISOString().split('T')[0]
 
 const formDirty = computed(() => {
   const u = store.userStore.user
@@ -220,6 +221,10 @@ const addressForm         = reactive({
   floor: '',
   comment: '',
 })
+
+function openCalendar() {
+  dateInput.value?.showPicker?.()
+}
 
 // Смена раздела
 async function select(sec) {
