@@ -261,17 +261,18 @@ function goCatalog() {
 
 // PROFILE
 const formDirty = computed(() => {
+  console.log(form, store.userStore.user)
   if (!isLoaded.value) return false
   const u = store.userStore.user
-  const normPhone = v => String(v||'').replace(/\D/g, '')
+  const normPhone = v => String(v || '').replace(/\D/g, '')
   return (
-    form.first_name  !== (u.first_name  || '') ||
-    form.last_name   !== (u.last_name   || '') ||
-    form.middle_name !== (u.middle_name || '') ||
-    form.gender      !== (u.gender      || '') ||
-    form.date_of_birth !== (u.date_of_birth || '') ||
-    normPhone(form.phone) !== (u.phone  || '') ||
-    form.email       !== (u.email       || '')
+    form.first_name       !== (u.first_name    || '') ||
+    form.last_name        !== (u.last_name     || '') ||
+    form.middle_name      !== (u.middle_name   || '') ||
+    form.gender           !== (u.gender        || '') ||
+    form.date_of_birth    !== (u.date_of_birth || '') ||
+    form.email            !== (u.email         || '') ||
+    normPhone(form.phone) !== (u.phone         || '')
   )
 })
 
@@ -307,9 +308,8 @@ async function saveProfile() {
   form.middle_name   = u.middle_name   || ''
   form.gender        = u.gender        || ''
   form.date_of_birth = u.date_of_birth || ''
-  form.phone         = formatPhone(u.phone)
   form.email         = u.email         || ''
-  // Ждём следующего тика, чтобы formDirty пересчитался
+  form.phone         = formatPhone(u.phone)
   await nextTick()
 }
 
@@ -325,7 +325,7 @@ function formatPhone(raw = '') {
 
   if (c1) out += c1
   if (c2.length > 0) out += ' (' + c2
-  if (c2.length === 3) out += ')'
+  if (c2.length === 3 && c3.length > 0) out += ')'
   if (c3.length > 0) out += ' ' + c3
   if (c4.length > 0) out += '-' + c4
   if (c5.length > 0) out += '-' + c5
@@ -399,8 +399,8 @@ watch(
     form.middle_name   = u.middle_name   || ''
     form.gender        = u.gender        || ''
     form.date_of_birth = u.date_of_birth || ''
-    form.phone         = formatPhone(u.phone)
     form.email         = u.email         || ''
+    form.phone         = formatPhone(u.phone)
     isLoaded.value     = true
   },
   { immediate: true }
