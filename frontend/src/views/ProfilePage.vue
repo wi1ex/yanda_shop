@@ -63,65 +63,77 @@
 
     <div v-if="currentSection==='orders'" class="content">
       <h2>Мои заказы</h2>
-      <p v-if="!orders.length">У тебя нет оформленных заказов.</p>
-      <button type="button" v-if="!orders.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
-<!--      <div v-if="orders.length">-->
-<!--        <h2>Мои заказы</h2>-->
-<!--        <div v-for="o in orders" :key="o.id" class="order-card" @click="loadOrder(o.id)">-->
-<!--          <div class="status" :class="o.status">{{ o.statusLabel }}</div>-->
-<!--          <div class="preview">-->
-<!--            <img v-for="it in o.items.slice(0,3)" :src="it.image_url" :key="it.sku"  alt="image"/>-->
-<!--          </div>-->
-<!--          <div class="timeline">-->
-<!--            <span v-for="(d, idx) in o.datesFormated" :key="idx">{{ d }}</span>-->
-<!--          </div>-->
-<!--          <div class="total">Итог: {{ o.total }} ₽</div>-->
-<!--        </div>-->
+      <p v-if="!store.userStore.orders.length">У тебя нет оформленных заказов.</p>
+      <button type="button" v-if="!store.userStore.orders.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
 
-<!--        <div v-if="orderDetail" class="order-detail">-->
-<!--          <h2>#{{ orderDetail.id }} <span class="status">{{ orderDetail.statusLabel }}</span></h2>-->
-<!--          <div class="timeline-full">-->
-<!--            <div v-for="(stage, idx) in orderDetail.timeline" :key="idx" class="stage">-->
-<!--              <div class="dot" :class="{done: stage.done}"></div>-->
-<!--              <div class="line" v-if="idx<orderDetail.timeline.length-1"></div>-->
-<!--              <p>{{ stage.label }}<br/><small>{{ stage.date }}</small></p>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--          <div class="info-block">-->
-<!--            <p>Оплата: {{ orderDetail.payment_method }}</p>-->
-<!--            <p>Доставка: {{ orderDetail.delivery_type }}</p>-->
-<!--            <p>Адрес: {{ orderDetail.delivery_address }}</p>-->
-<!--          </div>-->
-<!--          <div class="info-block">-->
-<!--            <p>Сумма товаров: {{ orderDetail.subtotal }} ₽</p>-->
-<!--            <p>Курьер: {{ orderDetail.delivery_price }} ₽</p>-->
-<!--            <p class="bold">Итог: {{ orderDetail.total }} ₽</p>-->
-<!--          </div>-->
-<!--          <div class="items">-->
-<!--            <div v-for="it in orderDetail.items" :key="it.sku" class="item">-->
-<!--              <img :src="it.image_url"  alt="image"/>-->
-<!--              <div>-->
-<!--                <p class="title">{{ it.brand }} {{ it.name }}</p>-->
-<!--                <p>Артикул: {{ it.sku }}</p>-->
-<!--                <p>Кол-во: {{ it.qty }}</p>-->
-<!--                <p>Размер: {{ it.size }}</p>-->
-<!--                <p>Доставка: {{ it.delivery_period }}</p>-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--          <button type="button" v-if="orderDetail.canRepeat" class="repeat" @click="repeatOrder(orderDetail.id)">Повторить заказ</button>-->
-<!--        </div>-->
-<!--      </div>-->
+
+
+
+
+
+      <div v-if="store.userStore.orders.length">
+        <h2>Мои заказы</h2>
+        <div v-for="o in store.userStore.orders" :key="o.id" class="order-card" @click="loadOrder(o.id)">
+          <div class="status" :class="o.status">{{ o.statusLabel }}</div>
+          <div class="preview">
+            <img v-for="it in o.items.slice(0,3)" :src="it.image_url" :key="it.sku"  alt="image"/>
+          </div>
+          <div class="timeline">
+            <span v-for="(d, idx) in o.datesFormated" :key="idx">{{ d }}</span>
+          </div>
+          <div class="total">Итог: {{ o.total }} ₽</div>
+        </div>
+
+        <div v-if="store.userStore.orderDetail" class="order-detail">
+          <h2>#{{ store.userStore.orderDetail.id }} <span class="status">{{ store.userStore.orderDetail.statusLabel }}</span></h2>
+          <div class="timeline-full">
+            <div v-for="(stage, idx) in store.userStore.orderDetail.timeline" :key="idx" class="stage">
+              <div class="dot" :class="{done: stage.done}"></div>
+              <div class="line" v-if="idx<store.userStore.orderDetail.timeline.length-1"></div>
+              <p>{{ stage.label }}<br/><small>{{ stage.date }}</small></p>
+            </div>
+          </div>
+          <div class="info-block">
+            <p>Оплата: {{ store.userStore.orderDetail.payment_method }}</p>
+            <p>Доставка: {{ store.userStore.orderDetail.delivery_type }}</p>
+            <p>Адрес: {{ store.userStore.orderDetail.delivery_address }}</p>
+          </div>
+          <div class="info-block">
+            <p>Сумма товаров: {{ store.userStore.orderDetail.subtotal }} ₽</p>
+            <p>Курьер: {{ store.userStore.orderDetail.delivery_price }} ₽</p>
+            <p class="bold">Итог: {{ store.userStore.orderDetail.total }} ₽</p>
+          </div>
+          <div class="items">
+            <div v-for="it in store.userStore.orderDetail.items" :key="it.sku" class="item">
+              <img :src="it.image_url"  alt="image"/>
+              <div>
+                <p class="title">{{ it.brand }} {{ it.name }}</p>
+                <p>Артикул: {{ it.sku }}</p>
+                <p>Кол-во: {{ it.qty }}</p>
+                <p>Размер: {{ it.size }}</p>
+                <p>Доставка: {{ it.delivery_period }}</p>
+              </div>
+            </div>
+          </div>
+          <button type="button" v-if="store.userStore.orderDetail.canRepeat" class="repeat" @click="repeatOrder(store.userStore.orderDetail.id)">Повторить заказ</button>
+        </div>
+      </div>
+
+
+
+
+
+
     </div>
 
     <div v-if="currentSection==='addresses'" class="content">
-      <h2 :style="{ marginBottom: (addresses.length || addressFormVisible) ? '40px' : '' }">
-        Мои адреса{{ addresses.length ? ` [ ${addresses.length} ]` : '' }}
+      <h2 :style="{ marginBottom: (store.userStore.addresses.length || addressFormVisible) ? '40px' : '' }">
+        Мои адреса{{ store.userStore.addresses.length ? ` [ ${store.userStore.addresses.length} ]` : '' }}
       </h2>
-      <p v-if="!addresses.length && !addressFormVisible">У тебя нет сохранённых адресов.</p>
-      <div v-if="addresses.length && !addressFormVisible" class="list_addresses">
-        <div v-for="a in addresses" class="address" :key="a.id" @click="selectAddress(a.id)">
-          <label class="radio-button address-text">
+      <p v-if="!store.userStore.addresses.length && !addressFormVisible">У тебя нет сохранённых адресов.</p>
+      <div v-if="store.userStore.addresses.length && !addressFormVisible" class="list_addresses">
+        <div v-for="a in store.userStore.addresses" class="address" :key="a.id">
+          <label class="radio-button address-text" @click="selectAddress(a.id)">
             <input type="radio" :value="a.id" v-model="selectedAddress" />
             {{ a.full }}
           </label>
@@ -187,12 +199,7 @@ const fileInput = ref()
 const dateInput = ref(null)
 const maxDate = new Date().toISOString().split('T')[0]
 
-// ORDERS
-const orders      = ref([])
-const orderDetail = ref(null)
-
 // ADDRESSES
-const addresses           = ref([])
 const selectedAddress     = ref(null)
 const addressFormVisible  = ref(false)
 const addressForm         = reactive({
@@ -209,21 +216,22 @@ const addressForm         = reactive({
 
 // Смена раздела
 const backLabel = computed(() => {
-  if (orderDetail.value)        return 'К заказам'
+  if (store.userStore.orderDetail) return 'К заказам'
   if (addressFormVisible.value) return 'К адресам'
-  if (currentSection.value)     return 'Мой кабинет'
+  if (currentSection.value) return 'Мой кабинет'
   return 'Назад'
 })
 
 async function select(sec) {
   currentSection.value = sec
-  orderDetail.value = null
+  store.userStore.orderDetail = null
   addressFormVisible.value = false
   if (sec==='orders') {
-    orders.value = await store.userStore.fetchOrders()
+    await store.userStore.fetchOrders()
   }
   if (sec==='addresses') {
-    addresses.value = await store.userStore.fetchAddresses()
+    await store.userStore.fetchAddresses()
+    selectedAddress.value = store.userStore.addresses.find(a => a.selected)?.id || null
   }
 }
 
@@ -235,8 +243,8 @@ async function onLogout() {
 }
 
 function goBack() {
-  if (orderDetail.value !== null) {
-    orderDetail.value = null
+  if (store.userStore.orderDetail !== null) {
+    store.userStore.orderDetail = null
   } else if (addressFormVisible.value) {
     addressFormVisible.value = false
   } else if (currentSection.value) {
@@ -326,7 +334,7 @@ function onPhoneInput(e) {
 
 // ORDERS
 async function loadOrder(id) {
-  orderDetail.value = await store.userStore.fetchOrder(id)
+  await store.userStore.fetchOrder(id)
 }
 
 function repeatOrder(id) {
@@ -334,7 +342,9 @@ function repeatOrder(id) {
 }
 
 // ADDRESSES
-function selectAddress(id) {
+async function selectAddress(id) {
+  await store.userStore.setPrimaryAddress(id)
+  await store.userStore.fetchAddresses()
   selectedAddress.value = id
 }
 
@@ -366,13 +376,13 @@ async function saveAddress() {
     await store.userStore.updateAddress(addressForm.id, addressForm)
   else
     await store.userStore.addAddress(addressForm)
-  addresses.value = await store.userStore.fetchAddresses()
+  await store.userStore.fetchAddresses()
   addressFormVisible.value = false
 }
 
 async function deleteAddress(id) {
   await store.userStore.deleteAddress(id)
-  addresses.value = await store.userStore.fetchAddresses()
+  await store.userStore.fetchAddresses()
   addressFormVisible.value = false
 }
 
@@ -582,7 +592,7 @@ watch(
         justify-content: space-between;
         padding: 20px 10px;
         border-radius: 4px;
-        background-color: $white-100;
+        background-color: $grey-95;
         .address-text {
           font-size: 16px;
           line-height: 110%;

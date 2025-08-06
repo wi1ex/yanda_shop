@@ -343,3 +343,4 @@ Settings → Secrets and variables → Actions → New repository secret
 cd /root/app/yanda_shop
 rm -f github_deploy_key github_deploy_key.pub known_hosts.txt
 ```
+

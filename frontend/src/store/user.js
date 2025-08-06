@@ -25,29 +25,26 @@ export const useUserStore = defineStore('user', () => {
   const profileLoaded    = ref(false)
   const showAuth         = ref(false)
 
-  // Добавляем заказы и адреса
+  // ADDRESSES and ORDERS states
+  const addresses    = ref([])
   const orders       = ref([])
   const orderDetail  = ref(null)
-  const addresses    = ref([])
 
   // ORDERS
   async function fetchOrders() {
     const { data } = await api.get(API.general.getUserOrders)
     orders.value = data.orders
-    return orders.value
   }
 
   async function fetchOrder(id) {
     const { data } = await api.get(`${API.general.getUserOrder}/${id}`)
     orderDetail.value = data.order
-    return orderDetail.value
   }
 
   // ADDRESSES
   async function fetchAddresses() {
     const { data } = await api.get(API.general.listAddresses)
     addresses.value = data.addresses
-    return addresses.value
   }
 
   async function addAddress(payload) {
@@ -60,6 +57,10 @@ export const useUserStore = defineStore('user', () => {
 
   async function deleteAddress(id) {
     await api.delete(`${API.general.deleteAddress}/${id}`)
+  }
+
+  async function setPrimaryAddress(id) {
+    await api.post(`${API.general.selectAddress}/${id}`)
   }
 
   // Helpers
@@ -256,6 +257,7 @@ export const useUserStore = defineStore('user', () => {
     addAddress,
     updateAddress,
     deleteAddress,
+    setPrimaryAddress,
 
     // helpers
     openAuth,
