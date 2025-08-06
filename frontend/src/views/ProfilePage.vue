@@ -69,8 +69,8 @@
     </div>
 
     <div v-if="currentSection==='orders'" class="content">
-      <h2>Мои заказы</h2>
-      <p v-if="!orders.length">У тебя нет оформленных заказов.</p>
+      <h2 :style="{ marginBottom: (orders.length || orderDetail) ? '40px' : '' }">Мои заказы</h2>
+      <p v-if="!orders.length && !orderDetail">У тебя нет оформленных заказов.</p>
       <button type="button" v-if="!orders.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
       <div v-if="orders.length">
         <h2>Мои заказы</h2>
@@ -137,6 +137,7 @@
 
       <!-- Форма адреса -->
       <div v-if="addressFormVisible" class="card">
+        <label class="card-label">Добавить новый адрес</label>
         <input class="info" v-model="addressForm.city" placeholder="Город*" />
         <input class="info" v-model="addressForm.street" placeholder="Улица*" />
         <input class="info" v-model="addressForm.house" placeholder="Дом, строение, корпус*" />
@@ -149,11 +150,11 @@
           <input class="info" v-model="addressForm.floor" placeholder="Этаж" />
         </div>
         <input class="info" v-model="addressForm.comment" placeholder="Комментарий курьеру" >
-        <div class="buttons">
-          <button type="button" class="action-button" @click="saveAddress">Сохранить</button>
-          <button type="button" class="cancel" @click="cancelAddress">Отменить</button>
-          <button type="button" v-if="addressForm.id" class="delete" @click="deleteAddress(addressForm.id)">Удалить адрес</button>
-        </div>
+      </div>
+      <div v-if="addressFormVisible" class="buttons">
+        <button type="button" class="action-button" @click="saveAddress">Сохранить</button>
+        <button type="button" class="cancel" @click="cancelAddress">Отменить</button>
+        <button type="button" v-if="addressForm.id" class="delete" @click="deleteAddress(addressForm.id)">Удалить адрес</button>
       </div>
     </div>
   </div>
@@ -260,7 +261,6 @@ function goCatalog() {
 
 // PROFILE
 const formDirty = computed(() => {
-  console.log(form, store.userStore.user)
   const u = store.userStore.user
   const normPhone = v => String(v || '').replace(/\D/g, '')
   return (
