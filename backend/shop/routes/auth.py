@@ -41,11 +41,12 @@ def make_tokens(user_id: str, role: str) -> Dict[str, str]:
     )
     return {
         "access_token": access_token,
-        "refresh_token": refresh_token
+        "refresh_token": refresh_token,
     }
 
 
 # Authentication endpoints
+
 @auth_bp.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 @handle_errors
@@ -54,7 +55,7 @@ def refresh() -> Tuple[Response, int]:
     user_id = get_jwt_identity()
     claims = get_jwt()
     role = claims.get("role", "")
-    logger.debug("refresh: user_id=%s", user_id)
+    logger.debug("refresh: user_id=%s role=%s", user_id, role)
 
     claims = {"role": role}
     access_token = create_access_token(
@@ -66,239 +67,142 @@ def refresh() -> Tuple[Response, int]:
     return jsonify({"access_token": access_token}), 200
 
 
-# Регистрация: запрос кода
-@auth_bp.route("/request_registration_code", methods=["POST"])
-@handle_errors
-@require_json("email", "first_name", "last_name")
-def request_registration_code() -> Tuple[Response, int]:
-    data = request.get_json()
-    logger.debug("request_registration_code: payload=%s", data)
-    raw_email = data["email"].lower().strip()
-    first_name, last_name = data["first_name"].strip(), data["last_name"].strip()
-    now = datetime.now(ZoneInfo("Europe/Moscow"))
-
-    # Нормализация и валидация e-mail
-    try:
-        validated = validate_email(raw_email)
-        email = validated.normalized
-        logger.debug("request_registration_code: validated email=%s", email)
-    except EmailNotValidError as e:
-        logger.warning("request_registration_code: invalid email %s: %s", raw_email, e)
-        return jsonify({"error": str(e)}), 400
-
-    # проверяем, что пользователя с таким e-mail ещё нет
-    with session_scope() as session:
-        exists_email = session.query(Users).filter_by(email=email).first()
-    if exists_email:
-        logger.debug("request_registration_code: registration attempt with existing email %s", email)
-        return jsonify({"error": "Пользователь с таким e-mail уже зарегистрирован"}), 400
-
-    # Генерация кода и отправка письма
-    logger.debug("request_registration_code: generating code for %s", email)
-    code = ''.join(secrets.choice(string.digits) for _ in range(6))
-    key  = f"email_reg:{email}"
-    redis_client.setex(key, 600, "|".join([code, first_name, last_name]))
-    logger.debug("request_registration_code: stored code in redis key=%s", key)
-
-    # шлём письмо
-    msg = Message(
-        subject="Код подтверждения регистрации на Yanda Shop",
-        recipients=[email],
-        body=(
-            f"Здравствуйте, {first_name}!\n\n"
-            f"Ваш код регистрации: {code}\n"
-            "Он действителен 10 минут.\n\n"
-            "Если вы не запрашивали, просто проигнорируйте."
-        )
-    )
-    mail.send(msg)
-    logger.debug("request_registration_code: confirmation email sent to %s", email)
-
-    with session_scope() as session:
-        session.add(ChangeLog(
-            author_id=0,
-            action_type="Регистрация",
-            description=f"Попытка регистрации пользователя: {first_name} {last_name}",
-            timestamp=now,
-        ))
-    logger.debug("request_registration_code: change log saved for new registration attempt")
-
-    logger.debug("Registration code sent to %s", email)
-    return jsonify({"status": "code_sent"}), 200
-
-
-# Регистрация: верификация кода
-@auth_bp.route("/verify_registration_code", methods=["POST"])
-@handle_errors
-@require_json("email", "code")
-def verify_registration_code():
-    data = request.get_json()
-    logger.debug("verify_registration_code: payload=%s", data)
-    email = data["email"].lower().strip()
-    code = data["code"].strip()
-    key = f"email_reg:{email}"
-    stored = redis_client.get(key)
-    now = datetime.now(ZoneInfo("Europe/Moscow"))
-    if not stored:
-        logger.warning("verify_registration_code: no code found in redis for %s", email)
-        return jsonify({"error": "Код не найден или истёк"}), 400
-
-    stored_code, first_name, last_name = stored.split("|", 2)
-    if code != stored_code:
-        logger.warning("verify_registration_code: invalid code %s for %s", code, email)
-        return jsonify({"error": "Неверный код"}), 400
-
-    redis_client.delete(key)
-    logger.debug("verify_registration_code: deleted redis key %s", key)
-
-    # создаём пользователя
-    with session_scope() as session:
-        user = Users(
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            email_verified=True,
-            last_visit=now
-        )
-        session.add(user)
-        session.flush()
-        user_id = str(user.user_id)
-    logger.debug("verify_registration_code: new user created id=%d email=%s", user_id, email)
-
-    # Redis: track visit counts
-    track_visit_counts(str(user_id))
-
-    with session_scope() as session:
-        session.add(ChangeLog(
-            author_id=user_id,
-            action_type="Регистрация",
-            description=f"Успешная регистрация пользователя: {first_name} {last_name}",
-            timestamp=now,
-        ))
-    logger.debug("verify_registration_code: change log saved for user_id=%s", user_id)
-
-    tokens = make_tokens(user_id, "customer")
-    access_token, refresh_token = tokens["access_token"], tokens["refresh_token"]
-    logger.debug("verify_registration_code: tokens issued for new user_id=%s", user_id)
-    return jsonify({
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-    }), 200
-
-
-# Авторизация: запрос кода
-@auth_bp.route("/request_login_code", methods=["POST"])
+@auth_bp.route("/request_code", methods=["POST"])
 @handle_errors
 @require_json("email")
-def request_login_code():
+def request_code() -> Tuple[Response, int]:
+    """
+    POST /api/auth/request_code
+    Запрос кода для входа или регистрации по e-mail.
+    """
     data = request.get_json()
-    logger.debug("request_login_code: payload=%s", data)
+    logger.debug("request_code: payload=%s", data)
+
     raw_email = data["email"].lower().strip()
     now = datetime.now(ZoneInfo("Europe/Moscow"))
 
-    # Нормализация и валидация e-mail
+    # Валидация e-mail
     try:
         validated = validate_email(raw_email)
         email = validated.normalized
-        logger.debug("request_login_code: validated email=%s", email)
+        logger.debug("request_code: validated email=%s", email)
     except EmailNotValidError as e:
-        logger.warning("request_login_code: invalid email %s: %s", raw_email, e)
+        logger.warning("request_code: invalid email %s: %s", raw_email, e)
         return jsonify({"error": str(e)}), 400
 
-    # проверяем, что пользователь есть
+    # Определяем, новый пользователь или существующий
     with session_scope() as session:
         user = session.query(Users).filter_by(email=email).first()
-        if not user:
-            logger.debug("request_login_code: login attempt for unknown email %s", email)
-            return jsonify({"error": "Пользователь не найден"}), 404
-        user_id = user.user_id
-        first_name = user.first_name
-        last_name = user.last_name
 
-    logger.debug("request_login_code: generating code for user_id=%d", user_id)
+    is_new = user is None
+    if is_new:
+        logger.debug("request_code: no existing user for %s", email)
+    else:
+        logger.debug("request_code: existing user found id=%s for %s", user.user_id, email)
+
+    # Генерация и хранение кода
     code = ''.join(secrets.choice(string.digits) for _ in range(6))
-    key = f"email_login:{email}"
+    key = f"email_code:{email}"
     redis_client.setex(key, 600, code)
-    logger.debug("request_login_code: stored login code in redis key=%s", key)
+    logger.debug("request_code: stored code=%s for %s", code, email)
 
-    msg = Message(
-        subject="Код входа на Yanda Shop",
-        recipients=[email],
-        body=(
-            f"Здравствуйте, {first_name}!\n\n"
-            f"Ваш код входа: {code}\n"
-            f"Он действителен 10 минут.\n\n"
-            "Если вы не запрашивали, просто проигнорируйте."
-        )
+    # Отправка письма
+    subject = (
+        "Код подтверждения регистрации на Yanda Shop"
+        if is_new
+        else "Код для входа на Yanda Shop"
     )
+    body = (
+        f"Здравствуйте!\n\n"
+        f"Ваш код {'регистрации' if is_new else 'входа'}: {code}\n"
+        "Он действителен 10 минут.\n\n"
+        "Если вы не запрашивали, просто проигнорируйте это письмо."
+    )
+    msg = Message(subject=subject, recipients=[email], body=body)
     mail.send(msg)
-    logger.debug("request_login_code: login email sent to %s", email)
+    logger.debug("request_code: email sent to %s (action=%s)", email, "Регистрация" if is_new else "Авторизация")
 
+    # Логирование в ChangeLog
+    action = "Регистрация" if is_new else "Авторизация"
     with session_scope() as session:
         session.add(ChangeLog(
-            author_id=user_id,
-            action_type="Авторизация",
-            description=f"Попытка входа в аккаунт: {first_name} {last_name}",
+            author_id=0 if is_new else user.user_id,
+            action_type=action,
+            description=f"Попытка {action.lower()} по e-mail: {email}",
             timestamp=now,
         ))
-    logger.debug("request_login_code: change log saved for login attempt user_id=%d", user_id)
+    logger.debug("request_code: change log saved for %s attempt on %s", action.lower(), email)
 
-    logger.debug("Login code sent to %s", email)
     return jsonify({"status": "code_sent"}), 200
 
 
-# Авторизация: верификация кода
-@auth_bp.route("/verify_login_code", methods=["POST"])
+@auth_bp.route("/verify_code", methods=["POST"])
 @handle_errors
 @require_json("email", "code")
-def verify_login_code():
+def verify_code() -> Tuple[Response, int]:
+    """
+    POST /api/auth/verify_code
+    Верификация кода и выдача токенов.
+    """
     data = request.get_json()
-    logger.debug("verify_login_code: payload=%s", data)
+    logger.debug("verify_code: payload=%s", data)
+
     email = data["email"].lower().strip()
     code = data["code"].strip()
-    key = f"email_login:{email}"
+    key = f"email_code:{email}"
     stored = redis_client.get(key)
     now = datetime.now(ZoneInfo("Europe/Moscow"))
+
     if not stored:
-        logger.warning("verify_login_code: no code in redis for %s", email)
+        logger.warning("verify_code: no code found in redis for %s", email)
         return jsonify({"error": "Код не найден или истёк"}), 400
 
     if code != stored:
-        logger.warning("verify_login_code: invalid code %s for %s", code, email)
-        return jsonify({"error": "Неверный код"}), 400
+        logger.warning("verify_code: invalid code %s for %s", code, email)
+        return jsonify({"error": "Неверный или просроченный код"}), 400
 
-    # получаем пользователя из БД
+    redis_client.delete(key)
+    logger.debug("verify_code: deleted redis key %s", key)
+
+    # Получение или создание пользователя
     with session_scope() as session:
         user = session.query(Users).filter_by(email=email).first()
         if not user:
-            logger.warning("verify_login_code: user not found after code match for %s", email)
-            return jsonify({"error": "Пользователь не найден"}), 404
-        user.last_visit = now
-        user_id = user.user_id
-        first_name = user.first_name
-        last_name = user.last_name
-        role = user.role
-    logger.debug("verify_login_code: user found id=%d, updating last_visit", user_id)
+            user = Users(
+                first_name="",
+                last_name="",
+                email=email,
+                email_verified=True,
+                last_visit=now
+            )
+            session.add(user)
+            session.flush()
+            user_id = str(user.user_id)
+            logger.debug("verify_code: created new user_id=%s for %s", user_id, email)
+            action = "Регистрация"
+        else:
+            user.last_visit = now
+            user_id = str(user.user_id)
+            logger.debug("verify_code: existing user_id=%s logged in", user_id)
+            action = "Авторизация"
 
-    # Redis: track visit counts
-    track_visit_counts(str(user_id))
-
-    redis_client.delete(key)
-    logger.debug("verify_login_code: deleted redis key %s", key)
-
-    with session_scope() as session:
         session.add(ChangeLog(
-            author_id=user_id,
-            action_type="Авторизация",
-            description=f"Успешный вход в аккаунт: {first_name} {last_name}",
+            author_id=user.user_id,
+            action_type=action,
+            description=f"Успешная {action.lower()}: {email}",
             timestamp=now,
         ))
-    logger.debug("verify_login_code: change log saved for successful login user_id=%d", user_id)
+    logger.debug("verify_code: change log saved for user_id=%s action=%s", user_id, action)
 
-    tokens = make_tokens(str(user_id), role)
-    access_token, refresh_token = tokens["access_token"], tokens["refresh_token"]
-    logger.debug("verify_login_code: tokens issued for user_id=%s", user_id)
+    # Обновляем счётчик визитов
+    track_visit_counts(user_id)
+    logger.debug("verify_code: visit count tracked for user_id=%s", user_id)
+
+    # Генерация токенов
+    tokens = make_tokens(user_id, getattr(user, "role", "customer"))
+    logger.debug("verify_code: tokens issued for user_id=%s", user_id)
+
     return jsonify({
-        "access_token": access_token,
-        "refresh_token": refresh_token,
+        "access_token": tokens["access_token"],
+        "refresh_token": tokens["refresh_token"],
     }), 200
