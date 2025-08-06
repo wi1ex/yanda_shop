@@ -176,7 +176,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 
@@ -442,6 +442,12 @@ watch(
   },
   { immediate: true }
 )
+
+onMounted(async () => {
+  await store.userStore.fetchOrders()
+  await store.userStore.fetchAddresses()
+  selectedAddress.value = sortedAddresses.value.find(a => a.selected)?.id || null
+})
 
 </script>
 
