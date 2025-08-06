@@ -368,7 +368,7 @@ def delete_review(review_id: int) -> Tuple[Response, int]:
 @handle_errors
 def list_users() -> Tuple[Response, int]:
     """GET /api/admin/list_users"""
-    hidden_fields = {"avatar_url", "password_hash", "email_verified", "updated_at"}
+    hidden_fields = {"avatar_url", "email_verified", "updated_at"}
     users_list: List[Dict[str, Any]] = []
     logger.debug("list_users: called")
 
