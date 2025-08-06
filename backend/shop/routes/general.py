@@ -234,7 +234,7 @@ def upload_avatar() -> Tuple[Response, int]:
         # загружаем новый
         filename = secure_filename(file.filename)
         name, ext = os.path.splitext(filename)
-        filename = f"{name}{ext.lower()}"
+        filename = f"{name.lower()}{ext.lower()}"
         new_key = f"users/{user_id}_{filename}"
         content = file.read()
         try:
