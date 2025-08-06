@@ -107,6 +107,7 @@
 | `/general/add_address`      | POST   | добавить адрес                     |
 | `/general/update_address`   | PUT    | обновить данные дареса             |
 | `/general/delete_address`   | DELETE | удалить адрес                      |
+| `/general/select_address`   | POST   | выбрать адрес основным             |
 
 ### /api/product
 
@@ -343,4 +344,3 @@ Settings → Secrets and variables → Actions → New repository secret
 cd /root/app/yanda_shop
 rm -f github_deploy_key github_deploy_key.pub known_hosts.txt
 ```
-
