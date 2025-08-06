@@ -489,9 +489,9 @@ def list_addresses() -> Tuple[Response, int]:
         qs = session.query(Addresses).filter_by(user_id=user_id).all()
         out: List[Dict[str, Any]] = []
         for a in qs:
-            full = f"{a.city}, ул. {a.street}, дом {a.house}"
+            full = f"г.{a.city}, ул. {a.street}, дом {a.house}"
             if a.apartment:
-                full += f", кв. {a.apartment}"
+                full += f", квартира {a.apartment}"
             out.append({
                 "id":        a.id,
                 "city":      a.city,
@@ -502,6 +502,7 @@ def list_addresses() -> Tuple[Response, int]:
                 "entrance":  a.entrance,
                 "floor":     a.floor,
                 "comment":   a.comment,
+                "selected":  a.select,
                 "full":      full,
             })
 
@@ -587,4 +588,30 @@ def delete_address(address_id: int) -> Tuple[Response, int]:
         session.delete(a)
 
     logger.debug("delete_address: removed address_id=%d for user_id=%d", address_id, user_id)
+    return jsonify({"status": "ok"}), 200
+
+
+@general_api.route("/select_address/<int:address_id>", methods=["POST"])
+@jwt_required()
+@handle_errors
+def select_address_api(address_id: int) -> Tuple[Response, int]:
+    """
+    POST /api/general/select_address/<address_id>
+    Отмечает один адрес как основной и снимает флаг с остальных.
+    """
+    user_id = int(get_jwt_identity())
+    logger.debug("select_address: user_id=%d address_id=%d", user_id, address_id)
+
+    with session_scope() as session:
+        # 1) Проверяем доступ
+        a = session.get(Addresses, address_id)
+        if not a or a.user_id != user_id:
+            logger.warning("select_address: address %d not found or access denied", address_id)
+            return jsonify({"error": "not found"}), 404
+
+        # 2) Снимаем флаг у всех адресов пользователя и устанавливаем на выбранном
+        session.query(Addresses).filter_by(user_id=user_id, select=True).update({"select": False})
+        a.select = True
+
+    logger.debug("select_address: address %d marked as primary for user_id=%d", address_id, user_id)
     return jsonify({"status": "ok"}), 200

@@ -79,6 +79,7 @@ class Addresses(db.Model):
     entrance      = db.Column(db.String(50))
     floor         = db.Column(db.String(50))
     comment       = db.Column(db.String(200))
+    select        = db.Column(db.Boolean, default=False, nullable=False)
 
 
 class Orders(db.Model):

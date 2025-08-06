@@ -15,6 +15,7 @@ export const API = {
     createAddress:            '/api/general/add_address',               // POST   - добавить адрес
     updateAddress:            '/api/general/update_address',            // PUT    - обновить данные дареса
     deleteAddress:            '/api/general/delete_address',            // DELETE - удалить адрес
+    selectAddress:            '/api/general/select_address',            // POST   - выбрать адрес основным
   },
   product: {
     listProducts:             '/api/product/list_products',             // GET    - список товаров
