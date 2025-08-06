@@ -536,9 +536,10 @@ def add_address() -> Tuple[Response, int]:
         )
         session.add(a)
         session.flush()
+        address_id = a.id
 
-    logger.debug("add_address: created address_id=%d for user_id=%d", a.id, user_id)
-    return jsonify({"id": a.id}), 201
+    logger.debug("add_address: created address_id=%d for user_id=%d", address_id, user_id)
+    return jsonify({"id": address_id}), 201
 
 
 @general_api.route("/update_address/<int:address_id>", methods=["PUT"])

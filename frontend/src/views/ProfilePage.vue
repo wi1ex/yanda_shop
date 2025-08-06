@@ -39,11 +39,11 @@
       <div class="card">
         <label class="card-label">Пол</label>
         <div class="gender">
-          <label class="gender-label">
+          <label class="radio-button">
             <input type="radio" value="male" v-model="form.gender" />
             Мужчина
           </label>
-          <label class="gender-label">
+          <label class="radio-button">
             <input type="radio" value="female" v-model="form.gender" />
             Женщина
           </label>
@@ -119,15 +119,18 @@
         Мои адреса{{ addresses.length ? ` [ ${addresses.length} ]` : '' }}
       </h2>
       <p v-if="!addresses.length && !addressFormVisible">У тебя нет сохранённых адресов.</p>
-      <button type="button" v-if="!addressFormVisible" class="action-button" @click="editAddress()">Добавить адрес</button>
       <div v-if="addresses.length">
-        <h2>Мои адреса</h2>
-        <div v-for="a in addresses" :key="a.id" class="addr-item" @click="selectAddress(a.id)">
-          <label><input type="radio" :value="a.id" v-model="selectedAddress" /> {{ a.full }}</label>
-          <button type="button" class="edit" @click.stop="editAddress(a)">›</button>
+        <div v-for="a in addresses" :key="a.id" @click="selectAddress(a.id)">
+          <label class="radio-button">
+            <input type="radio" :value="a.id" v-model="selectedAddress" />
+            {{ a.full }}
+          </label>
+          <button type="button" @click.stop="editAddress(a)">
+            <img :src="icon_arrow_mini_black" alt="" style="transform: rotate(180deg)"/>
+          </button>
         </div>
-        <button type="button" class="add-btn" @click="editAddress()">Добавить адрес</button>
       </div>
+      <button type="button" v-if="!addressFormVisible" class="action-button" @click="editAddress()">Добавить адрес</button>
 
       <div v-if="addressFormVisible" class="card">
         <label class="card-label">Добавить новый адрес</label>
@@ -161,6 +164,8 @@ import { useRouter } from 'vue-router'
 
 import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
 import icon_arrow_grey from "@/assets/images/arrow_grey.svg";
+import icon_arrow_mini_black from "@/assets/images/arrow_mini_black.svg";
+import icon_arrow_mini_red from "@/assets/images/arrow_mini_red.svg";
 
 const store = useStore()
 const router = useRouter()
@@ -564,29 +569,6 @@ watch(
       .gender {
         display: flex;
         gap: 24px;
-        .gender-label {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          color: $black-100;
-          font-size: 15px;
-          line-height: 100%;
-          letter-spacing: -0.6px;
-          input[type="radio"] {
-            margin: 0;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border: 1px solid $black-40;
-            border-radius: 50%;
-            background: none;
-          }
-          input[type="radio"]:checked {
-            border-color: $black-100;
-            background-color: $black-100;
-            box-shadow: inset 0 0 0 4px $white-100;
-          }
-        }
       }
     }
     .buttons {
@@ -594,7 +576,31 @@ watch(
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      margin-top: 30px;
       gap: 24px;
+    }
+    .radio-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: $black-100;
+      font-size: 15px;
+      line-height: 100%;
+      letter-spacing: -0.6px;
+      input[type="radio"] {
+        margin: 0;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 1px solid $black-40;
+        border-radius: 50%;
+        background: none;
+      }
+      input[type="radio"]:checked {
+        border-color: $black-100;
+        background-color: $black-100;
+        box-shadow: inset 0 0 0 4px $white-100;
+      }
     }
     .action-button {
       display: flex;
