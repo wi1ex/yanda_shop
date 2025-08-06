@@ -67,8 +67,8 @@ async function checkCode() {
   error.value = ''
   try {
     await store.userStore.verifyCode(form.value.email, form.value.code)
-    store.userStore.closeAuth()
     localStorage.removeItem('visitorId')
+    onClose()
   } catch (e) {
     error.value = e.response?.data?.error || 'Неверный код'
   }
