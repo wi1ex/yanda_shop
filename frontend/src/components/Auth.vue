@@ -4,21 +4,28 @@
       <button class="close-btn" @click="onClose">
         <img :src="icon_close" alt="Закрыть" />
       </button>
-
-      <div class="auth-modal">
-        <h2>Авторизация</h2>
-
-        <div v-if="step === 1">
-          <input v-model="form.email" type="email" placeholder="E-mail"/>
-          <button @click="sendCode">Получить код</button>
-        </div>
-
-        <div v-else-if="step === 2">
-          <input v-model="form.code" placeholder="Код из письма" />
-          <button @click="checkCode">Подтвердить</button>
-        </div>
-
-        <p v-if="error">{{ error }}</p>
+      <div class="auth-modal" v-if="step === 1">
+        <h2>Вход или регистрация</h2>
+        <p class="text">Введите почтовый адрес, и мы отправим вам письмо с кодом подтверждения.</p>
+        <input v-model="form.email" type="email" placeholder="Введи e-mail"/>
+        <p class="error" v-if="error">{{ error }}</p>
+        <button @click="sendCode">Получить код</button>
+        <p class="info">Нажимая на кнопку «Получить код», я даю согласие на обработку своих персональных данных в соответствии с политикой обработки персональных данных</p>
+      </div>
+      <div class="auth-modal" v-else-if="step === 2">
+        <h2>Подтверди почту</h2>
+        <p class="text">{{ form.email }}</p>
+        <p class="text">Введи код из сообщения.</p>
+        <input v-model="form.code" placeholder="Введи код" />
+        <p class="info">
+          Не получили код? Обратись в нашу
+          <a v-if="store.globalStore.parameters.url_social_email" :href="`mailto:${store.globalStore.parameters.url_social_email}`" rel="noopener">
+            службу поддержки
+          </a>
+        </p>
+        <p class="error" v-if="error">{{ error }}</p>
+        <button @click="checkCode">Подтвердить номер</button>
+        <p class="info">Нажимая на кнопку «Подтвердить номер», я даю согласие на обработку своих персональных данных в соответствии с политикой обработки персональных данных</p>
       </div>
     </div>
   </transition>
@@ -109,10 +116,20 @@ async function checkCode() {
       text-align: center;
     }
     input {
-      width: 100%;
-      margin: 8px 0;
-      padding: 8px;
-      box-sizing: border-box;
+      margin-bottom: 15px;
+      padding: 21px 10px 8px;
+      width: calc(100% - 20px);
+      outline: none;
+      box-shadow: none;
+      border: none;
+      border-bottom: 1px solid $grey-20;
+      color: $grey-20;
+      font-size: 15px;
+      line-height: 100%;
+      letter-spacing: -0.6px;
+      &::placeholder {
+        color: $black-40;
+      }
     }
     button {
       width: 100%;
@@ -120,7 +137,20 @@ async function checkCode() {
       margin-top: 12px;
       cursor: pointer;
     }
-    p {
+    .text {
+      color: black;
+      margin-top: 8px;
+      text-align: center;
+    }
+    .info {
+      color: grey;
+      margin-top: 8px;
+      text-align: center;
+      a {
+        color: grey;
+      }
+    }
+    .error {
       color: red;
       margin-top: 8px;
       text-align: center;
@@ -128,13 +158,11 @@ async function checkCode() {
   }
 }
 
-.fade-enter-active,
-.fade-leave-active {
+.fade-enter-active, .fade-leave-active {
   transition: opacity 0.25s ease-in-out;
 }
 
-.fade-enter-from,
-.fade-leave-to {
+.fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
 
