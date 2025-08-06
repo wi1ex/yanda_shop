@@ -112,36 +112,18 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  // запрос регистрации
-  async function requestRegistrationCode(email, first_name, last_name) {
-    return api.post(API.auth.requestRegistrationCode, { email, first_name, last_name })
+  async function requestCode(email) {
+    return api.post(API.auth.requestCode, { email })
   }
 
-  // запрос кода для входа
-  async function requestLoginCode(email) {
-    return api.post(API.auth.requestLoginCode, { email })
-  }
-
-  // верификация регистрации/авторизации
-  async function verifyCode(endpoint, email, code) {
-    const { data } = await api.post(endpoint, { email, code })
-    if (!data?.access_token || !data?.refresh_token) {
-      console.error('No tokens returned', data)
-      return null
+  async function verifyCode(email, code) {
+    const { data } = await api.post(API.auth.verifyCode, { email, code })
+    if (data.access_token && data.refresh_token) {
+      setTokens({ access: data.access_token, refresh: data.refresh_token })
+      await initializeWebUser()
+    } else {
+      throw new Error('Tokens not returned')
     }
-    setTokens({ access: data.access_token, refresh: data.refresh_token })
-    await initializeWebUser()
-  }
-
-  // переписываем регистрации и логин через общую функцию
-  async function verifyRegistrationCode(email, code) {
-    const profile = await verifyCode(API.auth.verifyRegistrationCode, email, code)
-    if (profile) user.value = profile
-  }
-
-  async function verifyLoginCode(email, code) {
-    const profile = await verifyCode(API.auth.verifyLoginCode, email, code)
-    if (profile) user.value = profile
   }
 
   async function verifyAdminAccess() {
@@ -267,13 +249,9 @@ export const useUserStore = defineStore('user', () => {
 
     // auth/init
     logout,
-    requestRegistrationCode,
-    verifyRegistrationCode,
-    requestLoginCode,
-    verifyLoginCode,
+    requestCode,
+    verifyCode,
     verifyAdminAccess,
-    saveUserToServer,
-    fetchUserProfile,
     updateProfile,
     uploadAvatar,
     deleteAvatar,

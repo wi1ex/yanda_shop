@@ -9,8 +9,8 @@ db = SQLAlchemy()
 class Users(db.Model):
     __tablename__  = 'users'
     user_id        = db.Column(db.BigInteger, primary_key=True)
-    first_name     = db.Column(db.String(50), nullable=False)
-    last_name      = db.Column(db.String(50), nullable=False)
+    first_name     = db.Column(db.String(50), nullable=True)
+    last_name      = db.Column(db.String(50), nullable=True)
     middle_name    = db.Column(db.String(50), nullable=True)
     role           = db.Column(db.String(50), default='customer', nullable=False)
     avatar_url     = db.Column(db.String(200), nullable=True)

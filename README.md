@@ -73,14 +73,18 @@
 
 ## 2. Переменные окружения
 
-| Переменная                                                             | Описание                                |
-| ---------------------------------------------------------------------- | --------------------------------------- |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`              | Параметры подключения к PostgreSQL      |
-| `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`                           | Параметры подключения к Redis           |
-| `MINIO_HOST`, `MINIO_BUCKET`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` | Конфиг MinIO S3                         |
-| `SECRET_KEY`                                                           | Секретный JWT-ключ                      |
-| `BOT_TOKEN`                                                            | Токен Telegram-бота                     |
-| `BACKEND_URL`                                                          | Базовый URL API и ссылок на изображения |
+| Переменные                                                                                          | Описание                                                        |
+|-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------|
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`                                           | Параметры подключения к PostgreSQL                              |
+| `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`                                                        | Параметры подключения к Redis                                   |
+| `MINIO_HOST`, `MINIO_BUCKET`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`                              | Конфиг MinIO S3                                                 |
+| `SECRET_KEY`, `JWT_SECRET_KEY`                                                                      | Секреты приложения (Flask и JWT)                                |
+| `BOT_TOKEN`                                                                                         | Токен Telegram-бота                                             |
+| `BACKEND_URL`                                                                                       | Базовый URL API и корень для ссылок на файлы/изображения        |
+| `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USE_TLS`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER` | Настройки SMTP (сервер, порт, TLS, учётные данные, отправитель) |
+| `DMS_DEBUG`, `LOG_LEVEL`                                                                            | Отладка DMS и уровень логирования                               |
+| `SSL_TYPE`, `SSL_CERT_PATH`, `SSL_KEY_PATH`                                                         | Настройки SSL (тип, путь к сертификату и ключу)                 |
+
 
 ---
 
@@ -122,12 +126,10 @@
 
 ### /api/auth
 
-| Endpoint                          | Method | Description                   |
-|-----------------------------------| ------ |-------------------------------|
-| `/auth/request_registration_code` | POST   | Регистрация: запрос кода      |
-| `/auth/verify_registration_code`  | POST   | Регистрация: верификация кода |
-| `/auth/request_login_code`        | POST   | Авторизация: запрос кода      |
-| `/auth/verify_login_code`         | POST   | Авторизация: верификация кода |
+| Endpoint             | Method | Description      |
+|----------------------| ------ |------------------|
+| `/auth/request_code` | POST   | Запрос кода      |
+| `/auth/verify_code`  | POST   | Верификация кода |
 
 ### /api/admin
 

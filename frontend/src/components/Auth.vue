@@ -4,38 +4,21 @@
       <button class="close-btn" @click="onClose">
         <img :src="icon_close" alt="Закрыть" />
       </button>
+
       <div class="auth-modal">
-        <h2 v-if="mode === 'register'">Регистрация</h2>
-        <h2 v-else>Вход</h2>
+        <h2>Авторизация</h2>
 
         <div v-if="step === 1">
-          <div v-if="mode === 'register'">
-            <input v-model="form.first_name"  placeholder="Имя" />
-            <input v-model="form.last_name"   placeholder="Фамилия" />
-            <input v-model="form.email"       placeholder="E-mail" />
-            <button @click="sendRegisterCode">Получить код</button>
-          </div>
-          <div v-else>
-            <input v-model="form.email" placeholder="E-mail" />
-            <button @click="sendLoginCode">Получить код</button>
-          </div>
+          <input v-model="form.email" type="email" placeholder="E-mail"/>
+          <button @click="sendCode">Получить код</button>
         </div>
 
         <div v-else-if="step === 2">
           <input v-model="form.code" placeholder="Код из письма" />
-          <button v-if="mode === 'register'" @click="verifyRegisterCode">Подтвердить регистрацию</button>
-          <button v-else @click="verifyLoginCode">Войти</button>
+          <button @click="checkCode">Подтвердить</button>
         </div>
 
-        <p class="error" v-if="error">{{ error }}</p>
-
-        <div class="switch-mode">
-          <span v-if="mode === 'register'">Уже есть аккаунт?</span>
-          <span v-else>Нет аккаунта?</span>
-          <button @click="toggleMode">
-            {{ mode === 'register' ? 'Войти' : 'Зарегистрироваться' }}
-          </button>
-        </div>
+        <p v-if="error">{{ error }}</p>
       </div>
     </div>
   </transition>
@@ -44,80 +27,44 @@
 <script setup>
 import { ref } from 'vue'
 import { useStore } from '@/store/index.js'
-
-import icon_close from "@/assets/images/close.svg";
+import icon_close from '@/assets/images/close.svg'
 
 const store = useStore()
-
 const step  = ref(1)
 const error = ref('')
-const mode  = ref('register')
-const form  = ref({ email: '', first_name: '', last_name: '', code: '' })
+const form  = ref({ email: '', code: '' })
+
+function reset() {
+  step.value = 1
+  form.value.email = ''
+  form.value.code = ''
+  error.value = ''
+}
 
 function onClose() {
   store.userStore.closeAuth()
   reset()
 }
 
-function toggleMode() {
-  mode.value = mode.value === 'register' ? 'login' : 'register'
-  reset()
-}
-
-function reset() {
-  step.value = 1
-  form.value = { email: '', first_name: '', last_name: '', code: '' }
-  error.value = ''
-}
-
-async function sendRegisterCode() {
+async function sendCode() {
   error.value = ''
   try {
-    await store.userStore.requestRegistrationCode(
-      form.value.email,
-      form.value.first_name,
-      form.value.last_name
-    )
+    await store.userStore.requestCode(form.value.email)
     step.value = 2
   } catch (e) {
     error.value = e.response?.data?.error || 'Ошибка отправки кода'
   }
 }
 
-async function verifyRegisterCode() {
+async function checkCode() {
   error.value = ''
   try {
-    await store.userStore.verifyRegistrationCode(form.value.email, form.value.code)
-    await onSuccess()
+    await store.userStore.verifyCode(form.value.email, form.value.code)
+    store.userStore.closeAuth()
+    localStorage.removeItem('visitorId')
   } catch (e) {
     error.value = e.response?.data?.error || 'Неверный код'
   }
-}
-
-async function sendLoginCode() {
-  error.value = ''
-  try {
-    await store.userStore.requestLoginCode(form.value.email)
-    step.value = 2
-  } catch (e) {
-    error.value = e.response?.data?.error || 'Ошибка отправки кода'
-  }
-}
-
-async function verifyLoginCode() {
-  error.value = ''
-  try {
-    await store.userStore.verifyLoginCode(form.value.email, form.value.code)
-    await onSuccess()
-  } catch (e) {
-    error.value = e.response?.data?.error || 'Неверный код'
-  }
-}
-
-async function onSuccess() {
-  // после успешной авторизации
-  store.userStore.closeAuth()
-  localStorage.removeItem('visitorId')
 }
 
 </script>
@@ -156,6 +103,11 @@ async function onSuccess() {
     justify-content: center;
     width: 100%;
     height: 100%;
+    h2 {
+      color: grey;
+      margin-top: 8px;
+      text-align: center;
+    }
     input {
       width: 100%;
       margin: 8px 0;
@@ -168,20 +120,10 @@ async function onSuccess() {
       margin-top: 12px;
       cursor: pointer;
     }
-    .error {
+    p {
       color: red;
       margin-top: 8px;
       text-align: center;
-    }
-    .switch-mode {
-      text-align: center;
-      margin-top: 12px;
-      button {
-        background: none;
-        border: none;
-        color: #007bff;
-        cursor: pointer;
-      }
     }
   }
 }

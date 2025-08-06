@@ -26,10 +26,8 @@ export const API = {
     saveFavorites:            '/api/product/save_favorites',            // POST   - сохранить избранное
   },
   auth: {
-    requestRegistrationCode:  '/api/auth/request_registration_code',    // POST   - Регистрация: запрос кода
-    verifyRegistrationCode:   '/api/auth/verify_registration_code',     // POST   - Регистрация: верификация кода
-    requestLoginCode:         '/api/auth/request_login_code',           // POST   - Авторизация: запрос кода
-    verifyLoginCode:          '/api/auth/verify_login_code',            // POST   - Авторизация: верификация кода
+    requestCode:              '/api/auth/request_code',                 // POST   - Запрос кода
+    verifyCode:               '/api/auth/verify_code',                  // POST   - Верификация кода
   },
   admin: {
     setUserRole:              '/api/admin/set_user_role',               // GET    - установить пользователю роль

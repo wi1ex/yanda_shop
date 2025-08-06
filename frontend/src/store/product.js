@@ -351,7 +351,6 @@ export const useProductStore = defineStore('product', () => {
     // Actions
     fetchProducts,
     fetchDetail,
-    buildIndexes,
     changeCategory,
     openSubcats,
     backToCats,
