@@ -119,9 +119,9 @@
         Мои адреса{{ addresses.length ? ` [ ${addresses.length} ]` : '' }}
       </h2>
       <p v-if="!addresses.length && !addressFormVisible">У тебя нет сохранённых адресов.</p>
-      <div v-if="addresses.length">
-        <div v-for="a in addresses" :key="a.id" @click="selectAddress(a.id)">
-          <label class="radio-button">
+      <div v-if="addresses.length && !addressFormVisible" class="list_addresses">
+        <div v-for="a in addresses" class="address" :key="a.id" @click="selectAddress(a.id)">
+          <label class="radio-button address-text">
             <input type="radio" :value="a.id" v-model="selectedAddress" />
             {{ a.full }}
           </label>
@@ -148,8 +148,8 @@
         <input class="info" v-model="addressForm.comment" placeholder="Комментарий курьеру" >
       </div>
       <div v-if="addressFormVisible" class="buttons">
-        <button type="button" class="action-button" @click="saveAddress">Сохранить</button>
-        <button type="button" class="default-button" @click="cancelAddress">Отменить</button>
+        <button type="button" v-if="!addressForm.id" class="action-button" @click="saveAddress">Сохранить</button>
+        <button type="button" v-if="!addressForm.id" class="default-button" @click="cancelAddress">Отменить</button>
         <button type="button" v-if="addressForm.id" class="action-button" @click="deleteAddress(addressForm.id)">Удалить адрес</button>
       </div>
     </div>
@@ -571,6 +571,36 @@ watch(
         gap: 24px;
       }
     }
+    .list_addresses {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 40px;
+      gap: 10px;
+      .address {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 10px;
+        border-radius: 4px;
+        background-color: $white-100;
+        .address-text {
+          font-size: 16px;
+          line-height: 110%;
+          letter-spacing: -0.64px;
+        }
+        button {
+          padding: 0;
+          border: none;
+          background: none;
+          cursor: pointer;
+          img {
+            width: 24px;
+            height: 24px;
+            object-fit: cover;
+          }
+        }
+      }
+    }
     .buttons {
       display: flex;
       flex-direction: column;
@@ -595,6 +625,7 @@ watch(
         border: 1px solid $black-40;
         border-radius: 50%;
         background: none;
+        cursor: pointer;
       }
       input[type="radio"]:checked {
         border-color: $black-100;
