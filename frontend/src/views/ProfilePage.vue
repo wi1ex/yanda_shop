@@ -240,7 +240,7 @@ async function select(sec) {
   }
   if (sec==='addresses') {
     await store.userStore.fetchAddresses()
-    selectedAddress.value = sortedAddresses.find(a => a.selected)?.id || null
+    selectedAddress.value = sortedAddresses.value.find(a => a.selected)?.id || null
   }
 }
 
