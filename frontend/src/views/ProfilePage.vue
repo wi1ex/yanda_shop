@@ -127,12 +127,12 @@
     </div>
 
     <div v-if="currentSection==='addresses'" class="content">
-      <h2 :style="{ marginBottom: (store.userStore.addresses.length || addressFormVisible) ? '40px' : '' }">
-        Мои адреса{{ store.userStore.addresses.length ? ` [ ${store.userStore.addresses.length} ]` : '' }}
+      <h2 :style="{ marginBottom: (sortedAddresses.length || addressFormVisible) ? '40px' : '' }">
+        Мои адреса{{ sortedAddresses.length ? ` [ ${sortedAddresses.length} ]` : '' }}
       </h2>
-      <p v-if="!store.userStore.addresses.length && !addressFormVisible">У тебя нет сохранённых адресов.</p>
-      <div v-if="store.userStore.addresses.length && !addressFormVisible" class="list_addresses">
-        <div v-for="a in store.userStore.addresses" class="address" :key="a.id">
+      <p v-if="!sortedAddresses.length && !addressFormVisible">У тебя нет сохранённых адресов.</p>
+      <div v-if="sortedAddresses.length && !addressFormVisible" class="list_addresses">
+        <div v-for="a in sortedAddresses" class="address" :key="a.id">
           <label class="radio-button address-text" @click="selectAddress(a.id)">
             <input type="radio" :value="a.id" v-model="selectedAddress" />
             {{ a.full }}
@@ -145,7 +145,7 @@
       <button type="button" v-if="!addressFormVisible" class="action-button" @click="editAddress()">Добавить адрес</button>
 
       <div v-if="addressFormVisible" class="card">
-        <label class="card-label">Добавить новый адрес</label>
+        <label class="card-label">{{ addressForm.id ? 'Редактировать адрес' : 'Добавить новый адрес' }}</label>
         <input class="info" v-model="addressForm.city" placeholder="Город*" />
         <input class="info" v-model="addressForm.street" placeholder="Улица*" />
         <input class="info" v-model="addressForm.house" placeholder="Дом, строение, корпус*" />
@@ -214,6 +214,15 @@ const addressForm         = reactive({
   comment: '',
 })
 
+const sortedAddresses = computed(() => {
+  const list = store.userStore.addresses.slice()
+  const primary = list.filter(a => a.selected)
+  const others = list
+    .filter(a => !a.selected)
+    .sort((a, b) => a.full.localeCompare(b.full))
+  return [...primary, ...others]
+})
+
 // Смена раздела
 const backLabel = computed(() => {
   if (store.userStore.orderDetail) return 'К заказам'
@@ -231,7 +240,7 @@ async function select(sec) {
   }
   if (sec==='addresses') {
     await store.userStore.fetchAddresses()
-    selectedAddress.value = store.userStore.addresses.find(a => a.selected)?.id || null
+    selectedAddress.value = sortedAddresses.find(a => a.selected)?.id || null
   }
 }
 

@@ -253,10 +253,10 @@ import icon_hero1_text from "@/assets/images/hero1_text.svg";
 import icon_hero2_text from "@/assets/images/hero2_text.svg";
 import icon_hero3_text from "@/assets/images/hero3_text.svg";
 import icon_hero4_text from "@/assets/images/hero4_text.svg";
-import icon_hero1 from "@/assets/images/hero1.png";
-import icon_hero2 from "@/assets/images/hero2.png";
-import icon_hero3 from "@/assets/images/hero3.png";
-import icon_hero4 from "@/assets/images/hero4.png";
+import icon_hero1 from "@/assets/images/hero1.webp";
+import icon_hero2 from "@/assets/images/hero2.webp";
+import icon_hero3 from "@/assets/images/hero3.webp";
+import icon_hero4 from "@/assets/images/hero4.webp";
 import about_text_logo from "@/assets/images/about_text_logo.svg";
 
 
@@ -858,7 +858,7 @@ onBeforeUnmount(() => {
       display: flex;
       padding: 20px 10px;
       height: 280px;
-      background-image: url('@/assets/images/principle.png');
+      background-image: url('@/assets/images/principle.webp');
       background-size: 125% auto;
       background-position: top;
       background-repeat: no-repeat;
@@ -1060,7 +1060,7 @@ onBeforeUnmount(() => {
     position: relative;
     margin-top: 96px;
     padding: 203px 10px 40px;
-    background-image: url('@/assets/images/request-form.png');
+    background-image: url('@/assets/images/request-form.webp');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
