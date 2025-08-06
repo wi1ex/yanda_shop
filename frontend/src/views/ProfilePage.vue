@@ -69,10 +69,12 @@
     </div>
 
     <div v-if="currentSection==='orders'" class="content">
-      <div v-if="!orders.length" class="empty">
-        У тебя нет оформленных заказов.
+      <div v-if="!orders.length">
+        <h2>Мои заказы</h2>
+        <p>У тебя нет оформленных заказов.</p>
       </div>
       <div v-else>
+        <h2>Мои заказы</h2>
         <div v-for="o in orders" :key="o.id" class="order-card" @click="loadOrder(o.id)">
           <div class="status" :class="o.status">{{ o.statusLabel }}</div>
           <div class="preview">
@@ -122,11 +124,13 @@
     </div>
 
     <div v-if="currentSection==='addresses'" class="content">
-      <div v-if="!addresses.length" class="empty">
-        У тебя нет сохранённых адресов.
+      <div v-if="!addresses.length">
+        <h2>Мои адреса</h2>
+        <p>У тебя нет сохранённых адресов.</p>
         <button type="button" class="add-btn" @click="editAddress()">Добавить адрес</button>
       </div>
       <div v-else>
+        <h2>Мои адреса</h2>
         <div v-for="a in addresses" :key="a.id" class="addr-item" @click="selectAddress(a.id)">
           <label><input type="radio" :value="a.id" v-model="selectedAddress" /> {{ a.full }}</label>
           <button type="button" class="edit" @click.stop="editAddress(a)">›</button>
@@ -161,7 +165,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, nextTick } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRouter } from 'vue-router'
 
@@ -188,20 +192,6 @@ const fileInput = ref()
 const dateInput = ref(null)
 const maxDate = new Date().toISOString().split('T')[0]
 
-const formDirty = computed(() => {
-  const u = store.userStore.user
-  const normPhone = v => String(v||'').replace(/\D/g, '')
-  return (
-    form.first_name  !== (u.first_name  || '') ||
-    form.last_name   !== (u.last_name   || '') ||
-    form.middle_name !== (u.middle_name || '') ||
-    form.gender      !== (u.gender      || '') ||
-    form.date_of_birth !== (u.date_of_birth || '') ||
-    normPhone(form.phone) !== (u.phone  || '') ||
-    form.email       !== (u.email       || '')
-  )
-})
-
 // ORDERS
 const orders      = ref([])
 const orderDetail = ref(null)
@@ -221,10 +211,6 @@ const addressForm         = reactive({
   floor: '',
   comment: '',
 })
-
-function openCalendar() {
-  dateInput.value?.showPicker?.()
-}
 
 // Смена раздела
 async function select(sec) {
@@ -259,7 +245,25 @@ function goBack() {
   }
 }
 
-// PROFILE: загрузка файла
+// PROFILE
+const formDirty = computed(() => {
+  const u = store.userStore.user
+  const normPhone = v => String(v||'').replace(/\D/g, '')
+  return (
+    form.first_name  !== (u.first_name  || '') ||
+    form.last_name   !== (u.last_name   || '') ||
+    form.middle_name !== (u.middle_name || '') ||
+    form.gender      !== (u.gender      || '') ||
+    form.date_of_birth !== (u.date_of_birth || '') ||
+    normPhone(form.phone) !== (u.phone  || '') ||
+    form.email       !== (u.email       || '')
+  )
+})
+
+function openCalendar() {
+  dateInput.value?.showPicker?.()
+}
+
 function triggerFile() {
   fileInput.value.click()
 }
@@ -275,21 +279,57 @@ async function removePhoto() {
   await store.userStore.deleteAvatar()
 }
 
-// PROFILE: сохранить
 async function saveProfile() {
   const fd = new FormData()
   for (const [k, v] of Object.entries(form)) {
     fd.append(k, v ?? '')
   }
   await store.userStore.updateProfile(fd)
+  // Сразу после сохранения сбросим форму из стора
+  const u = store.userStore.user
+  form.first_name    = u.first_name    || ''
+  form.last_name     = u.last_name     || ''
+  form.middle_name   = u.middle_name   || ''
+  form.gender        = u.gender        || ''
+  form.date_of_birth = u.date_of_birth || ''
+  form.phone         = formatPhone(u.phone)
+  form.email         = u.email         || ''
+  // Ждём следующего тика, чтобы formDirty пересчитался
+  await nextTick()
 }
 
-// ORDERS: детали
+function formatPhone(raw = '') {
+  raw = String(raw || '')
+  let d = raw.replace(/\D/g, '').slice(0, 11)
+  if (d && d[0] !== '8') d = '8' + d
+  const [c1, c2, c3, c4, c5] = [
+    d.slice(0,1),
+    d.slice(1,4),
+    d.slice(4,7),
+    d.slice(7,9),
+    d.slice(9,11),
+  ]
+  let out = ''
+  if (c1) out = c1
+  if (c2) out += ` (${c2}`
+  if (c2.length === 3) out += `)`
+  if (c3) out += ` ${c3}`
+  if (c4) out += `-${c4}`
+  if (c5) out += `-${c5}`
+  return out
+}
+
+function onPhoneInput(e) {
+  const formatted = formatPhone(e.target.value)
+  e.target.value = formatted
+  form.phone = formatted
+}
+
+// ORDERS
 async function loadOrder(id) {
   orderDetail.value = await store.userStore.fetchOrder(id)
 }
 
-// ORDERS: повторить
 function repeatOrder(id) {
   // например: store.userStore.repeatOrder(id) → router.push('/checkout')
 }
@@ -335,33 +375,6 @@ async function deleteAddress(id) {
   await store.userStore.deleteAddress(id)
   addresses.value = await store.userStore.fetchAddresses()
   addressFormVisible.value = false
-}
-
-function formatPhone(raw = '') {
-  raw = String(raw || '')
-  let d = raw.replace(/\D/g, '').slice(0, 11)
-  if (d && d[0] !== '8') d = '8' + d
-  const [c1, c2, c3, c4, c5] = [
-    d.slice(0,1),
-    d.slice(1,4),
-    d.slice(4,7),
-    d.slice(7,9),
-    d.slice(9,11),
-  ]
-  let out = ''
-  if (c1) out = c1
-  if (c2) out += ` (${c2}`
-  if (c2.length === 3) out += `)`
-  if (c3) out += ` ${c3}`
-  if (c4) out += `-${c4}`
-  if (c5) out += `-${c5}`
-  return out
-}
-
-function onPhoneInput(e) {
-  const formatted = formatPhone(e.target.value)
-  e.target.value = formatted
-  form.phone = formatted
 }
 
 watch(
