@@ -1200,7 +1200,6 @@ onBeforeUnmount(() => {
       }
       .product-img {
         display: flex;
-        padding: 40px 24px;
         height: 100%;
         img {
           width: 100%;

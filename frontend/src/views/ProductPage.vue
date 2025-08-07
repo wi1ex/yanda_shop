@@ -677,6 +677,7 @@ onMounted(init)
               font-size: 15px;
               line-height: 100%;
               letter-spacing: -0.6px;
+              transition: all 0.25s ease-in-out;
               &.active {
                 background-color: $black-100;
                 color: $white-100;
@@ -690,6 +691,7 @@ onMounted(init)
               border-radius: 4px;
               cursor: pointer;
               background-color: $white-40;
+              transition: all 0.25s ease-in-out;
               .color-thumb {
                 width: 50px;
                 height: 50px;
@@ -714,6 +716,7 @@ onMounted(init)
               font-size: 15px;
               line-height: 100%;
               letter-spacing: -0.6px;
+              transition: all 0.25s ease-in-out;
               .delivery-price {
                 font-size: 12px;
                 line-height: 80%;
@@ -859,6 +862,7 @@ onMounted(init)
           img {
             width: 20px;
             height: 20px;
+            transition: all 0.25s ease-in-out;
           }
         }
         .section-body {
