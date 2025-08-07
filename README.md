@@ -39,34 +39,43 @@
 
 ### Технологический стек
 
-| Компонент             | Технология              | Версия         |
-|-----------------------| ----------------------- | -------------- |
-| Язык программирования | Python                  | 3.11           |
-| Веб-фреймворк         | Flask                   | 3.1.1          |
-| CORS                  | flask-cors              | 6.0.1          |
-| WSGI-сервер           | Gunicorn                | 23.0.0         |
-| ORM                   | Flask-SQLAlchemy        | 3.1.1          |
-| Драйвер PostgreSQL    | psycopg2-binary         | 2.9.10         |
-| Миграции              | Flask-Migrate / Alembic | 4.1.0 / 1.16.2 |
-| Клиент Redis          | redis-py                | 6.2.0          |
-| Клиент MinIO          | minio                   | 7.2.15         |
-| HTTP-клиент           | requests                | 2.32.4         |
-| Retry-логика          | tenacity                | 9.1.2          |
-| JWT-аутентификация    | Flask-JWT-Extended      | 4.7.1          |
-| Telegram-бот          | aiogram                 | 3.10.0         |
-| База данных           | PostgreSQL              | 17             |
-| Кэш и сессии          | Redis                   | 7              |
-| Объектное хранилище   | MinIO                   | latest         |
-| Reverse proxy         | Nginx                   | 1.25.x         |
-| Рантайм фронтенда     | Node.js                 | 20.x           |
-| SPA-фреймворк         | Vue.js                  | 3.5.17         |
-| Маршрутизация         | Vue Router              | 4.5.1          |
-| State management      | Pinia                   | 3.0.3          |
-| HTTP-клиент (фронт)   | Axios                   | 1.10.0         |
-| Сборщик               | Vite                    | 7.0.0          |
-| Плагин Vue для Vite   | @vitejs/plugin-vue      | 6.0.0          |
-| CSS-препроцессор      | Sass                    | 1.89.2         |
-| Статический сервер    | serve                   | 14.2.4         |
+| Компонент            | Технология              | Версия          |
+|----------------------|-------------------------|-----------------|
+| Язык                 | Python                  | 3.11            |
+| Веб-фреймворк        | Flask                   | 3.1.1           |
+| ORM                  | Flask-SQLAlchemy        | 3.1.1           |
+| Миграции             | Flask-Migrate           | 4.1.0           |
+| Алхимик (Alembic)    | Alembic                 | 1.16.4          |
+| WSGI-сервер          | Gunicorn                | 23.0.0          |
+| PostgreSQL-драйвер   | psycopg2-binary         | 2.9.10          |
+| База данных          | PostgreSQL              | 17              |
+| Кэш и сессии         | Redis                   | 7               |
+| Клиент Redis         | redis-py                | 6.2.0           |
+| Объектное хранилище  | MinIO                   | latest          |
+| Клиент MinIO         | minio                   | 7.2.16          |
+| HTTP-клиент (бэкенд) | requests                | 2.32.4          |
+| Retry-логика         | tenacity                | 9.1.2           |
+| JWT-аутентификация   | Flask-JWT-Extended      | 4.7.1           |
+| Почтовый модуль      | Flask-Mail              | 0.10.0          |
+| Валидация email      | email-validator         | 2.2.0           |
+| Телеграм-бот         | aiogram                 | 3.21.0          |
+| Shell-скрипты        | bash (backup/restore)   | —               |
+| CI/CD                | GitHub Actions          | —               |
+| Reverse proxy        | Nginx                   | latest (1.25.x) |
+| SSL                  | Certbot                 | latest          |
+| Контейнеризация      | Docker / Docker Compose | 24.x / 2.x      |
+| Рантайм фронтенда    | Node.js                 | 20.x            |
+| SPA-фреймворк        | Vue.js                  | 3.5.18          |
+| Маршрутизация        | Vue Router              | 4.5.1           |
+| State management     | Pinia                   | 3.0.3           |
+| HTTP-клиент (фронт)  | Axios                   | 1.11.0          |
+| Сборщик              | Vite                    | 7.0.6           |
+| Плагин Vue для Vite  | @vitejs/plugin-vue      | 6.0.1           |
+| CSS-препроцессор     | Sass                    | 1.89.2          |
+| Статический сервер   | serve                   | 14.2.4          |
+| Почтовый сервер      | Docker Mailserver       | latest          |
+| Web-mail             | RainLoop                | alpine/latest   |
+| Локальная разработка | flake8, black, isort    | —               |
 
 
 ---
@@ -90,7 +99,7 @@
 
 ## 3. Справочник API
 
-Базовый URL: `https://shop.yourdomain.com/api`
+Базовый URL: `https://yourdomain.com/api`
 
 ### /api/general
 
