@@ -135,7 +135,7 @@
       <table>
         <thead>
           <tr>
-            <th>Админ-права</th>
+            <th>Админ</th>
             <th v-for="col in userColumns" :key="col">{{ col }}</th>
           </tr>
         </thead>
