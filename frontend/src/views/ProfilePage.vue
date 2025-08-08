@@ -87,7 +87,7 @@
               <p class="timeline-date">{{ o.created_at }}</p>
               <p class="timeline-text">Дата заказа</p>
             </div>
-            <div class="timeline-vector" v-if="o.status !== 'Выполнен' && o.status !== 'Отменен'">
+            <div class="timeline-vector" v-if="o.status !== 'Выполнен' && o.status !== 'Отменен'" style="margin-top: 6px;">
               <img :src="icon_order_dot" alt="timeline" />
               <img :src="icon_order_line" alt="timeline" />
               <img :src="icon_order_dot" alt="timeline" />
@@ -783,7 +783,7 @@ onMounted(async () => {
               line-height: 90%;
               letter-spacing: -1px;
               &.processed {
-                background-color: $black-40;
+                color: $black-40;
               }
             }
             .timeline-text {
