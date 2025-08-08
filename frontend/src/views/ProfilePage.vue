@@ -90,7 +90,7 @@
             <div class="timeline-vector" v-if="o.status !== 'Выполнен' && o.status !== 'Отменен'">
               <img :src="icon_order_dot" alt="timeline" />
               <img :src="icon_order_line" alt="timeline" />
-              <img :src="icon_order_done" alt="timeline" />
+              <img :src="icon_order_dot" alt="timeline" />
             </div>
             <div class="timeline-vector" v-if="o.status === 'Выполнен'">
               <img :src="icon_order_dot" alt="timeline" />
@@ -98,13 +98,16 @@
               <img :src="icon_order_done" alt="timeline" />
             </div>
             <div class="timeline-div" v-if="o.status !== 'Отменен'">
-              <p class="timeline-date">{{ o.delivery_date }}</p>
+              <p class="timeline-date" :class="o.status !== 'Выполнен' ? 'processed' : ''">{{ o.delivery_date }}</p>
               <p class="timeline-text">{{ o.status === 'Выполнен' ? o.status : 'Получение' }}</p>
             </div>
           </div>
           <div class="total">
-            <p>Итог: {{ formatPrice(o.total) }} ₽</p>
-            <button type="button" @click="loadOrder(o.id)">
+            <p class="total-text">
+              Итог:
+              <span class="total-price">{{ formatPrice(o.total) }} ₽</span>
+            </p>
+            <button type="button" class="total-button" @click="loadOrder(o.id)">
               Перейти
               <img :src="icon_arrow_grey" alt="arrow right" style="transform: rotate(180deg)" />
             </button>
@@ -765,15 +768,82 @@ onMounted(async () => {
         }
         .timeline {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           gap: 8px;
           .timeline-div {
             display: flex;
             flex-direction: column;
+            gap: 8px;
+            .timeline-date {
+              margin: 0;
+              color: $black-100;
+              font-family: Bounded;
+              font-size: 20px;
+              font-weight: 300;
+              line-height: 90%;
+              letter-spacing: -1px;
+              &.processed {
+                background-color: $black-40;
+              }
+            }
+            .timeline-text {
+              margin: 0;
+              width: max-content;
+              color: $black-40;
+              font-size: 14px;
+              line-height: 100%;
+              letter-spacing: -0.56px;
+            }
           }
           .timeline-vector {
             display: flex;
             align-items: center;
+            width: 100%;
+            img:nth-child(2) {
+              flex: 1;
+              width: 100%;
+              height: 1px;
+              object-fit: cover;
+            }
+          }
+        }
+        .total {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          .total-text {
+            margin: 0;
+            color: $grey-20;
+            font-size: 15px;
+            line-height: 100%;
+            letter-spacing: -0.6px;
+            .total-price {
+              margin: 0 0 0 8px;
+              color: $black-100;
+              font-family: Bounded;
+              font-size: 20px;
+              font-weight: 300;
+              line-height: 90%;
+              letter-spacing: -1px;
+            }
+          }
+          .total-button {
+            display: flex;
+            align-items: center;
+            padding: 0;
+            gap: 4px;
+            border: none;
+            background: none;
+            color: $black-100;
+            font-size: 16px;
+            line-height: 100%;
+            letter-spacing: -0.64px;
+            cursor: pointer;
+            img {
+              width: 24px;
+              height: 24px;
+              object-fit: cover;
+            }
           }
         }
       }
