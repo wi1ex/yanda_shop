@@ -9,6 +9,7 @@ export const API = {
     getParameters:            '/api/general/get_parameters',            // GET    - получить публичные настройки
     listReviews:              '/api/general/list_reviews',              // GET    - получить список отзывов
     createRequest:            '/api/general/create_request',            // POST   - отправить заявку на поиск товара
+    createOrder:              '/api/general/create_order',              // POST   - создать новый заказ
     getUserOrders:            '/api/general/get_user_orders',           // GET    - получить список заказов
     getUserOrder:             '/api/general/get_user_order',            // GET    - получить детали заказа
     listAddresses:            '/api/general/list_addresses',            // GET    - получить список адресов

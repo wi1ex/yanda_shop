@@ -67,7 +67,7 @@
         </div>
 
         <div class="cart-action" v-if="store.cartStore.cart.items.length">
-          <button type="button" v-if="store.userStore.isAuthenticated()" class="action-button" @click="store.cartStore.checkout">
+          <button type="button" v-if="store.userStore.isAuthenticated()" class="action-button" @click="onCheckout">
             Оформить заказ
           </button>
           <button type="button" v-else class="action-button" @click="onRegister">
@@ -103,11 +103,8 @@ function formatPrice(val) {
 }
 
 function onRegister() {
-  if (store.tg && store.tg.open) {
-    store.tg.open();
-  } else {
-    alert('Пожалуйста, авторизуйтесь');
-  }
+  store.cartStore.closeCartDrawer()
+  store.userStore.openAuth()
 }
 
 function goToCatalog() {
@@ -115,6 +112,17 @@ function goToCatalog() {
   store.productStore.selectedCategory = ''
   router.push({ name: 'Catalog' })
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+async function onCheckout() {
+  const data = await store.cartStore.checkout();
+  store.cartStore.closeCartDrawer();
+  if (data) {
+    router.push({ name: "Profile", query: { section: "orders" } });
+  } else {
+    alert("Нет основного адреса для оформления заказа");
+    router.push({ name: 'Profile', query: { section: 'addresses' } })
+  }
 }
 
 </script>

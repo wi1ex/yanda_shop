@@ -6,14 +6,12 @@ import { useUserStore } from './user';
 
 export const useCartStore = defineStore('cart', () => {
   // Cart contents
-  const cartOrder = ref([]);
   const cart = ref({ count: 0, total: 0, items: [] });
-  const cartLoaded = ref(false);
   const showCart = ref(false);
+  const deliveryPrice = ref(0)
 
   // Favorites
   const favorites = ref({ items: [], count: 0 });
-  const favoritesLoaded = ref(false);
 
   // Dependencies
   const userStore = useUserStore();
@@ -25,9 +23,6 @@ export const useCartStore = defineStore('cart', () => {
       if (newId && userStore.isAuthenticated(newId)) {
         loadCartFromServer();
         loadFavoritesFromServer();
-      } else {
-        cartLoaded.value = true;
-        favoritesLoaded.value = true;
       }
     }
   );
@@ -35,14 +30,12 @@ export const useCartStore = defineStore('cart', () => {
   // Actions
 
   // --- Cart operations ---
-
   async function loadCartFromServer() {
-    const userId = userStore.user.id;
     if (!userStore.isAuthenticated()) {
-      cartLoaded.value = true;
       return;
     }
 
+    const userId = userStore.user.id;
     try {
       const { data } = await api.get(API.product.getCart, {
         params: { user_id: userId },
@@ -51,14 +44,9 @@ export const useCartStore = defineStore('cart', () => {
         cart.value.items = data.items;
         cart.value.count = data.count;
         cart.value.total = data.total;
-        cartOrder.value = Array.from(
-          new Set(data.items.map((i) => i.variant_sku))
-        );
       }
     } catch (e) {
       console.error('Cannot load cart:', e);
-    } finally {
-      cartLoaded.value = true;
     }
   }
 
@@ -104,7 +92,6 @@ export const useCartStore = defineStore('cart', () => {
       cart.value.total += unitPrice;
       const id = `${Date.now()}-${Math.random()}`;
       cart.value.items.push({ ...product, id, unit_price: unitPrice });
-      cartOrder.value.push(product.variant_sku);
     }
 
     saveCartToServer();
@@ -145,9 +132,6 @@ export const useCartStore = defineStore('cart', () => {
             i.delivery_option?.label === product.delivery_option?.label
           )
       );
-      cartOrder.value = cartOrder.value.filter(
-        (sku) => sku !== product.variant_sku
-      );
     }
 
     saveCartToServer();
@@ -161,10 +145,43 @@ export const useCartStore = defineStore('cart', () => {
     ).length;
   }
 
-  function checkout() {
-    cart.value = { count: 0, total: 0, items: [] };
-    cartOrder.value = [];
-    saveCartToServer();
+  async function checkout() {
+    if (!userStore.isAuthenticated()) return;
+    try {
+      // Получаем основной адрес из userStore
+      const primary = userStore.addresses.find(a => a.selected);
+      if (!primary) {
+        return false;
+      }
+      // 2) Формируем payload из groupedCartItems
+      const items = groupedCartItems.value.map(item => ({
+        variant_sku:     item.variant_sku,
+        price:           item.unit_price,
+        qty:             item.quantity,
+        delivery_option: item.delivery_option?.label || null,
+        image_url:       item.image,
+        brand:           item.brand,
+        name:            item.name,
+        size_label:      item.size_label,
+      }))
+      deliveryPrice.value = 400
+      const payload = {
+        items,
+        address_id:     primary.id,
+        payment_method: "online",
+        delivery_type:  "standard",
+        delivery_price: deliveryPrice.value,
+      }
+      // Отправляем заказ
+      const { data } = await api.post(API.general.createOrder, payload);
+      // Очищаем корзину
+      cart.value = { count: 0, total: 0, items: [] };
+      deliveryPrice.value = 0;
+      await saveCartToServer();
+      return data.order_id;
+    } catch (e) {
+      console.error("checkout error:", e);
+    }
   }
 
   const groupedCartItems = computed(() => {
@@ -172,10 +189,9 @@ export const useCartStore = defineStore('cart', () => {
     cart.value.items.forEach((item) => {
       const key = `${item.variant_sku}_${item.delivery_option?.label}`;
       if (!map[key]) {
-        map[key] = { ...item, quantity: 0, totalPrice: 0 };
+        map[key] = { ...item, quantity: 0 };
       }
       map[key].quantity++;
-      map[key].totalPrice += item.price;
     });
     return Object.values(map);
   });
@@ -183,12 +199,11 @@ export const useCartStore = defineStore('cart', () => {
   // --- Favorites operations ---
 
   async function loadFavoritesFromServer() {
-    const userId = userStore.user.id;
     if (!userStore.isAuthenticated()) {
-      favoritesLoaded.value = true;
       return;
     }
 
+    const userId = userStore.user.id;
     try {
       const { data } = await api.get(API.product.getFavorites, {
         params: { user_id: userId },
@@ -197,8 +212,6 @@ export const useCartStore = defineStore('cart', () => {
       favorites.value.count = data.count || favorites.value.items.length;
     } catch (e) {
       console.error('Cannot load favorites:', e);
-    } finally {
-      favoritesLoaded.value = true;
     }
   }
 
@@ -238,9 +251,7 @@ export const useCartStore = defineStore('cart', () => {
 
   return {
     // Cart state & actions
-    cartOrder,
     cart,
-    cartLoaded,
     showCart,
     openCartDrawer,
     closeCartDrawer,
@@ -253,7 +264,6 @@ export const useCartStore = defineStore('cart', () => {
 
     // Favorites state & actions
     favorites,
-    favoritesLoaded,
     loadFavoritesFromServer,
     addToFavorites,
     removeFromFavorites,

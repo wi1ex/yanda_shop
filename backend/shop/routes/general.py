@@ -1,6 +1,5 @@
 import io
 import os
-import re
 import json
 import requests
 from datetime import datetime
@@ -381,6 +380,73 @@ def create_request() -> Tuple[Response, int]:
     return jsonify({"status": "ok"}), 201
 
 
+@general_api.route("/create_order", methods=["POST"])
+@jwt_required()
+@handle_errors
+@require_json("items")
+def create_order() -> Tuple[Response, int]:
+    """
+    POST /api/general/create_order
+    JSON body:
+      - items: список объектов { variant_sku, price, qty, delivery_option }
+      - address_id
+      - payment_method
+      - delivery_type
+    """
+    user_id = int(get_jwt_identity())
+    data = request.get_json()
+    items = data.get("items", [])
+    logger.debug("create_order: user_id=%s", user_id)
+
+    if not isinstance(items, list) or not items:
+        logger.warning("create_order: invalid or empty items for user_id=%d", user_id)
+        return jsonify({"error": "items must be a non-empty list"}), 400
+
+    # Определяем адрес доставки
+    address_id = data.get("address_id")
+    with session_scope() as session:
+        if not address_id:
+            primary = session.query(Addresses).filter_by(user_id=user_id, select=True).first()
+            if not primary:
+                logger.warning("create_order: no primary address for user_id=%d", user_id)
+                return jsonify({"error": "No primary address set"}), 400
+            address_id = primary.id
+
+        # Подсчёт суммы товаров
+        subtotal = 0
+        for it in items:
+            price = it.get("price") or 0
+            qty = it.get("qty") or 0
+            subtotal += price * qty
+
+        # Параметры оплаты и доставки
+        payment_method = data.get("payment_method", "online")
+        delivery_type = data.get("delivery_type", "standard")
+        delivery_price = data.get("delivery_price", 0)
+        total = subtotal + delivery_price
+
+        # Создаём заказ
+        order = Orders(
+            user_id=user_id,
+            items_json=items,
+            address_id=address_id,
+            payment_method=payment_method,
+            delivery_type=delivery_type,
+            delivery_price=delivery_price,
+            total=total,
+        )
+        session.add(order)
+        session.flush()
+        order_id = order.id
+
+        # Логируем создание
+        log_change("Создание заказа", f"order_id={order_id} user_id={user_id} subtotal={subtotal} total={total}")
+        logger.debug("create_order: created order_id=%d for user_id=%d subtotal=%.2f total=%.2f address_id=%d",
+                     order_id, user_id, subtotal, total, address_id)
+
+    return jsonify({"order_id": order_id}), 201
+
+
 @general_api.route("/get_user_orders", methods=["GET"])
 @jwt_required()
 @handle_errors
@@ -447,7 +513,6 @@ def get_user_order(order_id: int) -> Tuple[Response, int]:
         ]
 
         items = o.items_json
-
         addr = session.get(Addresses, o.address_id) if o.address_id else None
         delivery_address = None
         if addr:

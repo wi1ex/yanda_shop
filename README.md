@@ -226,7 +226,7 @@ certbot renew --force-renewal
 
 ```bash
 # npm install локально для обновления package-lock.json
-# Запись домена (помимо .env) в store.js, nginx.conf и BotFather
+# Запись домена (помимо .env) в api.js, nginx.conf и BotFather
 
 # Обновляем код
 cd /root/app/yanda_shop
