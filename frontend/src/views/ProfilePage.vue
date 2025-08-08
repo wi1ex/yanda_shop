@@ -76,7 +76,7 @@
         <div v-for="o in store.userStore.orders" :key="o.id" class="order-card" @click="loadOrder(o.id)">
           <div class="status" :class="o.status">{{ o.statusLabel }}</div>
           <div class="preview">
-            <img v-for="it in o.items.slice(0,3)" :src="it.image_url" :key="it.sku"  alt="image"/>
+            <img v-for="it in o.items.slice(0,3)" :src="it.image_url" :key="it.variant_sku"  alt="image"/>
           </div>
           <div class="timeline">
             <span v-for="(d, idx) in o.datesFormated" :key="idx">{{ d }}</span>
@@ -104,18 +104,18 @@
             <p class="bold">Итог: {{ store.userStore.orderDetail.total }} ₽</p>
           </div>
           <div class="items">
-            <div v-for="it in store.userStore.orderDetail.items" :key="it.sku" class="item">
+            <div v-for="it in store.userStore.orderDetail.items" :key="it.variant_sku" class="item">
               <img :src="it.image_url"  alt="image"/>
               <div>
                 <p class="title">{{ it.brand }} {{ it.name }}</p>
-                <p>Артикул: {{ it.sku }}</p>
+                <p>Артикул: {{ it.variant_sku }}</p>
                 <p>Кол-во: {{ it.qty }}</p>
-                <p>Размер: {{ it.size }}</p>
-                <p>Доставка: {{ it.delivery_period }}</p>
+                <p>Размер: {{ it.size_label }}</p>
+                <p>Доставка: {{ it.delivery_option }}</p>
               </div>
             </div>
           </div>
-          <button type="button" v-if="store.userStore.orderDetail.canRepeat" class="repeat" @click="repeatOrder(store.userStore.orderDetail.id)">Повторить заказ</button>
+<!--          <button type="button" v-if="store.userStore.orderDetail.canRepeat" class="repeat" @click="repeatOrder(store.userStore.orderDetail.id)">Повторить заказ</button>-->
         </div>
       </div>
 
@@ -178,7 +178,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useStore } from '@/store/index.js'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
 import icon_arrow_grey from "@/assets/images/arrow_grey.svg";
@@ -186,6 +186,7 @@ import icon_arrow_mini_black from "@/assets/images/arrow_mini_black.svg";
 import icon_arrow_mini_red from "@/assets/images/arrow_mini_red.svg";
 
 const store = useStore()
+const route = useRoute()
 const router = useRouter()
 
 // UI-state
@@ -352,9 +353,9 @@ async function loadOrder(id) {
   await store.userStore.fetchOrder(id)
 }
 
-function repeatOrder(id) {
-  // например: store.userStore.repeatOrder(id) → router.push('/checkout')
-}
+// function repeatOrder(id) {
+//   // например: store.userStore.repeatOrder(id) → router.push('/checkout')
+// }
 
 // ADDRESSES
 const addressFormDirty = computed(() => {
@@ -443,10 +444,17 @@ watch(
   { immediate: true }
 )
 
+watch(() => route.query.section, sec => {
+  if (sec) select(sec)
+})
+
 onMounted(async () => {
   await store.userStore.fetchOrders()
   await store.userStore.fetchAddresses()
   selectedAddress.value = sortedAddresses.value.find(a => a.selected)?.id || null
+  if (route.query.section) {
+    currentSection.value = route.query.section
+  }
 })
 
 </script>

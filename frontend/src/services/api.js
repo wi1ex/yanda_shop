@@ -41,7 +41,7 @@ api.interceptors.request.use(
     if (isRefreshCall) {
       return config;
     }
-    const store = useUserStore();
+    const userStore = useUserStore();
     let access = localStorage.getItem('accessToken');
     const refresh = localStorage.getItem('refreshToken');
     if (access && refresh) {
@@ -52,7 +52,7 @@ api.interceptors.request.use(
         try {
           access = await silentRefresh(refresh);
           localStorage.setItem('accessToken', access);
-          store.setTokens({ access, refresh });
+          userStore.setTokens({ access, refresh });
         } catch (e) {
           console.error('Silent refresh failed:', e);
         }
@@ -77,13 +77,13 @@ api.interceptors.response.use(
       try {
         const newAccess = await silentRefresh(refresh);
         localStorage.setItem('accessToken', newAccess);
-        const store = useUserStore();
-        store.setTokens({ access: newAccess, refresh });
+        const userStore = useUserStore();
+        userStore.setTokens({ access: newAccess, refresh });
         original.headers.Authorization = `Bearer ${newAccess}`;
         return api(original);
       } catch {
-        const store = useUserStore();
-        await store.logout();
+        const userStore = useUserStore();
+        await userStore.logout();
         window.location.href = '/';
       }
     }

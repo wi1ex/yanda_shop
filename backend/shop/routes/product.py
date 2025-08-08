@@ -97,6 +97,8 @@ def get_cart() -> Tuple[Response, int]:
     records = payload.get("items", [])
 
     # Собираем список SKU и пометок доставки
+    total = 0
+    result_items = []
     skus = [rec.get("variant_sku") for rec in records]
     # Затем загружаем товары разом
     with session_scope() as session:
@@ -105,24 +107,23 @@ def get_cart() -> Tuple[Response, int]:
         accessories = session.query(Accessory).filter(Accessory.variant_sku.in_(skus)).all()
         obj_map = {obj.variant_sku: obj for obj in shoes + clothing + accessories}
 
-    total = 0
-    result_items = []
-    for rec in records:
-        sku = rec.get("variant_sku")
-        label = rec.get("delivery_label")
-        obj = obj_map.get(sku)
-        if not obj:
-            logger.warning("get_cart: item %r not found, skipping", sku)
-            continue
+        for rec in records:
+            sku = rec.get("variant_sku")
+            label = rec.get("delivery_label")
+            obj = obj_map.get(sku)
+            if not obj:
+                logger.warning("get_cart: item %r not found, skipping", sku)
+                continue
 
-        data = serialize_product(obj)
-        opt = next((o for o in data["delivery_options"] if o["label"] == label), None)
-        unit_price = round(obj.price * (opt["multiplier"] if opt else 1))
-        data["unit_price"] = unit_price
-        data["delivery_option"] = opt
+            data = serialize_product(obj)
+            opt = next((o for o in data["delivery_options"] if o["label"] == label), None)
+            unit_price = round(obj.price * (opt["multiplier"] if opt else 1))
 
-        result_items.append(data)
-        total += unit_price
+            data["unit_price"] = unit_price
+            data["delivery_option"] = opt
+
+            result_items.append(data)
+            total += unit_price
 
     logger.debug("get_cart: returning %d items, total=%d", len(result_items), total)
     return jsonify({"items": result_items, "count": len(result_items), "total": total}), 200

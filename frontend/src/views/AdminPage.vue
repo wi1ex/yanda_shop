@@ -570,7 +570,7 @@ onMounted(() => {
   store.adminStore.fetchRequests()
 })
 
-// Когда store.settings обновляются — заполняем localSettings и снимаем снимок
+// Когда store.adminStore.settings обновляются — заполняем localSettings и снимаем снимок
 watch(
   () => store.adminStore.settings,
   (newSettings) => {
