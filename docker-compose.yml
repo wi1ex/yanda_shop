@@ -30,8 +30,6 @@ services:
       - "yes"
       - --appendfsync
       - "everysec"
-#    ports:
-#      - "6379:6379"
     expose:
       - "6379"
     volumes:
@@ -45,8 +43,6 @@ services:
     container_name: minio
     env_file: .env
     command: server /data
-#    ports:
-#      - "9000:9000"
     expose:
       - "9000"
     volumes:
