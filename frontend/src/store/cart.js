@@ -153,9 +153,10 @@ export const useCartStore = defineStore('cart', () => {
         await userStore.fetchAddresses();
       }
 
-      // Получаем основной адрес из userStore
+      // Проверяем, что в профиле заполнены адрес, ФИО, телефон и почта
       const primary = userStore.addresses.find(a => a.selected);
-      if (!primary) {
+      const { first_name, last_name, middle_name, phone, email } = userStore.user;
+      if (!primary || !first_name || !last_name || !middle_name || !phone || !email) {
         return false;
       }
 
@@ -195,6 +196,9 @@ export const useCartStore = defineStore('cart', () => {
         delivery_date:  delivery_date,
         first_name:     userStore.user.first_name,
         last_name:      userStore.user.last_name,
+        middle_name:    userStore.user.middle_name,
+        phone:          userStore.user.phone,
+        email:          userStore.user.email,
       }
 
       // Отправляем заказ и очищаем корзину
