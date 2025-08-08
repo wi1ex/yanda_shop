@@ -485,7 +485,6 @@ def get_user_orders() -> Tuple[Response, int]:
             out.append({
                 "id":            o.id,
                 "status":        o.status,
-                "statusLabel":   o.status.title(),
                 "items":         o.items_json,
                 "created_at":    o.created_at.strftime("%d.%m"),
                 "total":         o.total,
@@ -537,7 +536,7 @@ def get_user_order(order_id: int) -> Tuple[Response, int]:
 
         result = {
             "id":               o.id,
-            "statusLabel":      o.status.title(),
+            "status":           o.status,
             "timeline":         timeline,
             "payment_method":   o.payment_method,
             "delivery_type":    o.delivery_type,

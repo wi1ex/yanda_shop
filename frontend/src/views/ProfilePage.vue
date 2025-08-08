@@ -71,8 +71,8 @@
       <div v-if="store.userStore.orders.length" class="order-cards">
         <div v-for="o in store.userStore.orders" :key="o.id" class="order-card">
           <div class="status-div">
-            <div class="status-block" :class="o.statusLabel === 'Отменен' ? 'canceled' : o.statusLabel === 'Выполнен' ? 'completed' : ''">
-              {{ o.statusLabel }}
+            <div class="status-block" :class="o.status === 'Отменен' ? 'canceled' : o.status === 'Выполнен' ? 'completed' : ''">
+              {{ o.status }}
             </div>
             <p class="order-id">#{{ o.id }}</p>
           </div>
@@ -97,7 +97,7 @@
       </div>
 
       <div v-if="store.userStore.orderDetail" class="order-detail">
-        <h2>#{{ store.userStore.orderDetail.id }} <span class="status">{{ store.userStore.orderDetail.statusLabel }}</span></h2>
+        <h2>#{{ store.userStore.orderDetail.id }} <span class="status">{{ store.userStore.orderDetail.status }}</span></h2>
         <div class="timeline-full">
           <div v-for="(stage, idx) in store.userStore.orderDetail.timeline" :key="idx" class="stage">
             <div class="dot">{{ stage.done }}</div>
