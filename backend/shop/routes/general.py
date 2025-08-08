@@ -398,6 +398,15 @@ def create_order() -> Tuple[Response, int]:
     items = data.get("items", [])
     logger.debug("create_order: user_id=%s", user_id)
 
+    est_str = data.get("delivery_date")  # строка "YYYY-MM-DD"
+    est_date = None
+    if est_str:
+        try:
+            est_dt = datetime.fromisoformat(est_str.replace("Z", "+00:00"))
+        except ValueError:
+            logger.warning("create_order: invalid delivery_date %s", est_str)
+            return jsonify({"error": "Invalid delivery_date"}), 400
+
     if not isinstance(items, list) or not items:
         logger.warning("create_order: invalid or empty items for user_id=%d", user_id)
         return jsonify({"error": "items must be a non-empty list"}), 400
@@ -428,9 +437,10 @@ def create_order() -> Tuple[Response, int]:
         # Создаём заказ
         order = Orders(
             user_id=user_id,
-            status='Дата заказа',
+            status='В обработке',
             items_json=items,
             address_id=address_id,
+            delivery_date=est_date,
             payment_method=payment_method,
             delivery_type=delivery_type,
             delivery_price=delivery_price,
@@ -469,24 +479,14 @@ def get_user_orders() -> Tuple[Response, int]:
         )
         out: List[Dict[str, Any]] = []
         for o in qs:
-            preview = o.items_json
-            dates = [
-                o.created_at.strftime("%d.%m"),
-                *(o.processed_at and [o.processed_at.strftime("%d.%m")] or []),
-                *(o.purchased_at and [o.purchased_at.strftime("%d.%m")] or []),
-                *(o.assembled_at and [o.assembled_at.strftime("%d.%m")] or []),
-                *(o.shipped_at and [o.shipped_at.strftime("%d.%m")] or []),
-                *(o.transferred_at and [o.transferred_at.strftime("%d.%m")] or []),
-                *(o.delivered_at and [o.delivered_at.strftime("%d.%m")] or []),
-                *(o.completed_at and [o.completed_at.strftime("%d.%m")] or []),
-            ]
             out.append({
                 "id":            o.id,
                 "status":        o.status,
                 "statusLabel":   o.status.title(),
-                "items":         preview,
-                "datesFormated": dates,
+                "items":         o.items_json,
+                "created_at":    o.created_at.strftime("%d.%m"),
                 "total":         o.total,
+                "delivery_date": o.delivery_date.strftime("%d.%m"),
             })
 
     logger.debug("get_user_orders: returned %d orders", len(out))
@@ -512,13 +512,15 @@ def get_user_order(order_id: int) -> Tuple[Response, int]:
 
         timeline = [
             {"label": "Дата заказа", "date": o.created_at.strftime("%d.%m"), "done": True},
-            {"label": "В обработке", "date": o.processed_at.strftime("%d.%m") if o.processed_at else None, "done": bool(o.processed_at)},
+            {"label": "В обработке", "date": o.processed_at.strftime("%d.%m"), "done": True},
             {"label": "Выкуплен", "date": o.purchased_at.strftime("%d.%m") if o.purchased_at else None, "done": bool(o.purchased_at)},
             {"label": "Собран", "date": o.assembled_at.strftime("%d.%m") if o.assembled_at else None, "done": bool(o.assembled_at)},
             {"label": "В пути", "date": o.shipped_at.strftime("%d.%m") if o.shipped_at else None, "done": bool(o.shipped_at)},
             {"label": "Передан в доставку", "date": o.transferred_at.strftime("%d.%m") if o.transferred_at else None, "done": bool(o.transferred_at)},
             {"label": "Доставка", "date": o.delivered_at.strftime("%d.%m") if o.delivered_at else None, "done": bool(o.delivered_at)},
             {"label": "Выполнен", "date": o.completed_at.strftime("%d.%m") if o.completed_at else None, "done": bool(o.completed_at)},
+            {"label": "Отменен", "date": o.canceled_at.strftime("%d.%m") if o.canceled_at else None, "done": bool(o.canceled_at)},
+            {"label": "Получение", "date": o.delivery_date.strftime("%d.%m"), "done": True},
         ]
 
         items = o.items_json
