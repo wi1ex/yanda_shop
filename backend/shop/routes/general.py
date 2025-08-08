@@ -194,9 +194,9 @@ def update_profile() -> Tuple[Response, int]:
 
     # После выхода из session_scope() — логируем через log_change
     if changed_fields:
-        description = "Обновлены поля: " + "; ".join(changed_fields)
-        log_change("Обновление профиля", description)
-        logger.debug("update_profile: %s", description)
+        log_text = "Обновлены поля: " + "; ".join(changed_fields)
+        log_change("Обновление профиля", log_text)
+        logger.debug("update_profile: %s", log_text)
     else:
         logger.debug("update_profile: no changes detected for user_id=%d", user_id)
 
@@ -402,7 +402,7 @@ def create_order() -> Tuple[Response, int]:
     est_date = None
     if est_str:
         try:
-            est_dt = datetime.fromisoformat(est_str.replace("Z", "+00:00"))
+            est_date = datetime.fromisoformat(est_str.replace("Z", "+00:00"))
         except ValueError:
             logger.warning("create_order: invalid delivery_date %s", est_str)
             return jsonify({"error": "Invalid delivery_date"}), 400
@@ -429,6 +429,8 @@ def create_order() -> Tuple[Response, int]:
             subtotal += price * qty
 
         # Параметры оплаты и доставки
+        first_name = data.get("first_name", "Неизвестное имя")
+        last_name = data.get("last_name", "Неизвестная фамилия")
         payment_method = data.get("payment_method", "online")
         delivery_type = data.get("delivery_type", "standard")
         delivery_price = data.get("delivery_price", 0)
@@ -451,7 +453,8 @@ def create_order() -> Tuple[Response, int]:
         order_id = order.id
 
         # Логируем создание
-        log_change("Создание заказа", f"order_id={order_id} user_id={user_id} subtotal={subtotal} total={total}")
+        log_text = f"Номер заказа: {order_id}. Сумма заказа: {subtotal}. Клиент: {first_name} {last_name} #{user_id}"
+        log_change("Создание заказа", log_text)
         logger.debug("create_order: created order_id=%d for user_id=%d subtotal=%.2f total=%.2f address_id=%d",
                      order_id, user_id, subtotal, total, address_id)
 

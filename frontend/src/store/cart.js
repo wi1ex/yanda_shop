@@ -148,6 +148,11 @@ export const useCartStore = defineStore('cart', () => {
   async function checkout() {
     if (!userStore.isAuthenticated()) return;
     try {
+      // Если адреса ещё не загружены — загрузим
+      if (!userStore.addresses.length) {
+        await userStore.fetchAddresses();
+      }
+
       // Получаем основной адрес из userStore
       const primary = userStore.addresses.find(a => a.selected);
       if (!primary) {
@@ -188,6 +193,8 @@ export const useCartStore = defineStore('cart', () => {
         delivery_type:  "standard",
         delivery_price: deliveryPrice.value,
         delivery_date:  delivery_date,
+        first_name:     userStore.user.first_name,
+        last_name:      userStore.user.last_name,
       }
 
       // Отправляем заказ и очищаем корзину
