@@ -120,8 +120,8 @@ async function onCheckout() {
   if (data) {
     router.push({ name: "Profile", query: { section: "orders" } });
   } else {
-    alert("Нет основного адреса для оформления заказа");
-    router.push({ name: 'Profile', query: { section: 'addresses' } })
+    alert("Не заполнен профиль или адрес");
+    router.push({ name: 'Profile' })
   }
 }
 

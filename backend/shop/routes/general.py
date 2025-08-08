@@ -431,6 +431,9 @@ def create_order() -> Tuple[Response, int]:
         # Параметры оплаты и доставки
         first_name = data.get("first_name", "Неизвестное имя")
         last_name = data.get("last_name", "Неизвестная фамилия")
+        middle_name = data.get("middle_name", "Неизвестное отчество")
+        phone = data.get("phone", "Неизвестный телефон")
+        email = data.get("email", "Неизвестный адрес эл.почты")
         payment_method = data.get("payment_method", "online")
         delivery_type = data.get("delivery_type", "standard")
         delivery_price = data.get("delivery_price", 0)
@@ -453,7 +456,9 @@ def create_order() -> Tuple[Response, int]:
         order_id = order.id
 
         # Логируем создание
-        log_text = f"Номер заказа: {order_id}. Сумма заказа: {subtotal}. Клиент: {first_name} {last_name} #{user_id}"
+        log_text = (f"Номер заказа: {order_id}. Сумма заказа: {subtotal}. "
+                    f"Клиент: #{user_id} {first_name} {last_name} {middle_name}. "
+                    f"Контакты: {phone} {email}")
         log_change("Создание заказа", log_text)
         logger.debug("create_order: created order_id=%d for user_id=%d subtotal=%.2f total=%.2f address_id=%d",
                      order_id, user_id, subtotal, total, address_id)
