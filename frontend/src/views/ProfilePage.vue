@@ -63,7 +63,8 @@
 
     <div v-if="currentSection==='orders'" class="content">
       <h2 v-if="!store.userStore.orderDetail" :style="{ marginBottom: (store.userStore.orders.length || store.userStore.orderDetail) ? '40px' : '' }">
-        Мои заказы{{ store.userStore.orders.length ? ` [ ${store.userStore.orders.length} ]` : '' }}
+        Мои заказы
+        <sup class="title-count">{{ store.userStore.orders.length }}</sup>
       </h2>
       <p class="description" v-if="!store.userStore.orders.length && !store.userStore.orderDetail">У тебя нет оформленных заказов.</p>
       <button type="button" v-if="!store.userStore.orders.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
@@ -581,6 +582,14 @@ onMounted(async () => {
       line-height: 80%;
       letter-spacing: -1.2px;
       z-index: 20;
+      .title-count {
+        margin: 6px 10px 40px;
+        color: $grey-20;
+        font-size: 15px;
+        line-height: 110%;
+        letter-spacing: -0.6px;
+        z-index: 20;
+      }
     }
     .description {
       margin: 6px 10px 40px;
