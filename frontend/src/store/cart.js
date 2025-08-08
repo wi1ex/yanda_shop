@@ -153,7 +153,8 @@ export const useCartStore = defineStore('cart', () => {
       if (!primary) {
         return false;
       }
-      // 2) Формируем payload из groupedCartItems
+
+      // Формируем payload из groupedCartItems
       const items = groupedCartItems.value.map(item => ({
         variant_sku:     item.variant_sku,
         price:           item.unit_price,
@@ -164,6 +165,21 @@ export const useCartStore = defineStore('cart', () => {
         name:            item.name,
         size_label:      item.size_label,
       }))
+
+      // Извлекаем все текстовые сроки, парсим максимальное число дней
+      function parseMaxDays(label = '') {
+        const range = label.match(/(\d+)\D+(\d+)/);
+        if (range) return parseInt(range[2], 10);
+        const single = label.match(/(\d+)/);
+        return single ? parseInt(single[1], 10) : 0;
+      }
+      const maxDays = groupedCartItems.value.reduce((mx, item) => {
+        return Math.max(mx, parseMaxDays(item.delivery_option?.label));
+      }, 0);
+      const receiveDate = new Date();
+      receiveDate.setDate(receiveDate.getDate() + maxDays);
+      const delivery_date = receiveDate.toISOString();
+
       deliveryPrice.value = 400
       const payload = {
         items,
@@ -171,10 +187,11 @@ export const useCartStore = defineStore('cart', () => {
         payment_method: "online",
         delivery_type:  "standard",
         delivery_price: deliveryPrice.value,
+        delivery_date:  delivery_date,
       }
-      // Отправляем заказ
+
+      // Отправляем заказ и очищаем корзину
       const { data } = await api.post(API.general.createOrder, payload);
-      // Очищаем корзину
       cart.value = { count: 0, total: 0, items: [] };
       deliveryPrice.value = 0;
       await saveCartToServer();

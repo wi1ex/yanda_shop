@@ -281,7 +281,7 @@ const visibleDeliveryOptions = computed(() => {
   if (store.productStore.detailData.count_in_stock > 0) {
     return opts
   } else {
-    return opts.slice(1)
+    return opts.slice(0, 2)
   }
 })
 

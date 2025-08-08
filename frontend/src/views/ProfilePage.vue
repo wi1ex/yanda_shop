@@ -19,7 +19,7 @@
 
     <div v-if="currentSection==='profile'" class="content">
       <h2>Мой профиль</h2>
-      <p>Твои личные данные важны для покупок,<br>поэтому проверяй их актуальность.</p>
+      <p class="description">Твои личные данные важны для покупок,<br>поэтому проверяй их актуальность.</p>
       <div class="card">
         <label class="card-label">Фото профиля</label>
         <div class="photo-row">
@@ -65,21 +65,26 @@
       <h2 v-if="!store.userStore.orderDetail" :style="{ marginBottom: (store.userStore.orders.length || store.userStore.orderDetail) ? '40px' : '' }">
         Мои заказы{{ store.userStore.orders.length ? ` [ ${store.userStore.orders.length} ]` : '' }}
       </h2>
-      <p v-if="!store.userStore.orders.length && !store.userStore.orderDetail">У тебя нет оформленных заказов.</p>
+      <p class="description" v-if="!store.userStore.orders.length && !store.userStore.orderDetail">У тебя нет оформленных заказов.</p>
       <button type="button" v-if="!store.userStore.orders.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
 
       <div v-if="store.userStore.orders.length" class="order-cards">
         <div v-for="o in store.userStore.orders" :key="o.id" class="order-card">
-          <div class="status">
-            <p>{{ o.statusLabel }}</p>
-            <p>{{ o.id }}</p>
+          <div class="status-div">
+            <div class="status-block" :class="o.statusLabel === 'Отменен' ? 'canceled' : o.statusLabel === 'Выполнен' ? 'completed' : ''">
+              {{ o.statusLabel }}
+            </div>
+            <p class="order-id">#{{ o.id }}</p>
           </div>
-          <div class="preview">
-            <p>количество товаров / {{ o.items.length }} шт.</p>
-            <img v-for="it in o.items" :src="it.image_url" :key="it.variant_sku"  alt="image"/>
+          <div class="preview-div">
+            <p class="preview-text">количество товаров / {{ o.items.length }} шт.</p>
+            <div class="preview-images">
+              <img v-for="it in o.items" :src="it.image_url" :key="it.variant_sku" alt="image"/>
+            </div>
           </div>
           <div class="timeline">
-            <span v-for="(d, idx) in o.datesFormated" :key="idx">{{ d }}</span>
+            <p>Дата заказа {{ o.created_at }}</p>
+            <p>Получение {{ o.delivery_date }}</p>
           </div>
           <div class="total">
             <p>Итог: {{ formatPrice(o.total) }} ₽</p>
@@ -130,7 +135,7 @@
       <h2 v-if="!addressFormVisible" :style="{ marginBottom: (sortedAddresses.length || addressFormVisible) ? '40px' : '' }">
         Мои адреса{{ sortedAddresses.length ? ` [ ${sortedAddresses.length} ]` : '' }}
       </h2>
-      <p v-if="!sortedAddresses.length && !addressFormVisible">У тебя нет сохранённых адресов.</p>
+      <p class="description" v-if="!sortedAddresses.length && !addressFormVisible">У тебя нет сохранённых адресов.</p>
       <div v-if="sortedAddresses.length && !addressFormVisible" class="list_addresses">
         <div v-for="a in sortedAddresses" class="address" :key="a.id">
           <label class="radio-button address-text" @click="selectAddress(a.id)">
@@ -555,7 +560,7 @@ onMounted(async () => {
       letter-spacing: -1.2px;
       z-index: 20;
     }
-    p {
+    .description {
       margin: 6px 10px 40px;
       color: $grey-20;
       font-size: 15px;
@@ -685,16 +690,56 @@ onMounted(async () => {
         gap: 40px;
         border-radius: 4px;
         background-color: $grey-95;
-        .status {
-
-        }
-        .preview {
+        z-index: 20;
+        .status-div {
           display: flex;
-          gap: 8px;
-          img {
-            width: 64px;
-            height: 64px;
-            object-fit: cover;
+          align-items: center;
+          justify-content: space-between;
+          .status-block {
+            display: flex;
+            padding: 8px 12px;
+            border-radius: 26px;
+            background-color: $grey-20;
+            color: $white-100;
+            font-size: 15px;
+            line-height: 100%;
+            letter-spacing: -0.6px;
+            &.completed {
+              background-color: $green-active;
+            }
+            &.canceled {
+              background-color: $black-40;
+            }
+          }
+          .order-id {
+            margin: 0;
+            color: $black-40;
+            font-size: 16px;
+            line-height: 110%;
+            letter-spacing: -0.64px;
+          }
+        }
+        .preview-div {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          .preview-text {
+            margin: 0;
+            color: $black-100;
+            font-size: 15px;
+            line-height: 110%;
+            letter-spacing: -0.6px;
+          }
+          .preview-images {
+            display: flex;
+            gap: 8px;
+            img {
+              border-radius: 4px;
+              background-color: $grey-90;
+              width: 64px;
+              height: 64px;
+              object-fit: cover;
+            }
           }
         }
       }
