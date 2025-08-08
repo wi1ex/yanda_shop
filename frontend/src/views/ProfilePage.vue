@@ -70,7 +70,7 @@
       <button type="button" v-if="!store.userStore.orders.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
 
       <!-- Секция сортировки -->
-      <div class="mobile-sort" style="margin-bottom: 16px;">
+      <div class="mobile-sort">
         <button type="button" ref="sortBtn" class="sort-btn" @click="sortOpen = !sortOpen" :style="{ borderRadius: sortOpen ? '4px 4px 0 0' : '4px' }">
           <span>Сортировка: {{ currentLabel }}</span>
           <img :src="icon_arrow_red" alt="toggle" :style="{ transform: sortOpen ? 'rotate(90deg)' : 'rotate(-90deg)' }"/>
@@ -84,7 +84,7 @@
         </transition>
       </div>
 
-      <div v-if="store.userStore.orders.length" class="order-cards">
+      <div v-if="!store.userStore.orderDetail" class="order-cards">
         <div v-for="o in sortedOrders" :key="o.id" class="order-card">
           <div class="status-div">
             <div class="status-block" :class="o.status === 'Отменен' ? 'canceled' : o.status === 'Выполнен' ? 'completed' : ''">
@@ -131,7 +131,7 @@
         </div>
       </div>
 
-      <div v-if="store.userStore.orderDetail" class="order-detail">
+      <div v-else class="order-detail">
         <h2>#{{ store.userStore.orderDetail.id }} <span class="status">{{ store.userStore.orderDetail.status }}</span></h2>
         <div class="timeline-full">
           <div v-for="(stage, idx) in store.userStore.orderDetail.timeline" :key="idx" class="stage">
@@ -216,7 +216,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -235,9 +235,11 @@ const router = useRouter()
 
 // UI-state
 const currentSection = ref(null)
-const sortOpen   = ref(false)
-const sortOption = ref('id_desc')  // по умолчанию: по убыванию
-const sortOptions = [
+const sortBtn        = ref(null)
+const sortList       = ref(null)
+const sortOpen       = ref(false)
+const sortOption     = ref('id_desc')  // по умолчанию: по убыванию
+const sortOptions    = [
   { value: 'id_desc', label: 'От нового к старому' },
   { value: 'id_asc',  label: 'От старого к новому' }
 ]
@@ -260,6 +262,16 @@ const sortedOrders = computed(() => {
 function selectSort(val) {
   sortOption.value = val
   sortOpen.value   = false
+}
+
+function onClickOutside(e) {
+  if (
+    sortOpen.value &&
+    !sortBtn.value.contains(e.target) &&
+    !sortList.value?.contains(e.target)
+  ) {
+    sortOpen.value = false
+  }
 }
 
 // PROFILE
@@ -523,12 +535,17 @@ watch(() => route.query.section, sec => {
 })
 
 onMounted(async () => {
+  document.addEventListener('click', onClickOutside)
   await store.userStore.fetchOrders()
   await store.userStore.fetchAddresses()
   selectedAddress.value = sortedAddresses.value.find(a => a.selected)?.id || null
   if (route.query.section) {
     currentSection.value = route.query.section
   }
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onClickOutside)
 })
 
 </script>
@@ -756,7 +773,8 @@ onMounted(async () => {
     .mobile-sort {
       display: flex;
       position: relative;
-      min-width: calc(50% - 5px);
+      margin: 0 10px 40px;
+      z-index: 20;
       .sort-btn {
         display: flex;
         align-items: center;
@@ -831,11 +849,13 @@ onMounted(async () => {
       max-height: 500px;
       opacity: 1;
     }
+
     .order-cards {
       display: flex;
       flex-direction: column;
       width: 100%;
       gap: 8px;
+      z-index: 15;
       .order-card {
         display: flex;
         flex-direction: column;
@@ -844,7 +864,6 @@ onMounted(async () => {
         gap: 40px;
         border-radius: 4px;
         background-color: $grey-95;
-        z-index: 20;
         .status-div {
           display: flex;
           align-items: center;
