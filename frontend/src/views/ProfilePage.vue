@@ -83,8 +83,24 @@
             </div>
           </div>
           <div class="timeline">
-            <p>Дата заказа {{ o.created_at }}</p>
-            <p>Получение {{ o.delivery_date }}</p>
+            <div class="timeline-div">
+              <p class="timeline-date">{{ o.created_at }}</p>
+              <p class="timeline-text">Дата заказа</p>
+            </div>
+            <div class="timeline-vector" v-if="o.status !== 'Выполнен' && o.status !== 'Отменен'">
+              <img :src="icon_order_dot" alt="timeline" />
+              <img :src="icon_order_line" alt="timeline" />
+              <img :src="icon_order_done" alt="timeline" />
+            </div>
+            <div class="timeline-vector" v-if="o.status === 'Выполнен'">
+              <img :src="icon_order_dot" alt="timeline" />
+              <img :src="icon_order_line" alt="timeline" />
+              <img :src="icon_order_done" alt="timeline" />
+            </div>
+            <div class="timeline-div" v-if="o.status !== 'Отменен'">
+              <p class="timeline-date">{{ o.delivery_date }}</p>
+              <p class="timeline-text">{{ o.status === 'Выполнен' ? o.status : 'Получение' }}</p>
+            </div>
           </div>
           <div class="total">
             <p>Итог: {{ formatPrice(o.total) }} ₽</p>
@@ -189,6 +205,9 @@ import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
 import icon_arrow_grey from "@/assets/images/arrow_grey.svg";
 import icon_arrow_mini_black from "@/assets/images/arrow_mini_black.svg";
 import icon_arrow_mini_red from "@/assets/images/arrow_mini_red.svg";
+import icon_order_dot from "@/assets/images/order_dot.svg";
+import icon_order_line from "@/assets/images/order_line.svg";
+import icon_order_done from "@/assets/images/order_done.svg";
 
 const store = useStore()
 const route = useRoute()
@@ -736,10 +755,25 @@ onMounted(async () => {
             img {
               border-radius: 4px;
               background-color: $grey-90;
+              min-width: 64px;
+              min-height: 64px;
               width: 64px;
               height: 64px;
-              object-fit: cover;
+              object-fit: contain;
             }
+          }
+        }
+        .timeline {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          .timeline-div {
+            display: flex;
+            flex-direction: column;
+          }
+          .timeline-vector {
+            display: flex;
+            align-items: center;
           }
         }
       }
