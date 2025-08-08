@@ -69,8 +69,23 @@
       <p class="description" v-if="!store.userStore.orders.length && !store.userStore.orderDetail">У тебя нет оформленных заказов.</p>
       <button type="button" v-if="!store.userStore.orders.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
 
+      <!-- Секция сортировки -->
+      <div class="mobile-sort" style="margin-bottom: 16px;">
+        <button type="button" ref="sortBtn" class="sort-btn" @click="sortOpen = !sortOpen" :style="{ borderRadius: sortOpen ? '4px 4px 0 0' : '4px' }">
+          <span>Сортировка: {{ currentLabel }}</span>
+          <img :src="icon_arrow_red" alt="toggle" :style="{ transform: sortOpen ? 'rotate(90deg)' : 'rotate(-90deg)' }"/>
+        </button>
+        <transition name="slide-down">
+          <ul v-if="sortOpen" ref="sortList" class="sort-list">
+            <li v-for="opt in sortOptions" :key="opt.value" @click="selectSort(opt.value)" :class="{ active: sortOption === opt.value }">
+              {{ opt.label }}
+            </li>
+          </ul>
+        </transition>
+      </div>
+
       <div v-if="store.userStore.orders.length" class="order-cards">
-        <div v-for="o in store.userStore.orders" :key="o.id" class="order-card">
+        <div v-for="o in sortedOrders" :key="o.id" class="order-card">
           <div class="status-div">
             <div class="status-block" :class="o.status === 'Отменен' ? 'canceled' : o.status === 'Выполнен' ? 'completed' : ''">
               {{ o.status }}
@@ -88,7 +103,7 @@
               <p class="timeline-date">{{ o.created_at }}</p>
               <p class="timeline-text">Дата заказа</p>
             </div>
-            <div class="timeline-vector" v-if="o.status !== 'Выполнен' && o.status !== 'Отменен'" style="margin-top: 6px;">
+            <div class="timeline-vector" v-if="o.status !== 'Выполнен' && o.status !== 'Отменен'" style="margin-top: 5px;">
               <img :src="icon_order_dot" alt="timeline" />
               <img :src="icon_order_line" alt="timeline" />
               <img :src="icon_order_dot" alt="timeline" />
@@ -152,7 +167,7 @@
     </div>
 
     <div v-if="currentSection==='addresses'" class="content">
-      <h2 v-if="!addressFormVisible" :style="{ marginBottom: (sortedAddresses.length || addressFormVisible) ? '40px' : '' }">
+      <h2 :style="{ marginBottom: (sortedAddresses.length || addressFormVisible) ? '40px' : '' }">
         Мои адреса{{ sortedAddresses.length ? ` [ ${sortedAddresses.length} ]` : '' }}
       </h2>
       <p class="description" v-if="!sortedAddresses.length && !addressFormVisible">У тебя нет сохранённых адресов.</p>
@@ -209,6 +224,7 @@ import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
 import icon_arrow_grey from "@/assets/images/arrow_grey.svg";
 import icon_arrow_mini_black from "@/assets/images/arrow_mini_black.svg";
 import icon_arrow_mini_red from "@/assets/images/arrow_mini_red.svg";
+import icon_arrow_red from '@/assets/images/arrow_red.svg'
 import icon_order_dot from "@/assets/images/order_dot.svg";
 import icon_order_line from "@/assets/images/order_line.svg";
 import icon_order_done from "@/assets/images/order_done.svg";
@@ -219,6 +235,32 @@ const router = useRouter()
 
 // UI-state
 const currentSection = ref(null)
+const sortOpen   = ref(false)
+const sortOption = ref('id_desc')  // по умолчанию: по убыванию
+const sortOptions = [
+  { value: 'id_desc', label: 'От нового к старому' },
+  { value: 'id_asc',  label: 'От старого к новому' }
+]
+
+const currentLabel = computed(() => {
+  const opt = sortOptions.find(o => o.value === sortOption.value)
+  return opt ? opt.label : ''
+})
+
+// отсортированные заказы
+const sortedOrders = computed(() => {
+  const arr = [...store.userStore.orders]
+  if (sortOption.value === 'id_asc') {
+    return arr.sort((a, b) => a.id - b.id)
+  } else {
+    return arr.sort((a, b) => b.id - a.id)
+  }
+})
+
+function selectSort(val) {
+  sortOption.value = val
+  sortOpen.value   = false
+}
 
 // PROFILE
 const form = reactive({
@@ -710,6 +752,84 @@ onMounted(async () => {
           }
         }
       }
+    }
+    .mobile-sort {
+      display: flex;
+      position: relative;
+      min-width: calc(50% - 5px);
+      .sort-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 8px;
+        width: 100%;
+        border: none;
+        background-color: $grey-95;
+        cursor: pointer;
+        span {
+          color: $grey-20;
+          font-family: Bounded;
+          font-size: 14px;
+          font-weight: 350;
+          line-height: 120%;
+          letter-spacing: -0.7px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        img {
+          width: 16px;
+          height: 16px;
+          object-fit: cover;
+          transition: all 0.25s ease-in-out;
+        }
+      }
+      .sort-list {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: 0;
+        border-radius: 0 0 4px 4px;
+        background-color: $grey-95;
+        list-style: none;
+        z-index: 200;
+        li {
+          padding: 12px 10px;
+          border-top: 1px solid $white-100;
+          background-color: $grey-95;
+          color: $grey-20;
+          font-size: 15px;
+          line-height: 110%;
+          letter-spacing: -0.6px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          cursor: pointer;
+          &.active {
+            color: $black-100;
+            background-color: $white-100;
+          }
+        }
+      }
+    }
+    /* Плавное раскрытие вверх-вниз */
+    .slide-down-enter-active,
+    .slide-down-leave-active {
+      transition: max-height 0.25s ease-in-out, opacity 0.25s ease-in-out;
+    }
+    .slide-down-enter-from,
+    .slide-down-leave-to {
+      max-height: 0;
+      opacity: 0;
+    }
+    .slide-down-enter-to,
+    .slide-down-leave-from {
+      max-height: 500px;
+      opacity: 1;
     }
     .order-cards {
       display: flex;
