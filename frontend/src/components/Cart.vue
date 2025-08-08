@@ -23,32 +23,35 @@
             <div class="item-image-container">
               <img :src="item.image" alt="" />
             </div>
-            <div class="item-details">
-              <p class="item-brand">{{ item.brand }}</p>
-              <div class="item-title-price">
-                <p class="item-name">{{ item.name }}</p>
-                <p class="item-price">{{ formatPrice(item.unit_price) }} ₽</p>
-              </div>
+            <div class="item-details-div">
+              <div class="item-details">
+                <p class="item-brand">{{ item.brand }}</p>
+                <div class="item-title-price">
+                  <p class="item-name">{{ item.name }}</p>
+                  <p class="item-price">{{ formatPrice(item.unit_price) }} ₽</p>
+                </div>
 
-              <div class="item-quantity-controls">
-                <button type="button" class="qty-btn" @click="store.cartStore.decreaseQuantity(item)">
-                  <img :src="icon_minus_grey" alt="Минус" />
-                </button>
-                <span class="qty">{{ item.quantity }}</span>
-                <button type="button" class="qty-btn" @click="store.cartStore.increaseQuantity(item)">
-                  <img :src="icon_plus_grey" alt="Плюс" />
-                </button>
+                <div class="item-quantity-controls">
+                  <button type="button" class="qty-btn" @click="store.cartStore.decreaseQuantity(item)">
+                    <img :src="icon_minus_grey" alt="Минус" />
+                  </button>
+                  <span class="qty">{{ item.quantity }}</span>
+                  <button type="button" class="qty-btn" @click="store.cartStore.increaseQuantity(item)">
+                    <img :src="icon_plus_grey" alt="Плюс" />
+                  </button>
+                </div>
               </div>
-
               <div class="item-info-row">
-                <p class="item-info">
-                  Размер:
-                  <span class="item-info-value">{{ item.size_label }}</span>
-                </p>
-                <p class="item-info">
-                  Доставка:
-                  <span class="item-info-value">{{ item.delivery_option?.label || '—' }}</span>
-                </p>
+                <div class="item-info-div">
+                  <p class="item-info">
+                    Размер:
+                    <span class="item-info-value">{{ item.size_label }}</span>
+                  </p>
+                  <p class="item-info">
+                    Доставка:
+                    <span class="item-info-value">{{ item.delivery_option?.label || '—' }}</span>
+                  </p>
+                </div>
                 <button type="button" class="remove-btn" @click="removeItem(item)">
                   <span class="remove-text">Удалить</span>
                   <img :src="icon_trash" alt="Удалить" class="remove-icon" />
@@ -247,9 +250,15 @@ async function onCheckout() {
   height: 100%;
 }
 
-.item-details {
+.item-details-div {
   flex: 1;
   margin-left: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 188px;
+}
+.item-details {
   display: flex;
   flex-direction: column;
 }
@@ -314,10 +323,12 @@ async function onCheckout() {
 
 .item-info-row {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-top: 80px;
+  align-items: flex-end;
   font-size: 12px;
+}
+.item-info-div {
+  display: flex;
+  flex-direction: column;
 }
 .item-info {
   flex: 0 0 80%;
@@ -430,9 +441,6 @@ async function onCheckout() {
     align-items: flex-start;
     margin-bottom: 24px;
     gap: 16px;
-  }
-  .item-info-row {
-    margin-top: 28px;
   }
   .action-button {
     height: 56px;
