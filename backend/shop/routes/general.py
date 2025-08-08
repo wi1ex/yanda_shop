@@ -428,6 +428,7 @@ def create_order() -> Tuple[Response, int]:
         # Создаём заказ
         order = Orders(
             user_id=user_id,
+            status='Дата заказа',
             items_json=items,
             address_id=address_id,
             payment_method=payment_method,
@@ -468,7 +469,7 @@ def get_user_orders() -> Tuple[Response, int]:
         )
         out: List[Dict[str, Any]] = []
         for o in qs:
-            preview = o.items_json[:3]
+            preview = o.items_json
             dates = [
                 o.created_at.strftime("%d.%m"),
                 *(o.processed_at and [o.processed_at.strftime("%d.%m")] or []),
