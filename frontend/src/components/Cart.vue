@@ -450,8 +450,6 @@ async function onCheckout() {
     letter-spacing: -0.64px;
   }
   .summary-total {
-    font-family: Bounded;
-    font-weight: 375;
     font-size: 16px;
     letter-spacing: -0.8px;
   }
