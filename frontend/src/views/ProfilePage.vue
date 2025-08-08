@@ -62,72 +62,72 @@
     </div>
 
     <div v-if="currentSection==='orders'" class="content">
-      <h2>Мои заказы</h2>
-      <p v-if="!store.userStore.orders.length">У тебя нет оформленных заказов.</p>
+      <h2 v-if="!store.userStore.orderDetail" :style="{ marginBottom: (store.userStore.orders.length || store.userStore.orderDetail) ? '40px' : '' }">
+        Мои заказы{{ store.userStore.orders.length ? ` [ ${store.userStore.orders.length} ]` : '' }}
+      </h2>
+      <p v-if="!store.userStore.orders.length && !store.userStore.orderDetail">У тебя нет оформленных заказов.</p>
       <button type="button" v-if="!store.userStore.orders.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
 
-
-
-
-
-
-      <div v-if="store.userStore.orders.length">
-        <h2>Мои заказы</h2>
-        <div v-for="o in store.userStore.orders" :key="o.id" class="order-card" @click="loadOrder(o.id)">
-          <div class="status" :class="o.status">{{ o.statusLabel }}</div>
+      <div v-if="store.userStore.orders.length" class="order-cards">
+        <div v-for="o in store.userStore.orders" :key="o.id" class="order-card">
+          <div class="status">
+            <p>{{ o.statusLabel }}</p>
+            <p>{{ o.id }}</p>
+          </div>
           <div class="preview">
-            <img v-for="it in o.items.slice(0,3)" :src="it.image_url" :key="it.variant_sku"  alt="image"/>
+            <p>количество товаров / {{ o.items.length }} шт.</p>
+            <img v-for="it in o.items" :src="it.image_url" :key="it.variant_sku"  alt="image"/>
           </div>
           <div class="timeline">
             <span v-for="(d, idx) in o.datesFormated" :key="idx">{{ d }}</span>
           </div>
-          <div class="total">Итог: {{ o.total }} ₽</div>
-        </div>
-
-        <div v-if="store.userStore.orderDetail" class="order-detail">
-          <h2>#{{ store.userStore.orderDetail.id }} <span class="status">{{ store.userStore.orderDetail.statusLabel }}</span></h2>
-          <div class="timeline-full">
-            <div v-for="(stage, idx) in store.userStore.orderDetail.timeline" :key="idx" class="stage">
-              <div class="dot" :class="{done: stage.done}"></div>
-              <div class="line" v-if="idx<store.userStore.orderDetail.timeline.length-1"></div>
-              <p>{{ stage.label }}<br/><small>{{ stage.date }}</small></p>
-            </div>
+          <div class="total">
+            <p>Итог: {{ formatPrice(o.total) }} ₽</p>
+            <button type="button" @click="loadOrder(o.id)">
+              Перейти
+              <img :src="icon_arrow_grey" alt="arrow right" style="transform: rotate(180deg)" />
+            </button>
           </div>
-          <div class="info-block">
-            <p>Оплата: {{ store.userStore.orderDetail.payment_method }}</p>
-            <p>Доставка: {{ store.userStore.orderDetail.delivery_type }}</p>
-            <p>Адрес: {{ store.userStore.orderDetail.delivery_address }}</p>
-          </div>
-          <div class="info-block">
-            <p>Сумма товаров: {{ store.userStore.orderDetail.subtotal }} ₽</p>
-            <p>Курьер: {{ store.userStore.orderDetail.delivery_price }} ₽</p>
-            <p class="bold">Итог: {{ store.userStore.orderDetail.total }} ₽</p>
-          </div>
-          <div class="items">
-            <div v-for="it in store.userStore.orderDetail.items" :key="it.variant_sku" class="item">
-              <img :src="it.image_url"  alt="image"/>
-              <div>
-                <p class="title">{{ it.brand }} {{ it.name }}</p>
-                <p>Артикул: {{ it.variant_sku }}</p>
-                <p>Кол-во: {{ it.qty }}</p>
-                <p>Размер: {{ it.size_label }}</p>
-                <p>Доставка: {{ it.delivery_option }}</p>
-              </div>
-            </div>
-          </div>
-<!--          <button type="button" v-if="store.userStore.orderDetail.canRepeat" class="repeat" @click="repeatOrder(store.userStore.orderDetail.id)">Повторить заказ</button>-->
         </div>
       </div>
 
-
-
-
-
-
+      <div v-if="store.userStore.orderDetail" class="order-detail">
+        <h2>#{{ store.userStore.orderDetail.id }} <span class="status">{{ store.userStore.orderDetail.statusLabel }}</span></h2>
+        <div class="timeline-full">
+          <div v-for="(stage, idx) in store.userStore.orderDetail.timeline" :key="idx" class="stage">
+            <div class="dot">{{ stage.done }}</div>
+            <div class="line" v-if="idx<store.userStore.orderDetail.timeline.length-1"></div>
+            <p>{{ stage.label }}<br/><small>{{ stage.date }}</small></p>
+          </div>
+        </div>
+        <div class="info-block">
+          <p>Оплата: {{ store.userStore.orderDetail.payment_method }}</p>
+          <p>Доставка: {{ store.userStore.orderDetail.delivery_type }}</p>
+          <p>Адрес: {{ store.userStore.orderDetail.delivery_address }}</p>
+        </div>
+        <div class="info-block">
+          <p>Сумма товаров: {{ store.userStore.orderDetail.subtotal }} ₽</p>
+          <p>Курьер: {{ store.userStore.orderDetail.delivery_price }} ₽</p>
+          <p class="bold">Итог: {{ store.userStore.orderDetail.total }} ₽</p>
+        </div>
+        <div class="items">
+          <div v-for="it in store.userStore.orderDetail.items" :key="it.variant_sku" class="item">
+            <img :src="it.image_url"  alt="image"/>
+            <div>
+              <p class="title">{{ it.brand }} {{ it.name }}</p>
+              <p>Артикул: {{ it.variant_sku }}</p>
+              <p>Кол-во: {{ it.qty }}</p>
+              <p>Размер: {{ it.size_label }}</p>
+              <p>Доставка: {{ it.delivery_option }}</p>
+            </div>
+          </div>
+        </div>
+<!--        <button type="button" v-if="store.userStore.orderDetail.canRepeat" class="repeat" @click="repeatOrder(store.userStore.orderDetail.id)">Повторить заказ</button>-->
+      </div>
     </div>
 
     <div v-if="currentSection==='addresses'" class="content">
-      <h2 :style="{ marginBottom: (sortedAddresses.length || addressFormVisible) ? '40px' : '' }">
+      <h2 v-if="!addressFormVisible" :style="{ marginBottom: (sortedAddresses.length || addressFormVisible) ? '40px' : '' }">
         Мои адреса{{ sortedAddresses.length ? ` [ ${sortedAddresses.length} ]` : '' }}
       </h2>
       <p v-if="!sortedAddresses.length && !addressFormVisible">У тебя нет сохранённых адресов.</p>
@@ -138,7 +138,7 @@
             {{ a.full }}
           </label>
           <button type="button" @click.stop="editAddress(a)">
-            <img :src="icon_arrow_mini_black" alt="" style="transform: rotate(180deg)"/>
+            <img :src="icon_arrow_mini_black" alt="arrow" style="transform: rotate(180deg)"/>
           </button>
         </div>
       </div>
@@ -351,6 +351,10 @@ function onPhoneInput(e) {
 // ORDERS
 async function loadOrder(id) {
   await store.userStore.fetchOrder(id)
+}
+
+function formatPrice(val) {
+  return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
 // function repeatOrder(id) {
@@ -663,6 +667,33 @@ onMounted(async () => {
           img {
             width: 24px;
             height: 24px;
+            object-fit: cover;
+          }
+        }
+      }
+    }
+    .order-cards {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 8px;
+      .order-card {
+        display: flex;
+        flex-direction: column;
+        padding: 20px 10px;
+        width: calc(100% - 20px);
+        gap: 40px;
+        border-radius: 4px;
+        background-color: $grey-95;
+        .status {
+
+        }
+        .preview {
+          display: flex;
+          gap: 8px;
+          img {
+            width: 64px;
+            height: 64px;
             object-fit: cover;
           }
         }
