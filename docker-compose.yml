@@ -8,8 +8,10 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    expose:
-      - "5432"
+    ports:
+      - "5432:5432"
+#    expose:
+#      - "5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     networks:
@@ -28,6 +30,8 @@ services:
       - "yes"
       - --appendfsync
       - "everysec"
+#    ports:
+#      - "6379:6379"
     expose:
       - "6379"
     volumes:
@@ -41,6 +45,8 @@ services:
     container_name: minio
     env_file: .env
     command: server /data
+#    ports:
+#      - "9000:9000"
     expose:
       - "9000"
     volumes:
