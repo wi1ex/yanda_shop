@@ -519,15 +519,12 @@ def get_user_order(order_id: int) -> Tuple[Response, int]:
 
         timeline = [
             {"label": "Дата заказа", "date": o.created_at.strftime("%d.%m"), "done": True},
-            {"label": "В обработке", "date": o.processed_at.strftime("%d.%m"), "done": True},
+            {"label": "В обработке", "date": o.processed_at.strftime("%d.%m") if o.processed_at else None, "done": bool(o.processed_at)},
             {"label": "Выкуплен", "date": o.purchased_at.strftime("%d.%m") if o.purchased_at else None, "done": bool(o.purchased_at)},
             {"label": "Собран", "date": o.assembled_at.strftime("%d.%m") if o.assembled_at else None, "done": bool(o.assembled_at)},
             {"label": "В пути", "date": o.shipped_at.strftime("%d.%m") if o.shipped_at else None, "done": bool(o.shipped_at)},
-            {"label": "Передан в доставку", "date": o.transferred_at.strftime("%d.%m") if o.transferred_at else None, "done": bool(o.transferred_at)},
-            {"label": "Доставка", "date": o.delivered_at.strftime("%d.%m") if o.delivered_at else None, "done": bool(o.delivered_at)},
+            {"label": "Передан в доставку", "date": o.delivered_at.strftime("%d.%m") if o.delivered_at else None, "done": bool(o.delivered_at)},
             {"label": "Выполнен", "date": o.completed_at.strftime("%d.%m") if o.completed_at else None, "done": bool(o.completed_at)},
-            {"label": "Отменен", "date": o.canceled_at.strftime("%d.%m") if o.canceled_at else None, "done": bool(o.canceled_at)},
-            {"label": "Получение", "date": o.delivery_date.strftime("%d.%m"), "done": True},
         ]
 
         items = o.items_json
