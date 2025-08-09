@@ -65,6 +65,7 @@
           </tbody>
         </table>
       </div>
+
       <!-- Детали (drawer) -->
       <transition name="drawer">
         <div v-if="store.adminStore.orderDetail" class="order-detail-drawer">
