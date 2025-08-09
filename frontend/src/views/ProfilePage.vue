@@ -177,7 +177,7 @@
           </div>
         </div>
         <div class="cart-items-frame">
-          <div v-for="item in store.cartStore.orderDetail.items" :key="item.variant_sku" class="cart-item">
+          <div v-for="item in store.userStore.orderDetail.items" :key="item.variant_sku" class="cart-item">
             <div class="item-image-container">
               <img :src="item.image" alt="" />
             </div>
