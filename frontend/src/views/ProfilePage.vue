@@ -123,7 +123,7 @@
               Итог:
               <span class="total-price">{{ formatPrice(o.total) }} ₽</span>
             </p>
-            <button type="button" class="total-button" @click="loadOrder(o.id)">
+            <button type="button" class="total-button" v-if="o.status !== 'Отменен'" @click="loadOrder(o.id)">
               Перейти
               <img :src="icon_arrow_grey" alt="arrow right" style="transform: rotate(180deg)" />
             </button>
@@ -299,8 +299,20 @@ const sortOpen       = ref(false)
 const sortOption     = ref('id_desc')  // по умолчанию: по убыванию
 const sortOptions    = [
   { value: 'id_desc', label: 'От нового к старому' },
-  { value: 'id_asc',  label: 'От старого к новому' }
+  { value: 'id_asc',  label: 'От старого к новому' },
+  { value: 'status',  label: 'По статусу' },
 ]
+
+const statusPriority = {
+  'Дата заказа':         0,
+  'В обработке':         1,
+  'Выкуплен':            2,
+  'Собран':              3,
+  'В пути':              4,
+  'Передан в доставку':  5,
+  'Выполнен':            6,
+  'Отменен':             7,
+}
 
 const currentLabel = computed(() => {
   const opt = sortOptions.find(o => o.value === sortOption.value)
@@ -310,6 +322,15 @@ const currentLabel = computed(() => {
 // отсортированные заказы
 const sortedOrders = computed(() => {
   const arr = [...store.userStore.orders]
+  if (sortOption.value === 'status') {
+    const prio = (s) => (s in statusPriority ? statusPriority[s] : 999)
+    return arr.sort((a, b) => {
+      const pa = prio(a.status)
+      const pb = prio(b.status)
+      if (pa !== pb) return pa - pb
+      return b.id - a.id
+    })
+  }
   if (sortOption.value === 'id_asc') {
     return arr.sort((a, b) => a.id - b.id)
   } else {
@@ -511,7 +532,7 @@ function markAddableFlags() {
   // Если есть индекс:
   const index = store.productStore.variantBySku || null;
   store.userStore.orderDetail.items = items.map(it => {
-    let exists = false;
+    let exists;
     if (index && index.size) {
       exists = index.has(it.variant_sku);
     } else {
