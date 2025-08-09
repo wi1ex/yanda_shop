@@ -134,19 +134,20 @@
       <div v-else class="order-detail">
         <div class="status-id">
           <h3 class="detail-id">#{{ store.userStore.orderDetail.id }}</h3>
-          <p class="detail-status">{{ store.userStore.orderDetail.status }}</p>
           <div class="detail-status" :class="store.userStore.orderDetail.status === 'Отменен' ? 'canceled' : store.userStore.orderDetail.status === 'Выполнен' ? 'completed' : ''">
             {{ store.userStore.orderDetail.status }}
           </div>
         </div>
-        <div v-for="(stage, idx) in store.userStore.orderDetail.timeline" :key="idx" class="timeline">
-          <div class="timeline-vector" v-if="stage.done">
-            <img :src="icon_order_dot" alt="timeline" />
-            <img :src="icon_order_line" alt="timeline" />
-<!--            <img :src="icon_order_done" alt="timeline" />-->
+        <div class="timeline">
+          <div v-for="(stage, idx) in store.userStore.orderDetail.timeline" :key="idx" class="timeline-div">
+            <div class="timeline-vector" v-if="stage.done">
+              <img :src="icon_order_dot" alt="timeline" />
+              <img :src="icon_order_line" alt="timeline" />
+  <!--            <img :src="icon_order_done" alt="timeline" />-->
+            </div>
+            <p class="timeline-date">{{ stage.date }}</p>
+            <p class="timeline-label">{{ stage.label }}</p>
           </div>
-          <p class="timeline-date">{{ stage.date }}</p>
-          <p class="timeline-label">{{ stage.label }}</p>
         </div>
         <div class="info-block">
           <p class="info-block-info title">Информация о заказе</p>
@@ -179,7 +180,7 @@
         <div class="cart-items-frame">
           <div v-for="item in store.userStore.orderDetail.items" :key="item.variant_sku" class="cart-item">
             <div class="item-image-container">
-              <img :src="item.image" alt="" />
+              <img :src="item.image_url" alt="image" />
             </div>
             <div class="item-details-div">
               <div class="item-details">
@@ -207,8 +208,8 @@
                 </div>
 <!--                <button type="button" class="remove-btn" @click="addItem(item)">-->
                 <button type="button" class="remove-btn">
-                  <span class="remove-text">Удалить</span>
-                  <img :src="icon_trash" alt="Удалить" class="remove-icon" />
+                  <span class="add-text">Добавить в корзину</span>
+                  <img :src="icon_trash" alt="Удалить" class="add-icon" />
                 </button>
               </div>
             </div>
@@ -976,29 +977,32 @@ onBeforeUnmount(() => {
           display: flex;
           align-items: flex-start;
           gap: 8px;
-          .timeline-div {
+          .timeline {
             display: flex;
-            flex-direction: column;
-            gap: 8px;
-            .timeline-date {
-              margin: 0;
-              color: $black-100;
-              font-family: Bounded;
-              font-size: 20px;
-              font-weight: 300;
-              line-height: 90%;
-              letter-spacing: -1px;
-              &.processed {
-                color: $black-40;
+            .timeline-div {
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+              .timeline-date {
+                margin: 0;
+                color: $black-100;
+                font-family: Bounded;
+                font-size: 20px;
+                font-weight: 300;
+                line-height: 90%;
+                letter-spacing: -1px;
+                &.processed {
+                  color: $black-40;
+                }
               }
-            }
-            .timeline-text {
-              margin: 0;
-              width: max-content;
-              color: $black-40;
-              font-size: 14px;
-              line-height: 100%;
-              letter-spacing: -0.56px;
+              .timeline-text {
+                margin: 0;
+                width: max-content;
+                color: $black-40;
+                font-size: 14px;
+                line-height: 100%;
+                letter-spacing: -0.56px;
+              }
             }
           }
           .timeline-vector {
@@ -1278,13 +1282,13 @@ onBeforeUnmount(() => {
               border: none;
               background: none;
               cursor: pointer;
-              .remove-text {
+              .add-text {
                 display: none;
                 font-size: 12px;
                 color: $black-40;
                 border-bottom: 1px solid $black-40;
               }
-              .remove-icon {
+              .add-icon {
                 width: 24px;
                 height: 24px;
                 object-fit: cover;
