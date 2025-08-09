@@ -151,7 +151,7 @@ async function onCheckout() {
   flex-direction: column;
   .cart-header {
     height: 86px;
-    padding: 0 20px;
+    padding: 0 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -193,7 +193,7 @@ async function onCheckout() {
   .cart-items-frame {
     flex: 1;
     overflow-y: auto;
-    padding: 10px 10px 0 20px;
+    padding: 10px 0 10px 10px;
     position: relative;
     line-height: 100%;
     letter-spacing: -0.04em;
@@ -228,9 +228,9 @@ async function onCheckout() {
       border-bottom: 1px solid $grey-87;
     }
     .item-image-container {
-      padding: 10px;
-      width: 150px;
-      height: 200px;
+      padding: 5px;
+      width: 134px;
+      height: 178px;
       background-color: $grey-95;
       border-radius: 8px;
       display: flex;
@@ -260,8 +260,11 @@ async function onCheckout() {
         }
         .item-title-price {
           display: flex;
+          flex-direction: column;
+          align-items: flex-start;
           justify-content: space-between;
-          align-items: baseline;
+          margin-bottom: 24px;
+          gap: 16px;
           .item-name-price {
             margin: 0;
             color: $black-100;
@@ -342,7 +345,7 @@ async function onCheckout() {
     justify-content: space-between;
     align-items: flex-start;
     flex-shrink: 0;
-    padding: 0 20px 10px;
+    padding: 0 10px 10px;
     background-color: $white-100;
     .summary-block {
       display: flex;
@@ -350,20 +353,20 @@ async function onCheckout() {
       width: 100%;
     }
     .summary-label {
-      font-size: 20px;
+      font-size: 16px;
       margin: 18px 0 4px;
       color: $grey-20;
       line-height: 110%;
-      letter-spacing: -0.4px;
+      letter-spacing: -0.64px;
     }
     .summary-total {
-      font-size: 20px;
+      font-size: 16px;
       font-family: Bounded;
       font-weight: 250;
       color: $black-100;
       margin: 18px 0 4px;
       line-height: 80%;
-      letter-spacing: -1px;
+      letter-spacing: -0.8px;
     }
     .summary-note {
       font-size: 12px;
@@ -374,12 +377,12 @@ async function onCheckout() {
     }
   }
   .cart-action {
-    padding: 0 20px 20px;
+    padding: 0 10px 20px;
     background-color: $white-100;
     flex-shrink: 0;
     .action-button {
       width: 100%;
-      height: 72px;
+      height: 56px;
       padding: 0 14px;
       font-size: 16px;
       border: none;
@@ -393,65 +396,26 @@ async function onCheckout() {
   }
 }
 /* Transitions */
-.drawer-enter-active,
-.drawer-leave-active {
-  transition: opacity 0.2s ease, transform 0.3s ease;
+.drawer-enter-active, .drawer-leave-active {
+  transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
 }
-.drawer-enter-from,
-.drawer-leave-to {
+.drawer-enter-from, .drawer-leave-to {
   opacity: 0;
   transform: translateX(100%);
 }
-.drawer-enter-to,
-.drawer-leave-from {
+.drawer-enter-to, .drawer-leave-from {
   opacity: 1;
   transform: translateX(0);
 }
 /* Responsive */
 @media (max-width: 600px) {
-  .cart-drawer {
-    .cart-header {
-      padding: 0 10px;
-    }
-    .cart-items-frame {
-      padding: 10px 0 10px 10px;
-    }
-    .item-title-price {
-      flex-direction: column;
-      align-items: flex-start;
-      margin-bottom: 24px;
-      gap: 16px;
-    }
-    .action-button {
-      height: 56px;
-    }
-    .summary-label {
-      font-size: 16px;
-      letter-spacing: -0.64px;
-    }
-    .summary-total {
-      font-size: 16px;
-      letter-spacing: -0.8px;
-    }
-    .item-image-container {
-      padding: 5px;
-      width: 134px;
-      height: 178px;
-    }
-    .cart-summary {
-      padding: 0 10px 10px;
-    }
-    .cart-action {
-      padding: 0 10px 20px;
-    }
-    .remove-text {
-      display: none;
-    }
-    .remove-icon {
-      display: inline-block;
-      width: 24px;
-      height: 24px;
-    }
+  .remove-text {
+    display: none;
+  }
+  .remove-icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
   }
 }
 
