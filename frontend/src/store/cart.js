@@ -163,6 +163,7 @@ export const useCartStore = defineStore('cart', () => {
       // Формируем payload из groupedCartItems
       const items = groupedCartItems.value.map(item => ({
         variant_sku:     item.variant_sku,
+        world_sku:       item.world_sku,
         price:           item.unit_price,
         qty:             item.quantity,
         delivery_option: item.delivery_option?.label || null,

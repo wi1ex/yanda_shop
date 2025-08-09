@@ -232,6 +232,8 @@ async function onCheckout() {
       align-items: center;
       justify-content: center;
       padding: 5px;
+      min-width: 134px;
+      min-height: 178px;
       width: 134px;
       height: 178px;
       border-radius: 8px;

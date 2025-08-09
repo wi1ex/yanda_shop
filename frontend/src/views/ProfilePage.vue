@@ -177,40 +177,40 @@
             </div>
           </div>
         </div>
-        <div class="cart-items-frame">
-          <div v-for="item in store.userStore.orderDetail.items" :key="item.variant_sku" class="cart-item">
-            <div class="item-image-container">
-              <img :src="item.image_url" alt="image" />
-            </div>
-            <div class="item-details-div">
-              <div class="item-details">
-                <p class="item-brand">{{ item.brand }}</p>
-                <div class="item-title-price">
+        <div class="cart-drawer">
+          <div class="cart-items-frame">
+            <div v-for="item in store.userStore.orderDetail.items" :key="item.variant_sku" class="cart-item">
+              <div class="item-image-container">
+                <img :src="item.image_url" alt="image" />
+              </div>
+              <div class="item-details-div">
+                <div class="item-details">
+                  <p class="item-brand">{{ item.brand }}</p>
                   <p class="item-name-price">{{ item.name }}</p>
+                  <p class="item-sku">артикул: {{ item.world_sku }}</p>
                   <p class="item-name-price">{{ formatPrice(item.price) }} ₽</p>
                 </div>
-                <p class="item-brand">артикул: {{ item.variant_sku }}</p>
-              </div>
-              <div class="item-info-row">
-                <div class="item-info-div">
-                  <p class="item-info">
-                    Количество:
-                    <span class="item-info-value">{{ item.qty }}</span>
-                  </p>
-                  <p class="item-info">
-                    Размер:
-                    <span class="item-info-value">{{ item.size_label }}</span>
-                  </p>
-                  <p class="item-info">
-                    Доставка:
-                    <span class="item-info-value">{{ item.delivery_option }}</span>
-                  </p>
+                <div class="item-info-row">
+                  <div class="item-info-div">
+                    <p class="item-info">
+                      Количество:
+                      <span class="item-info-value">{{ item.qty }}</span>
+                    </p>
+                    <p class="item-info">
+                      Размер:
+                      <span class="item-info-value">{{ item.size_label }}</span>
+                    </p>
+                    <p class="item-info">
+                      Доставка:
+                      <span class="item-info-value">{{ item.delivery_option || '—' }}</span>
+                    </p>
+                  </div>
+  <!--                <button type="button" class="remove-btn" @click="addItem(item)">-->
+                  <button type="button" class="remove-btn">
+                    <span class="add-text">Добавить в корзину</span>
+                    <img :src="icon_trash" alt="Удалить" class="add-icon" />
+                  </button>
                 </div>
-<!--                <button type="button" class="remove-btn" @click="addItem(item)">-->
-                <button type="button" class="remove-btn">
-                  <span class="add-text">Добавить в корзину</span>
-                  <img :src="icon_trash" alt="Удалить" class="add-icon" />
-                </button>
               </div>
             </div>
           </div>
@@ -1173,125 +1173,137 @@ onBeforeUnmount(() => {
           }
         }
       }
-      .cart-items-frame {
-        flex: 1;
-        overflow-y: auto;
-        padding: 10px;
-        position: relative;
-        line-height: 100%;
-        letter-spacing: -0.04em;
-        scrollbar-width: thin;
-        scrollbar-color: $black-25 transparent;
-        &::after {
-          content: '';
-          position: sticky;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 20px;
-          background: linear-gradient(transparent, $black-10);
-          pointer-events: none;
-        }
-        &::-webkit-scrollbar {
-          width: 6px;
-        }
-        &::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        &::-webkit-scrollbar-thumb {
-          background-color: $black-40;
-          border-radius: 3px;
-        }
-      }
-      .cart-item {
+      .cart-drawer {
         display: flex;
-        padding: 20px 0;
-        border-top: 1px solid $grey-87;
-        &:last-child {
-          border-bottom: 1px solid $grey-87;
-        }
-        .item-image-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 5px;
-          width: 134px;
-          height: 178px;
-          border-radius: 8px;
-          background-color: $grey-95;
-          img {
-            width: 100%;
-            height: 100%;
+        flex-direction: column;
+        background-color: $white-100;
+        z-index: 20;
+        .cart-items-frame {
+          flex: 1;
+          overflow-y: auto;
+          padding: 10px;
+          position: relative;
+          line-height: 100%;
+          letter-spacing: -0.04em;
+          scrollbar-width: thin;
+          scrollbar-color: $black-25 transparent;
+          &::after {
+            content: '';
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(transparent, $black-10);
+            pointer-events: none;
+          }
+          &::-webkit-scrollbar {
+            width: 6px;
+          }
+          &::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          &::-webkit-scrollbar-thumb {
+            background-color: $black-40;
+            border-radius: 3px;
           }
         }
-        .item-details-div {
-          flex: 1;
+        .cart-item {
           display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          margin-left: 8px;
-          height: 188px;
-          .item-details {
+          padding: 20px 0;
+          border-top: 1px solid $grey-87;
+          &:last-child {
+            border-bottom: 1px solid $grey-87;
+          }
+          .item-image-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            min-width: 134px;
+            min-height: 178px;
+            width: 134px;
+            height: 178px;
+            border-radius: 8px;
+            background-color: $grey-95;
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+          }
+          .item-details-div {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            .item-brand {
-              margin: 0 0 8px;
-              color: $grey-20;
-              font-size: 12px;
-              line-height: 100%;
-              letter-spacing: -0.48px;
-            }
-            .item-title-price {
+            justify-content: space-between;
+            margin-left: 8px;
+            height: 188px;
+            .item-details {
               display: flex;
-              justify-content: space-between;
-              align-items: flex-start;
               flex-direction: column;
-              margin-bottom: 24px;
-              gap: 16px;
-              .item-name-price {
-                margin: 0;
-                color: $black-100;
-                font-family: Manrope-SemiBold;
+              .item-brand {
+                margin: 0 0 8px;
+                color: $black-60;
                 font-size: 15px;
                 line-height: 100%;
                 letter-spacing: -0.6px;
               }
-            }
-          }
-          .item-info-row {
-            display: flex;
-            align-items: flex-end;
-            font-size: 12px;
-            .item-info-div {
-              display: flex;
-              flex-direction: column;
-              .item-info {
-                flex: 0 0 80%;
+              .item-sku {
+                margin: 0 0 8px;
+                color: $black-60;
+                font-size: 12px;
+                line-height: 100%;
+                letter-spacing: -0.48px;
+              }
+              .item-name-price {
                 margin: 0;
-                color: $black-40;
-                font-size: 14px;
-                &-value {
-                  color: $grey-20;
+                color: $black-100;
+                font-family: Bounded;
+                font-size: 16px;
+                font-weight: 375;
+                line-height: 80%;
+                letter-spacing: -0.8px;
+              }
+            }
+            .item-info-row {
+              display: flex;
+              align-items: flex-end;
+              font-size: 12px;
+              .item-info-div {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                .item-info {
+                  flex: 0 0 80%;
+                  margin: 0;
+                  color: $black-40;
+                  font-size: 15px;
+                  line-height: 100%;
+                  letter-spacing: -0.6px;
+                  &-value {
+                    color: $grey-20;
+                  }
                 }
               }
-            }
-            .remove-btn {
-              margin-left: auto;
-              padding: 0;
-              height: 24px;
-              border: none;
-              background: none;
-              cursor: pointer;
-              .add-text {
-                display: none;
-                font-size: 12px;
-                color: $black-40;
-                border-bottom: 1px solid $black-40;
-              }
-              .add-icon {
-                width: 24px;
+              .remove-btn {
+                margin-left: auto;
+                padding: 0;
                 height: 24px;
-                object-fit: cover;
+                border: none;
+                background: none;
+                cursor: pointer;
+                .add-text {
+                  display: none;
+                  font-size: 12px;
+                  color: $black-40;
+                  border-bottom: 1px solid $black-40;
+                }
+                .add-icon {
+                  width: 24px;
+                  height: 24px;
+                  object-fit: cover;
+                }
               }
             }
           }
