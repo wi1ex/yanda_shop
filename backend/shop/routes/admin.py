@@ -613,7 +613,7 @@ def admin_set_next_status(order_id: int) -> Tuple[Response, int]:
         except ValueError:
             logger.warning("set_next_status: unknown status=%s, normalizing to 'Дата заказа' (order_id=%d)", o.status, order_id)
             idx = 0
-            o.status = STATUS_FLOW[idx]  # мягкая нормализация (без *_at)
+            o.status = STATUS_FLOW[idx]
 
         if idx >= len(STATUS_FLOW) - 1:
             logger.debug("set_next_status: already final order_id=%d status=%s", order_id, o.status)
@@ -625,15 +625,24 @@ def admin_set_next_status(order_id: int) -> Tuple[Response, int]:
             setattr(o, col, now)
         o.status = next_status
 
+        session.flush()  # гарантируем, что БД приняла изменения
+
+        # Снимаем примитивы до любой потенциальной ошибки / выхода из with
+        out_order_id = o.id
+        out_status   = o.status
+        out_set_at   = now.isoformat()
+
         admin_id = get_jwt_identity()
         admin_user = session.get(Users, admin_id)
         admin_name = f"{admin_user.first_name} {admin_user.last_name}" if admin_user else f"id={admin_id}"
-        log_change(action_type="Смена статуса заказа",
-                   description=f"{admin_name} обновил статус заказа #{o.id} → {next_status}")
-        session.flush()
 
-        logger.debug("set_next_status: ok order_id=%d new_status=%s set_at=%s", order_id, next_status, now.isoformat())
-        return jsonify({"order_id": o.id, "status": o.status, "set_at": now.isoformat()}), 200
+        # Если логирование вдруг бросит исключение — пусть его перехватит handle_errors,
+        # но к этому моменту мы уже не трогаем ORM-объект.
+        log_change(action_type="Смена статуса заказа",
+                   description=f"{admin_name} обновил статус заказа #{out_order_id} → {next_status}")
+
+        logger.debug("set_next_status: ok order_id=%d new_status=%s set_at=%s", out_order_id, next_status, out_set_at)
+        return jsonify({"order_id": out_order_id, "status": out_status, "set_at": out_set_at}), 200
 
 
 @admin_api.route("/cancel_order/<int:order_id>", methods=["POST"])
@@ -662,11 +671,16 @@ def admin_cancel_order(order_id: int) -> Tuple[Response, int]:
 
         o.status = "Отменен"
         o.canceled_at = now
+        session.flush()
+
+        out_order_id = o.id
+        out_status   = o.status
+        out_canceled = now.isoformat()
+
         admin_id = get_jwt_identity()
         admin_user = session.get(Users, admin_id)
         admin_name = f"{admin_user.first_name} {admin_user.last_name}" if admin_user else f"id={admin_id}"
-        log_change(action_type="Отмена заказа", description=f"{admin_name} отменил заказ #{o.id}")
-        session.flush()
+        log_change(action_type="Отмена заказа", description=f"{admin_name} отменил заказ #{out_order_id}")
 
-        logger.debug("cancel_order: ok order_id=%d canceled_at=%s", order_id, now.isoformat())
-        return jsonify({"order_id": o.id, "status": o.status, "canceled_at": now.isoformat()}), 200
+        logger.debug("cancel_order: ok order_id=%d canceled_at=%s", out_order_id, out_canceled)
+        return jsonify({"order_id": out_order_id, "status": out_status, "canceled_at": out_canceled}), 200
