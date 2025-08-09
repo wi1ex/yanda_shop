@@ -132,33 +132,85 @@
       </div>
 
       <div v-else class="order-detail">
-        <h2>#{{ store.userStore.orderDetail.id }} <span class="status">{{ store.userStore.orderDetail.status }}</span></h2>
-        <div class="timeline-full">
-          <div v-for="(stage, idx) in store.userStore.orderDetail.timeline" :key="idx" class="stage">
-            <div class="dot">{{ stage.done }}</div>
-            <div class="line" v-if="idx<store.userStore.orderDetail.timeline.length-1"></div>
-            <p>{{ stage.label }}<br/><small>{{ stage.date }}</small></p>
+        <div class="status-id">
+          <h3 class="detail-id">#{{ store.userStore.orderDetail.id }}</h3>
+          <p class="detail-status">{{ store.userStore.orderDetail.status }}</p>
+          <div class="detail-status" :class="store.userStore.orderDetail.status === 'Отменен' ? 'canceled' : store.userStore.orderDetail.status === 'Выполнен' ? 'completed' : ''">
+            {{ store.userStore.orderDetail.status }}
           </div>
         </div>
-        <div class="info-block">
-          <p>Оплата: {{ store.userStore.orderDetail.payment_method }}</p>
-          <p>Доставка: {{ store.userStore.orderDetail.delivery_type }}</p>
-          <p>Адрес: {{ store.userStore.orderDetail.delivery_address }}</p>
+        <div v-for="(stage, idx) in store.userStore.orderDetail.timeline" :key="idx" class="timeline">
+          <div class="timeline-vector" v-if="stage.done">
+            <img :src="icon_order_dot" alt="timeline" />
+            <img :src="icon_order_line" alt="timeline" />
+<!--            <img :src="icon_order_done" alt="timeline" />-->
+          </div>
+          <p class="timeline-date">{{ stage.date }}</p>
+          <p class="timeline-label">{{ stage.label }}</p>
         </div>
         <div class="info-block">
-          <p>Сумма товаров: {{ store.userStore.orderDetail.subtotal }} ₽</p>
-          <p>Курьер: {{ store.userStore.orderDetail.delivery_price }} ₽</p>
-          <p class="bold">Итог: {{ store.userStore.orderDetail.total }} ₽</p>
+          <p class="info-block-info title">Информация о заказе</p>
+          <p class="info-block-info">Оплата:</p>
+          <p class="info-block-info value">{{ store.userStore.orderDetail.payment_method }}</p>
+          <p class="info-block-info">Способ доставки:</p>
+          <p class="info-block-info value">{{ store.userStore.orderDetail.delivery_type }}</p>
+          <p class="info-block-info">Адрес доставки:</p>
+          <p class="info-block-info value">{{ store.userStore.orderDetail.delivery_address }}</p>
         </div>
-        <div class="items">
-          <div v-for="it in store.userStore.orderDetail.items" :key="it.variant_sku" class="item">
-            <img :src="it.image_url"  alt="image"/>
-            <div>
-              <p class="title">{{ it.brand }} {{ it.name }}</p>
-              <p>Артикул: {{ it.variant_sku }}</p>
-              <p>Кол-во: {{ it.qty }}</p>
-              <p>Размер: {{ it.size_label }}</p>
-              <p>Доставка: {{ it.delivery_option }}</p>
+        <div class="info-block">
+          <p class="info-block-info title">Стоимость</p>
+          <div class="info-block-price">
+            <div class="info-block-div">
+              <p class="info-block-text">Стоимость:</p>
+              <p class="info-block-text">{{ formatPrice(store.userStore.orderDetail.subtotal) }} ₽</p>
+            </div>
+            <div class="info-block-div">
+              <p class="info-block-text">Курьерская доставка:</p>
+              <p class="info-block-text">{{ formatPrice(store.userStore.orderDetail.delivery_price) }} ₽</p>
+            </div>
+          </div>
+          <div class="info-block-price">
+            <div class="info-block-div">
+              <p class="info-block-text black">Итог:</p>
+              <p class="info-block-text price">{{ formatPrice(store.userStore.orderDetail.total) }} ₽</p>
+            </div>
+          </div>
+        </div>
+        <div class="cart-items-frame">
+          <div v-for="item in store.cartStore.orderDetail.items" :key="item.variant_sku" class="cart-item">
+            <div class="item-image-container">
+              <img :src="item.image" alt="" />
+            </div>
+            <div class="item-details-div">
+              <div class="item-details">
+                <p class="item-brand">{{ item.brand }}</p>
+                <div class="item-title-price">
+                  <p class="item-name-price">{{ item.name }}</p>
+                  <p class="item-name-price">{{ formatPrice(item.unit_price) }} ₽</p>
+                </div>
+                <p class="item-brand">артикул: {{ item.variant_sku }}</p>
+              </div>
+              <div class="item-info-row">
+                <div class="item-info-div">
+                  <p class="item-info">
+                    Количество:
+                    <span class="item-info-value">{{ item.qty }}</span>
+                  </p>
+                  <p class="item-info">
+                    Размер:
+                    <span class="item-info-value">{{ item.size_label }}</span>
+                  </p>
+                  <p class="item-info">
+                    Доставка:
+                    <span class="item-info-value">{{ item.delivery_option?.label || '—' }}</span>
+                  </p>
+                </div>
+<!--                <button type="button" class="remove-btn" @click="addItem(item)">-->
+                <button type="button" class="remove-btn">
+                  <span class="remove-text">Удалить</span>
+                  <img :src="icon_trash" alt="Удалить" class="remove-icon" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -228,6 +280,9 @@ import icon_arrow_red from '@/assets/images/arrow_red.svg'
 import icon_order_dot from "@/assets/images/order_dot.svg";
 import icon_order_line from "@/assets/images/order_line.svg";
 import icon_order_done from "@/assets/images/order_done.svg";
+import icon_minus_grey from "@/assets/images/minus_grey.svg";
+import icon_plus_grey from "@/assets/images/plus_grey.svg";
+import icon_trash from "@/assets/images/trash.svg";
 
 const store = useStore()
 const route = useRoute()
@@ -999,6 +1054,243 @@ onBeforeUnmount(() => {
         }
       }
     }
+    .order-detail {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      .status-id {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        .detail-id {
+          margin: 0;
+          color: $black-100;
+          font-family: Bounded;
+          font-size: 24px;
+          font-weight: 250;
+          line-height: 80%;
+          letter-spacing: -1.2px;
+        }
+        .detail-status {
+          display: flex;
+          padding: 8px 12px;
+          border-radius: 26px;
+          background-color: $grey-20;
+          color: $white-100;
+          font-size: 15px;
+          line-height: 100%;
+          letter-spacing: -0.6px;
+          &.completed {
+            background-color: $green-active;
+          }
+          &.canceled {
+            background-color: $black-40;
+          }
+        }
+      }
+      .timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        .timeline-vector {
+          display: flex;
+          width: 150px;
+          img {
+
+          }
+
+        }
+        .timeline-date {
+          margin: 0;
+          color: $black-100;
+          font-family: Bounded;
+          font-size: 20px;
+          font-weight: 300;
+          line-height: 90%;
+          letter-spacing: -1px;
+        }
+        .timeline-label {
+          margin: 0;
+          color: $black-40;
+          font-size: 14px;
+          line-height: 100%;
+          letter-spacing: -0.56px;
+        }
+      }
+      .info-block {
+        display: flex;
+        padding: 20px 10px;
+        flex-direction: column;
+        gap: 24px;
+        .info-block-info {
+          margin: 0;
+          color: $grey-20;
+          font-size: 15px;
+          line-height: 100%;
+          letter-spacing: -0.6px;
+          &.title {
+            font-size: 16px;
+            line-height: 110%;
+            letter-spacing: -0.64px;
+          }
+          &.value {
+            color: $black-100;
+          }
+        }
+        .info-block-price {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          .info-block-div {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            .info-block-text {
+              margin: 0;
+              color: $black-40;
+              font-size: 15px;
+              line-height: 100%;
+              letter-spacing: -0.6px;
+              &.black {
+                color: $grey-20;
+                font-size: 16px;
+                line-height: 110%;
+                letter-spacing: -0.64px;
+              }
+              &.price {
+                color: $black-100;
+                font-family: Bounded;
+                font-size: 16px;
+                font-weight: 375;
+                line-height: 80%;
+                letter-spacing: -0.8px;
+              }
+            }
+          }
+        }
+      }
+      .cart-items-frame {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px 0 10px 10px;
+        position: relative;
+        line-height: 100%;
+        letter-spacing: -0.04em;
+        scrollbar-width: thin;
+        scrollbar-color: $black-25 transparent;
+        &::after {
+          content: '';
+          position: sticky;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 20px;
+          background: linear-gradient(transparent, $black-10);
+          pointer-events: none;
+        }
+        &::-webkit-scrollbar {
+          width: 6px;
+        }
+        &::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        &::-webkit-scrollbar-thumb {
+          background-color: $black-40;
+          border-radius: 3px;
+        }
+      }
+      .cart-item {
+        display: flex;
+        padding: 20px 0;
+        border-top: 1px solid $grey-87;
+        &:last-child {
+          border-bottom: 1px solid $grey-87;
+        }
+        .item-image-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 5px;
+          width: 134px;
+          height: 178px;
+          border-radius: 8px;
+          background-color: $grey-95;
+          img {
+            width: 100%;
+            height: 100%;
+          }
+        }
+        .item-details-div {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          margin-left: 8px;
+          height: 188px;
+          .item-details {
+            display: flex;
+            flex-direction: column;
+            .item-brand {
+              margin: 0 0 8px;
+              color: $grey-20;
+              font-size: 12px;
+              line-height: 100%;
+              letter-spacing: -0.48px;
+            }
+            .item-title-price {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              flex-direction: column;
+              margin-bottom: 24px;
+              gap: 16px;
+              .item-name-price {
+                margin: 0;
+                color: $black-100;
+                font-family: Manrope-SemiBold;
+                font-size: 15px;
+                line-height: 100%;
+                letter-spacing: -0.6px;
+              }
+            }
+          }
+          .item-info-row {
+            display: flex;
+            align-items: flex-end;
+            font-size: 12px;
+            .item-info-div {
+              display: flex;
+              flex-direction: column;
+              .item-info {
+                flex: 0 0 80%;
+                margin: 0;
+                color: $black-40;
+                font-size: 14px;
+                &-value {
+                  color: $grey-20;
+                }
+              }
+            }
+            .remove-btn {
+              margin-left: auto;
+              padding: 0;
+              height: 24px;
+              border: none;
+              background: none;
+              cursor: pointer;
+              .remove-text {
+                border-bottom: 1px solid $black-40;
+                color: $black-40;
+                font-size: 12px;
+              }
+              .remove-icon {
+                display: none;
+              }
+            }
+          }
+        }
+      }
+    }
     .buttons {
       display: flex;
       flex-direction: column;
@@ -1067,6 +1359,14 @@ onBeforeUnmount(() => {
 @media (max-width: 600px) {
   .profile-page {
     margin-top: 96px;
+  }
+  .remove-text {
+    display: none;
+  }
+  .remove-icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
   }
 }
 
