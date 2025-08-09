@@ -65,7 +65,7 @@
     <div v-if="currentSection==='orders'" class="content">
       <h2 v-if="!store.userStore.orderDetail" :style="{ marginBottom: (store.userStore.orders.length || store.userStore.orderDetail) ? '40px' : '' }">
         Мои заказы
-        <span class="title-count">{{ store.userStore.orders.length }}</span>
+        <span class="title-count" v-if="store.userStore.orders.length">{{ store.userStore.orders.length }}</span>
       </h2>
       <p class="description" v-if="!store.userStore.orders.length && !store.userStore.orderDetail">У тебя нет оформленных заказов.</p>
       <button type="button" v-if="!store.userStore.orders.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
@@ -269,15 +269,31 @@
     </div>
 
     <div v-if="currentSection==='favorites'" class="content">
-      <h2 :style="{ marginBottom: (favoriteProducts.length) ? '40px' : '' }">
+      <h2 :style="{ marginBottom: (favoriteProductsRaw.length) ? '40px' : '' }">
         Избранное
-        <span class="title-count">{{ favoriteProducts.length }}</span>
+        <span class="title-count" v-if="favoriteProductsRaw.length">{{ favoriteProductsRaw.length }}</span>
       </h2>
-      <p class="description" v-if="!favoriteProducts.length">Ты еще не добавлял товары в избранное.</p>
-      <button type="button" v-if="!favoriteProducts.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
+      <p class="description" v-if="!favoriteProductsRaw.length">Ты еще не добавлял товары в избранное.</p>
+      <button type="button" v-if="!favoriteProductsRaw.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
 
-      <div v-else class="products-grid" :class="{ blurred: favoritesLoading }">
-        <div v-for="product in favoriteProducts" :key="product.color_sku" @click="goToProduct(product)" class="product-card">
+      <div class="mobile-sort" v-if="favoriteProductsRaw.length">
+        <button type="button" ref="favSortBtn" class="sort-btn" @click="favSortOpen = !favSortOpen"
+                :style="{ borderRadius: favSortOpen ? '4px 4px 0 0' : '4px' }">
+          <span>Сортировка: {{ favCurrentLabel }}</span>
+          <img :src="icon_arrow_red" alt="toggle" :style="{ transform: favSortOpen ? 'rotate(90deg)' : 'rotate(-90deg)' }"/>
+        </button>
+        <transition name="slide-down">
+          <ul v-if="favSortOpen" ref="favSortList" class="sort-list">
+            <li v-for="opt in favSortOptions" :key="opt.value" @click="selectFavSort(opt.value)"
+                :class="{ active: favSortOption === opt.value }">
+              {{ opt.label }}
+            </li>
+          </ul>
+        </transition>
+      </div>
+
+      <div v-else class="products-grid">
+        <div v-for="product in sortedFavorites" :key="product.color_sku" @click="goToProduct(product)" class="product-card">
           <button type="button" class="remove-fav-btn" @click.prevent.stop="store.cartStore.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">
             <img :src="icon_favorites_black" alt="product" />
           </button>
@@ -317,7 +333,6 @@ const route = useRoute()
 const router = useRouter()
 
 // UI-state
-const favoritesLoading = ref(false)
 const currentSection   = ref(null)
 const sortBtn          = ref(null)
 const sortList         = ref(null)
@@ -327,6 +342,15 @@ const sortOptions      = [
   { value: 'id_desc', label: 'От нового к старому' },
   { value: 'id_asc',  label: 'От старого к новому' },
   { value: 'status',  label: 'По статусу' },
+]
+const favSortBtn     = ref(null)
+const favSortList    = ref(null)
+const favSortOpen    = ref(false)
+const favSortOption  = ref('date_desc') // по умолчанию: по дате добавления (новые сверху)
+const favSortOptions = [
+  { value: 'date_desc', label: 'По дате добавления' },
+  { value: 'price_asc', label: 'По возрастанию цены' },
+  { value: 'price_desc', label: 'По убыванию цены' },
 ]
 
 const statusPriority = {
@@ -345,13 +369,10 @@ const currentLabel = computed(() => {
   return opt ? opt.label : ''
 })
 
-const favoriteProducts = computed(() =>
-  store.cartStore.favorites.items
-    .slice().reverse()
-    .map(cs => store.productStore.colorGroups.find(g => g.color_sku === cs))
-    .filter(Boolean)
-    .map(g => g.minPriceVariant)
-)
+const favCurrentLabel = computed(() => {
+  const opt = favSortOptions.find(o => o.value === favSortOption.value)
+  return opt ? opt.label : ''
+})
 
 // отсортированные заказы
 const sortedOrders = computed(() => {
@@ -372,18 +393,59 @@ const sortedOrders = computed(() => {
   }
 })
 
+// сохраняем порядок из store.cartStore.favorites.items (это порядок добавления)
+const favoriteProductsRaw = computed(() =>
+  store.cartStore.favorites.items
+    .map((cs, idx) => {
+      const group = store.productStore.colorGroups.find(g => g.color_sku === cs)
+      if (!group) return null
+      const v = group.minPriceVariant
+      return {
+        ...v,
+        color_sku: group.color_sku,
+        __addedIndex: idx,          // индекс добавления (меньше — раньше добавлен)
+      }
+    })
+    .filter(Boolean)
+)
+
+// итоговый список с учётом выбранной сортировки
+const sortedFavorites = computed(() => {
+  const arr = [...favoriteProductsRaw.value]
+  switch (favSortOption.value) {
+    case 'price_asc':
+      return arr.sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
+    case 'price_desc':
+      return arr.sort((a, b) => (b.price ?? 0) - (a.price ?? 0))
+    case 'date_desc':
+    default:
+      // новые сверху: предполагаем, что конец original list — самые новые
+      return arr.sort((a, b) => b.__addedIndex - a.__addedIndex)
+  }
+})
+
 function selectSort(val) {
   sortOption.value = val
   sortOpen.value   = false
 }
 
+function selectFavSort(val) {
+  favSortOption.value = val
+  favSortOpen.value   = false
+}
+
 function onClickOutside(e) {
-  if (
-    sortOpen.value &&
-    !sortBtn.value.contains(e.target) &&
-    !sortList.value?.contains(e.target)
-  ) {
+  // сортировка заказов
+  if (sortOpen.value &&
+      !sortBtn.value?.contains(e.target) &&
+      !sortList.value?.contains(e.target)) {
     sortOpen.value = false
+  }
+  // сортировка избранного
+  if (favSortOpen.value &&
+      !favSortBtn.value?.contains(e.target) &&
+      !favSortList.value?.contains(e.target)) {
+    favSortOpen.value = false
   }
 }
 
@@ -440,19 +502,6 @@ async function select(sec) {
   if (sec==='orders') {
     await store.userStore.fetchOrders()
   }
-  if (sec==='addresses') {
-    await store.userStore.fetchAddresses()
-    selectedAddress.value = sortedAddresses.value.find(a => a.selected)?.id || null
-  }
-  if (sec==='favorites') {
-    favoritesLoading.value = true
-    await store.productStore.fetchProducts()
-    await store.cartStore.loadFavoritesFromServer()
-    await nextTick()
-    setTimeout(() => {
-      favoritesLoading.value = false
-    }, 200)
-  }
 }
 
 // LOGOUT
@@ -482,6 +531,15 @@ function goBack() {
 function goCatalog() {
   currentSection.value = null
   router.push({ name: 'Catalog' })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function goToProduct(p) {
+  router.push({
+    name: 'ProductDetail',
+    params: { variant_sku: p.variant_sku },
+    query: { category: p.category }
+  })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -714,6 +772,8 @@ onMounted(async () => {
   await store.userStore.fetchOrders()
   await store.userStore.fetchAddresses()
   selectedAddress.value = sortedAddresses.value.find(a => a.selected)?.id || null
+  await store.productStore.fetchProducts()
+  await store.cartStore.loadFavoritesFromServer()
   if (route.query.section) {
     currentSection.value = route.query.section
   }
