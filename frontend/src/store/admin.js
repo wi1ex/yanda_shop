@@ -172,6 +172,17 @@ export const useAdminStore = defineStore('admin', () => {
     return data
   }
 
+  async function deleteOrder(orderId) {
+    await api.delete(`${API.admin.deleteOrder}/${orderId}`)
+    // локально выкидываем из списка
+    const i = orders.value.findIndex(o => o.id === orderId)
+    if (i >= 0) orders.value.splice(i, 1)
+    // если открыт drawer по этому заказу — закрываем
+    if (orderDetail.value?.id === orderId) {
+      orderDetail.value = null
+    }
+  }
+
   // Requests management
   async function fetchRequests() {
     const { data } = await api.get(API.admin.listRequests);
@@ -232,6 +243,7 @@ export const useAdminStore = defineStore('admin', () => {
     fetchOrderDetailAdmin,
     setNextOrderStatus,
     cancelOrder,
+    deleteOrder,
 
     createReview,
     deleteReview,

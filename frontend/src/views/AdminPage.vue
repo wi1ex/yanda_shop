@@ -56,6 +56,7 @@
                   <button type="button" class="btn" @click="goOrderDetail(o.id)">Детали</button>
                   <button class="btn next" :disabled="!canAdvance(o.status) || isBusy(o.id)" @click="advance(o.id)">След. статус</button>
                   <button class="btn danger" :disabled="!canCancel(o.status) || isBusy(o.id)" @click="onCancel(o.id)">Отменить</button>
+                  <button class="btn delete" :disabled="isBusy(o.id)" @click="onDelete(o.id)">Удалить</button>
                 </div>
               </td>
             </tr>
@@ -74,11 +75,17 @@
             <button type="button" class="close" @click="store.adminStore.orderDetail=null">×</button>
           </div>
           <div class="od-actions">
-            <button class="btn next" @click="advance(store.adminStore.orderDetail.id)" :disabled="!canAdvance(store.adminStore.orderDetail.status) || isBusy(store.adminStore.orderDetail.id)">
+            <button type="button" class="btn next" @click="advance(store.adminStore.orderDetail.id)"
+                    :disabled="!canAdvance(store.adminStore.orderDetail.status) || isBusy(store.adminStore.orderDetail.id)">
               След. статус
             </button>
-            <button class="btn danger" @click="onCancel(store.adminStore.orderDetail.id)" :disabled="!canCancel(store.adminStore.orderDetail.status) || isBusy(store.adminStore.orderDetail.id)">
+            <button type="button" class="btn danger" @click="onCancel(store.adminStore.orderDetail.id)"
+                    :disabled="!canCancel(store.adminStore.orderDetail.status) || isBusy(store.adminStore.orderDetail.id)">
               Отменить заказ
+            </button>
+            <button type="button" class="btn delete" @click="onDelete(store.adminStore.orderDetail.id)"
+                    :disabled="isBusy(store.adminStore.orderDetail.id)">
+              Удалить заказ
             </button>
           </div>
           <div class="od-body">
@@ -503,17 +510,26 @@ function canCancel(status) {
   return status !== 'Выполнен' && status !== 'Отменен'
 }
 
+function _setBusySet(prev, id, on) {
+  const s = new Set(prev)
+  on ? s.add(id) : s.delete(id)
+  return s
+}
+
 function setBusy(id, v) {
-  const s = new Set(busyOrderIds.value)
-  v ? s.add(id) : s.delete(id)
-  busyOrderIds.value = s
+  busyOrderIds.value = _setBusySet(busyOrderIds.value, id, v)
 }
 
 function isBusy(id) {
   return busyOrderIds.value.has(id)
 }
 
+function parseErr(e, fallback = 'Ошибка') {
+  return e?.response?.data?.error || e?.response?.data?.message || e?.message || fallback
+}
+
 async function advance(id) {
+  if (!confirm(`Обновить статус заказа #${id}?`)) return
   if (isBusy(id)) return
   setBusy(id, true)
   try {
@@ -533,6 +549,19 @@ async function onCancel(id) {
     await store.adminStore.cancelOrder(id)
   } catch (e) {
     alert(parseErr(e, 'Не удалось отменить заказ'))
+  } finally {
+    setBusy(id, false)
+  }
+}
+
+async function onDelete(id) {
+  if (!confirm(`Удалить заказ #${id} навсегда?`)) return
+  if (isBusy(id)) return
+  setBusy(id, true)
+  try {
+    await store.adminStore.deleteOrder(id)
+  } catch (e) {
+    alert(parseErr(e, 'Не удалось удалить заказ'))
   } finally {
     setBusy(id, false)
   }
@@ -577,7 +606,7 @@ async function onProcessAll() {
     alert('Всё проверено и загружено без ошибок');
 
   } catch (e) {
-    const data = e?.response?.data?.error || e?.response?.data?.message || e?.message || {};
+    const data = parseErr(e, 'Не удалось обновить данные');
     // Заполнить preview по таблицам
     Object.entries(data.sheet_errors || {}).forEach(([cat, report]) => {
       store.adminStore.previewSheetResult[cat] = report;
@@ -961,6 +990,9 @@ watch(selected, (tab) => {
       &.danger {
         background: #7a1f1f;
       }
+      &.delete {
+        background: #5a1212;
+      }
       &:disabled {
         background: $grey-30;
         cursor: not-allowed;
@@ -1087,6 +1119,9 @@ watch(selected, (tab) => {
       }
       .btn.danger {
         background: #7a1f1f;
+      }
+      .btn.delete {
+        background: #5a1212;
       }
     }
   }

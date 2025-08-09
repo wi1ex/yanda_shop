@@ -684,3 +684,29 @@ def admin_cancel_order(order_id: int) -> Tuple[Response, int]:
 
         logger.debug("cancel_order: ok order_id=%d canceled_at=%s", out_order_id, out_canceled)
         return jsonify({"order_id": out_order_id, "status": out_status, "canceled_at": out_canceled}), 200
+
+
+@admin_api.route("/delete_order/<int:order_id>", methods=["DELETE"])
+@admin_required
+@handle_errors
+def admin_delete_order(order_id: int):
+    """
+    DELETE /api/admin/delete_order/<id>
+    Полное удаление заказа из БД (безвозвратно).
+    """
+    logger.debug("delete_order: order_id=%d", order_id)
+    with session_scope() as session:
+        o = session.get(Orders, order_id)
+        if not o:
+            logger.warning("delete_order: not found order_id=%d", order_id)
+            return jsonify({"error": "not found"}), 404
+
+        session.delete(o)
+
+        admin_id = get_jwt_identity()
+        admin_user = session.get(Users, admin_id)
+        admin_name = f"{admin_user.first_name} {admin_user.last_name}" if admin_user else f"id={admin_id}"
+        log_change(action_type="Удаление заказа", description=f"{admin_name} удалил заказ #{order_id}")
+
+        logger.debug("delete_order: deleted order_id=%d", order_id)
+        return jsonify({"message": f"Order {order_id} deleted"}), 200

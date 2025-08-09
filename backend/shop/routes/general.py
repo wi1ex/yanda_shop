@@ -493,7 +493,7 @@ def get_user_orders() -> Tuple[Response, int]:
                 "items":         o.items_json,
                 "created_at":    o.created_at.strftime("%d.%m"),
                 "total":         o.total,
-                "delivery_date": o.delivery_date.strftime("%d.%m"),
+                "finish_date":   o.completed_at.strftime("%d.%m") if bool(o.completed_at) else o.delivery_date.strftime("%d.%m"),
             })
 
     logger.debug("get_user_orders: returned %d orders", len(out))

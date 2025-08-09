@@ -47,5 +47,6 @@ export const API = {
     getOrder:                 '/api/admin/get_order',                   // GET    - получить данные заказа
     nextOrderStatus:          '/api/admin/set_next_status',             // POST   - установить статус заказа
     cancelOrder:              '/api/admin/cancel_order',                // POST   - отменить заказ
+    deleteOrder:              '/api/admin/delete_order',                // DELETE - удалить заказ
   }
 }
