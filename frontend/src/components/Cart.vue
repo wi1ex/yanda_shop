@@ -193,7 +193,7 @@ async function onCheckout() {
   .cart-items-frame {
     flex: 1;
     overflow-y: auto;
-    padding: 10px 0 10px 10px;
+    padding: 10px;
     position: relative;
     line-height: 100%;
     letter-spacing: -0.04em;
@@ -328,12 +328,15 @@ async function onCheckout() {
           cursor: pointer;
           height: 24px;
           .remove-text {
+            display: none;
             font-size: 12px;
             color: $black-40;
             border-bottom: 1px solid $black-40;
           }
           .remove-icon {
-            display: none;
+            width: 24px;
+            height: 24px;
+            object-fit: cover;
           }
         }
       }
@@ -353,25 +356,25 @@ async function onCheckout() {
       width: 100%;
     }
     .summary-label {
-      font-size: 16px;
       margin: 18px 0 4px;
       color: $grey-20;
+      font-size: 16px;
       line-height: 110%;
       letter-spacing: -0.64px;
     }
     .summary-total {
-      font-size: 16px;
-      font-family: Bounded;
-      font-weight: 250;
-      color: $black-100;
       margin: 18px 0 4px;
+      color: $black-100;
+      font-family: Bounded;
+      font-size: 16px;
+      font-weight: 250;
       line-height: 80%;
       letter-spacing: -0.8px;
     }
     .summary-note {
-      font-size: 12px;
+      margin: 0 0 16px;
       color: $black-60;
-      margin-bottom: 16px;
+      font-size: 12px;
       line-height: 100%;
       letter-spacing: -0.48px;
     }
@@ -381,17 +384,17 @@ async function onCheckout() {
     background-color: $white-100;
     flex-shrink: 0;
     .action-button {
+      padding: 0 14px;
       width: 100%;
       height: 56px;
-      padding: 0 14px;
-      font-size: 16px;
       border: none;
       border-radius: 4px;
-      cursor: pointer;
       background-color: $grey-20;
       color: $white-100;
+      font-size: 16px;
       line-height: 100%;
       letter-spacing: -0.64px;
+      cursor: pointer;
     }
   }
 }
@@ -409,14 +412,6 @@ async function onCheckout() {
 }
 /* Responsive */
 @media (max-width: 600px) {
-  .remove-text {
-    display: none;
-  }
-  .remove-icon {
-    display: inline-block;
-    width: 24px;
-    height: 24px;
-  }
 }
 
 </style>

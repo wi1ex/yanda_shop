@@ -1172,7 +1172,7 @@ onBeforeUnmount(() => {
       .cart-items-frame {
         flex: 1;
         overflow-y: auto;
-        padding: 10px 0 10px 10px;
+        padding: 10px;
         position: relative;
         line-height: 100%;
         letter-spacing: -0.04em;
@@ -1279,12 +1279,15 @@ onBeforeUnmount(() => {
               background: none;
               cursor: pointer;
               .remove-text {
-                border-bottom: 1px solid $black-40;
-                color: $black-40;
+                display: none;
                 font-size: 12px;
+                color: $black-40;
+                border-bottom: 1px solid $black-40;
               }
               .remove-icon {
-                display: none;
+                width: 24px;
+                height: 24px;
+                object-fit: cover;
               }
             }
           }
@@ -1359,14 +1362,6 @@ onBeforeUnmount(() => {
 @media (max-width: 600px) {
   .profile-page {
     margin-top: 96px;
-  }
-  .remove-text {
-    display: none;
-  }
-  .remove-icon {
-    display: inline-block;
-    width: 24px;
-    height: 24px;
   }
 }
 
