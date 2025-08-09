@@ -292,7 +292,7 @@
         </transition>
       </div>
 
-      <div v-else class="products-grid">
+      <div class="products-grid" v-if="favoriteProductsRaw.length">
         <div v-for="product in sortedFavorites" :key="product.color_sku" @click="goToProduct(product)" class="product-card">
           <button type="button" class="remove-fav-btn" @click.prevent.stop="store.cartStore.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">
             <img :src="icon_favorites_black" alt="product" />
