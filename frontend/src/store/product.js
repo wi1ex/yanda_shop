@@ -11,6 +11,7 @@ export const useProductStore = defineStore('product', () => {
   const selectedSubcat = ref('');
   const currentSubcatPage = ref(0);
   const isFetching = ref(false);
+  const variantBySku = ref(new Map());
 
   const sortBy = ref('date');
   const sortOrder = ref('desc');
@@ -159,6 +160,12 @@ export const useProductStore = defineStore('product', () => {
 
   // Actions
 
+  function rebuildVariantIndex(list) {
+    const m = new Map();
+    list.forEach(p => m.set(p.variant_sku, p));
+    variantBySku.value = m;
+  }
+
   function buildIndexes(list) {
     const groups = {};
     list.forEach(p => {
@@ -238,6 +245,8 @@ export const useProductStore = defineStore('product', () => {
         if (bIsNum) return 1;
         return a.localeCompare(b, 'ru', { sensitivity: 'base' });
       });
+
+    rebuildVariantIndex(list);
   }
 
   async function fetchProducts() {
@@ -311,7 +320,7 @@ export const useProductStore = defineStore('product', () => {
     filterSizes.value = [];
   }
 
-  watch(filterGender.value, () => {
+  watch(() => filterGender.value, () => {
     showSubcats.value = false
     selectedSubcat.value = ''
     currentSubcatPage.value = 0
@@ -325,6 +334,7 @@ export const useProductStore = defineStore('product', () => {
     selectedSubcat,
     currentSubcatPage,
     isFetching,
+    variantBySku,
     sortBy,
     sortOrder,
     filterPriceMin,

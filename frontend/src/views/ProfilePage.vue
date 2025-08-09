@@ -208,7 +208,7 @@
                       <span class="item-info-value">{{ item.delivery_option || '—' }}</span>
                     </p>
                   </div>
-                  <button type="button" class="add-btn" @click="addItem(item)">
+                  <button type="button" class="add-btn" v-if="item.canAddToCart" @click="addItem(item)">
                     <span class="add-text">Добавить в корзину</span>
                     <img :src="icon_cart_add" alt="Добавить" class="add-icon" />
                   </button>
@@ -491,14 +491,62 @@ function onPhoneInput(e) {
 // ORDERS
 async function loadOrder(id) {
   await store.userStore.fetchOrder(id)
+  await ensureProductsLoaded();
+  markAddableFlags();
 }
 
 function formatPrice(val) {
   return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
-async function addItem(item) {
+async function ensureProductsLoaded() {
+  if (!store.productStore.products.length) {
+    try { await store.productStore.fetchProducts() } catch (e) { /* noop */ }
+  }
+}
 
+function markAddableFlags() {
+  if (!store.userStore.orderDetail) return;
+  const items = store.userStore.orderDetail.items || [];
+  // Если есть индекс:
+  const index = store.productStore.variantBySku || null;
+  store.userStore.orderDetail.items = items.map(it => {
+    let exists = false;
+    if (index && index.size) {
+      exists = index.has(it.variant_sku);
+    } else {
+      // fallback без индекса
+      exists = store.productStore.products.some(p => p.variant_sku === it.variant_sku);
+    }
+    return { ...it, canAddToCart: exists };
+  });
+}
+
+async function addItem(item) {
+  // Каталог гарантированно загружен, флаг уже стоит
+  const variant = store.productStore.variantBySku?.get(item.variant_sku)
+               || store.productStore.products.find(p => p.variant_sku === item.variant_sku);
+
+  if (!variant) {
+    // Теоретический гон: пока смотрели — каталог обновился.
+    alert('Этого товара больше нет в каталоге');
+    return;
+  }
+
+  const payload = {
+    variant_sku:     variant.variant_sku,
+    world_sku:       variant.world_sku || null,
+    image:           variant.image_url || item.image_url || '',
+    brand:           variant.brand || '',
+    name:            variant.name  || '',
+    size_label:      variant.size_label || '',
+    computed_price:  variant.price,
+    price:           variant.price,
+    delivery_option: item.delivery_option ? { label: item.delivery_option } : null
+  };
+
+  store.cartStore.addToCart(payload);
+  store.cartStore.openCartDrawer();
 }
 
 // function repeatOrder(id) {
@@ -1098,7 +1146,7 @@ onBeforeUnmount(() => {
       }
       .order-timeline {
         display: flex;
-        align-items: baseline;
+        align-items: center;
         margin: 0 10px;
         z-index: 20;
         overflow-x: auto;
