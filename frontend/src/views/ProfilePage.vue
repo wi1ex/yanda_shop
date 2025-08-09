@@ -141,8 +141,8 @@
         <div class="order-timeline">
           <div v-for="(stage, idx) in store.userStore.orderDetail.timeline" :key="idx" class="order-timeline-div">
             <div class="order-timeline-vector" :class="{ 'incomplete': !stage.done }">
-              <img :src="icon_order_dot" alt="timeline" />
-              <img :src="icon_order_line" alt="timeline" />
+              <img :src="icon_order_dot" alt="timeline" v-if="idx !== store.userStore.orderDetail.timeline.length - 1" />
+              <img :src="icon_order_line" alt="timeline" v-if="idx !== store.userStore.orderDetail.timeline.length - 1" />
               <img :src="icon_order_done" alt="timeline" v-if="idx === store.userStore.orderDetail.timeline.length - 1" />
             </div>
             <p class="order-timeline-date" :class="!stage.done ? 'processed' : ''">{{ stage.date }}</p>
@@ -1105,11 +1105,15 @@ onBeforeUnmount(() => {
         overflow-y: hidden;
         scrollbar-width: none;
         -ms-overflow-style: none;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
         .order-timeline-div {
+          flex: 0 0 auto;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
           height: 72px;
+          scroll-snap-align: center;
           .order-timeline-vector {
             display: flex;
             align-items: center;
@@ -1141,7 +1145,7 @@ onBeforeUnmount(() => {
           }
         }
       }
-      .scrollable-block::-webkit-scrollbar {
+      .order-timeline::-webkit-scrollbar {
         display: none;
       }
       .info-block {
