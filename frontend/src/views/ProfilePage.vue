@@ -140,12 +140,12 @@
         </div>
         <div class="order-timeline">
           <div v-for="(stage, idx) in store.userStore.orderDetail.timeline" :key="idx" class="order-timeline-div">
-            <div class="order-timeline-vector" v-if="stage.done">
+            <div class="order-timeline-vector" :class="{ 'incomplete': !stage.done }">
               <img :src="icon_order_dot" alt="timeline" />
               <img :src="icon_order_line" alt="timeline" />
-              <img :src="icon_order_done" alt="timeline" />
+              <img :src="icon_order_done" alt="timeline" v-if="idx === store.userStore.orderDetail.timeline.length - 1" />
             </div>
-            <p class="order-timeline-date">{{ stage.date }}</p>
+            <p class="order-timeline-date" :class="!stage.done ? 'processed' : ''">{{ stage.date }}</p>
             <p class="order-timeline-label">{{ stage.label }}</p>
           </div>
         </div>
@@ -1099,6 +1099,11 @@ onBeforeUnmount(() => {
       .order-timeline {
         display: flex;
         margin: 0 10px;
+        z-index: 20;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
         .order-timeline-div {
           display: flex;
           flex-direction: column;
@@ -1106,10 +1111,9 @@ onBeforeUnmount(() => {
           .order-timeline-vector {
             display: flex;
             width: 150px;
-            img {
-
+            &.incomplete {
+              opacity: 0.4;
             }
-
           }
           .order-timeline-date {
             margin: 0;
@@ -1119,6 +1123,9 @@ onBeforeUnmount(() => {
             font-weight: 300;
             line-height: 90%;
             letter-spacing: -1px;
+            &.processed {
+              color: $black-40;
+            }
           }
           .order-timeline-label {
             margin: 0;
@@ -1129,6 +1136,9 @@ onBeforeUnmount(() => {
           }
         }
       }
+      .scrollable-block::-webkit-scrollbar {
+        display: none;
+      }
       .info-block {
         display: flex;
         padding: 20px 10px;
@@ -1136,6 +1146,7 @@ onBeforeUnmount(() => {
         gap: 24px;
         border-radius: 4px;
         background-color: $white-100;
+        z-index: 20;
         .info-block-info {
           margin: 0;
           color: $grey-20;
@@ -1155,7 +1166,7 @@ onBeforeUnmount(() => {
         .info-block-price {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 4px;
           .info-block-div {
             display: flex;
             align-items: center;
@@ -1273,7 +1284,7 @@ onBeforeUnmount(() => {
                 font-family: Bounded;
                 font-size: 16px;
                 font-weight: 375;
-                line-height: 80%;
+                line-height: 90%;
                 letter-spacing: -0.8px;
               }
             }
