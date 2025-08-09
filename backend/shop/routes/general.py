@@ -442,7 +442,7 @@ def create_order() -> Tuple[Response, int]:
         # Создаём заказ
         order = Orders(
             user_id=user_id,
-            status='В обработке',
+            status='Дата заказа',
             items_json=items,
             address_id=address_id,
             delivery_date=est_date,
