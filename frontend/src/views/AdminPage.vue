@@ -43,11 +43,11 @@
               <td>{{ new Date(o.created_at).toLocaleString('ru-RU') }}</td>
               <td>
                 <div>{{ o.user?.last_name || '' }} {{ o.user?.first_name || '' }}</div>
-                <div class="muted">ID: {{ o.user?.id }}</div>
+                <div>ID: {{ o.user?.id }}</div>
               </td>
               <td>
                 <div>{{ o.user?.phone || '—' }}</div>
-                <div class="muted">{{ o.user?.email || '—' }}</div>
+                <div>{{ o.user?.email || '—' }}</div>
               </td>
               <td>{{ o.address || '—' }}</td>
               <td>{{ formatPrice(o.total) }} ₽</td>
@@ -84,7 +84,7 @@
           <div class="od-body">
             <!-- таймлайн -->
             <div class="order-timeline">
-              <div v-for="(stage, idx) in store.adminStore.orderDetail.timeline" :key="idx" class="order-timeline-div">
+              <div v-for="(stage, idx) in store.adminStore.orderDetail.timeline" :key="idx">
                 <div class="order-timeline-vector" :class="{ 'incomplete': !stage.done }"></div>
                 <div class="order-timeline-text">
                   <div class="date" :class="{ processed: !stage.done }">{{ stage.date || '—' }}</div>
@@ -923,15 +923,12 @@ watch(selected, (tab) => {
       background: $grey-20;
       color: $white-100;
     }
-    .muted {
-      color: $grey-87;
-      font-size: .8rem;
-    }
     .st-badge {
       display: inline-block;
       padding: .2rem .5rem;
       border-radius: 999px;
       font-size: .75rem;
+      width: max-content;
       &.canceled {
         background: #3a1f1f;
         color: #ff6b6b;
@@ -957,6 +954,7 @@ watch(selected, (tab) => {
       background: $grey-20;
       color: $white-100;
       cursor: pointer;
+      width: max-content;
       &.next {
         background: $red-active;
       }
@@ -972,7 +970,9 @@ watch(selected, (tab) => {
   /* Drawer с деталями */
   .order-detail-drawer {
     position: fixed;
-    right: 0; top: 0; bottom: 0;
+    right: 0;
+    top: 72px;
+    bottom: 0;
     width: min(720px, 100%);
     background: $black-100;
     border-left: 1px solid $grey-20;
@@ -1003,8 +1003,8 @@ watch(selected, (tab) => {
     .order-timeline {
       display: grid;
       grid-template-columns: 12px 1fr;
-      row-gap: 8px;
-      column-gap: 12px;
+      row-gap: 10px;
+      column-gap: 100px;
       margin-bottom: 12px;
       .order-timeline-vector {
         background: $grey-20;
