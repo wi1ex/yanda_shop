@@ -115,7 +115,7 @@
               <img :src="icon_order_done" alt="timeline" />
             </div>
             <div class="timeline-div" v-if="o.status !== 'Отменен'">
-              <p class="timeline-date" :class="o.status !== 'Выполнен' ? 'processed' : ''">{{ o.delivery_date }}</p>
+              <p class="timeline-date" :class="o.status !== 'Выполнен' ? 'processed' : ''">{{ o.finish_date }}</p>
               <p class="timeline-text">{{ o.status === 'Выполнен' ? o.status : 'Получение' }}</p>
             </div>
           </div>
