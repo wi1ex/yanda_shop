@@ -1517,7 +1517,6 @@ onBeforeUnmount(() => {
     .products-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(187px, 1fr));
-      margin-top: 40px;
       transition: filter 0.25s ease-in-out;
       .product-card {
         display: flex;
