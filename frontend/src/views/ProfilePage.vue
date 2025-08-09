@@ -138,15 +138,15 @@
             {{ store.userStore.orderDetail.status }}
           </div>
         </div>
-        <div class="timeline">
-          <div v-for="(stage, idx) in store.userStore.orderDetail.timeline" :key="idx" class="timeline-div">
-            <div class="timeline-vector" v-if="stage.done">
+        <div class="order-timeline">
+          <div v-for="(stage, idx) in store.userStore.orderDetail.timeline" :key="idx" class="order-timeline-div">
+            <div class="order-timeline-vector" v-if="stage.done">
               <img :src="icon_order_dot" alt="timeline" />
               <img :src="icon_order_line" alt="timeline" />
   <!--            <img :src="icon_order_done" alt="timeline" />-->
             </div>
-            <p class="timeline-date">{{ stage.date }}</p>
-            <p class="timeline-label">{{ stage.label }}</p>
+            <p class="order-timeline-date">{{ stage.date }}</p>
+            <p class="order-timeline-label">{{ stage.label }}</p>
           </div>
         </div>
         <div class="info-block">
@@ -977,32 +977,29 @@ onBeforeUnmount(() => {
           display: flex;
           align-items: flex-start;
           gap: 8px;
-          .timeline {
+          .timeline-div {
             display: flex;
-            .timeline-div {
-              display: flex;
-              flex-direction: column;
-              gap: 8px;
-              .timeline-date {
-                margin: 0;
-                color: $black-100;
-                font-family: Bounded;
-                font-size: 20px;
-                font-weight: 300;
-                line-height: 90%;
-                letter-spacing: -1px;
-                &.processed {
-                  color: $black-40;
-                }
-              }
-              .timeline-text {
-                margin: 0;
-                width: max-content;
+            flex-direction: column;
+            gap: 8px;
+            .timeline-date {
+              margin: 0;
+              color: $black-100;
+              font-family: Bounded;
+              font-size: 20px;
+              font-weight: 300;
+              line-height: 90%;
+              letter-spacing: -1px;
+              &.processed {
                 color: $black-40;
-                font-size: 14px;
-                line-height: 100%;
-                letter-spacing: -0.56px;
               }
+            }
+            .timeline-text {
+              margin: 0;
+              width: max-content;
+              color: $black-40;
+              font-size: 14px;
+              line-height: 100%;
+              letter-spacing: -0.56px;
             }
           }
           .timeline-vector {
@@ -1092,33 +1089,36 @@ onBeforeUnmount(() => {
           }
         }
       }
-      .timeline {
+      .order-timeline {
         display: flex;
-        flex-direction: column;
-        gap: 16px;
-        .timeline-vector {
+        .order-timeline-div {
           display: flex;
-          width: 150px;
-          img {
+          flex-direction: column;
+          gap: 16px;
+          .order-timeline-vector {
+            display: flex;
+            width: 150px;
+            img {
+
+            }
 
           }
-
-        }
-        .timeline-date {
-          margin: 0;
-          color: $black-100;
-          font-family: Bounded;
-          font-size: 20px;
-          font-weight: 300;
-          line-height: 90%;
-          letter-spacing: -1px;
-        }
-        .timeline-label {
-          margin: 0;
-          color: $black-40;
-          font-size: 14px;
-          line-height: 100%;
-          letter-spacing: -0.56px;
+          .order-timeline-date {
+            margin: 0;
+            color: $black-100;
+            font-family: Bounded;
+            font-size: 20px;
+            font-weight: 300;
+            line-height: 90%;
+            letter-spacing: -1px;
+          }
+          .order-timeline-label {
+            margin: 0;
+            color: $black-40;
+            font-size: 14px;
+            line-height: 100%;
+            letter-spacing: -0.56px;
+          }
         }
       }
       .info-block {
