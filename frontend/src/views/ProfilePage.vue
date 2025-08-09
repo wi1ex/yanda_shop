@@ -14,6 +14,7 @@
       <button type="button" @click="select('profile')">Мой профиль</button>
       <button type="button" @click="select('orders')">Заказы</button>
       <button type="button" @click="select('addresses')">Мои адреса</button>
+      <button type="button" @click="select('favorites')">Избранное</button>
       <button type="button" @click="onLogout()" v-if="!store.userStore.isTelegramWebApp">Выйти из профиля</button>
     </div>
 
@@ -70,7 +71,7 @@
       <button type="button" v-if="!store.userStore.orders.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
 
       <!-- Секция сортировки -->
-      <div class="mobile-sort" v-if="!store.userStore.orderDetail">
+      <div class="mobile-sort" v-if="store.userStore.orders.length && !store.userStore.orderDetail">
         <button type="button" ref="sortBtn" class="sort-btn" @click="sortOpen = !sortOpen" :style="{ borderRadius: sortOpen ? '4px 4px 0 0' : '4px' }">
           <span>Сортировка: {{ currentLabel }}</span>
           <img :src="icon_arrow_red" alt="toggle" :style="{ transform: sortOpen ? 'rotate(90deg)' : 'rotate(-90deg)' }"/>
@@ -266,12 +267,35 @@
         </button>
       </div>
     </div>
+
+    <div v-if="currentSection==='favorites'" class="content">
+      <h2 :style="{ marginBottom: (favoriteProducts.length) ? '40px' : '' }">
+        Избранное
+        <span class="title-count">{{ favoriteProducts.length }}</span>
+      </h2>
+      <p class="description" v-if="!favoriteProducts.length">Ты еще не добавлял товары в избранное.</p>
+      <button type="button" v-if="!favoriteProducts.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
+
+      <div v-else class="products-grid" :class="{ blurred: favoritesLoading }">
+        <div v-for="product in favoriteProducts" :key="product.color_sku" @click="goToProduct(product)" class="product-card">
+          <button type="button" class="remove-fav-btn" @click.prevent.stop="store.cartStore.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">
+            <img :src="icon_favorites_black" alt="product" />
+          </button>
+          <img class="product-image" :src="product.image" alt="product" />
+          <div class="product-info">
+            <p class="product-brand">{{ product.brand }}</p>
+            <p class="product-name">{{ product.name }}</p>
+            <p class="product-price">от {{ formatPrice(product.price) }} ₽</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="line-hor" style="margin-top: 96px;"></div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from '@/store/index.js'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -286,18 +310,20 @@ import icon_order_done from "@/assets/images/order_done.svg";
 import icon_minus_grey from "@/assets/images/minus_grey.svg";
 import icon_plus_grey from "@/assets/images/plus_grey.svg";
 import icon_cart_add from "@/assets/images/cart_add.svg";
+import icon_favorites_black from "@/assets/images/favorites_black.svg";
 
 const store = useStore()
 const route = useRoute()
 const router = useRouter()
 
 // UI-state
-const currentSection = ref(null)
-const sortBtn        = ref(null)
-const sortList       = ref(null)
-const sortOpen       = ref(false)
-const sortOption     = ref('id_desc')  // по умолчанию: по убыванию
-const sortOptions    = [
+const favoritesLoading = ref(false)
+const currentSection   = ref(null)
+const sortBtn          = ref(null)
+const sortList         = ref(null)
+const sortOpen         = ref(false)
+const sortOption       = ref('id_desc')  // по умолчанию: по убыванию
+const sortOptions      = [
   { value: 'id_desc', label: 'От нового к старому' },
   { value: 'id_asc',  label: 'От старого к новому' },
   { value: 'status',  label: 'По статусу' },
@@ -318,6 +344,14 @@ const currentLabel = computed(() => {
   const opt = sortOptions.find(o => o.value === sortOption.value)
   return opt ? opt.label : ''
 })
+
+const favoriteProducts = computed(() =>
+  store.cartStore.favorites.items
+    .slice().reverse()
+    .map(cs => store.productStore.colorGroups.find(g => g.color_sku === cs))
+    .filter(Boolean)
+    .map(g => g.minPriceVariant)
+)
 
 // отсортированные заказы
 const sortedOrders = computed(() => {
@@ -409,6 +443,15 @@ async function select(sec) {
   if (sec==='addresses') {
     await store.userStore.fetchAddresses()
     selectedAddress.value = sortedAddresses.value.find(a => a.selected)?.id || null
+  }
+  if (sec==='favorites') {
+    favoritesLoading.value = true
+    await store.productStore.fetchProducts()
+    await store.cartStore.loadFavoritesFromServer()
+    await nextTick()
+    setTimeout(() => {
+      favoritesLoading.value = false
+    }, 200)
   }
 }
 
@@ -514,6 +557,7 @@ async function loadOrder(id) {
   await store.userStore.fetchOrder(id)
   await ensureProductsLoaded();
   markAddableFlags();
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function formatPrice(val) {
@@ -1406,6 +1450,74 @@ onBeforeUnmount(() => {
                 }
               }
             }
+          }
+        }
+      }
+    }
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(187px, 1fr));
+      margin-top: 40px;
+      transition: filter 0.25s ease-in-out;
+      .product-card {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        min-width: 0;
+        background-color: $grey-89;
+        cursor: pointer;
+        transition: transform 0.25s ease-in-out;
+        .remove-fav-btn {
+          display: flex;
+          position: absolute;
+          padding: 0;
+          top: 10px;
+          right: 10px;
+          background: none;
+          border: none;
+          width: 24px;
+          height: 24px;
+          cursor: pointer;
+          img {
+            width: 24px;
+            height: 24px;
+            object-fit: cover;
+          }
+        }
+        .product-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .product-info {
+          display: flex;
+          flex-direction: column;
+          padding: 10px 10px 16px;
+          background-color: $grey-87;
+          .product-brand {
+            margin: 0;
+            font-size: 12px;
+            line-height: 100%;
+            letter-spacing: -0.48px;
+            color: $black-60;
+          }
+          .product-name {
+            margin: 4px 0 12px;
+            font-family: Manrope-SemiBold;
+            font-size: 15px;
+            line-height: 100%;
+            letter-spacing: -0.6px;
+            color: $black-100;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          .product-price {
+            margin: 0;
+            font-size: 15px;
+            line-height: 80%;
+            letter-spacing: -0.6px;
+            color: $grey-20;
           }
         }
       }
