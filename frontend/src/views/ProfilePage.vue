@@ -1098,6 +1098,7 @@ onBeforeUnmount(() => {
       }
       .order-timeline {
         display: flex;
+        align-items: baseline;
         margin: 0 10px;
         z-index: 20;
         overflow-x: auto;
@@ -1107,16 +1108,19 @@ onBeforeUnmount(() => {
         .order-timeline-div {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          justify-content: space-between;
+          height: 72px;
           .order-timeline-vector {
             display: flex;
-            width: 150px;
+            align-items: center;
+            height: 16px;
             &.incomplete {
               opacity: 0.4;
             }
           }
           .order-timeline-date {
-            margin: 0;
+            display: flex;
+            margin: 16px 0 0;
             color: $black-100;
             font-family: Bounded;
             font-size: 20px;
@@ -1128,6 +1132,7 @@ onBeforeUnmount(() => {
             }
           }
           .order-timeline-label {
+            display: flex;
             margin: 0;
             color: $black-40;
             font-size: 14px;
