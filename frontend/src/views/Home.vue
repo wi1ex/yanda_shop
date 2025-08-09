@@ -101,9 +101,7 @@
             <button type="button" class="fav-btn" @click.stop="toggleFav(p)">
               <img :src="store.cartStore.isFavorite(p.color_sku) ? icon_favorites_black : icon_favorites_grey" alt="" />
             </button>
-            <div class="product-image">
-              <img :src="p.image" alt="product" />
-            </div>
+            <img class="product-image" :src="p.image" alt="product" />
             <div class="product-info">
               <p class="product-brand">{{ p.brand }}</p>
               <p class="product-name">{{ p.name }}</p>
@@ -961,13 +959,9 @@ onBeforeUnmount(() => {
             }
           }
           .product-image {
-            display: flex;
-            padding: 40px 24px;
+            width: 100%;
             height: 100%;
-            img {
-              width: 100%;
-              object-fit: cover;
-            }
+            object-fit: cover;
           }
           .product-info {
             display: flex;

@@ -185,9 +185,7 @@
           <button type="button" class="fav" @click.stop="toggleFav(group)">
             <img :src="store.cartStore.isFavorite(group.color_sku) ? icon_favorites_black : icon_favorites_grey" alt="" />
           </button>
-          <div class="product-img">
-            <img :src="group.minPriceVariant.image" alt="product" />
-          </div>
+          <img class="product-img" :src="group.minPriceVariant.image" alt="product" />
           <div class="info">
             <p class="brand">{{ group.minPriceVariant.brand }}</p>
             <p class="name">{{ group.minPriceVariant.name }}</p>
@@ -1199,12 +1197,9 @@ onBeforeUnmount(() => {
         }
       }
       .product-img {
-        display: flex;
+        width: 100%;
         height: 100%;
-        img {
-          width: 100%;
-          object-fit: cover;
-        }
+        object-fit: cover;
       }
       .info {
         display: flex;

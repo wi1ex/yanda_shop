@@ -25,11 +25,7 @@
         <button type="button" class="remove-fav-btn" @click.prevent.stop="store.cartStore.removeFromFavorites(product.color_sku)" aria-label="Удалить из избранного">
           <img :src="icon_favorites_black" alt="product" />
         </button>
-
-        <div class="product-image">
-          <img :src="product.image" alt="product" />
-        </div>
-
+        <img class="product-image" :src="product.image" alt="product" />
         <div class="product-info">
           <p class="product-brand">{{ product.brand }}</p>
           <p class="product-name">{{ product.name }}</p>
@@ -227,13 +223,9 @@ onMounted(async () => {
         }
       }
       .product-image {
-        display: flex;
-        padding: 40px 24px;
+        width: 100%;
         height: 100%;
-        img {
-          width: 100%;
-          object-fit: cover;
-        }
+        object-fit: cover;
       }
       .product-info {
         display: flex;

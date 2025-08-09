@@ -228,25 +228,26 @@ async function onCheckout() {
       border-bottom: 1px solid $grey-87;
     }
     .item-image-container {
-      padding: 5px;
-      width: 134px;
-      height: 178px;
-      background-color: $grey-95;
-      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 5px;
+      width: 134px;
+      height: 178px;
+      border-radius: 8px;
+      background-color: $grey-95;
       img {
         width: 100%;
         height: 100%;
+        object-fit: cover;
       }
     }
     .item-details-div {
       flex: 1;
-      margin-left: 8px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      margin-left: 8px;
       height: 188px;
       .item-details {
         display: flex;
@@ -383,19 +384,19 @@ async function onCheckout() {
     padding: 0 10px 20px;
     background-color: $white-100;
     flex-shrink: 0;
-    .action-button {
-      padding: 0 14px;
-      width: 100%;
-      height: 56px;
-      border: none;
-      border-radius: 4px;
-      background-color: $grey-20;
-      color: $white-100;
-      font-size: 16px;
-      line-height: 100%;
-      letter-spacing: -0.64px;
-      cursor: pointer;
-    }
+  }
+  .action-button {
+    padding: 0 14px;
+    width: 100%;
+    height: 56px;
+    border: none;
+    border-radius: 4px;
+    background-color: $grey-20;
+    color: $white-100;
+    font-size: 16px;
+    line-height: 100%;
+    letter-spacing: -0.64px;
+    cursor: pointer;
   }
 }
 /* Transitions */
