@@ -426,7 +426,7 @@ def create_order() -> Tuple[Response, int]:
         for it in items:
             price = it.get("price") or 0
             qty = it.get("qty") or 0
-            subtotal += price * qty
+            subtotal += int(price) * int(qty)
 
         # Параметры оплаты и доставки
         first_name = data.get("first_name", "Неизвестное имя")

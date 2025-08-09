@@ -187,7 +187,7 @@
                 <p class="item-brand">{{ item.brand }}</p>
                 <div class="item-title-price">
                   <p class="item-name-price">{{ item.name }}</p>
-                  <p class="item-name-price">{{ formatPrice(item.unit_price) }} ₽</p>
+                  <p class="item-name-price">{{ formatPrice(item.price) }} ₽</p>
                 </div>
                 <p class="item-brand">артикул: {{ item.variant_sku }}</p>
               </div>
@@ -203,7 +203,7 @@
                   </p>
                   <p class="item-info">
                     Доставка:
-                    <span class="item-info-value">{{ item.delivery_option?.label || '—' }}</span>
+                    <span class="item-info-value">{{ item.delivery_option }}</span>
                   </p>
                 </div>
 <!--                <button type="button" class="remove-btn" @click="addItem(item)">-->
