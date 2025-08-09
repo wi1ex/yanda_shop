@@ -191,8 +191,8 @@ export const useCartStore = defineStore('cart', () => {
       const payload = {
         items,
         address_id:     primary.id,
-        payment_method: "online",
-        delivery_type:  "standard",
+        payment_method: "онлайн",
+        delivery_type:  "ПВЗ",
         delivery_price: deliveryPrice.value,
         delivery_date:  delivery_date,
         first_name:     userStore.user.first_name,
