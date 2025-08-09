@@ -70,7 +70,7 @@
       <button type="button" v-if="!store.userStore.orders.length" class="action-button" @click="goCatalog">Перейти в каталог</button>
 
       <!-- Секция сортировки -->
-      <div class="mobile-sort">
+      <div class="mobile-sort" v-if="!store.userStore.orderDetail">
         <button type="button" ref="sortBtn" class="sort-btn" @click="sortOpen = !sortOpen" :style="{ borderRadius: sortOpen ? '4px 4px 0 0' : '4px' }">
           <span>Сортировка: {{ currentLabel }}</span>
           <img :src="icon_arrow_red" alt="toggle" :style="{ transform: sortOpen ? 'rotate(90deg)' : 'rotate(-90deg)' }"/>
@@ -143,7 +143,7 @@
             <div class="order-timeline-vector" v-if="stage.done">
               <img :src="icon_order_dot" alt="timeline" />
               <img :src="icon_order_line" alt="timeline" />
-  <!--            <img :src="icon_order_done" alt="timeline" />-->
+              <img :src="icon_order_done" alt="timeline" />
             </div>
             <p class="order-timeline-date">{{ stage.date }}</p>
             <p class="order-timeline-label">{{ stage.label }}</p>
@@ -153,12 +153,12 @@
           <p class="info-block-info title">Информация о заказе</p>
           <p class="info-block-info">Оплата:</p>
           <p class="info-block-info value">{{ store.userStore.orderDetail.payment_method }}</p>
-          <p class="info-block-info">Способ доставки:</p>
+          <p class="info-block-info" style="margin-top: -4px;">Способ доставки:</p>
           <p class="info-block-info value">{{ store.userStore.orderDetail.delivery_type }}</p>
-          <p class="info-block-info">Адрес доставки:</p>
+          <p class="info-block-info" style="margin-top: -4px;">Адрес доставки:</p>
           <p class="info-block-info value">{{ store.userStore.orderDetail.delivery_address }}</p>
         </div>
-        <div class="info-block">
+        <div class="info-block" style="margin-top: -32px;">
           <p class="info-block-info title">Стоимость</p>
           <div class="info-block-price">
             <div class="info-block-div">
@@ -178,6 +178,9 @@
           </div>
         </div>
         <div class="cart-drawer">
+          <div class="info-block" style="padding-bottom: 24px;">
+            <p class="info-block-info title">Товары [ {{ store.userStore.orderDetail.items.length }} ]</p>
+          </div>
           <div class="cart-items-frame">
             <div v-for="item in store.userStore.orderDetail.items" :key="item.variant_sku" class="cart-item">
               <div class="item-image-container">
@@ -205,10 +208,9 @@
                       <span class="item-info-value">{{ item.delivery_option || '—' }}</span>
                     </p>
                   </div>
-  <!--                <button type="button" class="remove-btn" @click="addItem(item)">-->
-                  <button type="button" class="remove-btn">
+                  <button type="button" class="add-btn" @click="addItem(item)">
                     <span class="add-text">Добавить в корзину</span>
-                    <img :src="icon_trash" alt="Удалить" class="add-icon" />
+                    <img :src="icon_cart_add" alt="Добавить" class="add-icon" />
                   </button>
                 </div>
               </div>
@@ -283,7 +285,7 @@ import icon_order_line from "@/assets/images/order_line.svg";
 import icon_order_done from "@/assets/images/order_done.svg";
 import icon_minus_grey from "@/assets/images/minus_grey.svg";
 import icon_plus_grey from "@/assets/images/plus_grey.svg";
-import icon_trash from "@/assets/images/trash.svg";
+import icon_cart_add from "@/assets/images/cart_add.svg";
 
 const store = useStore()
 const route = useRoute()
@@ -493,6 +495,10 @@ async function loadOrder(id) {
 
 function formatPrice(val) {
   return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
+async function addItem(item) {
+
 }
 
 // function repeatOrder(id) {
@@ -1063,6 +1069,7 @@ onBeforeUnmount(() => {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        margin: 10px 10px 0;
         .detail-id {
           margin: 0;
           color: $black-100;
@@ -1091,6 +1098,7 @@ onBeforeUnmount(() => {
       }
       .order-timeline {
         display: flex;
+        margin: 0 10px;
         .order-timeline-div {
           display: flex;
           flex-direction: column;
@@ -1126,6 +1134,8 @@ onBeforeUnmount(() => {
         padding: 20px 10px;
         flex-direction: column;
         gap: 24px;
+        border-radius: 4px;
+        background-color: $white-100;
         .info-block-info {
           margin: 0;
           color: $grey-20;
@@ -1138,6 +1148,7 @@ onBeforeUnmount(() => {
             letter-spacing: -0.64px;
           }
           &.value {
+            margin-top: -16px;
             color: $black-100;
           }
         }
@@ -1181,7 +1192,7 @@ onBeforeUnmount(() => {
         .cart-items-frame {
           flex: 1;
           overflow-y: auto;
-          padding: 10px;
+          padding: 0 10px 20px;
           position: relative;
           line-height: 100%;
           letter-spacing: -0.04em;
@@ -1210,7 +1221,7 @@ onBeforeUnmount(() => {
         }
         .cart-item {
           display: flex;
-          padding: 20px 0;
+          padding: 24px 0;
           border-top: 1px solid $grey-87;
           &:last-child {
             border-bottom: 1px solid $grey-87;
@@ -1243,14 +1254,14 @@ onBeforeUnmount(() => {
               display: flex;
               flex-direction: column;
               .item-brand {
-                margin: 0 0 8px;
+                margin: 0 0 12px;
                 color: $black-60;
                 font-size: 15px;
                 line-height: 100%;
                 letter-spacing: -0.6px;
               }
               .item-sku {
-                margin: 0 0 8px;
+                margin: 8px 0 16px;
                 color: $black-60;
                 font-size: 12px;
                 line-height: 100%;
@@ -1286,7 +1297,7 @@ onBeforeUnmount(() => {
                   }
                 }
               }
-              .remove-btn {
+              .add-btn {
                 margin-left: auto;
                 padding: 0;
                 height: 24px;

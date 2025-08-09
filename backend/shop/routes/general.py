@@ -434,8 +434,8 @@ def create_order() -> Tuple[Response, int]:
         middle_name = data.get("middle_name", "Неизвестное отчество")
         phone = data.get("phone", "Неизвестный телефон")
         email = data.get("email", "Неизвестный адрес эл.почты")
-        payment_method = data.get("payment_method", "online")
-        delivery_type = data.get("delivery_type", "standard")
+        payment_method = data.get("payment_method", "Нет данных")
+        delivery_type = data.get("delivery_type", "Нет данных")
         delivery_price = data.get("delivery_price", 0)
         total = subtotal + delivery_price
 
@@ -534,10 +534,7 @@ def get_user_order(order_id: int) -> Tuple[Response, int]:
         addr = session.get(Addresses, o.address_id) if o.address_id else None
         delivery_address = None
         if addr:
-            delivery_address = (
-                f"{addr.city}, {addr.street}, {addr.house}"
-                + (f", кв. {addr.apartment}" if addr.apartment else "")
-            )
+            delivery_address = f"г.{addr.city}, ул. {addr.street}, дом {addr.house}"
 
         result = {
             "id":               o.id,
