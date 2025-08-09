@@ -7,6 +7,123 @@
       </button>
     </nav>
 
+    <!-- Секция заказов -->
+    <section class="orders-section" v-if="selected==='orders'">
+      <h2>Все заказы</h2>
+      <!-- Сортировка -->
+      <div class="orders-sort">
+        <label>Сортировка:</label>
+        <select v-model="ordersSort">
+          <option value="id_desc">От нового к старому</option>
+          <option value="id_asc">От старого к новому</option>
+          <option value="status">По статусу</option>
+        </select>
+      </div>
+      <!-- Таблица -->
+      <div class="orders-table-wrap">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Статус</th>
+              <th>Создан</th>
+              <th>Клиент</th>
+              <th>Контакты</th>
+              <th>Адрес</th>
+              <th>Сумма</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="o in sortedAdminOrders" :key="o.id">
+              <td>{{ o.id }}</td>
+              <td>
+                <span :class="['st-badge', badgeClass(o.status)]">{{ o.status }}</span>
+              </td>
+              <td>{{ new Date(o.created_at).toLocaleString('ru-RU') }}</td>
+              <td>
+                <div>{{ o.user?.last_name || '' }} {{ o.user?.first_name || '' }}</div>
+                <div class="muted">ID: {{ o.user?.id }}</div>
+              </td>
+              <td>
+                <div>{{ o.user?.phone || '—' }}</div>
+                <div class="muted">{{ o.user?.email || '—' }}</div>
+              </td>
+              <td>{{ o.address || '—' }}</td>
+              <td>{{ formatPrice(o.total) }} ₽</td>
+              <td>
+                <div class="action-row">
+                  <button type="button" class="btn" @click="goOrderDetail(o.id)">Детали</button>
+                  <button class="btn next" :disabled="!canAdvance(o.status) || isBusy(o.id)" @click="advance(o.id)">След. статус</button>
+                  <button class="btn danger" :disabled="!canCancel(o.status) || isBusy(o.id)" @click="onCancel(o.id)">Отменить</button>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="!store.adminStore.orders.length">
+              <td colspan="9" class="no-data">Заказов нет</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Детали (drawer) -->
+      <transition name="drawer">
+        <div v-if="store.adminStore.orderDetail" class="order-detail-drawer">
+          <div class="od-header">
+            <h3>Заказ #{{ store.adminStore.orderDetail.id }}</h3>
+            <button type="button" class="close" @click="store.adminStore.orderDetail=null">×</button>
+          </div>
+          <div class="od-actions">
+            <button class="btn next" @click="advance(store.adminStore.orderDetail.id)" :disabled="!canAdvance(store.adminStore.orderDetail.status) || isBusy(store.adminStore.orderDetail.id)">
+              След. статус
+            </button>
+            <button class="btn danger" @click="onCancel(store.adminStore.orderDetail.id)" :disabled="!canCancel(store.adminStore.orderDetail.status) || isBusy(store.adminStore.orderDetail.id)">
+              Отменить заказ
+            </button>
+          </div>
+          <div class="od-body">
+            <!-- таймлайн -->
+            <div class="order-timeline">
+              <div v-for="(stage, idx) in store.adminStore.orderDetail.timeline" :key="idx" class="order-timeline-div">
+                <div class="order-timeline-vector" :class="{ 'incomplete': !stage.done }"></div>
+                <div class="order-timeline-text">
+                  <div class="date" :class="{ processed: !stage.done }">{{ stage.date || '—' }}</div>
+                  <div class="label">{{ stage.label }}</div>
+                </div>
+              </div>
+            </div>
+            <!-- блоки, как в профиле -->
+            <div class="od-info">
+              <div><b>Оплата:</b> {{ store.adminStore.orderDetail.payment_method }}</div>
+              <div><b>Доставка:</b> {{ store.adminStore.orderDetail.delivery_type }}</div>
+              <div><b>Адрес:</b> {{ store.adminStore.orderDetail.delivery_address }}</div>
+            </div>
+            <div class="od-price">
+              <div><span>Стоимость:</span> <b>{{ formatPrice(store.adminStore.orderDetail.subtotal) }} ₽</b></div>
+              <div><span>Доставка:</span> <b>{{ formatPrice(store.adminStore.orderDetail.delivery_price) }} ₽</b></div>
+              <div class="total"><span>Итог:</span> <b>{{ formatPrice(store.adminStore.orderDetail.total) }} ₽</b></div>
+            </div>
+            <div class="od-items">
+              <h4>Товары [ {{ store.adminStore.orderDetail.items.length }} ]</h4>
+              <div class="od-item" v-for="it in store.adminStore.orderDetail.items" :key="it.variant_sku">
+                <img :src="it.image_url" alt="" />
+                <div class="info">
+                  <div class="brand">{{ it.brand }}</div>
+                  <div class="name">{{ it.name }}</div>
+                  <div class="sku">артикул: {{ it.world_sku }}</div>
+                  <div class="row">
+                    <span>Цена: {{ formatPrice(it.price) }} ₽</span>
+                    <span>Кол-во: {{ it.qty }}</span>
+                    <span>Размер: {{ it.size_label }}</span>
+                    <span>Доставка: {{ it.delivery_option || '—' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </section>
+
     <!-- Превью-проверка -->
     <section class="preview-section" v-if="selected==='preview'">
       <h2>Проверка и загрузка данных</h2>
@@ -200,7 +317,7 @@
             <strong>#{{ r.id }}</strong>
             <span>{{ r.name }}</span>
             <span>{{ r.email || '—' }}</span>
-            <span class="date">{{ new Date(r.created_at).toLocaleString() }}</span>
+            <span class="date">{{ new Date(r.created_at).toLocaleString('ru-RU') }}</span>
           </div>
           <p>Артикул: {{ r.sku || '—' }}</p>
           <a v-if="r.file_url" :href="r.file_url" target="_blank">Файл</a>
@@ -218,7 +335,7 @@
           <div class="review-header">
             <strong>#{{ r.id }}</strong>
             <span>{{ r.client_name }}</span>
-            <span class="review-date">{{ new Date(r.created_at).toLocaleString() }}</span>
+            <span class="review-date">{{ new Date(r.created_at).toLocaleString('ru-RU') }}</span>
           </div>
           <p class="user-text"><strong>Текст клиента 1:</strong> {{ r.client_text1 }}</p>
           <p class="shop-text"><strong>Ответ магазина:</strong> {{ r.shop_response }}</p>
@@ -276,7 +393,8 @@ const fileInput3       = ref(null)
 const formError        = ref('')
 const formSuccess      = ref('')
 const files            = reactive({})
-const selected         = ref('preview')
+const selected         = ref('orders')
+const ordersSort       = ref('id_desc')
 const logPage          = ref(1)
 const pageSize         = 10
 const newSetting       = reactive({ key: '', value: '' })
@@ -284,7 +402,9 @@ const reviewForm       = ref(null)
 const isLoading        = ref(false)
 const isProcessing     = ref(false)
 const statsLoaded      = ref(false);
+const busyOrderIds     = ref(new Set())
 const tabs             = [
+  { key:'orders',      label:'Заказы' },
   { key:'preview',     label:'Проверка и загрузка данных' },
   { key:'logs',        label:'Логи сервера' },
   { key:'visits',      label:'Статистика посещений' },
@@ -294,6 +414,16 @@ const tabs             = [
   { key:'all_reviews', label:'Список отзывов' },
   { key:'add_review',  label:'Добавить отзыв' },
 ]
+const statusPriority   = {
+  'Дата заказа':         0,
+  'В обработке':         1,
+  'Выкуплен':            2,
+  'Собран':              3,
+  'В пути':              4,
+  'Передан в доставку':  5,
+  'Выполнен':            6,
+  'Отменен':             7,
+}
 
 const zipPreviewFiles = reactive({ shoes:null, clothing:null, accessories:null });
 
@@ -334,7 +464,79 @@ const maxTotal = computed(() => {
   return hours.length ? Math.max(...hours.map(h => h.total)) : 1
 })
 
+const sortedAdminOrders = computed(() => {
+  const arr = [...store.adminStore.orders]
+  if (ordersSort.value === 'status') {
+    const prio = (s) => s in statusPriority ? statusPriority[s] : 999
+    return arr.sort((a,b) => {
+      const da = prio(a.status), db = prio(b.status)
+      return da !== db ? da - db : b.id - a.id
+    })
+  }
+  if (ordersSort.value === 'id_asc') return arr.sort((a,b) => a.id - b.id)
+  return arr.sort((a,b) => b.id - a.id) // id_desc
+})
+
 // Утилиты
+function formatPrice(v) {
+  return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
+function badgeClass(status) {
+  if (status === 'Отменен') return 'canceled'
+  if (status === 'Выполнен') return 'done'
+  return 'inprogress'
+}
+
+function canAdvance(status) {
+  // финальные статусы не двигаем
+  return status !== 'Выполнен' && status !== 'Отменен'
+}
+
+async function goOrderDetail(id) {
+  await store.adminStore.fetchOrderDetailAdmin(id)
+}
+
+function canCancel(status) {
+  // нельзя отменять завершённые и уже отменённые
+  return status !== 'Выполнен' && status !== 'Отменен'
+}
+
+function setBusy(id, v) {
+  const s = new Set(busyOrderIds.value)
+  v ? s.add(id) : s.delete(id)
+  busyOrderIds.value = s
+}
+
+function isBusy(id) {
+  return busyOrderIds.value.has(id)
+}
+
+async function advance(id) {
+  if (isBusy(id)) return
+  setBusy(id, true)
+  try {
+    await store.adminStore.setNextOrderStatus(id)
+  } catch (e) {
+    alert(parseErr(e, 'Не удалось обновить статус'))
+  } finally {
+    setBusy(id, false)
+  }
+}
+
+async function onCancel(id) {
+  if (!confirm(`Отменить заказ #${id}?`)) return
+  if (isBusy(id)) return
+  setBusy(id, true)
+  try {
+    await store.adminStore.cancelOrder(id)
+  } catch (e) {
+    alert(parseErr(e, 'Не удалось отменить заказ'))
+  } finally {
+    setBusy(id, false)
+  }
+}
+
 function resetReviewForm() {
   // 1) нативный reset всех <input> и <textarea>
   reviewForm.value?.reset()
@@ -374,7 +576,7 @@ async function onProcessAll() {
     alert('Всё проверено и загружено без ошибок');
 
   } catch (e) {
-    const data = e.response?.data || {};
+    const data = e?.response?.data?.error || e?.response?.data?.message || e?.message || {};
     // Заполнить preview по таблицам
     Object.entries(data.sheet_errors || {}).forEach(([cat, report]) => {
       store.adminStore.previewSheetResult[cat] = report;
@@ -562,6 +764,7 @@ async function revokeAdmin(userId) {
 
 // При монтировании — подгрузим все по умолчанию
 onMounted(() => {
+  store.adminStore.fetchAllOrders()
   store.adminStore.loadLogs(pageSize, 0)
   store.adminStore.loadVisits(selectedDate.value)
   store.adminStore.fetchSettings()
@@ -599,6 +802,9 @@ watch(
 // **Новый watch**: при каждом переключении вкладки обновляем её данные
 watch(selected, (tab) => {
   switch(tab) {
+    case 'orders':
+      store.adminStore.fetchAllOrders()
+      break
     case 'preview':
       // ничего не грузим
       break
@@ -681,6 +887,210 @@ watch(selected, (tab) => {
     }
   }
 }
+
+/* ===== Orders ===== */
+.orders-section {
+  .orders-sort {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 10px 0 14px;
+    label {
+      color: $white-100;
+    }
+    select {
+      padding: .5rem;
+      border: 1px solid $grey-20;
+      border-radius: 4px;
+      background: $black-100;
+      color: $white-100;
+    }
+  }
+  .orders-table-wrap {
+    overflow-x: auto;
+  }
+  .orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    th, td {
+      border: 1px solid $grey-20;
+      padding: .6rem;
+      font-size: .85rem;
+      text-align: left;
+    }
+    thead {
+      background: $grey-20;
+      color: $white-100;
+    }
+    .muted {
+      color: $grey-87;
+      font-size: .8rem;
+    }
+    .st-badge {
+      display: inline-block;
+      padding: .2rem .5rem;
+      border-radius: 999px;
+      font-size: .75rem;
+      &.canceled {
+        background: #3a1f1f;
+        color: #ff6b6b;
+      }
+      &.done {
+        background: #1f3a25;
+        color: #9cffb3;
+      }
+      &.inprogress {
+        background: #2a2a2a;
+        color: #eee;
+      }
+    }
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .btn {
+      padding: .4rem .7rem;
+      border: none;
+      border-radius: 4px;
+      background: $grey-20;
+      color: $white-100;
+      cursor: pointer;
+      &.next {
+        background: $red-active;
+      }
+      &.danger {
+        background: #7a1f1f;
+      }
+      &:disabled {
+        background: $grey-30;
+        cursor: not-allowed;
+      }
+    }
+  }
+  /* Drawer с деталями */
+  .order-detail-drawer {
+    position: fixed;
+    right: 0; top: 0; bottom: 0;
+    width: min(720px, 100%);
+    background: $black-100;
+    border-left: 1px solid $grey-20;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    .od-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid $grey-20;
+      h3 {
+        margin: 0;
+      }
+      .close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: $white-100;
+        cursor: pointer;
+      }
+    }
+    .od-body {
+      padding: 12px 16px;
+      overflow: auto;
+    }
+    .order-timeline {
+      display: grid;
+      grid-template-columns: 12px 1fr;
+      row-gap: 8px;
+      column-gap: 12px;
+      margin-bottom: 12px;
+      .order-timeline-vector {
+        background: $grey-20;
+        border-radius: 2px;
+        width: 4px;
+        &.incomplete {
+          background: $grey-30;
+        }
+      }
+      .order-timeline-text {
+        .date  {
+          color: $white-100;
+        }
+        .label {
+          color: $grey-87;
+          font-size: .9rem;
+        }
+      }
+      .processed {
+        color: $grey-87;
+      }
+    }
+    .od-info,
+    .od-price {
+      display: grid;
+      row-gap: 4px;
+      margin: 10px 0;
+      color: $white-100;
+    }
+    .od-price .total {
+      margin-top: 6px;
+    }
+    .od-items {
+      margin-top: 14px;
+      h4 {
+        margin: 0 0 8px;
+      }
+      .od-item {
+        display: flex;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid $grey-20;
+        img {
+          width: 72px;
+          height: 72px;
+          object-fit: cover;
+          border-radius: 4px;
+        }
+        .info {
+          display: grid;
+          gap: 4px;
+          color: $white-100;
+        }
+        .row  {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          color: $grey-87;
+        }
+      }
+    }
+    .od-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      .btn {
+        background: $grey-20;
+        border: none;
+        border-radius: 4px;
+        color: $white-100;
+        padding: .5rem .9rem;
+        cursor: pointer;
+        &:disabled {
+          background: $grey-30;
+          cursor: not-allowed;
+        }
+      }
+      .btn.next {
+        background: $red-active;
+      }
+      .btn.danger {
+        background: #7a1f1f;
+      }
+    }
+  }
+}
+
 /* ===== Preview & Import ===== */
 .preview-section {
   h2 {

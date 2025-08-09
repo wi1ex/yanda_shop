@@ -6,11 +6,12 @@ from zoneinfo import ZoneInfo
 from typing import Tuple, List, Dict, Any
 import requests
 from flask import Blueprint, jsonify, request, Response
+from flask_jwt_extended import get_jwt_identity
 from sqlalchemy import func
 from ..core.logging import logger
 from ..core.config import BACKEND_URL
 from ..extensions import redis_client, minio_client, BUCKET
-from ..models import ChangeLog, AdminSetting, Users, Review, RequestItem
+from ..models import ChangeLog, AdminSetting, Users, Review, RequestItem, Addresses, Orders
 from ..utils.db_utils import session_scope
 from ..utils.google_sheets import get_sheet_url, process_rows, preview_rows
 from ..utils.jwt_utils import admin_required
@@ -468,3 +469,204 @@ def set_user_role() -> Tuple[Response, int]:
     log_change(action_type="Назначение роли", description=desc)
     logger.debug("set_user_role: user_id=%s role set to %s", user_id, new_role)
     return jsonify({"status": "ok"}), 200
+
+
+@admin_api.route("/list_orders", methods=["GET"])
+@admin_required
+@handle_errors
+def admin_list_orders() -> Tuple[Response, int]:
+    """
+    GET /api/admin/list_orders
+    Возвращает краткие данные по всем заказам с полями пользователя/адреса.
+    """
+    logger.debug("list_orders: called")
+    with session_scope() as session:
+        qs = session.query(Orders).order_by(Orders.created_at.desc()).all()
+        out = []
+        tz = ZoneInfo("Europe/Moscow")
+        for o in qs:
+            u = session.get(Users, o.user_id)
+            a = session.get(Addresses, o.address_id) if o.address_id else None
+            address_short = None
+            if a:
+                address_short = f"г.{a.city}, ул. {a.street}, дом {a.house}"
+
+            created_local = o.created_at.astimezone(tz).isoformat() if o.created_at else None
+
+            out.append({
+                "id":             o.id,
+                "status":         o.status,
+                "created_at":     created_local,
+                "total":          o.total,
+                "delivery_price": o.delivery_price,
+                "user": {
+                    "id":         u.user_id if u else None,
+                    "first_name": u.first_name if u else None,
+                    "last_name":  u.last_name if u else None,
+                    "phone":      u.phone if u else None,
+                    "email":      u.email if u else None,
+                },
+                "address": address_short,
+            })
+
+    logger.debug("list_orders: returned %d orders", len(out))
+    return jsonify({"orders": out}), 200
+
+
+@admin_api.route("/get_order/<int:order_id>", methods=["GET"])
+@admin_required
+@handle_errors
+def admin_get_order(order_id: int) -> Tuple[Response, int]:
+    logger.debug("get_order: order_id=%d", order_id)
+    with session_scope() as session:
+        o = session.get(Orders, order_id)
+        if not o:
+            logger.warning("get_order: not found order_id=%d", order_id)
+            return jsonify({"error": "not found"}), 404
+
+        a = session.get(Addresses, o.address_id) if o.address_id else None
+        delivery_address = None
+        if a:
+            delivery_address = f"г.{a.city}, ул. {a.street}, дом {a.house}" + (f", кв.{a.apartment}" if a.apartment else "")
+
+        # даты на таймлайне показываем «ДД.ММ» если есть
+        def d(dt):
+            return dt.strftime("%d.%m") if dt else None
+
+        timeline = [
+            {"label": "Дата заказа",        "date": d(o.created_at),   "done": True},
+            {"label": "В обработке",        "date": d(o.processed_at), "done": bool(o.processed_at)},
+            {"label": "Выкуплен",           "date": d(o.purchased_at), "done": bool(o.purchased_at)},
+            {"label": "Собран",             "date": d(o.assembled_at), "done": bool(o.assembled_at)},
+            {"label": "В пути",             "date": d(o.shipped_at),   "done": bool(o.shipped_at)},
+            {"label": "Передан в доставку", "date": d(o.delivered_at), "done": bool(o.delivered_at)},
+            {"label": "Выполнен",           "date": d(o.completed_at), "done": bool(o.completed_at)},
+        ]
+
+        subtotal = 0
+        for i in (o.items_json or []):
+            price = i.get("price", 0) or 0
+            qty   = i.get("qty", 0) or 0
+            subtotal += int(price) * int(qty)
+
+        data = {
+            "id":               o.id,
+            "status":           o.status,
+            "timeline":         timeline,
+            "payment_method":   o.payment_method,
+            "delivery_type":    o.delivery_type,
+            "delivery_address": delivery_address,
+            "subtotal":         subtotal,
+            "delivery_price":   o.delivery_price,
+            "total":            o.total,
+            "items":            o.items_json,
+            "user":             {"id": o.user_id},
+        }
+
+    logger.debug("get_order: ok order_id=%d status=%s", order_id, data["status"])
+    return jsonify({"order": data}), 200
+
+
+@admin_api.route("/set_next_status/<int:order_id>", methods=["POST"])
+@admin_required
+@handle_errors
+def admin_set_next_status(order_id: int) -> Tuple[Response, int]:
+    """
+    POST /api/admin/set_next_status/<id>
+    Переводит заказ на следующий статус и проставляет соответствующую *_at дату.
+    Переход из 'Отменен'/'Выполнен' запрещён.
+    """
+    STATUS_FLOW = [
+        "Дата заказа",         # created_at
+        "В обработке",         # processed_at
+        "Выкуплен",            # purchased_at
+        "Собран",              # assembled_at
+        "В пути",              # shipped_at
+        "Передан в доставку",  # delivered_at
+        "Выполнен",            # completed_at
+    ]
+    STATUS_TO_COLUMN = {
+        "В обработке":         "processed_at",
+        "Выкуплен":            "purchased_at",
+        "Собран":              "assembled_at",
+        "В пути":              "shipped_at",
+        "Передан в доставку":  "delivered_at",
+        "Выполнен":            "completed_at",
+    }
+
+    logger.debug("set_next_status: order_id=%d", order_id)
+    now = datetime.now(ZoneInfo("Europe/Moscow"))
+    with session_scope() as session:
+        o = session.get(Orders, order_id)
+        if not o:
+            logger.warning("set_next_status: not found order_id=%d", order_id)
+            return jsonify({"error": "not found"}), 404
+
+        # запрет перехода из финальных статусов
+        if o.status in ("Отменен", "Выполнен"):
+            logger.debug("set_next_status: blocked from status=%s order_id=%d", o.status, order_id)
+            return jsonify({"status": o.status, "message": "blocked from final status"}), 400
+
+        # если статус не из цепочки — считаем его как «Дата заказа»
+        try:
+            idx = STATUS_FLOW.index(o.status)
+        except ValueError:
+            logger.warning("set_next_status: unknown status=%s, normalizing to 'Дата заказа' (order_id=%d)", o.status, order_id)
+            idx = 0
+            o.status = STATUS_FLOW[idx]  # мягкая нормализация (без *_at)
+
+        if idx >= len(STATUS_FLOW) - 1:
+            logger.debug("set_next_status: already final order_id=%d status=%s", order_id, o.status)
+            return jsonify({"status": o.status, "message": "already final"}), 200
+
+        next_status = STATUS_FLOW[idx + 1]
+        col = STATUS_TO_COLUMN.get(next_status)
+        if col:
+            setattr(o, col, now)
+        o.status = next_status
+
+        admin_id = get_jwt_identity()
+        admin_user = session.get(Users, admin_id)
+        admin_name = f"{admin_user.first_name} {admin_user.last_name}" if admin_user else f"id={admin_id}"
+        log_change(action_type="Смена статуса заказа",
+                   description=f"{admin_name} обновил статус заказа #{o.id} → {next_status}")
+        session.flush()
+
+        logger.debug("set_next_status: ok order_id=%d new_status=%s set_at=%s", order_id, next_status, now.isoformat())
+        return jsonify({"order_id": o.id, "status": o.status, "set_at": now.isoformat()}), 200
+
+
+@admin_api.route("/cancel_order/<int:order_id>", methods=["POST"])
+@admin_required
+@handle_errors
+def admin_cancel_order(order_id: int) -> Tuple[Response, int]:
+    """
+    POST /api/admin/cancel_order/<id>
+    Ставит статус 'Отменен' и дату canceled_at (идемпотентно).
+    """
+    logger.debug("cancel_order: order_id=%d", order_id)
+    now = datetime.now(ZoneInfo("Europe/Moscow"))
+    with session_scope() as session:
+        o = session.get(Orders, order_id)
+        if not o:
+            logger.warning("cancel_order: not found order_id=%d", order_id)
+            return jsonify({"error": "not found"}), 404
+
+        if o.status == "Выполнен":
+            logger.debug("cancel_order: already completed order_id=%d", order_id)
+            return jsonify({"error": "already completed"}), 400
+
+        if o.status == "Отменен":
+            logger.debug("cancel_order: already canceled order_id=%d", order_id)
+            return jsonify({"status": o.status, "message": "already canceled"}), 200
+
+        o.status = "Отменен"
+        o.canceled_at = now
+        admin_id = get_jwt_identity()
+        admin_user = session.get(Users, admin_id)
+        admin_name = f"{admin_user.first_name} {admin_user.last_name}" if admin_user else f"id={admin_id}"
+        log_change(action_type="Отмена заказа", description=f"{admin_name} отменил заказ #{o.id}")
+        session.flush()
+
+        logger.debug("cancel_order: ok order_id=%d canceled_at=%s", order_id, now.isoformat())
+        return jsonify({"order_id": o.id, "status": o.status, "canceled_at": now.isoformat()}), 200

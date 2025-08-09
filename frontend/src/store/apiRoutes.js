@@ -14,7 +14,7 @@ export const API = {
     getUserOrder:             '/api/general/get_user_order',            // GET    - получить детали заказа
     listAddresses:            '/api/general/list_addresses',            // GET    - получить список адресов
     createAddress:            '/api/general/add_address',               // POST   - добавить адрес
-    updateAddress:            '/api/general/update_address',            // PUT    - обновить данные дареса
+    updateAddress:            '/api/general/update_address',            // PUT    - обновить данные адреса
     deleteAddress:            '/api/general/delete_address',            // DELETE - удалить адрес
     selectAddress:            '/api/general/select_address',            // POST   - выбрать адрес основным
   },
@@ -31,7 +31,7 @@ export const API = {
     verifyCode:               '/api/auth/verify_code',                  // POST   - Верификация кода
   },
   admin: {
-    setUserRole:              '/api/admin/set_user_role',               // GET    - установить пользователю роль
+    setUserRole:              '/api/admin/set_user_role',               // POST   - установить пользователю роль
     getDailyVisits:           '/api/admin/get_daily_visits',            // GET    - статистика визитов по часам
     getLogs:                  '/api/admin/get_logs',                    // GET    - журнал
     syncAll:                  '/api/admin/sync_all',                    // POST   - проверка и загрузка Sheets и ZIP
@@ -43,5 +43,9 @@ export const API = {
     listRequests:             '/api/admin/list_requests',               // GET    - получить список заявок на поиск товара
     deleteRequest:            '/api/admin/delete_request',              // DELETE - удалить заявку на поиск товара
     listUsers:                '/api/admin/list_users',                  // GET    - получить список пользователей
+    listAllOrders:            '/api/admin/list_orders',                 // GET    - получить список всех заказов
+    getOrder:                 '/api/admin/get_order',                   // GET    - получить данные заказа
+    nextOrderStatus:          '/api/admin/set_next_status',             // POST   - установить статус заказа
+    cancelOrder:              '/api/admin/cancel_order',                // POST   - отменить заказ
   }
 }
