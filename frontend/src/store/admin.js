@@ -69,6 +69,10 @@ export const useAdminStore = defineStore('admin', () => {
     accessories:false,
   });
 
+  // === Orders ===
+  const orders = ref([])
+  const orderDetail = ref(null)
+
   // Logs & visits
   const logs = ref([]);
   const logsLoading = ref(false);
@@ -137,6 +141,37 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
+  // === Orders ===
+  async function fetchAllOrders() {
+    const { data } = await api.get(API.admin.listAllOrders)
+    orders.value = data.orders
+  }
+
+  async function fetchOrderDetailAdmin(orderId) {
+    const { data } = await api.get(`${API.admin.getOrder}/${orderId}`)
+    orderDetail.value = data.order
+  }
+
+  async function setNextOrderStatus(orderId) {
+    const { data } = await api.post(`${API.admin.nextOrderStatus}/${orderId}`)
+    const i = orders.value.findIndex(o => o.id === orderId)
+    if (i >= 0) orders.value[i].status = data.status
+    if (orderDetail.value?.id === orderId) {
+      await fetchOrderDetailAdmin(orderId)
+    }
+    return data
+  }
+
+  async function cancelOrder(orderId) {
+    const { data } = await api.post(`${API.admin.cancelOrder}/${orderId}`)
+    const i = orders.value.findIndex(o => o.id === orderId)
+    if (i >= 0) orders.value[i].status = data.status
+    if (orderDetail.value?.id === orderId) {
+      await fetchOrderDetailAdmin(orderId)
+    }
+    return data
+  }
+
   // Requests management
   async function fetchRequests() {
     const { data } = await api.get(API.admin.listRequests);
@@ -173,6 +208,9 @@ export const useAdminStore = defineStore('admin', () => {
     previewZipResult,
     previewZipLoading,
 
+    orders,
+    orderDetail,
+
     logs,
     logsLoading,
     totalLogs,
@@ -189,6 +227,11 @@ export const useAdminStore = defineStore('admin', () => {
     saveSetting,
     deleteSetting,
     updateUserRole,
+
+    fetchAllOrders,
+    fetchOrderDetailAdmin,
+    setNextOrderStatus,
+    cancelOrder,
 
     createReview,
     deleteReview,
