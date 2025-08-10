@@ -92,7 +92,7 @@ async function sendCode() {
   pending.value = true
   try {
     const { data } = await store.userStore.requestCode(form.value.email)
-    const seconds = Number(data?.expires_in) > 0 ? Number(data.expires_in) : 59
+    const seconds = Number(data?.expires_in) > 0 ? Number(data.expires_in) : 60
     step.value = 2
     startTimer(seconds)
   } catch (e) {
@@ -108,7 +108,7 @@ async function resendCode() {
   pending.value = true
   try {
     const { data } = await store.userStore.requestCode(form.value.email)
-    const seconds = Number(data?.expires_in) > 0 ? Number(data.expires_in) : 600
+    const seconds = Number(data?.expires_in) > 0 ? Number(data.expires_in) : 60
     startTimer(seconds)
   } catch (e) {
     error.value = e?.response?.data?.error || 'Не удалось отправить код повторно'
