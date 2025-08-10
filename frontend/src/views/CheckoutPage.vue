@@ -1,17 +1,9 @@
 <template>
   <div class="checkout-page">
     <div class="line-vert"></div>
-
     <h1 class="section-title" v-if="mode==='form'">ОФОРМЛЕНИЕ ЗАКАЗА</h1>
     <h1 class="section-title" v-else>ПОЗДРАВЛЯЕМ!</h1>
-
-    <button type="button" class="back-button" @click="goBack">
-      <img :src="icon_arrow_grey" alt="arrow back" />
-      Назад
-    </button>
-
     <div class="line-hor"></div>
-
     <!-- FORM -->
     <div v-if="mode==='form'" class="content">
       <div class="grid">
@@ -25,7 +17,6 @@
             <input class="info" v-model="form.email"      placeholder="Почта*" type="email" />
             <input class="info" v-model="form.phone"      placeholder="Телефон*" />
           </div>
-
           <!-- 2. Способ доставки -->
           <div class="card">
             <label class="card-label">2. Способ доставки</label>
@@ -39,7 +30,6 @@
             </label>
             <p v-if="addressHint" class="hint">{{ addressHint }}</p>
           </div>
-
           <!-- 3. Способ оплаты -->
           <div class="card">
             <label class="card-label">3. Способ оплаты</label>
@@ -53,12 +43,10 @@
             </label>
           </div>
         </div>
-
         <!-- Правая колонка -->
         <div class="right">
           <div class="card">
             <label class="card-label">Товары</label>
-
             <div class="cart-items-frame">
               <div v-for="it in items" :key="it.variant_sku + (it.delivery_option?.label || '')" class="cart-item">
                 <div class="item-image-container">
@@ -86,7 +74,6 @@
                 <div class="qty">× {{ it.quantity }}</div>
               </div>
             </div>
-
             <div class="price-block">
               <div class="row">
                 <p class="info-block-text">Стоимость:</p>
@@ -101,12 +88,10 @@
                 <p class="info-block-text price">{{ formatPrice(total) }} ₽</p>
               </div>
             </div>
-
             <label class="agree">
               <input type="checkbox" v-model="form.agree" />
               Я согласен на обработку персональных данных
             </label>
-
             <button type="button" class="action-button" :disabled="!canSubmit || loading" @click="submit">
               {{ loading ? 'Отправка...' : 'Перейти к оплате' }}
             </button>
@@ -114,7 +99,6 @@
         </div>
       </div>
     </div>
-
     <!-- SUCCESS -->
     <div v-else class="content">
       <div class="card success-card">
@@ -166,7 +150,12 @@ const form = reactive({
 const shipping = computed(() => form.delivery === 'courier_mkad' ? 400 : 0)
 const total    = computed(() => subtotal.value + shipping.value)
 const canSubmit = computed(() =>
-  Boolean(items.value.length && form.first_name && form.last_name && form.email && form.phone && form.agree)
+  Boolean(items.value.length
+      && form.first_name
+      && form.last_name
+      && form.email
+      && form.phone
+      && form.agree)
 )
 
 const addressHint = computed(() => {
@@ -179,22 +168,9 @@ function formatPrice(v) {
   return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
-onMounted(async () => {
-  if (!store.userStore.isAuthenticated()) {
-    store.userStore.openAuth()
-    return
-  }
-  if (!store.cartStore.cart.items.length) await store.cartStore.loadCartFromServer?.()
-  if (!store.userStore.addresses.length)  await store.userStore.fetchAddresses?.()
-  if (!store.cartStore.cart.items.length) {
-    router.replace({ name: 'Catalog' })
-  }
-})
-
 async function submit() {
   if (!canSubmit.value || loading.value) return
   loading.value = true
-
   const payload = {
     payment_method: form.payment === 'card' ? 'Банковская карта' : 'СБП',
     delivery_type:  form.delivery === 'courier_mkad' ? 'Курьер (МКАД)' : 'ПВЗ',
@@ -205,10 +181,8 @@ async function submit() {
     phone:       form.phone,
     email:       form.email,
   }
-
   const orderId = await store.cartStore.placeOrder(payload)
   loading.value = false
-
   if (orderId) {
     createdOrderId.value = orderId
     mode.value = 'success'
@@ -218,21 +192,39 @@ async function submit() {
   }
 }
 
-function goBack() {
-  if (mode.value === 'success') {
-    router.replace({ name: 'Profile', query: { section: 'orders', order: String(createdOrderId.value || '') } })
-  } else {
-    if (window.history.length > 1) router.back()
-    else router.push({ name: 'Home' })
-  }
+function goOrders() {
+  router.push({ name: "Profile", query: { section: "orders" } })
 }
 
-function goOrders() {
-  router.replace({ name: 'Profile', query: { section: 'orders', order: String(createdOrderId.value || '') } })
-}
+onMounted(async () => {
+  if (!store.userStore.addresses.length) {
+    await userStore.fetchAddresses()
+  }
+  if (!store.cartStore.cart.items.length) {
+    router.replace({ name: 'Catalog' })
+  }
+})
+
 </script>
 
 <style scoped lang="scss">
+
+.line-vert {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 0.5px);
+  width: 1px;
+  height: 100%;
+  background-color: $white-100;
+  z-index: 10;
+}
+.line-hor {
+  width: 100%;
+  height: 1px;
+  background-color: $white-100;
+  z-index: 100;
+}
+
 .checkout-page {
   margin-top: 120px;
   .section-title {
@@ -271,8 +263,8 @@ function goOrders() {
     flex-direction: column;
   }
   .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
     margin: 0 10px;
   }
@@ -344,8 +336,7 @@ function goOrders() {
     padding: 0 0 12px;
     gap: 12px;
     .cart-item {
-      display: grid;
-      grid-template-columns: 134px 1fr auto;
+      display: flex;
       gap: 8px;
       align-items: center;
       padding: 12px 0;
