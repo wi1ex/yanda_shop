@@ -54,7 +54,6 @@ const pending   = ref(false)
 const remaining = ref(0)
 let timerId     = null
 
-
 const ss = computed(() => String(remaining.value % 60).padStart(2, '0'))
 const canSendEmail  = computed(() => /\S+@\S+\.\S+/.test(form.value.email))
 const canSubmitCode = computed(() => /^[0-9]{6}$/.test(form.value.code))

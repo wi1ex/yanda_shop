@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory, abort
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -54,6 +54,14 @@ def create_app() -> Flask:
         for bp in (general_api, product_api, admin_api, auth_bp):
             app.register_blueprint(bp)
             logger.debug("%s: registered blueprint %s", context, bp.name)
+
+        # ——— Скачивание документов ————————————————————————
+        @app.route("/download/<path:filename>")
+        def download_file(filename):
+            # Базовая защита: отдаём только PDF
+            if not filename.lower().endswith(".pdf"):
+                abort(404)
+            return send_from_directory('static/files', filename)
 
         # ——— Кэширование опций доставки ————————————————————————
         with app.app_context():
