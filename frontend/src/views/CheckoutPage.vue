@@ -1,8 +1,6 @@
 <template>
   <div class="checkout-page">
     <div class="line-vert"></div>
-    <h1 class="section-title" v-if="mode==='form'">ОФОРМЛЕНИЕ ЗАКАЗА</h1>
-    <h1 class="section-title" v-else>ПОЗДРАВЛЯЕМ!</h1>
     <div class="line-hor"></div>
     <!-- FORM -->
     <div v-if="mode==='form'" class="content">
@@ -22,7 +20,7 @@
             <label class="card-label">2. Способ доставки</label>
             <label class="radio-button">
               <input type="radio" value="courier_mkad" v-model="form.delivery" />
-              Курьером по Москве (в пределах МКАД)
+              Курьерская доставка
             </label>
             <label class="radio-button">
               <input type="radio" value="pvz" v-model="form.delivery" />
@@ -61,6 +59,10 @@
                   <div class="item-info-row">
                     <div class="item-info-div">
                       <p class="item-info">
+                        Количество:
+                        <span class="item-info-value">{{ it.quantity }}</span>
+                      </p>
+                      <p class="item-info">
                         Размер:
                         <span class="item-info-value">{{ it.size_label }}</span>
                       </p>
@@ -71,7 +73,6 @@
                     </div>
                   </div>
                 </div>
-                <div class="qty">× {{ it.quantity }}</div>
               </div>
             </div>
             <div class="price-block">
@@ -80,7 +81,7 @@
                 <p class="info-block-text">{{ formatPrice(subtotal) }} ₽</p>
               </div>
               <div class="row">
-                <p class="info-block-text">Курьерская доставка:</p>
+                <p class="info-block-text">Доставка:</p>
                 <p class="info-block-text">{{ formatPrice(shipping) }} ₽</p>
               </div>
               <div class="row total">
@@ -198,7 +199,7 @@ function goOrders() {
 
 onMounted(async () => {
   if (!store.userStore.addresses.length) {
-    await userStore.fetchAddresses()
+    await store.userStore.fetchAddresses()
   }
   if (!store.cartStore.cart.items.length) {
     router.replace({ name: 'Catalog' })
@@ -227,37 +228,6 @@ onMounted(async () => {
 
 .checkout-page {
   margin-top: 120px;
-  .section-title {
-    margin: 96px 0 40px;
-    text-align: center;
-    color: $black-100;
-    font-family: Bounded;
-    font-weight: 400;
-    font-size: 32px;
-    line-height: 90%;
-    letter-spacing: -2.24px;
-    z-index: 20;
-  }
-  .back-button {
-    display: flex;
-    align-items: center;
-    margin: 0 10px 10px;
-    padding: 0;
-    width: fit-content;
-    gap: 4px;
-    background: none;
-    border: none;
-    color: $black-100;
-    font-size: 16px;
-    line-height: 100%;
-    letter-spacing: -0.64px;
-    cursor: pointer;
-    img {
-      width: 24px;
-      height: 24px;
-      object-fit: cover;
-    }
-  }
   .content {
     display: flex;
     flex-direction: column;
@@ -392,13 +362,6 @@ onMounted(async () => {
       .item-info-value {
         color: $grey-20;
       }
-      .qty {
-        justify-self: end;
-        color: $black-100;
-        font-family: Bounded;
-        font-size: 16px;
-        font-weight: 375;
-      }
     }
   }
   .price-block {
@@ -459,7 +422,7 @@ onMounted(async () => {
     letter-spacing: -0.64px;
     cursor: pointer;
     &:disabled {
-      opacity: .6;
+      opacity: 0.6;
       cursor: default;
     }
   }
@@ -493,7 +456,7 @@ onMounted(async () => {
       width: 96px;
       height: 96px;
       object-fit: contain;
-      opacity: .9;
+      opacity: 0.9;
     }
   }
 }
