@@ -8,7 +8,6 @@ export const useCartStore = defineStore('cart', () => {
   // Cart contents
   const cart = ref({ count: 0, total: 0, items: [] });
   const showCart = ref(false);
-  const deliveryPrice = ref(0)
 
   // Favorites
   const favorites = ref({ items: [], count: 0 });
@@ -145,22 +144,14 @@ export const useCartStore = defineStore('cart', () => {
     ).length;
   }
 
-  async function checkout() {
-    if (!userStore.isAuthenticated()) return;
+  async function placeOrder(options = {}) {
+    if (!userStore.isAuthenticated()) return null
     try {
-      // Если адреса ещё не загружены — загрузим
       if (!userStore.addresses.length) {
-        await userStore.fetchAddresses();
+        await userStore.fetchAddresses()
       }
+      const primary = userStore.addresses.find(a => a.selected)
 
-      // Проверяем, что в профиле заполнены адрес, ФИО, телефон и почта
-      const primary = userStore.addresses.find(a => a.selected);
-      const { first_name, last_name, middle_name, phone, email } = userStore.user;
-      if (!primary || !first_name || !last_name || !middle_name || !phone || !email) {
-        return false;
-      }
-
-      // Формируем payload из groupedCartItems
       const items = groupedCartItems.value.map(item => ({
         variant_sku:     item.variant_sku,
         world_sku:       item.world_sku,
@@ -173,43 +164,40 @@ export const useCartStore = defineStore('cart', () => {
         size_label:      item.size_label,
       }))
 
-      // Извлекаем все текстовые сроки, парсим максимальное число дней
       function parseMaxDays(label = '') {
-        const range = label.match(/(\d+)\D+(\d+)/);
-        if (range) return parseInt(range[2], 10);
-        const single = label.match(/(\d+)/);
-        return single ? parseInt(single[1], 10) : 0;
+        const range = label.match(/(\d+)\D+(\d+)/)
+        if (range) return parseInt(range[2], 10)
+        const single = label.match(/(\d+)/)
+        return single ? parseInt(single[1], 10) : 0
       }
-      const maxDays = groupedCartItems.value.reduce((mx, item) => {
-        return Math.max(mx, parseMaxDays(item.delivery_option?.label));
-      }, 0);
-      const receiveDate = new Date();
-      receiveDate.setDate(receiveDate.getDate() + maxDays);
-      const delivery_date = receiveDate.toISOString();
+      const maxDays = groupedCartItems.value.reduce((mx, it) => Math.max(mx, parseMaxDays(it.delivery_option?.label)), 0)
+      const receiveDate = new Date()
+      receiveDate.setDate(receiveDate.getDate() + maxDays)
 
-      deliveryPrice.value = 400
       const payload = {
         items,
-        address_id:     primary.id,
-        payment_method: "онлайн",
-        delivery_type:  "ПВЗ",
-        delivery_price: deliveryPrice.value,
-        delivery_date:  delivery_date,
-        first_name:     userStore.user.first_name,
-        last_name:      userStore.user.last_name,
-        middle_name:    userStore.user.middle_name,
-        phone:          userStore.user.phone,
-        email:          userStore.user.email,
+        address_id:     options.address_id ?? (primary ? primary.id : undefined),
+        payment_method: options.payment_method ?? 'онлайн',
+        delivery_type:  options.delivery_type  ?? 'ПВЗ',
+        delivery_price: typeof options.delivery_price === 'number' ? options.delivery_price : 400,
+        delivery_date:  receiveDate.toISOString(),
+        first_name:     options.first_name  ?? userStore.user.first_name,
+        last_name:      options.last_name   ?? userStore.user.last_name,
+        middle_name:    options.middle_name ?? userStore.user.middle_name,
+        phone:          options.phone       ?? userStore.user.phone,
+        email:          options.email       ?? userStore.user.email,
       }
 
-      // Отправляем заказ и очищаем корзину
-      const { data } = await api.post(API.general.createOrder, payload);
-      cart.value = { count: 0, total: 0, items: [] };
-      deliveryPrice.value = 0;
-      await saveCartToServer();
-      return data.order_id;
+      const { data } = await api.post(API.general.createOrder, payload)
+
+      cart.value = { count: 0, total: 0, items: [] }
+      deliveryPrice.value = 0
+      await saveCartToServer()
+
+      return data.order_id
     } catch (e) {
-      console.error("checkout error:", e);
+      console.error('placeOrder error:', e)
+      return null
     }
   }
 
@@ -288,7 +276,7 @@ export const useCartStore = defineStore('cart', () => {
     increaseQuantity,
     decreaseQuantity,
     getProductQuantity,
-    checkout,
+    placeOrder,
     groupedCartItems,
 
     // Favorites state & actions

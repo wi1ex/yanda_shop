@@ -70,7 +70,7 @@
         </div>
 
         <div class="cart-action" v-if="store.cartStore.cart.items.length">
-          <button type="button" v-if="store.userStore.isAuthenticated()" class="action-button" @click="onCheckout">
+          <button type="button" v-if="store.userStore.isAuthenticated()" class="action-button" @click="goToCheckout">
             Оформить заказ
           </button>
           <button type="button" v-else class="action-button" @click="onRegister">
@@ -117,15 +117,9 @@ function goToCatalog() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-async function onCheckout() {
-  const data = await store.cartStore.checkout();
-  store.cartStore.closeCartDrawer();
-  if (data) {
-    router.push({ name: "Profile", query: { section: "orders" } });
-  } else {
-    alert("Не заполнен профиль или адрес");
-    router.push({ name: 'Profile' })
-  }
+async function goToCheckout() {
+  store.cartStore.closeCartDrawer()
+  router.push({ name: 'Checkout' })
 }
 
 </script>
