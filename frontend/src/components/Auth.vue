@@ -20,7 +20,7 @@
         <p class="text">Введи код из сообщения.</p>
         <input v-model.trim="form.code" inputmode="numeric" maxlength="6" placeholder="Введи код" @keyup.enter="checkCode" />
         <p class="error" v-if="error">{{ error }}</p>
-        <p v-if="remaining > 0" class="text">Запросить код повторно можно через {{ mm }}:{{ ss }} секунд</p>
+        <p v-if="remaining > 0" class="text">Запросить код повторно можно через 0:{{ ss }} секунд</p>
         <button v-else type="button" class="resend-link" @click="resendCode" :disabled="pending">
           Отправить код ещё раз
         </button>
@@ -53,7 +53,6 @@ const remaining = ref(0)
 let timerId     = null
 
 
-const mm = computed(() => String(Math.floor(remaining.value / 60)).padStart(2, '0'))
 const ss = computed(() => String(remaining.value % 60).padStart(2, '0'))
 const canSendEmail  = computed(() => /\S+@\S+\.\S+/.test(form.value.email))
 const canSubmitCode = computed(() => /^[0-9]{6}$/.test(form.value.code))
@@ -91,8 +90,8 @@ async function sendCode() {
   error.value = ''
   pending.value = true
   try {
-    const { data } = await store.userStore.requestCode(form.value.email)
-    const seconds = Number(data?.expires_in) > 0 ? Number(data.expires_in) : 60
+    await store.userStore.requestCode(form.value.email)
+    const seconds = 59
     step.value = 2
     startTimer(seconds)
   } catch (e) {
@@ -107,8 +106,8 @@ async function resendCode() {
   error.value = ''
   pending.value = true
   try {
-    const { data } = await store.userStore.requestCode(form.value.email)
-    const seconds = Number(data?.expires_in) > 0 ? Number(data.expires_in) : 60
+    await store.userStore.requestCode(form.value.email)
+    const seconds = 59
     startTimer(seconds)
   } catch (e) {
     error.value = e?.response?.data?.error || 'Не удалось отправить код повторно'
