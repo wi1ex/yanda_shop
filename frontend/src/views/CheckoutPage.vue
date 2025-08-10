@@ -198,12 +198,7 @@ function goOrders() {
 }
 
 onMounted(async () => {
-  if (!store.userStore.addresses.length) {
-    await store.userStore.fetchAddresses()
-  }
-  if (!store.cartStore.cart.items.length) {
-    router.replace({ name: 'Catalog' })
-  }
+  await store.userStore.fetchAddresses()
 })
 
 </script>
