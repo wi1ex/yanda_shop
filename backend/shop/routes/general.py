@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 from .auth import make_tokens
 from ..core.logging import logger
 from ..core.config import BACKEND_URL
-from ..utils.db_utils import session_scope
+from ..utils.db_utils import session_scope, adjust_user_order_stats
 from ..models import Users, ChangeLog, Review, RequestItem, Addresses, Orders
 from ..extensions import redis_client, minio_client, BUCKET
 from ..utils.logging_utils import log_change
@@ -454,6 +454,8 @@ def create_order() -> Tuple[Response, int]:
         session.add(order)
         session.flush()
         order_id = order.id
+
+        adjust_user_order_stats(session, user_id, count_delta=1, amount_delta=total)
 
         # Логируем создание
         log_text = (f"Номер заказа: {order_id}. Сумма заказа: {subtotal}. "

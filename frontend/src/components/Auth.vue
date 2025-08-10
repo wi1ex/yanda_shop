@@ -7,24 +7,32 @@
       <div class="auth-modal" v-if="step === 1">
         <h2>Вход или регистрация</h2>
         <p class="text">Введите почтовый адрес, и мы отправим вам письмо с кодом подтверждения.</p>
-        <input v-model="form.email" type="email" placeholder="Введи e-mail"/>
+        <input v-model.trim="form.email" type="email" placeholder="Введи e-mail" @keyup.enter="sendCode"/>
         <p class="error" v-if="error">{{ error }}</p>
-        <button @click="sendCode">Получить код</button>
+        <button @click="sendCode" :disabled="pending || !canSendEmail">
+          {{ pending ? 'Отправляем…' : 'Получить код' }}
+        </button>
         <p class="info">Нажимая на кнопку «Получить код», я даю согласие на обработку своих персональных данных в соответствии с политикой обработки персональных данных</p>
       </div>
       <div class="auth-modal" v-else-if="step === 2">
         <h2>Подтверди почту</h2>
         <p class="text">{{ form.email }}</p>
         <p class="text">Введи код из сообщения.</p>
-        <input v-model="form.code" placeholder="Введи код" />
+        <input v-model.trim="form.code" inputmode="numeric" maxlength="6" placeholder="Введи код" @keyup.enter="checkCode" />
         <p class="error" v-if="error">{{ error }}</p>
+        <p v-if="remaining > 0" class="text">Отправить код повторно через {{ mm }}:{{ ss }}</p>
+        <button v-else class="resend-link" @click="resendCode" :disabled="pending">
+          Отправить код ещё раз
+        </button>
         <p class="info">
           Не получили код? Обратись в нашу
           <a v-if="store.globalStore.parameters.url_social_email" :href="`mailto:${store.globalStore.parameters.url_social_email}`" rel="noopener">
             службу поддержки
           </a>
         </p>
-        <button @click="checkCode">Подтвердить почту</button>
+        <button @click="checkCode" :disabled="pending || !canSubmitCode">
+          {{ pending ? 'Проверяем…' : 'Подтвердить почту' }}
+        </button>
         <p class="info">Нажимая на кнопку «Подтвердить номер», я даю согласие на обработку своих персональных данных в соответствии с политикой обработки персональных данных</p>
       </div>
     </div>
@@ -32,20 +40,45 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onBeforeUnmount } from 'vue'
 import { useStore } from '@/store/index.js'
 import icon_close from '@/assets/images/close.svg'
 
-const store = useStore()
-const step  = ref(1)
-const error = ref('')
-const form  = ref({ email: '', code: '' })
+const store     = useStore()
+const step      = ref(1)
+const error     = ref('')
+const form      = ref({ email: '', code: '' })
+const pending   = ref(false)
+const remaining = ref(0)
+let timerId     = null
+
+
+const mm = computed(() => String(Math.floor(remaining.value / 60)).padStart(2, '0'))
+const ss = computed(() => String(remaining.value % 60).padStart(2, '0'))
+const canSendEmail  = computed(() => /\S+@\S+\.\S+/.test(form.value.email))
+const canSubmitCode = computed(() => /^[0-9]{6}$/.test(form.value.code))
+
+function startTimer(seconds) {
+  stopTimer()
+  remaining.value = Math.max(0, seconds | 0)
+  if (remaining.value <= 0) return
+  timerId = setInterval(() => {
+    if (remaining.value > 0) remaining.value -= 1
+    else stopTimer()
+  }, 1000)
+}
+function stopTimer() {
+  if (timerId) { clearInterval(timerId); timerId = null }
+}
 
 function reset() {
   step.value = 1
   form.value.email = ''
   form.value.code = ''
   error.value = ''
+  pending.value = false
+  remaining.value = 0
+  stopTimer()
 }
 
 function onClose() {
@@ -54,25 +87,52 @@ function onClose() {
 }
 
 async function sendCode() {
+  if (!canSendEmail.value) { error.value = 'Введите корректный e-mail'; return }
   error.value = ''
+  pending.value = true
   try {
-    await store.userStore.requestCode(form.value.email)
+    const { data } = await store.userStore.requestCode(form.value.email)
+    const seconds = Number(data?.expires_in) > 0 ? Number(data.expires_in) : 600
     step.value = 2
+    startTimer(seconds)
   } catch (e) {
-    error.value = e.response?.data?.error || 'Ошибка отправки кода'
+    error.value = e?.response?.data?.error || 'Ошибка отправки кода'
+  } finally {
+    pending.value = false
+  }
+}
+
+async function resendCode() {
+  if (remaining.value > 0) return
+  error.value = ''
+  pending.value = true
+  try {
+    const { data } = await store.userStore.requestCode(form.value.email)
+    const seconds = Number(data?.expires_in) > 0 ? Number(data.expires_in) : 600
+    startTimer(seconds)
+  } catch (e) {
+    error.value = e?.response?.data?.error || 'Не удалось отправить код повторно'
+  } finally {
+    pending.value = false
   }
 }
 
 async function checkCode() {
+  if (!canSubmitCode.value) { error.value = 'Введите 6-значный код'; return }
   error.value = ''
+  pending.value = true
   try {
     await store.userStore.verifyCode(form.value.email, form.value.code)
     localStorage.removeItem('visitorId')
     onClose()
   } catch (e) {
-    error.value = e.response?.data?.error || 'Неверный код'
+    error.value = e?.response?.data?.error || 'Неверный или просроченный код'
+  } finally {
+    pending.value = false
   }
 }
+
+onBeforeUnmount(stopTimer)
 
 </script>
 

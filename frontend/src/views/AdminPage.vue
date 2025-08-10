@@ -658,11 +658,17 @@ function nextPage() {
 
 // Функции для форматирования
 function isDateField(col) {
-  return ['created_at', 'last_visit', 'updated_at', /* и любые другие */].includes(col)
+  return ['created_at', 'last_visit', 'date_of_birth', /* и любые другие */].includes(col)
 }
 
 function formatDate(val) {
-  return val ? new Date(val).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' }) : '—'
+  if (!val) return '—'
+  // Если пришла именно дата 'YYYY-MM-DD' — выводим без времени
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+    const [y,m,d] = val.split('-').map(Number)
+    return new Date(Date.UTC(y, m-1, d)).toLocaleDateString('ru-RU', { dateStyle: 'short' })
+  }
+  return new Date(val).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' })
 }
 
 // Отправка нового отзыва
