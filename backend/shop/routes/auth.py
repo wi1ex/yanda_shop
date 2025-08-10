@@ -118,7 +118,7 @@ def request_code() -> Tuple[Response, int]:
         logger.debug("request_code: existing user found id=%s for %s", user_id, email)
 
     # Генерация и хранение кода
-    code_ttl_seconds = 600  # 10 минут
+    code_ttl_seconds = 600
     code = ''.join(secrets.choice(string.digits) for _ in range(6))
     key = f"email_code:{email}"
     redis_client.setex(key, code_ttl_seconds, code)
@@ -155,7 +155,7 @@ def request_code() -> Tuple[Response, int]:
         ))
 
     logger.debug("request_code: change log saved for %s attempt on %s", action.lower(), email)
-    return jsonify({"status": "code_sent", "expires_in": code_ttl_seconds}), 200
+    return jsonify({"status": "code_sent"}), 200
 
 
 @auth_bp.route("/verify_code", methods=["POST"])
