@@ -60,6 +60,10 @@ router.beforeEach(async (to, from, next) => {
     return next({ name: 'Home' })
   }
 
+  if (to.name === 'Checkout' && !store.cartStore.cart.items.length) {
+    return next({ name: 'Catalog' })
+  }
+
   if (to.name === 'Home') {
     store.productStore.selectedCategory = ''
     store.productStore.clearFilters()

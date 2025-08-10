@@ -499,9 +499,21 @@ function formatPrice(val) {
   return String(val).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
+async function preloadHeroImages() {
+  await Promise.all(
+    heroSlides.map(s => new Promise(resolve => {
+      const img = new Image();
+      img.onload = img.onerror = resolve;
+      img.decoding = 'async';
+      img.src = s.image;
+    }))
+  );
+}
+
 watch(idx, updateCarouselHeight)
 
-onMounted(() => {
+onMounted(async () => {
+  await preloadHeroImages();
   startAuto()
 })
 
