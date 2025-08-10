@@ -74,6 +74,8 @@ def request_code() -> Tuple[Response, int]:
     """
     POST /api/auth/request_code
     Запрос кода для входа или регистрации по e-mail.
+    Возвращает {"status":"code_sent", "expires_in": <секунд>} при успехе.
+    Реализован анти-спам кулдаун (30 сек) по email и ip.
     """
     data = request.get_json()
     logger.debug("request_code: payload=%s", data)
@@ -90,7 +92,21 @@ def request_code() -> Tuple[Response, int]:
         logger.warning("request_code: invalid email %s: %s", raw_email, e)
         return jsonify({"error": str(e)}), 400
 
-    # Определяем, новый пользователь или существующий
+    # Кулдаун повторной отправки
+    ip = request.remote_addr or "unknown"
+    cooldown_key_email = f"email_code_cooldown:{email}"
+    cooldown_key_ip    = f"email_code_cooldown_ip:{ip}"
+    cooldown_seconds   = 30
+
+    if redis_client.get(cooldown_key_email) or redis_client.get(cooldown_key_ip):
+        ttl_email = redis_client.ttl(cooldown_key_email) or cooldown_seconds
+        ttl_ip    = redis_client.ttl(cooldown_key_ip) or cooldown_seconds
+        ttl = max(ttl_email, ttl_ip)
+        ttl = ttl if ttl > 0 else cooldown_seconds
+        logger.debug("request_code: cooldown active for %s (ip=%s), ttl=%s", email, ip, ttl)
+        return jsonify({"error": f"Пожалуйста, подождите {ttl} сек перед повторной отправкой"}), 429
+
+    # Новый или существующий пользователь
     with session_scope() as session:
         user = session.query(Users).filter_by(email=email).first()
         user_id = user.user_id if user else None
@@ -102,10 +118,15 @@ def request_code() -> Tuple[Response, int]:
         logger.debug("request_code: existing user found id=%s for %s", user_id, email)
 
     # Генерация и хранение кода
+    code_ttl_seconds = 600  # 10 минут
     code = ''.join(secrets.choice(string.digits) for _ in range(6))
     key = f"email_code:{email}"
-    redis_client.setex(key, 600, code)
+    redis_client.setex(key, code_ttl_seconds, code)
     logger.debug("request_code: stored code=%s for %s", code, email)
+
+    # Кулдаун
+    redis_client.setex(cooldown_key_email, cooldown_seconds, "1")
+    redis_client.setex(cooldown_key_ip, cooldown_seconds, "1")
 
     # Отправка письма
     subject = (
@@ -123,7 +144,7 @@ def request_code() -> Tuple[Response, int]:
     mail.send(msg)
     logger.debug("request_code: email sent to %s (action=%s)", email, "Регистрация" if is_new else "Авторизация")
 
-    # Логирование в ChangeLog
+    # Лог
     action = "Регистрация" if is_new else "Авторизация"
     with session_scope() as session:
         session.add(ChangeLog(
@@ -132,9 +153,9 @@ def request_code() -> Tuple[Response, int]:
             description=f"Попытка {action.lower()} по e-mail: {email}",
             timestamp=now,
         ))
-    logger.debug("request_code: change log saved for %s attempt on %s", action.lower(), email)
 
-    return jsonify({"status": "code_sent"}), 200
+    logger.debug("request_code: change log saved for %s attempt on %s", action.lower(), email)
+    return jsonify({"status": "code_sent", "expires_in": code_ttl_seconds}), 200
 
 
 @auth_bp.route("/verify_code", methods=["POST"])

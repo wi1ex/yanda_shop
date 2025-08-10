@@ -1,7 +1,7 @@
 import csv
 import io
 import os
-from datetime import datetime
+from datetime import datetime, date
 from zoneinfo import ZoneInfo
 from typing import Tuple, List, Dict, Any
 import requests
@@ -12,7 +12,7 @@ from ..core.logging import logger
 from ..core.config import BACKEND_URL
 from ..extensions import redis_client, minio_client, BUCKET
 from ..models import ChangeLog, AdminSetting, Users, Review, RequestItem, Addresses, Orders
-from ..utils.db_utils import session_scope
+from ..utils.db_utils import session_scope, adjust_user_order_stats
 from ..utils.google_sheets import get_sheet_url, process_rows, preview_rows
 from ..utils.jwt_utils import admin_required
 from ..utils.logging_utils import log_change
@@ -384,6 +384,8 @@ def list_users() -> Tuple[Response, int]:
                 val = getattr(u, name)
                 if isinstance(val, datetime):
                     val = val.astimezone(ZoneInfo("Europe/Moscow")).isoformat()
+                elif isinstance(val, date):
+                    val = val.isoformat()  # 'YYYY-MM-DD'
                 row[name] = val
             users_list.append(row)
 
@@ -669,9 +671,14 @@ def admin_cancel_order(order_id: int) -> Tuple[Response, int]:
             logger.debug("cancel_order: already canceled order_id=%d", order_id)
             return jsonify({"status": o.status, "message": "already canceled"}), 200
 
+        prev_total = o.total or 0
+        user_id_for_stats = o.user_id
+
         o.status = "Отменен"
         o.canceled_at = now
         session.flush()
+
+        adjust_user_order_stats(session, user_id_for_stats, count_delta=-1, amount_delta=-prev_total)
 
         out_order_id = o.id
         out_status   = o.status
@@ -701,7 +708,14 @@ def admin_delete_order(order_id: int):
             logger.warning("delete_order: not found order_id=%d", order_id)
             return jsonify({"error": "not found"}), 404
 
+        needs_rollback = o.status != "Отменен"
+        rollback_amount = o.total or 0
+        rollback_user_id = o.user_id
+
         session.delete(o)
+
+        if needs_rollback:
+            adjust_user_order_stats(session, rollback_user_id, count_delta=-1, amount_delta=-rollback_amount)
 
         admin_id = get_jwt_identity()
         admin_user = session.get(Users, admin_id)
