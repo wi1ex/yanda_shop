@@ -10,7 +10,6 @@ export const useGlobalStore = defineStore('global', () => {
   const showSearch      = ref(false);
   const showSearchQuery = ref(false);
   const searchQuery     = ref('')
-  const filesURL        = 'https://yandashop.ru/download'
 
   async function fetchParameters() {
     try {
@@ -45,7 +44,6 @@ export const useGlobalStore = defineStore('global', () => {
     showSearch,
     showSearchQuery,
     searchQuery,
-    filesURL,
 
     // public data
     fetchParameters,

@@ -91,22 +91,22 @@
       <img :src="icon_logo_2025" alt="Лого 2025" class="big-digit" />
       <div class="footer-bottom-column">
         <div class="bottom-cell">
-          <a class="bottom-link" :href="`${store.global.filesURL}/public_offer_agreement.pdf`" target="_blank">
+          <a class="bottom-link" href="/download/public_offer_agreement.pdf" target="_blank">
             Договор публичной оферты
           </a>
         </div>
         <div class="bottom-cell" style="left: 18vw">
-          <a class="bottom-link" :href="`${store.global.filesURL}/privacy_policy.pdf`" target="_blank">
+          <a class="bottom-link" href="/download/privacy_policy.pdf" target="_blank">
             Политика конфиденциальности
           </a>
         </div>
         <div class="bottom-cell" style="left: 49.8vw">
-          <a class="bottom-link" :href="`${store.global.filesURL}/return_exchange_policy.pdf`" target="_blank">
+          <a class="bottom-link" href="/download/return_exchange_policy.pdf" target="_blank">
             Политика возврата и обмена
           </a>
         </div>
         <div class="bottom-cell" style="left: 81.5vw">
-          <a class="bottom-link" :href="`${store.global.filesURL}/payment_and_delivery_terms.pdf`" target="_blank">
+          <a class="bottom-link" href="/download/payment_and_delivery_terms.pdf" target="_blank">
             Условия оплаты и доставки
           </a>
         </div>
@@ -119,24 +119,24 @@
       <div class="footer-bottom-row">
         <div class="footer-bottom-column">
           <div class="bottom-cell">
-            <a class="bottom-cell" :href="`${store.global.filesURL}/public_offer_agreement.pdf`" target="_blank">
+            <a class="bottom-cell" href="/download/public_offer_agreement.pdf" target="_blank">
               Договор публичной оферты
             </a>
           </div>
           <div class="bottom-cell">
-            <a class="bottom-cell" :href="`${store.global.filesURL}/privacy_policy.pdf`" target="_blank">
+            <a class="bottom-cell" href="/download/privacy_policy.pdf" target="_blank">
               Политика конфиденциальности
             </a>
           </div>
         </div>
         <div class="footer-bottom-column">
           <div class="bottom-cell">
-            <a class="bottom-cell" :href="`${store.global.filesURL}/return_exchange_policy.pdf`" target="_blank">
+            <a class="bottom-cell" href="/download/return_exchange_policy.pdf" target="_blank">
               Политика возврата и обмена
             </a>
           </div>
           <div class="bottom-cell">
-            <a class="bottom-cell" :href="`${store.global.filesURL}/payment_and_delivery_terms.pdf`" target="_blank">
+            <a class="bottom-cell" href="/download/payment_and_delivery_terms.pdf" target="_blank">
               Условия оплаты и доставки
             </a>
           </div>
