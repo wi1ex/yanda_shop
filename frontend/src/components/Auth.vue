@@ -1,7 +1,7 @@
 <template>
   <transition name="fade">
     <div class="auth-modal-backdrop" @click.self="onClose" v-if="store.userStore.showAuth">
-      <button class="close-btn" @click="onClose">
+      <button type="button" class="close-btn" @click="onClose">
         <img :src="icon_close" alt="Закрыть" />
       </button>
       <div class="auth-modal" v-if="step === 1">
@@ -9,7 +9,7 @@
         <p class="text">Введите почтовый адрес, и мы отправим вам письмо с кодом подтверждения.</p>
         <input v-model.trim="form.email" type="email" placeholder="Введи e-mail" @keyup.enter="sendCode"/>
         <p class="error" v-if="error">{{ error }}</p>
-        <button @click="sendCode" :disabled="pending || !canSendEmail">
+        <button type="button" class="button-code" @click="sendCode" :disabled="pending || !canSendEmail">
           {{ pending ? 'Отправляем…' : 'Получить код' }}
         </button>
         <p class="info">Нажимая на кнопку «Получить код», я даю согласие на обработку своих персональных данных в соответствии с политикой обработки персональных данных</p>
@@ -20,17 +20,17 @@
         <p class="text">Введи код из сообщения.</p>
         <input v-model.trim="form.code" inputmode="numeric" maxlength="6" placeholder="Введи код" @keyup.enter="checkCode" />
         <p class="error" v-if="error">{{ error }}</p>
-        <p v-if="remaining > 0" class="text">Отправить код повторно через {{ mm }}:{{ ss }}</p>
-        <button v-else class="resend-link" @click="resendCode" :disabled="pending">
+        <p v-if="remaining > 0" class="text">Запросить код повторно можно через {{ mm }}:{{ ss }} секунд</p>
+        <button v-else type="button" class="resend-link" @click="resendCode" :disabled="pending">
           Отправить код ещё раз
         </button>
-        <p class="info">
+        <p class="info" style="margin-top: 4px;">
           Не получили код? Обратись в нашу
           <a v-if="store.globalStore.parameters.url_social_email" :href="`mailto:${store.globalStore.parameters.url_social_email}`" rel="noopener">
             службу поддержки
           </a>
         </p>
-        <button @click="checkCode" :disabled="pending || !canSubmitCode">
+        <button type="button" class="button-code" @click="checkCode" :disabled="pending || !canSubmitCode">
           {{ pending ? 'Проверяем…' : 'Подтвердить почту' }}
         </button>
         <p class="info">Нажимая на кнопку «Подтвердить номер», я даю согласие на обработку своих персональных данных в соответствии с политикой обработки персональных данных</p>
@@ -92,7 +92,7 @@ async function sendCode() {
   pending.value = true
   try {
     const { data } = await store.userStore.requestCode(form.value.email)
-    const seconds = Number(data?.expires_in) > 0 ? Number(data.expires_in) : 600
+    const seconds = Number(data?.expires_in) > 0 ? Number(data.expires_in) : 59
     step.value = 2
     startTimer(seconds)
   } catch (e) {
@@ -198,7 +198,7 @@ onBeforeUnmount(stopTimer)
         color: $black-40;
       }
     }
-    button {
+    .button-code {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -246,6 +246,17 @@ onBeforeUnmount(stopTimer)
       font-size: 14px;
       line-height: 100%;
       letter-spacing: -0.56px;
+    }
+    .resend-link {
+      margin: 16px 0 0;
+      padding: 0;
+      border: none;
+      background: none;
+      color: $black-100;
+      font-size: 20px;
+      line-height: 100%;
+      letter-spacing: -0.8px;
+      cursor: pointer;
     }
   }
 }
