@@ -91,16 +91,24 @@
       <img :src="icon_logo_2025" alt="Лого 2025" class="big-digit" />
       <div class="footer-bottom-column">
         <div class="bottom-cell">
-          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Договор публичной оферты</a>
+          <a class="bottom-link" :href="`${store.global.filesURL}/public_offer_agreement.pdf`" target="_blank">
+            Договор публичной оферты
+          </a>
         </div>
         <div class="bottom-cell" style="left: 18vw">
-          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика конфиденциальности</a>
+          <a class="bottom-link" :href="`${store.global.filesURL}/privacy_policy.pdf`" target="_blank">
+            Политика конфиденциальности
+          </a>
         </div>
         <div class="bottom-cell" style="left: 49.8vw">
-          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика возврата и обмена</a>
+          <a class="bottom-link" :href="`${store.global.filesURL}/return_exchange_policy.pdf`" target="_blank">
+            Политика возврата и обмена
+          </a>
         </div>
         <div class="bottom-cell" style="left: 81.5vw">
-          <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Условия оплаты и доставки</a>
+          <a class="bottom-link" :href="`${store.global.filesURL}/payment_and_delivery_terms.pdf`" target="_blank">
+            Условия оплаты и доставки
+          </a>
         </div>
       </div>
     </div>
@@ -111,18 +119,26 @@
       <div class="footer-bottom-row">
         <div class="footer-bottom-column">
           <div class="bottom-cell">
-            <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Договор публичной оферты</a>
+            <a class="bottom-cell" :href="`${store.global.filesURL}/public_offer_agreement.pdf`" target="_blank">
+              Договор публичной оферты
+            </a>
           </div>
           <div class="bottom-cell">
-            <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика конфиденциальности</a>
+            <a class="bottom-cell" :href="`${store.global.filesURL}/privacy_policy.pdf`" target="_blank">
+              Политика конфиденциальности
+            </a>
           </div>
         </div>
         <div class="footer-bottom-column">
           <div class="bottom-cell">
-            <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Политика возврата и обмена</a>
+            <a class="bottom-cell" :href="`${store.global.filesURL}/return_exchange_policy.pdf`" target="_blank">
+              Политика возврата и обмена
+            </a>
           </div>
           <div class="bottom-cell">
-            <a href="#" class="bottom-link" @click.prevent="goToPage('Home')">Условия оплаты и доставки</a>
+            <a class="bottom-cell" :href="`${store.global.filesURL}/payment_and_delivery_terms.pdf`" target="_blank">
+              Условия оплаты и доставки
+            </a>
           </div>
         </div>
       </div>
