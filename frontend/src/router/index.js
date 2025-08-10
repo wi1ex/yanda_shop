@@ -6,6 +6,7 @@ import ProductPage from '@/views/ProductPage.vue'
 import FavoritesPage from '@/views/FavoritesPage.vue'
 import ProfilePage from '@/views/ProfilePage.vue'
 import AboutPage from '@/views/AboutPage.vue'
+import CheckoutPage from '@/views/CheckoutPage.vue'
 import DeliveryPage from '@/views/DeliveryPage.vue'
 import ContactsPage from '@/views/ContactsPage.vue'
 import BrandsPage from '@/views/BrandsPage.vue'
@@ -19,6 +20,7 @@ const routes = [
   { path: '/favorites', name: 'Favorites', component: FavoritesPage },
   { path: '/profile', name: 'Profile', component: ProfilePage },
   { path: '/about', name: 'About', component: AboutPage },
+  { path: '/checkout', name: 'Checkout', component: CheckoutPage },
   { path: '/delivery', name: 'Delivery', component: DeliveryPage },
   { path: '/contacts', name: 'Contacts', component: ContactsPage },
   { path: '/brands', name: 'Brands', component: BrandsPage },
@@ -49,7 +51,7 @@ router.beforeEach(async (to, from, next) => {
     })
   }
 
-  if (to.name === 'Profile' && !store.userStore.isAuthenticated()) {
+  if ((to.name === 'Profile' || to.name === 'Checkout') && !store.userStore.isAuthenticated()) {
     store.userStore.openAuth()
     return next(false)
   }
