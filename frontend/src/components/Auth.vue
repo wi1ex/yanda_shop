@@ -6,7 +6,7 @@
       </button>
       <div class="auth-modal" v-if="step === 1">
         <h2>Вход или регистрация</h2>
-        <p class="text">Введите почтовый адрес, и мы отправим вам письмо с кодом подтверждения.</p>
+        <p class="text" style="width: 75%;">Введите почтовый адрес, и мы отправим вам письмо с кодом подтверждения.</p>
         <input v-model.trim="form.email" type="email" placeholder="Введи e-mail" @keyup.enter="sendCode"/>
         <p class="error" v-if="error">{{ error }}</p>
         <button type="button" class="button-code" @click="sendCode" :disabled="pending || !canSendEmail">
@@ -20,11 +20,13 @@
         <p class="text">Введи код из сообщения.</p>
         <input v-model.trim="form.code" inputmode="numeric" maxlength="6" placeholder="Введи код" @keyup.enter="checkCode" />
         <p class="error" v-if="error">{{ error }}</p>
-        <p v-if="remaining > 0" class="text">Запросить код повторно можно через 0:{{ ss }} секунд</p>
+        <p v-if="remaining > 0" class="text" style="margin-top: 40px;">
+          Запросить код повторно можно через 0:{{ ss }} секунд
+        </p>
         <button v-else type="button" class="resend-link" @click="resendCode" :disabled="pending">
-          Отправить код ещё раз
+          Запросить новый код
         </button>
-        <p class="info" style="margin-top: 4px;">
+        <p class="info" style="margin-top: 8px;">
           Не получили код? Обратись в нашу
           <a v-if="store.globalStore.parameters.url_social_email" :href="`mailto:${store.globalStore.parameters.url_social_email}`" rel="noopener">
             службу поддержки
@@ -223,7 +225,6 @@ onBeforeUnmount(stopTimer)
     }
     .text {
       margin: 16px 0 0;
-      width: 75%;
       color: $grey-20;
       font-size: 15px;
       line-height: 110%;
@@ -247,14 +248,14 @@ onBeforeUnmount(stopTimer)
       letter-spacing: -0.56px;
     }
     .resend-link {
-      margin: 16px 0 0;
+      margin: 40px 0 0;
       padding: 0;
       border: none;
       background: none;
       color: $black-100;
-      font-size: 20px;
-      line-height: 100%;
-      letter-spacing: -0.8px;
+      font-size: 15px;
+      line-height: 110%;
+      letter-spacing: -0.6px;
       cursor: pointer;
     }
   }
