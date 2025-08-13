@@ -16,6 +16,7 @@ jobs:
       BOT_TOKEN:           ${{ secrets.BOT_TOKEN }}
       SECRET_KEY:          ${{ secrets.SECRET_KEY }}
       JWT_SECRET_KEY:      ${{ secrets.JWT_SECRET_KEY }}
+      LOG_LEVEL:           ${{ secrets.LOG_LEVEL }}
 
       DB_HOST:             ${{ secrets.DB_HOST }}
       DB_PORT:             ${{ secrets.DB_PORT }}
@@ -48,7 +49,6 @@ jobs:
       ENABLE_POSTGREY:     ${{ secrets.ENABLE_POSTGREY }}
       ONE_DIR:             ${{ secrets.ONE_DIR }}
       DMS_DEBUG:           ${{ secrets.DMS_DEBUG }}
-      LOG_LEVEL:           ${{ secrets.LOG_LEVEL }}
 
       SSL_TYPE:            ${{ secrets.SSL_TYPE }}
       SSL_CERT_PATH:       ${{ secrets.SSL_CERT_PATH }}
@@ -108,6 +108,7 @@ jobs:
           BOT_TOKEN=${BOT_TOKEN}
           SECRET_KEY=${SECRET_KEY}
           JWT_SECRET_KEY=${JWT_SECRET_KEY}
+          LOG_LEVEL=${LOG_LEVEL}
           
           DB_HOST=${DB_HOST}
           DB_PORT=${DB_PORT}
@@ -140,7 +141,6 @@ jobs:
           ENABLE_POSTGREY=${ENABLE_POSTGREY}
           ONE_DIR=${ONE_DIR}
           DMS_DEBUG=${DMS_DEBUG}
-          LOG_LEVEL=${LOG_LEVEL}
           
           SSL_TYPE=${SSL_TYPE}
           SSL_CERT_PATH=${SSL_CERT_PATH}
