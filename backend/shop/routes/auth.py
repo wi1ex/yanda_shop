@@ -24,21 +24,47 @@ auth_bp: Blueprint = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 
 # Internal helpers
+def touch_last_visit(user_id: int, strict: bool = False) -> None:
+    now = datetime.now(ZoneInfo("Europe/Moscow"))
+    try:
+        with session_scope() as session:
+            updated = (
+                session.query(Users)
+                .filter(Users.user_id == user_id)
+                .update({Users.last_visit: now}, synchronize_session=False)
+            )
+        if updated == 0:
+            logger.warning("touch_last_visit: no rows updated for user_id=%s", user_id)
+        else:
+            logger.debug("touch_last_visit: user_id=%s last_visit=%s", user_id, now.isoformat())
+    except Exception as exc:
+        if strict:
+            raise
+        logger.warning("touch_last_visit: failed to update last_visit for user_id=%s: %s", user_id, exc, exc_info=True)
+
+
 def make_tokens(user_id: str, role: str) -> Dict[str, str]:
     """
     Генерирует пару access/refresh токенов для заданного user_id и роли.
     """
     claims = {"role": role}
+
     access_token = create_access_token(
         identity=user_id,
         additional_claims=claims,
         expires_delta=timedelta(hours=1),
     )
+    logger.debug("make_tokens: new access token generated for user_id=%s", user_id)
+
     refresh_token = create_refresh_token(
         identity=user_id,
         additional_claims=claims,
         expires_delta=timedelta(days=7),
     )
+    logger.debug("make_tokens: new refresh token generated for user_id=%s", user_id)
+
+    touch_last_visit(int(user_id))
+
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -53,8 +79,8 @@ def make_tokens(user_id: str, role: str) -> Dict[str, str]:
 def refresh() -> Tuple[Response, int]:
     """POST /api/auth/refresh (refresh token required)"""
     user_id = get_jwt_identity()
-    claims = get_jwt()
-    role = claims.get("role", "")
+    jwt_claims = get_jwt()
+    role = jwt_claims.get("role", "")
     logger.debug("refresh: user_id=%s role=%s", user_id, role)
 
     claims = {"role": role}
@@ -63,6 +89,9 @@ def refresh() -> Tuple[Response, int]:
         additional_claims=claims,
         expires_delta=timedelta(hours=1),
     )
+
+    touch_last_visit(int(user_id))
+
     logger.debug("refresh: new access token generated for user_id=%s", user_id)
     return jsonify({"access_token": access_token}), 200
 
@@ -74,7 +103,6 @@ def request_code() -> Tuple[Response, int]:
     """
     POST /api/auth/request_code
     Запрос кода для входа или регистрации по e-mail.
-    Возвращает {"status":"code_sent", "expires_in": <секунд>} при успехе.
     Реализован анти-спам кулдаун (30 сек) по email и ip.
     """
     data = request.get_json()
@@ -93,7 +121,8 @@ def request_code() -> Tuple[Response, int]:
         return jsonify({"error": str(e)}), 400
 
     # Кулдаун повторной отправки
-    ip = request.remote_addr or "unknown"
+    fwd_for = request.headers.get("X-Forwarded-For", "")
+    ip = (fwd_for.split(",")[0].strip() if fwd_for else request.remote_addr) or "unknown"
     cooldown_key_email = f"email_code_cooldown:{email}"
     cooldown_key_ip    = f"email_code_cooldown_ip:{ip}"
     cooldown_seconds   = 30
@@ -122,7 +151,7 @@ def request_code() -> Tuple[Response, int]:
     code = ''.join(secrets.choice(string.digits) for _ in range(6))
     key = f"email_code:{email}"
     redis_client.setex(key, code_ttl_seconds, code)
-    logger.debug("request_code: stored code=%s for %s", code, email)
+    logger.debug("request_code: stored for %s", email)
 
     # Кулдаун
     redis_client.setex(cooldown_key_email, cooldown_seconds, "1")
@@ -180,7 +209,7 @@ def verify_code() -> Tuple[Response, int]:
         return jsonify({"error": "Код не найден или истёк"}), 400
 
     if code != stored:
-        logger.warning("verify_code: invalid code %s for %s", code, email)
+        logger.warning("verify_code: invalid email %s", email)
         return jsonify({"error": "Неверный или просроченный код"}), 400
 
     redis_client.delete(key)
@@ -193,7 +222,6 @@ def verify_code() -> Tuple[Response, int]:
             user = Users(
                 email=email,
                 email_verified=True,
-                last_visit=now
             )
             session.add(user)
             session.flush()
@@ -202,14 +230,13 @@ def verify_code() -> Tuple[Response, int]:
             action = "Регистрация"
             logger.debug("verify_code: created new user_id=%s for %s", user_id, email)
         else:
-            user.last_visit = now
             user_id = str(user.user_id)
-            role = str(user.role)
+            role = user.role
             action = "Авторизация"
             logger.debug("verify_code: existing user_id=%s logged in", user_id)
 
         session.add(ChangeLog(
-            author_id=user_id,
+            author_id=int(user_id),
             action_type=action,
             description=f"Успешная {action.lower()}: {email}",
             timestamp=now,

@@ -36,14 +36,8 @@ def adjust_user_order_stats(session, user_id: int, count_delta: int, amount_delt
     """
     session.query(Users).filter(Users.user_id == user_id).update(
         {
-            Users.order_count: func.greatest(
-                0,
-                func.coalesce(Users.order_count, 0) + count_delta
-            ),
-            Users.total_spent: func.greatest(
-                0,
-                func.coalesce(Users.total_spent, 0) + amount_delta
-            ),
+            Users.order_count: func.greatest(0, func.coalesce(Users.order_count, 0) + count_delta),
+            Users.total_spent: func.greatest(0, func.coalesce(Users.total_spent, 0) + amount_delta),
         },
         synchronize_session=False,
     )

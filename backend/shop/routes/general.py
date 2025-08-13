@@ -55,7 +55,6 @@ def save_user() -> Tuple[Response, int]:
                     user_id=user_id,
                     first_name=first_name,
                     last_name=last_name,
-                    last_visit=now,
                 )
                 session.add(tg_user)
 
@@ -78,8 +77,6 @@ def save_user() -> Tuple[Response, int]:
                         except Exception as exc:
                             logger.warning("save_user: failed upload new avatar %s: %s", new_key, exc)
             else:
-                tg_user.last_visit = now
-
                 session.add(ChangeLog(
                     author_id=user_id,
                     action_type="Авторизация",
@@ -235,22 +232,21 @@ def upload_avatar() -> Tuple[Response, int]:
         name, ext = os.path.splitext(filename)
         filename = f"{name.lower()}{ext.lower()}"
         new_key = f"users/{user_id}_{filename}"
+        url = f"{BACKEND_URL}/{BUCKET}/{new_key}"
         content = file.read()
         try:
             minio_client.put_object(BUCKET, new_key, io.BytesIO(content), len(content), content_type=file.mimetype)
             old_avatar_url = u.avatar_url
             u.avatar_url = filename
-            session.merge(u)
             session.flush()
             logger.debug("upload_avatar: uploaded new avatar %s", new_key)
         except Exception as exc:
             logger.error("upload_avatar: failed upload new avatar %s: %s", new_key, exc)
             return jsonify({"error": "avatar upload failed"}), 500
 
-        # логируем
-        log_change("Обновление аватара", f"{old_avatar_url} → {filename}")
-        url = f"{BACKEND_URL}/{BUCKET}/{new_key}"
-        return jsonify({"photo_url": url}), 200
+    # логируем
+    log_change("Обновление аватара", f"{old_avatar_url} → {filename}")
+    return jsonify({"photo_url": url}), 200
 
 
 @general_api.route("/delete_avatar", methods=["DELETE"])
@@ -279,7 +275,6 @@ def delete_avatar() -> Tuple[Response, int]:
 
         old_avatar_url = u.avatar_url
         u.avatar_url = None
-        session.merge(u)
         session.flush()
 
         log_change("Удаление аватара", f"{old_avatar_url} → None")
@@ -457,13 +452,14 @@ def create_order() -> Tuple[Response, int]:
 
         adjust_user_order_stats(session, user_id, count_delta=1, amount_delta=total)
 
-        # Логируем создание
         log_text = (f"Номер заказа: {order_id}. Сумма заказа: {subtotal}. "
                     f"Клиент: #{user_id} {first_name} {last_name} {middle_name}. "
                     f"Контакты: {phone} {email}")
-        log_change("Создание заказа", log_text)
         logger.debug("create_order: created order_id=%d for user_id=%d subtotal=%.2f total=%.2f address_id=%d",
                      order_id, user_id, subtotal, total, address_id)
+
+    # Логируем создание
+    log_change("Создание заказа", log_text)
 
     return jsonify({"order_id": order_id}), 201
 
@@ -495,7 +491,10 @@ def get_user_orders() -> Tuple[Response, int]:
                 "items":         o.items_json,
                 "created_at":    o.created_at.strftime("%d.%m"),
                 "total":         o.total,
-                "finish_date":   o.completed_at.strftime("%d.%m") if bool(o.completed_at) else o.delivery_date.strftime("%d.%m"),
+                "finish_date": (
+                    (o.completed_at or o.delivery_date).strftime("%d.%m")
+                    if (o.completed_at or o.delivery_date) else None
+                ),
             })
 
     logger.debug("get_user_orders: returned %d orders", len(out))
@@ -689,7 +688,7 @@ def select_address_api(address_id: int) -> Tuple[Response, int]:
             return jsonify({"error": "not found"}), 404
 
         # 2) Снимаем флаг у всех адресов пользователя и устанавливаем на выбранном
-        session.query(Addresses).filter_by(user_id=user_id, select=True).update({"select": False})
+        session.query(Addresses).filter_by(user_id=user_id, select=True).update({"select": False}, synchronize_session=False)
         a.select = True
 
     logger.debug("select_address: address %d marked as primary for user_id=%d", address_id, user_id)
