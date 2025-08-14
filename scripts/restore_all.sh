@@ -7,17 +7,7 @@ set -euo pipefail
 LOCKFILE="/var/lock/restore_all.lock"
 exec 200>"$LOCKFILE"
 flock -n 200 || { echo "$(date '+%F %T') [ERROR] Restore already running"; exit 1; }
-
-cleanup() {
-  rc=$?
-  flock -u 200
-  rm -f "$LOCKFILE"
-  if [ $rc -ne 0 ]; then
-    echo "$(date '+%F %T') [ERROR] Restore failed (rc=$rc)"
-  fi
-  exit $rc
-}
-trap cleanup EXIT
+trap 'rc=$?; flock -u 200; rm -f "$LOCKFILE"; [ $rc -ne 0 ] && echo "$(date "+%F %T") [ERROR] Restore failed (rc=$rc)"; exit $rc' EXIT
 
 log(){ echo "$(date '+%F %T') [INFO] $*"; }
 error(){ echo "$(date '+%F %T') [ERROR] $*" >&2; }
@@ -26,9 +16,9 @@ error(){ echo "$(date '+%F %T') [ERROR] $*" >&2; }
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 [ -f "$PROJECT_ROOT/.env" ] || { error ".env not found"; exit 1; }
+# shellcheck disable=SC1091
 source "$PROJECT_ROOT/.env"
 
-: "${COMPOSE_PROJECT_NAME:=$(basename "$PROJECT_ROOT")}"
 : "${DB_NAME:?DB_NAME not set}"
 : "${DB_USER:?DB_USER not set}"
 : "${DB_PASSWORD:?DB_PASSWORD not set}"
@@ -36,78 +26,89 @@ source "$PROJECT_ROOT/.env"
 : "${MINIO_BUCKET:?MINIO_BUCKET not set}"
 
 BACKUP_ROOT="$PROJECT_ROOT/backups"
+latest() { ls -1t "$1"/*.tar.gz 2>/dev/null | head -n1; }
 
-# Функция для поиска последнего архива
-find_latest(){
-  ls -1t "$1"/*.tar.gz 2>/dev/null | head -n1
-}
+# === 2) Остановить пишущие сервисы (но НЕ БД) ===
+log "[0/6] Stopping writers: backend frontend bot (если есть)"
+docker-compose stop backend frontend bot 2>/dev/null || true
 
-# === 2) Остановка сервисов ===
-log "[0/6] Stopping services: backend frontend db redis minio"
-docker-compose stop backend frontend db redis minio
-
-# === 3) Восстановление PostgreSQL ===
+# === 3) PostgreSQL ===
 log "[1/6] Restoring PostgreSQL"
-PG_ARCHIVE=$(find_latest "$BACKUP_ROOT/postgres")
-[ -f "$PG_ARCHIVE" ] || { error "Postgres archive not found"; exit 1; }
-TMP=$(mktemp -d)
+docker-compose up -d db
 
+# дождаться готовности БД
+for i in {1..30}; do
+  if docker-compose exec -T db bash -lc "export PGPASSWORD='$DB_PASSWORD'; pg_isready -U '$DB_USER' -d '$DB_NAME' >/dev/null 2>&1"; then
+    break
+  fi
+  sleep 1
+done
+
+PG_ARCHIVE="$(latest "$BACKUP_ROOT/postgres")"; [ -f "$PG_ARCHIVE" ] || { error "Postgres archive not found"; exit 1; }
+TMP="$(mktemp -d)"
 tar xzf "$PG_ARCHIVE" -C "$TMP"
-cd "$TMP"
-# Проверка целостности
-sha256sum -c "${DB_NAME}.sha256"
 
-PG_CONTAINER=$(docker-compose ps -q db)
-[ -n "$PG_CONTAINER" ] || { error "Postgres container not found"; exit 1; }
+# твой бэкап пишет в .sha256 абсолютный путь → проверяем хэш вручную
+exp_pg_hash="$(awk '{print $1}' "$TMP/${DB_NAME}.sha256")"
+act_pg_hash="$(sha256sum "$TMP/${DB_NAME}.dump" | awk '{print $1}')"
+[ "$exp_pg_hash" = "$act_pg_hash" ] || { error "Postgres dump checksum mismatch"; exit 1; }
 
-docker exec -i "$PG_CONTAINER" \
-  sh -c "export PGPASSWORD='$DB_PASSWORD' && pg_restore -U '$DB_USER' -d '$DB_NAME' --clean --no-owner --if-exists" \
-  < "$TMP/${DB_NAME}.dump"
+docker-compose exec -T db bash -lc "export PGPASSWORD='$DB_PASSWORD'; createdb -U '$DB_USER' '$DB_NAME' 2>/dev/null || true"
+docker-compose exec -T db bash -lc "export PGPASSWORD='$DB_PASSWORD'; pg_restore -U '$DB_USER' -d '$DB_NAME' --clean --no-owner --if-exists" < "$TMP/${DB_NAME}.dump"
+rm -rf "$TMP"
 log "→ PostgreSQL restored from $(basename "$PG_ARCHIVE")"
-rm -rf "$TMP"
 
-# === 4) Восстановление Redis ===
-log "[2/6] Restoring Redis"
-REDIS_ARCHIVE=$(find_latest "$BACKUP_ROOT/redis")
-[ -f "$REDIS_ARCHIVE" ] || { error "Redis archive not found"; exit 1; }
-TMP=$(mktemp -d)
-
+# === 4) Redis ===
+log "[2/6] Restoring Redis (RDB)"
+REDIS_ARCHIVE="$(latest "$BACKUP_ROOT/redis")"; [ -f "$REDIS_ARCHIVE" ] || { error "Redis archive not found"; exit 1; }
+TMP="$(mktemp -d)"
 tar xzf "$REDIS_ARCHIVE" -C "$TMP"
-cd "$TMP"
-sha256sum -c "dump.sha256"
 
-# Находим том Redis по проекту
-REDIS_VOL=$(docker volume ls -q --filter name="${COMPOSE_PROJECT_NAME}_redis_data")
-[ -n "$REDIS_VOL" ] || { error "Redis volume not found"; exit 1; }
-MNT=$(docker volume inspect -f '{{ .Mountpoint }}' "$REDIS_VOL")
+# .sha256 у тебя содержит абсолютный путь → сверяем только хэш
+exp_rdb_hash="$(awk '{print $1}' "$TMP/dump.sha256")"
+act_rdb_hash="$(sha256sum "$TMP/dump.rdb" | awk '{print $1}')"
+[ "$exp_rdb_hash" = "$act_rdb_hash" ] || { error "Redis RDB checksum mismatch"; exit 1; }
 
-cp "\$PWD/dump.rdb" "$MNT/dump.rdb"
+# найдём путь маунта /data у контейнера redis и заменим содержимое
+docker-compose up -d redis
+REDIS_CID="$(docker-compose ps -q redis)"; [ -n "$REDIS_CID" ] || { error "Redis container not found"; exit 1; }
+REDIS_MNT="$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Source}}{{end}}{{end}}' "$REDIS_CID")"
+[ -d "$REDIS_MNT" ] || { error "Redis /data mountpoint not found"; exit 1; }
+
+docker-compose stop redis
+rm -f "$REDIS_MNT"/appendonly.aof* || true
+rm -f "$REDIS_MNT"/dump.rdb || true
+cp "$TMP/dump.rdb" "$REDIS_MNT/dump.rdb"
+rm -rf "$TMP"
+docker-compose up -d redis
 log "→ Redis restored from $(basename "$REDIS_ARCHIVE")"
-rm -rf "$TMP"
 
-# === 5) Восстановление MinIO ===
+# === 5) MinIO ===
 log "[3/6] Restoring MinIO bucket"
-MINIO_ARCHIVE=$(find_latest "$BACKUP_ROOT/minio")
-[ -f "$MINIO_ARCHIVE" ] || { error "MinIO archive not found"; exit 1; }
-TMP=$(mktemp -d)
-
+MINIO_ARCHIVE="$(latest "$BACKUP_ROOT/minio")"; [ -f "$MINIO_ARCHIVE" ] || { error "MinIO archive not found"; exit 1; }
+TMP="$(mktemp -d)"
 tar xzf "$MINIO_ARCHIVE" -C "$TMP"
-cd "$TMP"
-sha256sum -c "${MINIO_BUCKET}.sha256"
 
-# Находим том MinIO
-MINIO_VOL=$(docker volume ls -q --filter name="${COMPOSE_PROJECT_NAME}_minio_data")
-[ -n "$MINIO_VOL" ] || { error "MinIO volume not found"; exit 1; }
-MNT=$(docker volume inspect -f '{{ .Mountpoint }}' "$MINIO_VOL")
+# у тебя .sha256 содержит HASH и имя '-' (stdin). Сравним хэши вручную.
+exp_minio_hash="$(awk '{print $1}' "$TMP/${MINIO_BUCKET}.sha256")"
+act_minio_hash="$(sha256sum "$TMP/${MINIO_BUCKET}.tar" | awk '{print $1}')"
+[ "$exp_minio_hash" = "$act_minio_hash" ] || { error "MinIO bucket checksum mismatch"; exit 1; }
 
-# Извлекаем содержимое бакета
-LOGDIR="$PWD"
-tar xf "${MINIO_BUCKET}.tar" -C "$MNT"
-log "→ MinIO bucket '$MINIO_BUCKET' restored from $(basename "$MINIO_ARCHIVE")"
+docker-compose up -d minio
+MINIO_CID="$(docker-compose ps -q minio)"; [ -n "$MINIO_CID" ] || { error "MinIO container not found"; exit 1; }
+MINIO_MNT="$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Source}}{{end}}{{end}}' "$MINIO_CID")"
+[ -d "$MINIO_MNT" ] || { error "MinIO /data mountpoint not found"; exit 1; }
+
+docker-compose stop minio
+rm -rf "$MINIO_MNT/$MINIO_BUCKET"
+# ВНУТРЕННИЙ файл — это gz-тар, хоть и называется .tar → распаковываем с -z
+tar xzf "$TMP/${MINIO_BUCKET}.tar" -C "$MINIO_MNT"
 rm -rf "$TMP"
+docker-compose up -d minio
+log "→ MinIO bucket '$MINIO_BUCKET' restored from $(basename "$MINIO_ARCHIVE")"
 
-# === 6) Запуск сервисов ===
-log "[5/6] Starting services: db redis minio backend frontend"
-docker-compose start db redis minio backend frontend
+# === 6) Поднимаем приложение ===
+log "[5/6] Starting services: backend bot frontend"
+docker-compose up -d backend bot frontend
 
 log "Restore completed successfully"
