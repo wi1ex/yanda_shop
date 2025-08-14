@@ -1,357 +1,160 @@
-# Yanda Shop
+# Yanda Shop — eCommerce-кейс (Flask + PostgreSQL/Redis/MinIO + Vue 3)
+
+Проект «под ключ»: публичный REST API, SPA-фронтенд, админ-инструменты, импорты из Google Sheets, собственная объектная медиа-витрина на MinIO, Redis-кэш и счётчики, e-mail-аутентификация, интеграция Telegram Mini App, резервное копирование и автодеплой.
 
 ---
 
-## ✨ Оглавление
+## Оглавление
 
-1. [Сервисы Docker-Compose](#сервисы-docker-compose)  
-2. [Переменные окружения](#переменные-окружения)  
-3. [Справочник API](#справочник-api)  
-4. [Быстрый старт](#быстрый-старт)  
-   4.1. [Подготовка сервера](#1-подготовка-сервера)  
-   4.2. [Клон и конфигурация](#2-клон-и-конфигурация)  
-   4.3. [SSL через Certbot](#3-ssl-через-certbot)  
-   4.4. [Запуск](#4-запуск)  
-5. [Скрипты](#5-скрипты)  
-6. [Автодеплой (GitHub Actions)](#6-автодеплой-проекта-на-сервер-с-помощью-github-actions)
+1. [О проекте](#о-проекте)
+2. [Возможности для пользователей](#ключевые-возможности-для-пользователей)
+3. [Админ-возможности и импорт контента](#админ-возможности-и-импорт-контента)
+4. [Технологический стек](#технологический-стек)
+5. [Инфраструктура, CI/CD и бэкапы](#инфраструктура-cicd-и-бэкапы)
+6. [Структура репозитория](#структура-репозитория)
 
 ---
 
-## 1. Сервисы Docker-Compose
+## О проекте
 
+* **Backend (Flask)**
 
-| Сервис       | Назначение               | Публикуемый порт   | Внутренний порт   |
-| ------------ | ------------------------ |--------------------|-------------------|
-| **db**       | PostgreSQL               | —                  | 5432              |
-| **redis**    | Redis                    | —                  | 6379              |
-| **minio**    | S3-хранилище (MinIO)     | —                  | 9000              |
-| **backend**  | Flask-REST API           | —                  | 8000              |
-| **bot**      | Telegram-бот             | —                  | —                 |
-| **frontend** | Vue.js SPA               | —                  | —                 |
-| **proxy**    | Nginx + SSL              | 80, 443            | 80, 443           |
-| **mail**     | Docker Mailserver        | 25, 143, 587, 993  | 25, 143, 587, 993 |
-| **webmail**  | RainLoop Webmail         | —                  | —                 |
+  * Архитектура приложения (`create_app`, Blueprints `general/product/auth/admin`), расширения и инициализация (`SQLAlchemy`, `JWT`, `Flask-Mail`, `Redis`, `MinIO`).
+  * **JWT-аутентификация по коду e-mail**: генерация кода, TTL 10 мин, повторный запрос — с кулдауном по e-mail и IP в Redis.
+  * Профили, адреса, заказы, отзывы, список желаемого, корзина в Redis, сериализация товаров.
+  * Кэширование параметров и опций доставки в Redis; сервисные валидаторы и нормализация данных.
+  * Объектное хранилище MinIO: загрузка/очистка/синхронизация медиа, безопасные имена файлов.
+  * Логирование изменений (ChangeLog), учёт посещений по часам в Redis (total/unique).
+  * Импорт из Google Sheets: разбор, валидация, нормализация, сопоставление с моделями и загрузка в БД/MinIO.
 
-### Архитектурная схема
+* **Frontend (Vue 3 + Vite)**
 
-* Микросервисная топология: схема взаимодействия контейнеров в Docker Compose.
-* Data flow: последовательность запросов от SPA → Nginx → Backend → DB/Redis/MinIO.
+  * SPA с роутингом, Pinia-хранилищами (`user`, `cart`, `product`, `admin`, `global`), модульным SCSS.
+  * Интерфейс каталога (категории/подкатегории/сортировка/пагинация), карточка товара, поиск/заявка с загрузкой файла, корзина/избранное, профиль, заказы и адреса.
+  * **Auth-модалка с одноразовым кодом**, счётчиком повторной отправки, **тихий refresh** access-токена в axios-интерцепторе.
+  * Админ-страница: синхронизации, заказы/статусы, пользователи, заявки, настройки, просмотр логов и посещаемости.
 
-### Технологический стек
+* **Интеграции**
 
-| Компонент            | Технология              | Версия          |
-|----------------------|-------------------------|-----------------|
-| Язык                 | Python                  | 3.11            |
-| Веб-фреймворк        | Flask                   | 3.1.1           |
-| ORM                  | Flask-SQLAlchemy        | 3.1.1           |
-| Миграции             | Flask-Migrate           | 4.1.0           |
-| Алхимик (Alembic)    | Alembic                 | 1.16.4          |
-| WSGI-сервер          | Gunicorn                | 23.0.0          |
-| PostgreSQL-драйвер   | psycopg2-binary         | 2.9.10          |
-| База данных          | PostgreSQL              | 17              |
-| Кэш и сессии         | Redis                   | 7               |
-| Клиент Redis         | redis-py                | 6.2.0           |
-| Объектное хранилище  | MinIO                   | latest          |
-| Клиент MinIO         | minio                   | 7.2.16          |
-| HTTP-клиент (бэкенд) | requests                | 2.32.4          |
-| Retry-логика         | tenacity                | 9.1.2           |
-| JWT-аутентификация   | Flask-JWT-Extended      | 4.7.1           |
-| Почтовый модуль      | Flask-Mail              | 0.10.0          |
-| Валидация email      | email-validator         | 2.2.0           |
-| Телеграм-бот         | aiogram                 | 3.21.0          |
-| Shell-скрипты        | bash (backup/restore)   | —               |
-| CI/CD                | GitHub Actions          | —               |
-| Reverse proxy        | Nginx                   | latest (1.25.x) |
-| SSL                  | Certbot                 | latest          |
-| Контейнеризация      | Docker / Docker Compose | 24.x / 2.x      |
-| Рантайм фронтенда    | Node.js                 | 20.x            |
-| SPA-фреймворк        | Vue.js                  | 3.5.18          |
-| Маршрутизация        | Vue Router              | 4.5.1           |
-| State management     | Pinia                   | 3.0.3           |
-| HTTP-клиент (фронт)  | Axios                   | 1.11.0          |
-| Сборщик              | Vite                    | 7.0.6           |
-| Плагин Vue для Vite  | @vitejs/plugin-vue      | 6.0.1           |
-| CSS-препроцессор     | Sass                    | 1.89.2          |
-| Статический сервер   | serve                   | 14.2.4          |
-| Почтовый сервер      | Docker Mailserver       | latest          |
-| Web-mail             | RainLoop                | alpine/latest   |
-| Локальная разработка | flake8, black, isort    | —               |
+  * **Telegram-бот** на `aiogram` (стартовые сценарии + связка с backend).
+  * **SMTP e-mail** через `Flask-Mail` и **самостоятельно развёрнутую почтовую подсистему** (Docker Mailserver + RainLoop веб-клиент) — для отправки кодов входа и сервисных писем.
 
+* **Инфраструктура и эксплуатация**
+
+  * **Docker Compose** для всех сервисов: PostgreSQL, Redis, MinIO, Backend (Gunicorn), Frontend (Vite build), Nginx (reverse proxy, security headers), Mailserver, Webmail.
+  * **Nginx** с HSTS, X-Frame-Options, Referrer-Policy и шаблонной CSP; SPA-роутинг и проксирование API.
+  * **Миграции БД (Alembic)** и сервисные скрипты **резервного копирования/восстановления** PostgreSQL/Redis/MinIO (с блокировками и checksum).
+  * **Автодеплой из GitHub Actions** (секреты через `secrets.*`, деплой без хранения приватных данных в репозитории).
 
 ---
 
-## 2. Переменные окружения
+## Возможности для пользователей
 
-| Переменные                                                                                          | Описание                                                        |
-|-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------|
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`                                           | Параметры подключения к PostgreSQL                              |
-| `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`                                                        | Параметры подключения к Redis                                   |
-| `MINIO_HOST`, `MINIO_BUCKET`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`                              | Конфиг MinIO S3                                                 |
-| `SECRET_KEY`, `JWT_SECRET_KEY`                                                                      | Секреты приложения (Flask и JWT)                                |
-| `BOT_TOKEN`                                                                                         | Токен Telegram-бота                                             |
-| `BACKEND_URL`                                                                                       | Базовый URL API и корень для ссылок на файлы/изображения        |
-| `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USE_TLS`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER` | Настройки SMTP (сервер, порт, TLS, учётные данные, отправитель) |
-| `DMS_DEBUG`, `LOG_LEVEL`                                                                            | Отладка DMS и уровень логирования                               |
-| `SSL_TYPE`, `SSL_CERT_PATH`, `SSL_KEY_PATH`                                                         | Настройки SSL (тип, путь к сертификату и ключу)                 |
-
+* **Каталог и карточки**: категории/подкатегории, фильтры и сортировки, пагинация, вариации (SKU), медиагалереи из MinIO.
+* **Корзина/избранное**: хранение в Redis, быстрая синхронизация с клиентом.
+* **Оформление заказа**: REST-создание, статусы, расчёт итогов и доставки.
+* **Профиль**: данные, загрузка/удаление аватара, адреса доставки, список заказов.
+* **Отзывы и заявки**: публикация отзывов; форма «найти товар», загрузка изображения (проверка размера).
 
 ---
 
-## 3. Справочник API
+## Админ-возможности и импорт контента
 
-Базовый URL: `https://yourdomain.com/api`
+* **Импорт из Google Sheets**
+  Разбор строк, **валидации** (SKU, gender/category/subcategory, длины и типы), нормализация, сопоставление с типами товаров `Shoe/Clothing/Accessory`, загрузка и обновление записей в БД.
+  Контроль консистентности наборов изображений, карта русских → англ. подкатегорий, поиск дубликатов SKU.
 
-### /api/general
+* **Медиа-менеджмент в MinIO**
+  Загрузка/очистка/синхронизация, удаление «осиротевших» объектов, проверка соответствий.
 
-| Endpoint                    | Method | Description                        |
-|-----------------------------|--------|------------------------------------|
-| `/general/`                 | GET    | Health check                       |
-| `/general/save_user`        | POST   | Сохранить/обновить TG-пользователя |
-| `/general/get_user_profile` | GET    | Получить данные профиля            |
-| `/general/update_profile`   | PUT    | обновить данные профиля            |
-| `/general/upload_avatar`    | POST   | обновить фото профиля              |
-| `/general/delete_avatar`    | DELETE | удалить фото профиля               |
-| `/general/get_parameters`   | GET    | получить публичные настройки       |
-| `/general/list_reviews`     | GET    | получить список отзывов            |
-| `/general/create_request`   | POST   | отправить заявку на поиск товара   |
-| `/general/get_user_orders`  | GET    | получить список заказов            |
-| `/general/get_user_order`   | GET    | получить детали заказа             |
-| `/general/list_addresses`   | GET    | получить список адресов            |
-| `/general/add_address`      | POST   | добавить адрес                     |
-| `/general/update_address`   | PUT    | обновить данные дареса             |
-| `/general/delete_address`   | DELETE | удалить адрес                      |
-| `/general/select_address`   | POST   | выбрать адрес основным             |
-
-### /api/product
-
-| Endpoint                  | Method | Description                   |
-| ------------------------- | ------ | ----------------------------- |
-| `/product/list_products`  | GET    | Список товаров по категории   |
-| `/product/get_product`    | GET    | Детали товара по variant\_sku |
-| `/product/get_cart`       | GET    | Загрузка корзины (из Redis)   |
-| `/product/save_cart`      | POST   | Сохранение корзины            |
-| `/product/get_favorites`  | GET    | Избранное (загрузка)          |
-| `/product/save_favorites` | POST   | Избранное (сохранение)        |
-
-### /api/auth
-
-| Endpoint             | Method | Description      |
-|----------------------| ------ |------------------|
-| `/auth/request_code` | POST   | Запрос кода      |
-| `/auth/verify_code`  | POST   | Верификация кода |
-
-### /api/admin
-
-| Endpoint                  | Method | Description                           |
-|---------------------------| ------ |---------------------------------------|
-| `/admin/set_user_role`    | GET    | Установить пользователю роль          |
-| `/admin/get_daily_visits` | GET    | Статистика посещений по часам (Redis) |
-| `/admin/get_logs`         | GET    | Логи изменений (Postgres)             |
-| `/admin/sync_all`         | POST   | Проверка и загрузка Sheets и ZIP      |
-| `/admin/get_settings`     | GET    | Список настроек                       |
-| `/admin/update_setting`   | POST   | Изменение настроек                    |
-| `/admin/delete_setting`   | DELETE | Удаление настроек                     |
-| `/admin/create_review`    | POST   | Создание отзыва                       |
-| `/admin/delete_review`    | DELETE | Удаление отзыва                       |
-| `/admin/list_requests`    | GET    | Список заявок на поиск товара         |
-| `/admin/delete_request`   | DELETE | Удаление заявки на поиск товара       |
-| `/admin/list_users`       | GET    | Список пользователей                  |
+* **Операции админа (REST)**
+  Пользователи/роли, заказы (получение/статусы/отмена/удаление), заявки, отзывы, настройки, **логи изменений** и **почасовая посещаемость** из Redis.
 
 ---
 
-## 4. Быстрый старт
+## Технологический стек
 
-### 1. Подготовка сервера
+**Backend:** Python 3, Flask, SQLAlchemy, Alembic (Flask-Migrate), Gunicorn, Flask-JWT-Extended, Flask-Mail, requests, tenacity
+**Storage:** PostgreSQL, Redis, MinIO (S3-совместимое хранилище)
+**Frontend:** Vue 3, Vite, Pinia, Vue Router, Axios, SCSS
+**Proxy:** Nginx
+**Инфра:** Docker / Docker Compose, GitHub Actions
 
-```bash
-# Обновление и утилиты
-apt update && apt upgrade -y
-apt install -y ca-certificates curl gnupg lsb-release ufw
-
-# Фаервол
-ufw allow OpenSSH
-ufw allow 80,443/tcp
-ufw --force enable
-
-# Docker & Compose
-apt install -y docker.io docker-compose
-systemctl enable docker
-```
-
-*Добавление официального репозитория Docker и установка последних пакетов:*
-
-```bash
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | tee /etc/apt/keyrings/docker.asc > /dev/null
-
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-apt update
-apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-systemctl enable docker.socket
-systemctl start docker.socket
-systemctl restart docker
-docker login --username <your-username>
-```
+> Конкретные версии — в `backend/requirements.txt` и `frontend/package.json`.
 
 ---
 
-### 2. Клон и конфигурация
+## Инфраструктура, CI/CD и бэкапы
 
-```bash
-mkdir -p ~/app && cd ~/app
-rm -rf yanda_shop
-git clone https://<TOKEN>@github.com/wi1ex/yanda_shop.git
-cd yanda_shop
-python3 -c 'import secrets; print(secrets.token_urlsafe(32))'
-
-export DOCKER_BUILDKIT=1
-export COMPOSE_DOCKER_CLI_BUILD=1
-```
+* **Docker Compose**: изоляция сервисов и **именованные volumes** для персистентности (БД/Redis/MinIO/почта).
+* **Nginx**: единая точка входа для SPA и API (reverse proxy), TLS/заголовки безопасности, SPA history-fallback.
+* **Mail-стек (опционально)**: Docker Mailserver (готовность к DKIM/SpamAssassin/ClamAV/Postgrey) + RainLoop webmail.
+* **CI/CD (GitHub Actions)**: деплой по push в `main`, секреты через `secrets.*`, без утечки конфиденциальных данных в репозиторий; выборочная пересборка сервисов (backend/frontend) по изменившимся путям.
+* **Бэкапы (`scripts/backup_all.sh`)**: PostgreSQL (dump + sha256), Redis (RDB snapshot), MinIO (mirror + архив).
+* **Восстановление (`scripts/restore_all.sh`)**: пошаговый restore с проверками checksum; блокировки, чтобы избежать гонок.
 
 ---
 
-### 3. SSL через Certbot
+## Структура репозитория
 
-```bash
-apt install -y certbot
-certbot certonly --standalone -d yourdomain.example.com
-# Для принудительного обновления:
-certbot renew --force-renewal
+```
+backend/                         # Flask API
+  app.py                         # точка входа (Gunicorn: app:app)
+  Dockerfile
+  requirements.txt
+  migrations/                    # Alembic миграции
+  shop/
+    __init__.py                  # create_app(), регистрация blueprints, JWT, CORS
+    core/
+      config.py                  # конфиг из env
+      logging.py                 # настройка логера
+    extensions.py                # Redis / MinIO / Mail + ensure_bucket_exists()
+    models.py                    # Users, Orders, Reviews, Settings, BaseProduct→Shoe/Clothing/Accessory
+    routes/
+      general.py                 # профиль, заказы, заявки, параметры, отзывы, upload
+      product.py                 # каталог, карточка, корзина, избранное
+      auth.py                    # email-код, verify, refresh (JWT)
+      admin.py                   # операции админа: синхронизации, заказы, пользователи, настройки, логи, визиты
+    utils/
+      route_utils.py             # валидация args/json, универсальный error handler
+      db_utils.py                # session_scope(), агрегаты по пользователю
+      cache_utils.py             # кэш параметров/доставки в Redis
+      product_serializer.py      # сериализация товаров и ссылок на медиа
+      google_sheets.py           # парсинг и валидация строк, маппинги категорий/подкатегорий
+      validators.py              # набор строгих валидаторов
+      storage_utils.py           # работа с MinIO (upload/cleanup/sync), ZIP/CSV
+      logging_utils.py           # ChangeLog writer
+      redis_utils.py             # счётчики посещений (total/unique)
+frontend/                        # Vue 3 + Vite SPA
+  vite.config.mjs
+  index.html
+  src/
+    main.js
+    App.vue
+    assets/                      # иконки, изображения
+    styles/                      # SCSS-модули, переменные
+    components/                  # Header, Footer, Cart, Auth, Search ...
+    views/                       # Home, Catalog, Product, Checkout, Profile, Admin, ...
+    store/
+      apiRoutes.js               # маршруты API
+      *.js                       # pinia-модули: user/cart/product/admin/global
+    services/
+      api.js                     # axios + silent refresh
+nginx/
+  Dockerfile
+  nginx.conf                     # reverse proxy, security headers, SPA routing
+bot/
+  bot.py                         # aiogram: /start и базовые сценарии
+  Dockerfile
+scripts/                         # эксплуатационные утилиты
+  backup_all.sh
+  restore_all.sh
+.github/workflows/
+  deploy.yml                     # CI/CD деплой (секреты: secrets.*)
+docker-compose.yml               # все сервисы
+.env.example                     # пример env (без секретов)
+LICENSE
+README.md
 ```
 
 ---
-
-### 4. Запуск
-
-```bash
-# npm install локально для обновления package-lock.json
-# Запись домена (помимо .env) в api.js, nginx.conf и BotFather
-
-# Обновляем код
-cd /root/app/yanda_shop
-git fetch --all
-git reset --hard origin/main
-
-# Останавливаем прежние контейнеры и чистим ненужное
-docker-compose down
-docker network prune --filter "until=24h" --force
-docker container prune --filter "until=24h" --force
-docker image prune --all --filter "until=24h" --force
-docker builder prune --all --filter "until=24h" --force
-
-# Обновление SSL-сертификатов (только если нужно)
-certbot renew --noninteractive --standalone --agree-tos
-
-# Пересобираем образы
-docker-compose build --no-cache
-
-# Поднимаем образы
-docker-compose up -d
-
-# Применяем миграции в свежесобранном образе
-docker-compose run --rm backend flask db upgrade
-
-# Финальная проверка и логи
-docker-compose ps
-docker-compose logs -f
-```
-
-*Миграции:*
-
-```bash
-docker-compose up -d db backend
-docker-compose exec backend flask db init
-docker-compose exec backend flask db migrate -m "initial schema"
-docker-compose exec backend flask db upgrade
-docker-compose up -d
-```
-
-
-*MinIO и Redis:*
-
-```bash
-# если mc ещё не установлена, на сервере:
-wget https://dl.min.io/client/mc/release/linux-amd64/mc
-chmod +x mc
-# затем прописать алиас к вашему MinIO
-./mc alias set myminio http://127.0.0.1:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}
-# Установить anonymous-политику для бакета
-./mc anonymous set download myminio/images
-
-# Включить vm.overcommit_memory для Redis
-# Создадим конфиг для sysctl
-echo "vm.overcommit_memory = 1" | sudo tee /etc/sysctl.d/99-redis-overcommit.conf
-# Применим сразу, без перезагрузки
-sudo sysctl --system
-```
-
----
-
-## 5. Скрипты
-
-### `backup_all.sh - резервное копирование PostgreSQL, Redis и MinIO`
-
-```bash
-1) Дамп PostgreSQL
-2) RDB-файл Redis
-3) Mirror и архив MinIO
-4) Удаление бэкапов старше 7 дней
-```
-
-*Запускать по расписанию через cron или systemd-timer.*
-
----
-
-### `restore_all.sh - восстановление из последних бэкапов`
-
-```bash
-1) Остановить сервисы
-2) Восстановить Postgres из .dump
-3) Восстановить Redis (RDB → volume)
-4) Восстановить MinIO (tar.gz → mc mirror)
-5) Запустить сервисы
-```
-
----
-
-## 6. Автодеплой проекта на сервер с помощью GitHub Actions
-
-На **сервере** выполните:
-
-```bash
-# Перейдите в корень проекта
-cd path/to/yanda_shop
-# Сгенерируйте ED25519-ключ (без пароля):
-ssh-keygen -t ed25519 -f github_deploy_key -N ""
-# создаём папку ~/.ssh, если её нет
-mkdir -p ~/.ssh && chmod 700 ~/.ssh
-# добавляем публичный ключ в авторизованные
-cat ~/github_deploy_key.pub >> ~/.ssh/authorized_keys
-chmod 600 ~/.ssh/authorized_keys
-# чтобы GitHub Actions мог «доверять» вашему серверу
-ssh-keyscan -H SERVER_HOST > known_hosts.txt
-```
-
-В веб-интерфейсе вашего репозитория:
-
-```
-Settings → Secrets and variables → Actions → New repository secret
-```
-
-Создайте четыре секрета:
-
-| Имя               | Значение                                          |
-| ----------------- | ------------------------------------------------- |
-| SSH\_PRIVATE\_KEY | содержимое `github_deploy_key`                    |
-| SSH\_KNOWN\_HOSTS | содержимое `known_hosts.txt`                      |
-| SERVER\_HOST      | IP вашего сервера (например, `1.2.3.4`)           |
-| SERVER\_USER      | имя SSH-пользователя (обычно `root`)              |
-
-В корне репозитория заведите файл `.github/workflows/deploy.yml`
-После успешной настройки **удалите** из папки `/root/app/yanda_shop` все временные артефакты:
-
-```bash
-cd /root/app/yanda_shop
-rm -f github_deploy_key github_deploy_key.pub known_hosts.txt
-```
