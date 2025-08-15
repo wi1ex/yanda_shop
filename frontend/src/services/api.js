@@ -1,13 +1,15 @@
 import axios from 'axios';
 import { useUserStore } from '@/store/user';
 
-const api = axios.create({
-  baseURL: 'https://yandashop.ru'
-});
+const BASE_URL = 'https://yandashop.ru';
 
-/**
- * Декодирует JWT и возвращает payload или null
- */
+// Основной инстанс для обычных запросов
+const api = axios.create({ baseURL: BASE_URL });
+
+// Отдельный инстанс БЕЗ интерсепторов — только для refresh
+const authApi = axios.create({ baseURL: BASE_URL });
+
+/** Декодирует JWT и возвращает payload или null */
 function parseJwt(token) {
   try {
     const payload = token.split('.')[1];
@@ -17,11 +19,23 @@ function parseJwt(token) {
   }
 }
 
-/**
- * Silent refresh: получает новый access_token по refreshToken
- */
+/** Утилита: определяет, что конфиг относится к /api/auth/refresh */
+function isRefreshRequest(config) {
+  if (!config) return false;
+  const refreshPath = '/api/auth/refresh';
+  const url = config.url || '';
+  // Учитываем абсолютные и относительные URL
+  try {
+    const u = new URL(url, BASE_URL);
+    return u.pathname.endsWith(refreshPath);
+  } catch {
+    return url.endsWith(refreshPath);
+  }
+}
+
+/** Silent refresh через отдельный инстанс без интерсепторов */
 async function silentRefresh(refreshToken) {
-  const { data } = await api.post(
+  const { data } = await authApi.post(
     '/api/auth/refresh',
     null,
     { headers: { Authorization: `Bearer ${refreshToken}` } }
@@ -29,64 +43,73 @@ async function silentRefresh(refreshToken) {
   return data.access_token;
 }
 
-// Request interceptor: proactive refresh перед каждым запросом, кроме самого refresh
+// Request interceptor: проактивный refresh за 5 минут до истечения
 api.interceptors.request.use(
   async config => {
-    const url = config.url || '';
-    const base = config.baseURL || '';
-    const refreshPath = '/api/auth/refresh';
-    const isRefreshCall =
-      url.endsWith(refreshPath) ||
-      `${base}${refreshPath}` === url;
-    if (isRefreshCall) {
-      return config;
+    if (isRefreshRequest(config)) {
+      return config; // никогда не трогаем сам /refresh
     }
     const userStore = useUserStore();
     let access = localStorage.getItem('accessToken');
     const refresh = localStorage.getItem('refreshToken');
+
     if (access && refresh) {
       const payload = parseJwt(access);
       const now = Date.now() / 1000;
       const threshold = 5 * 60; // 5 минут
+
       if (payload?.exp && now >= payload.exp - threshold) {
         try {
           access = await silentRefresh(refresh);
           localStorage.setItem('accessToken', access);
           userStore.setTokens({ access, refresh });
         } catch (e) {
-          console.error('Silent refresh failed:', e);
+          // refresh не удался — чистим и не блокируем запрос
+          await userStore.logout();
         }
       }
-      config.headers.Authorization = `Bearer ${access}`;
+      // Всегда ставим актуальный access в заголовок
+      if (access) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${access}`;
+      }
     }
     return config;
   },
   error => Promise.reject(error)
 );
 
-// Response interceptor: fallback-refresh при 401
+// Response interceptor: fallback-refresh при 401, КРОМЕ /refresh
 api.interceptors.response.use(
-  null,
+  response => response,
   async err => {
     const status = err.response?.status;
     const original = err.config;
-    if (status === 401 && !original._retry) {
+
+    // Если 401 не с /refresh и ещё не пробовали — пробуем один раз
+    if (status === 401 && original && !original._retry && !isRefreshRequest(original)) {
       original._retry = true;
       const refresh = localStorage.getItem('refreshToken');
       if (!refresh) return Promise.reject(err);
+
       try {
         const newAccess = await silentRefresh(refresh);
         localStorage.setItem('accessToken', newAccess);
         const userStore = useUserStore();
         userStore.setTokens({ access: newAccess, refresh });
+        original.headers = original.headers || {};
         original.headers.Authorization = `Bearer ${newAccess}`;
         return api(original);
-      } catch {
+      } catch (e) {
         const userStore = useUserStore();
         await userStore.logout();
+        // Жёсткий редирект на главную
         window.location.href = '/';
+        return Promise.reject(e);
       }
     }
+
+    // 401 от /refresh или повторная ошибка — отдаём вверх
     return Promise.reject(err);
   }
 );
