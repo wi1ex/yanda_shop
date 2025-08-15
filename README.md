@@ -1,4 +1,4 @@
-# Yanda Shop — eCommerce-кейс (Flask + PostgreSQL/Redis/MinIO + Vue 3)
+# Yanda Shop (Flask + Vue 3 + PostgreSQL/Redis/MinIO)
 
 Проект «под ключ»: публичный REST API, SPA-фронтенд, админ-инструменты, импорты из Google Sheets, собственная объектная медиа-витрина на MinIO, Redis-кэш и счётчики, e-mail-аутентификация, интеграция Telegram Mini App, резервное копирование и автодеплой.
 
