@@ -229,18 +229,19 @@ def verify_code() -> Tuple[Response, int]:
             role = "customer"
             action = "Регистрация"
             logger.debug("verify_code: created new user_id=%s for %s", user_id, email)
+
+            session.add(ChangeLog(
+                author_id=int(user_id),
+                action_type=action,
+                description=f"Успешная {action.lower()}: {email}",
+                timestamp=now,
+            ))
         else:
             user_id = str(user.user_id)
             role = user.role
             action = "Авторизация"
             logger.debug("verify_code: existing user_id=%s logged in", user_id)
 
-        session.add(ChangeLog(
-            author_id=int(user_id),
-            action_type=action,
-            description=f"Успешная {action.lower()}: {email}",
-            timestamp=now,
-        ))
     logger.debug("verify_code: change log saved for user_id=%s action=%s", user_id, action)
 
     # Обновляем счётчик визитов

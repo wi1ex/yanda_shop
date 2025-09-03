@@ -61,7 +61,7 @@ def save_user() -> Tuple[Response, int]:
                 session.add(ChangeLog(
                     author_id=user_id,
                     action_type="Регистрация",
-                    description=f"Успешная регистрация TG-пользователя: {first_name} {last_name}",
+                    description=f"Успешная Регистрация TG: {first_name} {last_name}",
                     timestamp=now,
                 ))
 
@@ -76,13 +76,6 @@ def save_user() -> Tuple[Response, int]:
                             tg_user.avatar_url = filename
                         except Exception as exc:
                             logger.warning("save_user: failed upload new avatar %s: %s", new_key, exc)
-            else:
-                session.add(ChangeLog(
-                    author_id=user_id,
-                    action_type="Авторизация",
-                    description=f"Успешный вход в TG-аккаунт: {first_name} {last_name}",
-                    timestamp=now,
-                ))
 
             # Redis: track visit counts
             track_visit_counts(raw_id)
