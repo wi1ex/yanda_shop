@@ -191,7 +191,6 @@ export const useCartStore = defineStore('cart', () => {
       const { data } = await api.post(API.general.createOrder, payload)
 
       cart.value = { count: 0, total: 0, items: [] }
-      deliveryPrice.value = 0
       await saveCartToServer()
 
       return data.order_id

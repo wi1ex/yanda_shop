@@ -171,15 +171,13 @@ const deliveryTypeMap  = {
 }
 
 const shipping = computed(() => deliveryPriceMap[form.delivery] ?? 0)
-const subtotal = computed(() => store.cartStore.items.reduce((s, i) => s + i.unit_price * i.quantity, 0))
+const subtotal = computed(() => items.value.reduce((s, i) => s + Number(i.unit_price || 0) * Number(i.quantity || 0), 0))
 const total    = computed(() => subtotal.value + shipping.value)
 
 const canSubmit = computed(() =>
-  store.cartStore.items.length > 0 &&
+  items.value.length > 0 &&
   form.first_name && form.last_name && form.email && form.phone &&
-  form.payment &&
-  (form.delivery === 'pvz' || form.address_id) &&
-  form.agree
+  form.payment && (form.delivery === 'pvz' || form.address_id) && form.agree
 )
 
 function formatPrice(v) {
