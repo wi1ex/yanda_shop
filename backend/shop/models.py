@@ -71,6 +71,7 @@ class Addresses(db.Model):
     __tablename__ = 'addresses'
     id            = db.Column(db.Integer, primary_key=True)
     user_id       = db.Column(db.BigInteger, db.ForeignKey('users.user_id'), nullable=False)
+    label         = db.Column(db.String(50), nullable=False)
     city          = db.Column(db.String(50), nullable=False)
     street        = db.Column(db.String(50), nullable=False)
     house         = db.Column(db.String(50), nullable=False)

@@ -231,7 +231,7 @@
         <div v-for="a in sortedAddresses" class="address" :key="a.id">
           <label class="radio-button address-text" @click="selectAddress(a.id)">
             <input type="radio" :value="a.id" v-model="selectedAddress" />
-            {{ a.full }}
+            {{ a.label }}
           </label>
           <button type="button" @click.stop="editAddress(a)">
             <img :src="icon_arrow_mini_black" alt="arrow" style="transform: rotate(180deg)"/>
@@ -242,6 +242,7 @@
 
       <div v-if="addressFormVisible" class="card">
         <label class="card-label">{{ addressForm.id ? 'Редактировать адрес' : 'Добавить новый адрес' }}</label>
+        <input class="info" v-model="addressForm.label" placeholder="Название адреса*" />
         <input class="info" v-model="addressForm.city" placeholder="Город*" />
         <input class="info" v-model="addressForm.street" placeholder="Улица*" />
         <input class="info" v-model="addressForm.house" placeholder="Дом, строение, корпус*" />
@@ -256,7 +257,7 @@
         <input class="info" v-model="addressForm.comment" placeholder="Комментарий курьеру" >
       </div>
       <div v-if="addressFormVisible" class="buttons">
-        <button type="button" class="action-button" v-if="!addressForm.id || addressFormDirty" @click="saveAddress">
+        <button type="button" class="action-button" v-if="(!addressForm.id && canSave) || addressFormDirty" @click="saveAddress">
           {{ addressForm.id ? 'Сохранить изменения' : 'Сохранить' }}
         </button>
         <button type="button" class="default-button" @click="cancelAddress">
@@ -467,23 +468,28 @@ const maxDate = new Date().toISOString().split('T')[0]
 const selectedAddress     = ref(null)
 const addressFormVisible  = ref(false)
 const addressForm         = reactive({
-  id: null,
-  city: '',
-  street: '',
-  house: '',
+  id:        null,
+  label:     '',
+  city:      '',
+  street:    '',
+  house:     '',
   apartment: '',
-  intercom: '',
-  entrance: '',
-  floor: '',
-  comment: '',
+  intercom:  '',
+  entrance:  '',
+  floor:     '',
+  comment:   '',
 })
+const requiredFilled = v => !!(v && String(v).trim())
+const canSave = computed(() =>
+  ['label', 'city', 'street', 'house'].every(k => requiredFilled(form[k]))
+)
 
 const sortedAddresses = computed(() => {
   const list = store.userStore.addresses.slice()
   const primary = list.filter(a => a.selected)
   const others = list
     .filter(a => !a.selected)
-    .sort((a, b) => a.full.localeCompare(b.full))
+    .sort((a, b) => a.label.localeCompare(b.label))
   return [...primary, ...others]
 })
 
@@ -715,15 +721,16 @@ function editAddress(a = null) {
     Object.assign(addressForm, a)
   } else {
     Object.assign(addressForm, {
-      id: null,
-      city: '',
-      street: '',
-      house: '',
+      id:        null,
+      label:     '',
+      city:      '',
+      street:    '',
+      house:     '',
       apartment: '',
-      intercom: '',
-      entrance: '',
-      floor: '',
-      comment: ''
+      intercom:  '',
+      entrance:  '',
+      floor:     '',
+      comment:   ''
     })
   }
   addressFormVisible.value = true
@@ -734,6 +741,7 @@ function cancelAddress() {
 }
 
 async function saveAddress() {
+  if (!addressForm.label || !addressForm.label.trim()) return
   if (addressForm.id)
     await store.userStore.updateAddress(addressForm.id, addressForm)
   else

@@ -427,6 +427,9 @@ def create_order() -> Tuple[Response, int]:
         delivery_price = data.get("delivery_price", 0)
         total = subtotal + delivery_price
 
+        if delivery_type.startswith("Курьер") and not address_id:
+            return jsonify({"error": "address_required"}), 400
+
         # Создаём заказ
         order = Orders(
             user_id=user_id,
@@ -560,11 +563,9 @@ def list_addresses() -> Tuple[Response, int]:
         qs = session.query(Addresses).filter_by(user_id=user_id).all()
         out: List[Dict[str, Any]] = []
         for a in qs:
-            full = f"г.{a.city}, ул. {a.street}, дом {a.house}"
-            if a.apartment:
-                full += f", квартира {a.apartment}"
             out.append({
                 "id":        a.id,
+                "label":     a.label,
                 "city":      a.city,
                 "street":    a.street,
                 "house":     a.house,
@@ -574,7 +575,6 @@ def list_addresses() -> Tuple[Response, int]:
                 "floor":     a.floor,
                 "comment":   a.comment,
                 "selected":  a.select,
-                "full":      full,
             })
 
     logger.debug("list_addresses: returned %d addresses", len(out))
@@ -597,14 +597,15 @@ def add_address() -> Tuple[Response, int]:
     with session_scope() as session:
         a = Addresses(
             user_id=user_id,
-            city=data["city"],
-            street=data["street"],
-            house=data["house"],
-            apartment=data.get("apartment"),
-            intercom=data.get("intercom"),
-            entrance=data.get("entrance"),
-            floor=data.get("floor"),
-            comment=data.get("comment"),
+            label=data.get("label").strip(),
+            city=data.get("city").strip(),
+            street=data.get("street").strip(),
+            house=data.get("house").strip(),
+            apartment=data.get("apartment").strip(),
+            intercom=data.get("intercom").strip(),
+            entrance=data.get("entrance").strip(),
+            floor=data.get("floor").strip(),
+            comment=data.get("comment").strip(),
         )
         session.add(a)
         session.flush()
@@ -632,7 +633,7 @@ def update_address(address_id: int) -> Tuple[Response, int]:
             logger.warning("update_address: address %d not found or access denied", address_id)
             return jsonify({"error": "not found"}), 404
 
-        for field in ("city", "street", "house", "apartment", "intercom", "entrance", "floor", "comment"):
+        for field in ("label", "city", "street", "house", "apartment", "intercom", "entrance", "floor", "comment"):
             if field in data:
                 setattr(a, field, data[field])
 

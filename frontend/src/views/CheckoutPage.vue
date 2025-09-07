@@ -19,16 +19,30 @@
           <div class="card">
             <label class="card-label">2. Способ доставки</label>
             <label class="radio-button">
-              <input type="radio" value="courier_mkad" v-model="form.delivery" />
-              Курьерская доставка
+              <input type="radio" value="courier_in_mkad" v-model="form.delivery" />
+              Курьером по Москве (в пределах МКАД)
+            </label>
+            <label class="radio-button">
+              <input type="radio" value="courier_out_mkad" v-model="form.delivery" />
+              Курьером по Москве (за МКАД)
             </label>
             <label class="radio-button">
               <input type="radio" value="pvz" v-model="form.delivery" />
               Доставка до ПВЗ
             </label>
-            <p v-if="addressHint" class="hint">{{ addressHint }}</p>
           </div>
-          <!-- 3. Способ оплаты -->
+          <!-- 3. Адрес доставки -->
+          <div class="card">
+            <label class="card-label">3. Адрес доставки</label>
+            <select class="info" v-model="form.address_id">
+              <option v-for="a in store.userStore.addresses" :key="a.id" :value="a.id">
+                {{ a.label }}
+              </option>
+            </select>
+            <button type="button" class="action-button" @click="goAddAddress">Добавить адрес</button>
+            <p v-if="!store.userStore.addresses.length" class="hint">Добавьте адрес в личном кабинете.</p>
+          </div>
+          <!-- 4. Способ оплаты -->
           <div class="card">
             <label class="card-label">3. Способ оплаты</label>
             <label class="radio-button">
@@ -133,9 +147,8 @@ const store = useStore()
 const mode = ref('form') // 'form' | 'success'
 const createdOrderId = ref(null)
 const loading = ref(false)
-
 const items = computed(() => store.cartStore.groupedCartItems)
-const subtotal = computed(() => store.cartStore.cart.total)
+
 
 const form = reactive({
   first_name: store.userStore.user.first_name || '',
@@ -143,27 +156,31 @@ const form = reactive({
   middle_name: store.userStore.user.middle_name || '',
   phone:      store.userStore.user.phone || '',
   email:      store.userStore.user.email || '',
-  delivery:   'courier_mkad',
+  delivery:   'courier_in_mkad',
   payment:    'card',
+  address_id: null,
   agree:      false,
 })
 
-const shipping = computed(() => form.delivery === 'courier_mkad' ? 400 : 0)
-const total    = computed(() => subtotal.value + shipping.value)
-const canSubmit = computed(() =>
-  Boolean(items.value.length
-      && form.first_name
-      && form.last_name
-      && form.email
-      && form.phone
-      && form.agree)
-)
+// цена доставки и отображаемое имя
+const deliveryPriceMap = { courier_in_mkad: 400, courier_out_mkad: 400, pvz: 0 }
+const deliveryTypeMap  = {
+  courier_in_mkad: 'Курьер по Москве (в пределах МКАД)',
+  courier_out_mkad: 'Курьер по Москве (за МКАД)',
+  pvz: 'Доставка до ПВЗ',
+}
 
-const addressHint = computed(() => {
-  if (!store.userStore.addresses.length) return 'Добавьте адрес в кабинете или выберите доставку до ПВЗ.'
-  const primary = store.userStore.addresses.find(a => a.selected)
-  return primary ? null : 'Выберите основной адрес в личном кабинете.'
-})
+const shipping = computed(() => deliveryPriceMap[form.delivery] ?? 0)
+const subtotal = computed(() => store.cartStore.items.reduce((s, i) => s + i.unit_price * i.quantity, 0))
+const total    = computed(() => subtotal.value + shipping.value)
+
+const canSubmit = computed(() =>
+  store.cartStore.items.length > 0 &&
+  form.first_name && form.last_name && form.email && form.phone &&
+  form.payment &&
+  (form.delivery === 'pvz' || form.address_id) &&
+  form.agree
+)
 
 function formatPrice(v) {
   return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -173,14 +190,15 @@ async function submit() {
   if (!canSubmit.value || loading.value) return
   loading.value = true
   const payload = {
+    address_id:     form.delivery === 'pvz' ? null : form.address_id,
     payment_method: form.payment === 'card' ? 'Банковская карта' : 'СБП',
-    delivery_type:  form.delivery === 'courier_mkad' ? 'Курьер (МКАД)' : 'ПВЗ',
+    delivery_type:  deliveryTypeMap[form.delivery],
     delivery_price: shipping.value,
-    first_name:  form.first_name,
-    last_name:   form.last_name,
-    middle_name: form.middle_name || '—',
-    phone:       form.phone,
-    email:       form.email,
+    first_name:     form.first_name,
+    last_name:      form.last_name,
+    middle_name:    form.middle_name,
+    phone:          form.phone,
+    email:          form.email,
   }
   const orderId = await store.cartStore.placeOrder(payload)
   loading.value = false
@@ -197,8 +215,14 @@ function goOrders() {
   router.push({ name: "Profile", query: { section: "orders" } })
 }
 
+function goAddAddress() {
+  router.push({ name: "Profile", query: { section: "addresses" } })
+}
+
 onMounted(async () => {
-  await store.userStore.fetchAddresses()
+  if (!store.userStore.addresses.length) await store.userStore.fetchAddresses()
+  const primary = store.userStore.addresses.find(a => a.selected)
+  form.address_id = primary ? primary.id : null
 })
 
 </script>

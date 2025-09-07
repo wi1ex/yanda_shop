@@ -176,16 +176,16 @@ export const useCartStore = defineStore('cart', () => {
 
       const payload = {
         items,
-        address_id:     options.address_id ?? (primary ? primary.id : undefined),
-        payment_method: options.payment_method ?? 'онлайн',
-        delivery_type:  options.delivery_type  ?? 'ПВЗ',
-        delivery_price: typeof options.delivery_price === 'number' ? options.delivery_price : 400,
+        address_id:     options.address_id ?? undefined,
+        payment_method: options.payment_method,
+        delivery_type:  options.delivery_type,
+        delivery_price: Number(options.delivery_price) || 0,
         delivery_date:  receiveDate.toISOString(),
-        first_name:     options.first_name  ?? userStore.user.first_name,
-        last_name:      options.last_name   ?? userStore.user.last_name,
-        middle_name:    options.middle_name ?? userStore.user.middle_name,
-        phone:          options.phone       ?? userStore.user.phone,
-        email:          options.email       ?? userStore.user.email,
+        first_name:     options.first_name,
+        last_name:      options.last_name,
+        middle_name:    options.middle_name,
+        phone:          options.phone,
+        email:          options.email,
       }
 
       const { data } = await api.post(API.general.createOrder, payload)
