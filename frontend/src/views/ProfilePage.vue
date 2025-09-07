@@ -1377,7 +1377,7 @@ onBeforeUnmount(() => {
                 color: $black-100;
                 font-family: Bounded;
                 font-size: 16px;
-                font-weight: 375;
+                font-weight: 300;
                 line-height: 80%;
                 letter-spacing: -0.8px;
               }
@@ -1473,7 +1473,7 @@ onBeforeUnmount(() => {
                 color: $black-100;
                 font-family: Bounded;
                 font-size: 16px;
-                font-weight: 375;
+                font-weight: 300;
                 line-height: 90%;
                 letter-spacing: -0.8px;
               }

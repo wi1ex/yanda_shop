@@ -120,6 +120,7 @@ function goToCatalog() {
 async function goToCheckout() {
   store.cartStore.closeCartDrawer()
   router.push({ name: 'Checkout' })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 </script>

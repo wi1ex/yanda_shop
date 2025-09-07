@@ -192,10 +192,7 @@ function goToCategory(gender, category) {
   store.productStore.filterGender = gender
   store.productStore.filterSubcat = ''
   // навигация в каталог с двумя фильтрами
-  router.push({
-    name: 'Catalog',
-    query: { gender, category }
-  })
+  router.push({ name: 'Catalog', query: { gender, category } })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -239,10 +236,8 @@ function onSelectSuggestion(item) {
   store.productStore.filterGender = item.gender
   store.productStore.filterBrands = [item.brand]
   // category для роутинга
-  router.push({
-    name: 'Catalog',
-    query: { gender: item.gender, category: item.category, brand: item.brand }
-  })
+  router.push({ name: 'Catalog', query: { gender: item.gender, category: item.category, brand: item.brand } })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function onProfileClick() {

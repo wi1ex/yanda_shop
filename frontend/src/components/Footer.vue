@@ -174,10 +174,7 @@ function goToCategory(cat) {
 function goToGender(gender) {
   store.productStore.selectedCategory = ''
   store.productStore.filterGender = gender
-  router.push({
-    name:  'Catalog',
-    query: { gender }
-  })
+  router.push({ name:  'Catalog', query: { gender } })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 

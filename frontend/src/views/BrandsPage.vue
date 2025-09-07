@@ -74,10 +74,7 @@ function scrollToLetter(letter) {
 // При клике — переход в каталог с query.brand
 function onBrandClick(brand) {
   store.productStore.clearFilters()
-  router.push({
-    name: 'Catalog',
-    query: { brand }
-  })
+  router.push({ name: 'Catalog', query: { brand } })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 </script>
@@ -134,7 +131,7 @@ function onBrandClick(brand) {
           color: $black-100;
           font-family: Bounded;
           font-size: 16px;
-          font-weight: 375;
+          font-weight: 300;
           line-height: 80%;
           letter-spacing: -0.8px;
         }

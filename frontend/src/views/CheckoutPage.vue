@@ -11,9 +11,9 @@
           <div class="card">
             <label class="card-label">1. Контакты</label>
             <input class="info" v-model="form.first_name" placeholder="Имя*" />
-            <input class="info" v-model="form.last_name"  placeholder="Фамилия*" />
-            <input class="info" v-model="form.email"      placeholder="Почта*" type="email" />
-            <input class="info" v-model="form.phone"      placeholder="Телефон*" />
+            <input class="info" v-model="form.last_name" placeholder="Фамилия*" />
+            <input class="info" v-model="form.email" placeholder="Почта*" type="email" />
+            <input class="info" v-model="form.phone" placeholder="Телефон*" @input="onPhoneInput" />
           </div>
           <!-- 2. Способ доставки -->
           <div class="card">
@@ -40,11 +40,10 @@
               </option>
             </select>
             <button type="button" class="action-button" @click="goAddAddress">Добавить адрес</button>
-            <p v-if="!store.userStore.addresses.length" class="hint">Добавьте адрес в личном кабинете.</p>
           </div>
           <!-- 4. Способ оплаты -->
           <div class="card">
-            <label class="card-label">3. Способ оплаты</label>
+            <label class="card-label">4. Способ оплаты</label>
             <label class="radio-button">
               <input type="radio" value="card" v-model="form.payment" />
               Банковская карта
@@ -163,7 +162,7 @@ const form = reactive({
 })
 
 // цена доставки и отображаемое имя
-const deliveryPriceMap = { courier_in_mkad: 400, courier_out_mkad: 400, pvz: 0 }
+const deliveryPriceMap = { courier_in_mkad: 400, courier_out_mkad: 600, pvz: 0 }
 const deliveryTypeMap  = {
   courier_in_mkad: 'Курьер по Москве (в пределах МКАД)',
   courier_out_mkad: 'Курьер по Москве (за МКАД)',
@@ -209,12 +208,39 @@ async function submit() {
   }
 }
 
+function formatPhone(raw = '') {
+  // оставляем только цифры и обрезаем до 11
+  const d = raw.replace(/\D/g, '').slice(0, 11)
+  const c1 = d.slice(0, 1)       // «8»
+  const c2 = d.slice(1, 4)       // код оператора
+  const c3 = d.slice(4, 7)       // первые 3
+  const c4 = d.slice(7, 9)       // следующие 2
+  const c5 = d.slice(9, 11)      // последние 2
+  let out = ''
+
+  if (c1) out += c1
+  if (c2.length > 0) out += ' (' + c2
+  if (c2.length === 3 && c3.length > 0) out += ')'
+  if (c3.length > 0) out += ' ' + c3
+  if (c4.length > 0) out += '-' + c4
+  if (c5.length > 0) out += '-' + c5
+  return out
+}
+
+function onPhoneInput(e) {
+  const formatted = formatPhone(e.target.value)
+  e.target.value = formatted
+  form.phone = formatted
+}
+
 function goOrders() {
   router.push({ name: "Profile", query: { section: "orders" } })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function goAddAddress() {
   router.push({ name: "Profile", query: { section: "addresses" } })
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 onMounted(async () => {
@@ -253,21 +279,24 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin: 0 10px;
   }
   .card {
     display: flex;
+    position: relative;
     flex-direction: column;
     margin-bottom: 10px;
     padding: 20px 10px;
     border-radius: 4px;
     background-color: $white-100;
+    z-index: 20;
     .card-label {
       margin-bottom: 24px;
-      color: $grey-20;
-      font-size: 16px;
-      line-height: 110%;
-      letter-spacing: -0.64px;
+      color: $black-100;
+      font-family: Bounded;
+      font-size: 24px;
+      font-weight: 250;
+      line-height: 80%;
+      letter-spacing: -1.2px;
     }
     .info {
       margin-bottom: 15px;
@@ -282,11 +311,6 @@ onMounted(async () => {
       &::placeholder {
         color: $black-40;
       }
-    }
-    .hint {
-      margin-top: 8px;
-      color: $black-40;
-      font-size: 12px;
     }
   }
   .radio-button {
@@ -321,12 +345,11 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     padding: 0 0 12px;
-    gap: 12px;
     .cart-item {
       display: flex;
       gap: 8px;
       align-items: center;
-      padding: 12px 0;
+      padding: 24px 0;
       border-top: 1px solid $grey-87;
       &:last-child {
         border-bottom: 1px solid $grey-87;
@@ -355,18 +378,19 @@ onMounted(async () => {
       }
       .item-details {
         .item-brand {
-          margin: 0 0 12px;
+          margin: 0 0 8px;
           color: $black-60;
-          font-size: 15px;
+          font-size: 12px;
+          line-height: 100%;
+          letter-spacing: -0.48px;
         }
         .item-name-price {
-          margin: 0;
+          margin: 0 0 16px;
           color: $black-100;
-          font-family: Bounded;
-          font-size: 16px;
-          font-weight: 375;
-          line-height: 90%;
-          letter-spacing: -0.8px;
+          font-family: Manrope-SemiBold;
+          font-size: 15px;
+          line-height: 100%;
+          letter-spacing: -0.6px;
         }
       }
       .item-info-row .item-info {
@@ -406,7 +430,7 @@ onMounted(async () => {
           color: $black-100;
           font-family: Bounded;
           font-size: 16px;
-          font-weight: 375;
+          font-weight: 300;
           line-height: 80%;
           letter-spacing: -0.8px;
         }
