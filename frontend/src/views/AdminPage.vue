@@ -296,8 +296,9 @@
         <tr v-for="s in localSettings" :key="s.key">
           <td>{{ s.key }}</td>
           <td><input v-model="s.value" /></td>
-          <td><button type="button" class="delete-icon" :disabled="s.key.startsWith('delivery_') || s.key.startsWith('sheet_url_')" @click="deleteSetting(s.key)"
-                      :title="s.key.startsWith('delivery_') || s.key.startsWith('sheet_url_') ? 'Нельзя удалить системный параметр' : 'Удалить параметр'">🗑️</button></td>
+          <td><button type="button" class="delete-icon" @click="deleteSetting(s.key)"
+                      :disabled="s.key.startsWith('delivery_') || s.key.startsWith('sheet_url_') || s.key.startsWith('courier_')"
+                      :title="s.key.startsWith('delivery_') || s.key.startsWith('sheet_url_') || s.key.startsWith('courier_') ? 'Нельзя удалить системный параметр' : 'Удалить параметр'">🗑️</button></td>
         </tr>
       </table>
 

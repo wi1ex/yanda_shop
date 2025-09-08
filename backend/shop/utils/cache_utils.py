@@ -21,6 +21,7 @@ def load_parameters() -> None:
                 or_(
                     AdminSetting.key.like("faq_%"),
                     AdminSetting.key.like("url_%"),
+                    AdminSetting.key.like("courier_%"),
                 )
             ).all()
             payload = {s.key: s.value or "" for s in settings}

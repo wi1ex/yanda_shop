@@ -23,16 +23,22 @@
           <div class="card">
             <label class="card-label">2. Способ доставки</label>
             <label class="radio-button">
-              <input type="radio" value="courier_in_mkad" v-model="form.delivery" />
-              Курьером по Москве (в пределах МКАД)
+              <div>
+                <input type="radio" value="courier_in_mkad" v-model="form.delivery" />
+                Курьером по Москве (в пределах МКАД)
+              </div>
             </label>
             <label class="radio-button">
-              <input type="radio" value="courier_out_mkad" v-model="form.delivery" />
-              Курьером по Москве (за МКАД)
+              <div>
+                <input type="radio" value="courier_out_mkad" v-model="form.delivery" />
+                Курьером по Москве (за МКАД)
+              </div>
             </label>
             <label class="radio-button">
-              <input type="radio" value="pvz" v-model="form.delivery" />
-              Доставка до ПВЗ
+              <div>
+                <input type="radio" value="courier_to_pvz" v-model="form.delivery" />
+                Доставка до ПВЗ
+              </div>
             </label>
           </div>
           <!-- 3. Адрес доставки -->
@@ -49,13 +55,17 @@
           <div class="card">
             <label class="card-label">4. Способ оплаты</label>
             <label class="radio-button">
-              <input type="radio" value="card" v-model="form.payment" />
-              Банковская карта
+              <div>
+                <input type="radio" value="card" v-model="form.payment" />
+                Банковская карта
+              </div>
               <img :src="icon_pay_card" alt="pay_card" />
             </label>
             <label class="radio-button">
-              <input type="radio" value="sbp" v-model="form.payment" />
-              СБП
+              <div>
+                <input type="radio" value="sbp" v-model="form.payment" />
+                СБП
+              </div>
               <img :src="icon_pay_sbp" alt="pay_sbp" />
             </label>
           </div>
@@ -170,11 +180,15 @@ const form = reactive({
 })
 
 // цена доставки и отображаемое имя
-const deliveryPriceMap = { courier_in_mkad: 400, courier_out_mkad: 600, pvz: 0 }
+const deliveryPriceMap = {
+  courier_in_mkad: store.globalStore.parameters.courier_in_mkad,
+  courier_out_mkad: store.globalStore.parameters.courier_out_mkad,
+  courier_to_pvz: store.globalStore.parameters.courier_to_pvz,
+}
 const deliveryTypeMap  = {
   courier_in_mkad: 'Курьер по Москве (в пределах МКАД)',
   courier_out_mkad: 'Курьер по Москве (за МКАД)',
-  pvz: 'Доставка до ПВЗ',
+  courier_to_pvz: 'Доставка до ПВЗ',
 }
 
 const shipping = computed(() => deliveryPriceMap[form.delivery] ?? 0)
@@ -184,7 +198,7 @@ const total    = computed(() => subtotal.value + shipping.value)
 const canSubmit = computed(() =>
   items.value.length > 0 &&
   form.first_name && form.last_name && form.email && form.phone &&
-  form.payment && (form.delivery === 'pvz' || form.address_id) && form.agree
+  form.payment && (form.delivery === 'courier_to_pvz' || form.address_id) && form.agree
 )
 
 function formatPrice(v) {
@@ -195,7 +209,7 @@ async function submit() {
   if (!canSubmit.value || loading.value) return
   loading.value = true
   const payload = {
-    address_id:     form.delivery === 'pvz' ? null : form.address_id,
+    address_id:     form.delivery === 'courier_to_pvz' ? null : form.address_id,
     payment_method: form.payment === 'card' ? 'Банковская карта' : 'СБП',
     delivery_type:  deliveryTypeMap[form.delivery],
     delivery_price: shipping.value,
@@ -312,11 +326,12 @@ onMounted(async () => {
   .content {
     display: flex;
     flex-direction: column;
-  }
-  .grid {
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
+    margin-top: 10px;
+    .grid {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
   }
   .card {
     display: flex;
@@ -369,6 +384,7 @@ onMounted(async () => {
   .radio-button {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 16px 10px;
     gap: 8px;
     border-radius: 4px;
@@ -511,6 +527,7 @@ onMounted(async () => {
   }
   .agree {
     display: flex;
+    position: relative;
     align-items: center;
     gap: 8px;
     margin: 8px 0 16px;
