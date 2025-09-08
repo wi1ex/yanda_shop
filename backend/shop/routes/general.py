@@ -426,6 +426,11 @@ def create_order() -> Tuple[Response, int]:
         delivery_type = data.get("delivery_type", "Нет данных")
         delivery_price = data.get("delivery_price", 0)
         total = subtotal + delivery_price
+        pvz_id = data.get("pvz_id")
+        pvz_name = data.get("pvz_name")
+        pvz_address = data.get("pvz_address")
+        pvz_lat = data.get("pvz_lat")
+        pvz_lon = data.get("pvz_lon")
 
         if delivery_type.startswith("Курьер") and not address_id:
             return jsonify({"error": "address_required"}), 400
@@ -441,6 +446,11 @@ def create_order() -> Tuple[Response, int]:
             delivery_type=delivery_type,
             delivery_price=delivery_price,
             total=total,
+            pvz_id=pvz_id,
+            pvz_name=pvz_name,
+            pvz_address=pvz_address,
+            pvz_lat=pvz_lat,
+            pvz_lon=pvz_lon,
         )
         session.add(order)
         session.flush()
@@ -687,3 +697,20 @@ def select_address_api(address_id: int) -> Tuple[Response, int]:
 
     logger.debug("select_address: address %d marked as primary for user_id=%d", address_id, user_id)
     return jsonify({"status": "ok"}), 200
+
+@general_api.route("/pvz/list", methods=["POST"])
+@jwt_required()
+@handle_errors
+def pvz_list() -> Tuple[Response, int]:
+    body = request.get_json() or {}
+    url = "https://b2b-authproxy.taxi.yandex.net/api/b2b/platform/pickup-points/list"
+    # token = "YANDEX_B2B_PVZ_TOKEN"
+    token = None
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+
+    r = requests.post(url, json=body, headers=headers, timeout=10)
+    r.raise_for_status()
+    data = r.json()
+    # опционально сузить ответ
+    points = data.get("points", [])
+    return jsonify({"points": points}), 200

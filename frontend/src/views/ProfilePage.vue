@@ -231,7 +231,7 @@
         <div v-for="a in sortedAddresses" class="address" :key="a.id">
           <label class="radio-button address-text" @click="selectAddress(a.id)">
             <input type="radio" :value="a.id" v-model="selectedAddress" />
-            {{ a.label }}
+            {{ a.label }} ({{ a.city }}, {{ a.street }} {{ a.house }})
           </label>
           <button type="button" @click.stop="editAddress(a)">
             <img :src="icon_arrow_mini_black" alt="arrow" style="transform: rotate(180deg)"/>
@@ -889,9 +889,7 @@ onBeforeUnmount(() => {
       .title-count {
         margin: 0;
         color: $red-active;
-        font-family: Manrope;
         font-size: 16px;
-        font-weight: 500;
         line-height: 110%;
         letter-spacing: -0.64px;
       }

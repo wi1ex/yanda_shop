@@ -46,20 +46,28 @@
           <!-- 3. Адрес доставки -->
           <div class="card">
             <label class="card-label">3. Адрес доставки</label>
-            <div class="address-select" v-if="store.userStore.addresses.length">
-              <button type="button" ref="addrBtn" class="sort-btn" @click="addrOpen = !addrOpen" :style="{ borderRadius: addrOpen ? '4px 4px 0 0' : '4px' }">
-                <span>{{ currentAddressLabel }}</span>
-                <img :src="icon_arrow_red" alt="toggle" :style="{ transform: addrOpen ? 'rotate(90deg)' : 'rotate(-90deg)' }"/>
-              </button>
-              <transition name="slide-down">
-                <ul v-if="addrOpen" ref="addrList" class="sort-list">
-                  <li v-for="a in store.userStore.addresses" :key="a.id" @click="selectAddress(a.id)" :class="{ active: form.address_id === a.id }">
-                    {{ a.label }}
-                  </li>
-                </ul>
-              </transition>
+            <div v-if="form.delivery !== 'courier_to_pvz'">
+              <div class="address-select" v-if="store.userStore.addresses.length">
+                <button type="button" ref="addrBtn" class="sort-btn" @click="addrOpen = !addrOpen" :style="{ borderRadius: addrOpen ? '4px 4px 0 0' : '4px' }">
+                  <span>{{ currentAddressLabel }}</span>
+                  <img :src="icon_arrow_red" alt="toggle" :style="{ transform: addrOpen ? 'rotate(90deg)' : 'rotate(-90deg)' }"/>
+                </button>
+                <transition name="slide-down">
+                  <ul v-if="addrOpen" ref="addrList" class="sort-list">
+                    <li v-for="a in store.userStore.addresses" :key="a.id" @click="selectAddress(a.id)" :class="{ active: form.address_id === a.id }">
+                      {{ a.label }} ({{ a.city }}, {{ a.street }} {{ a.house }})
+                    </li>
+                  </ul>
+                </transition>
+              </div>
+              <button type="button" class="address-button" @click="goAddAddress">Добавить адрес</button>
             </div>
-            <button type="button" class="address-button" @click="goAddAddress">Добавить адрес</button>
+            <div v-else>
+              <div class="pvz-selected" v-if="pvz.id">
+                {{ pvz.name }} — {{ pvz.address }}
+              </div>
+              <div ref="pvzMapEl" class="pvz-map"></div>
+            </div>
           </div>
 
           <!-- 4. Способ оплаты -->
@@ -162,7 +170,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, reactive, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from '@/store'
 
@@ -178,6 +186,9 @@ const store = useStore()
 const addrOpen = ref(false)
 const addrBtn = ref(null)
 const addrList = ref(null)
+const pvzMapEl = ref(null)
+const pvz = reactive({ id: null, name: '', address: '', lat: null, lon: null })
+let ymapsLoaded = false, map, objects
 
 const mode = ref('form') // 'form' | 'success'
 const createdOrderId = ref(null)
@@ -214,8 +225,13 @@ const total    = computed(() => subtotal.value + shipping.value)
 
 const canSubmit = computed(() =>
   items.value.length > 0 &&
-  form.first_name && form.last_name && form.email && form.phone &&
-  form.payment && (form.delivery === 'courier_to_pvz' || form.address_id) && form.agree
+    form.first_name &&
+    form.last_name &&
+    form.email &&
+    form.phone &&
+    ((form.delivery === 'courier_to_pvz' && pvz.id) || (form.delivery !== 'courier_to_pvz' && form.address_id)) &&
+    form.payment &&
+    form.agree
 )
 
 const currentAddressLabel = computed(() => {
@@ -243,6 +259,11 @@ async function submit() {
   loading.value = true
   const payload = {
     address_id:     form.delivery === 'courier_to_pvz' ? null : form.address_id,
+    pvz_id:         form.delivery === 'courier_to_pvz' ? pvz.id : null,
+    pvz_name:       form.delivery === 'courier_to_pvz' ? pvz.name : null,
+    pvz_address:    form.delivery === 'courier_to_pvz' ? pvz.address : null,
+    pvz_lat:        form.delivery === 'courier_to_pvz' ? pvz.lat : null,
+    pvz_lon:        form.delivery === 'courier_to_pvz' ? pvz.lon : null,
     payment_method: form.payment === 'card' ? 'Банковская карта' : 'СБП',
     delivery_type:  deliveryTypeMap[form.delivery],
     delivery_price: shipping.value,
@@ -308,6 +329,74 @@ function goBack() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+// карта только при выборе ПВЗ
+watch(() => form.delivery, async (v) => {
+  if (v === 'courier_to_pvz') {
+    await initYMap()
+    await loadPvzOnBounds()
+    map.events.add('boundschange', debounce(loadPvzOnBounds, 400))
+  }
+})
+
+function debounce(fn, t){ let h; return (...a)=>{ clearTimeout(h); h=setTimeout(()=>fn(...a), t) } }
+
+async function initYMap() {
+  if (ymapsLoaded) return
+  await loadYMapScript()  // загрузка 2.1
+  ymapsLoaded = true
+  const center = [55.751244, 37.618423] // Москва по умолчанию
+  // если есть адрес пользователя — попробуем центр по нему (координаты храните у себя, если нет — используем дефолт)
+  map = new window.ymaps.Map(pvzMapEl.value, { center, zoom: 10, controls: [] })
+  objects = new window.ymaps.GeoObjectCollection()
+  map.geoObjects.add(objects)
+}
+
+function loadYMapScript() {
+  return new Promise((res, rej) => {
+    if (window.ymaps) return window.ymaps.ready(res)
+    const s = document.createElement('script')
+    s.src = 'https://api-maps.yandex.ru/2.1/?lang=ru_RU' // ключ не требуется для 2.1 в простом режиме
+    s.onload = () => window.ymaps.ready(res)
+    s.onerror = rej
+    document.head.appendChild(s)
+  })
+}
+
+async function loadPvzOnBounds() {
+  if (!map) return
+  const b = map.getBounds() // [[latSW, lonSW],[latNE, lonNE]]
+  const body = {
+    type: 'pickup_point',
+    is_not_branded_partner_station: true,
+    is_yandex_branded: true,
+    is_post_office: false,
+    latitude:  { from: b[0][0], to: b[1][0] },
+    longitude: { from: b[0][1], to: b[1][1] },
+    payment_methods: ['already_paid','card_on_receipt'],
+  }
+  const { data } = await api.post(API.general.listPickupPoints, body)
+  renderPvz(data.points || [])
+}
+
+function renderPvz(points) {
+  objects.removeAll()
+  points.forEach(p => {
+    const placemark = new window.ymaps.Placemark(
+      [p.position.latitude, p.position.longitude],
+      { balloonContent: `<b>${p.name}</b><br/>${p.address.full_address}` },
+      { preset: 'islands#redIcon' }
+    )
+    placemark.events.add('click', () => {
+      pvz.id = p.ID
+      pvz.name = p.name
+      pvz.address = p.address.full_address
+      pvz.lat = p.position.latitude
+      pvz.lon = p.position.longitude
+    })
+    objects.add(placemark)
+  })
+}
+
 onMounted(async () => {
   document.addEventListener('click', onDocClick)
   if (!store.userStore.addresses.length) await store.userStore.fetchAddresses()
@@ -367,6 +456,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
       display: flex;
       flex-direction: column;
       gap: 40px;
+      z-index: 20;
     }
   }
   .card {
@@ -377,7 +467,6 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
     padding: 20px 10px;
     border-radius: 4px;
     background-color: $white-100;
-    z-index: 20;
     .card-label {
       margin-bottom: 24px;
       color: $black-100;
@@ -401,11 +490,9 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
         cursor: pointer;
         span {
           color: $grey-20;
-          font-family: Bounded;
-          font-size: 14px;
-          font-weight: 350;
-          line-height: 120%;
-          letter-spacing: -0.7px;
+          font-size: 15px;
+          line-height: 110%;
+          letter-spacing: -0.6px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -462,6 +549,17 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
     .slide-down-leave-from {
       max-height: 500px;
       opacity: 1;
+    }
+    .pvz-selected {
+      margin-bottom: 8px;
+      color: $grey-20;
+      font-size: 14px;
+    }
+    .pvz-map {
+      width: 100%;
+      height: 320px;
+      border-radius: 4px;
+      background: $grey-95;
     }
     .address-button {
       display: flex;

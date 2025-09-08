@@ -186,6 +186,11 @@ export const useCartStore = defineStore('cart', () => {
         middle_name:    options.middle_name,
         phone:          options.phone,
         email:          options.email,
+        pvz_id:         options.pvz_id || null,
+        pvz_name:       options.pvz_name || null,
+        pvz_address:    options.pvz_address || null,
+        pvz_lat:        options.pvz_lat ?? null,
+        pvz_lon:        options.pvz_lon ?? null,
       }
 
       const { data } = await api.post(API.general.createOrder, payload)

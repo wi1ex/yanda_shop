@@ -437,9 +437,7 @@ function onProfileClick() {
       }
     }
     .search-text {
-      font-family: Manrope;
       font-size: 15px;
-      font-weight: 500;
       line-height: 110%;
       letter-spacing: -0.6px;
     }

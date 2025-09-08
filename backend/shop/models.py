@@ -101,6 +101,11 @@ class Orders(db.Model):
     delivery_type  = db.Column(db.String(50))
     delivery_price = db.Column(db.Integer)
     total          = db.Column(db.Integer)
+    pvz_id         = db.Column(db.String(50))
+    pvz_name       = db.Column(db.String(100))
+    pvz_address    = db.Column(db.String(200))
+    pvz_lat        = db.Column(db.Float)
+    pvz_lon        = db.Column(db.Float)
     address_id     = db.Column(db.Integer, db.ForeignKey('addresses.id'))
     items_json     = db.Column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
 

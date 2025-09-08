@@ -567,7 +567,6 @@ onBeforeUnmount(() => {
         padding: 16px 10px 8px;
         border-bottom: 1px solid $white-100;
         font-size: 32px;
-        font-weight: 500;
         line-height: 90%;
         letter-spacing: -1.28px;
       }
