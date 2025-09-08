@@ -705,9 +705,10 @@ def select_address_api(address_id: int) -> Tuple[Response, int]:
 @handle_errors
 def pvz_list() -> Tuple[Response, int]:
     body = request.get_json() or {}
-    url = "https://b2b-authproxy.taxi.yandex.net/api/b2b/platform/pickup-points/list"
+    # url = "https://b2b-authproxy.taxi.yandex.net/api/b2b/platform/pickup-points/list"
+    url = "https://b2b.taxi.tst.yandex.net/api/b2b/platform/pickup-points/list"
     # token = "YANDEX_B2B_PVZ_TOKEN"
-    token = None
+    token = "y2_AgAAAAD04omrAAAPeAAAAAACRpC94Qk6Z5rUTgOcTgYFECJllXYKFx8"
     headers = {"Authorization": f"Bearer {token}"} if token else {}
 
     r = requests.post(url, json=body, headers=headers, timeout=10)

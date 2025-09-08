@@ -55,7 +55,7 @@
                 <transition name="slide-down">
                   <ul v-if="addrOpen" ref="addrList" class="sort-list">
                     <li v-for="a in store.userStore.addresses" :key="a.id" @click="selectAddress(a.id)" :class="{ active: form.address_id === a.id }">
-                      {{ a.full }} || {{ a.label }}
+                      {{ a.full }}
                     </li>
                   </ul>
                 </transition>
