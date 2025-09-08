@@ -173,6 +173,7 @@
 import { computed, reactive, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from '@/store'
+import api from '@/services/api';
 
 import icon_pay_sbp from '@/assets/images/pay_sbp.svg'
 import icon_pay_card from '@/assets/images/pay_card.svg'
