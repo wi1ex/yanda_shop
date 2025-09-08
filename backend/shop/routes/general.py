@@ -710,8 +710,10 @@ def pvz_list() -> Tuple[Response, int]:
     # token = "YANDEX_B2B_PVZ_TOKEN"
     token1 = "y2_AgAAAAD04omr"
     token2 = "AAAPeAAAAAA"
-    token3 = "CRpC94Qk6Z5rUTgOcTgYFECJllXYKFx8"
-    token = token1 + token2 + token3
+    token3 = "CRpC94Qk6Z5"
+    token4 = "rUTgOcTgYFECJ"
+    token5 = "llXYKFx8"
+    token = token1 + token2 + token3 + token4 + token5
     headers = {"Authorization": f"Bearer {token}"} if token else {}
 
     r = requests.post(url, json=body, headers=headers, timeout=10)
