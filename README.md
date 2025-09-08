@@ -11,7 +11,6 @@
 3. [Админ-возможности и импорт контента](#админ-возможности-и-импорт-контента)
 4. [Технологический стек](#технологический-стек)
 5. [Инфраструктура, CI/CD и бэкапы](#инфраструктура-cicd-и-бэкапы)
-6. [Структура репозитория](#структура-репозитория)
 
 ---
 
@@ -92,69 +91,5 @@
 * **CI/CD (GitHub Actions)**: деплой по push в `main`, секреты через `secrets.*`, без утечки конфиденциальных данных в репозиторий; выборочная пересборка сервисов (backend/frontend) по изменившимся путям.
 * **Бэкапы (`scripts/backup_all.sh`)**: PostgreSQL (dump + sha256), Redis (RDB snapshot), MinIO (mirror + архив).
 * **Восстановление (`scripts/restore_all.sh`)**: пошаговый restore с проверками checksum; блокировки, чтобы избежать гонок.
-
----
-
-## Структура репозитория
-
-```
-backend/                         # Flask API
-  app.py                         # точка входа (Gunicorn: app:app)
-  Dockerfile
-  requirements.txt
-  migrations/                    # Alembic миграции
-  shop/
-    __init__.py                  # create_app(), регистрация blueprints, JWT, CORS
-    core/
-      config.py                  # конфиг из env
-      logging.py                 # настройка логера
-    extensions.py                # Redis / MinIO / Mail + ensure_bucket_exists()
-    models.py                    # Users, Orders, Reviews, Settings, BaseProduct→Shoe/Clothing/Accessory
-    routes/
-      general.py                 # профиль, заказы, заявки, параметры, отзывы, upload
-      product.py                 # каталог, карточка, корзина, избранное
-      auth.py                    # email-код, verify, refresh (JWT)
-      admin.py                   # операции админа: синхронизации, заказы, пользователи, настройки, логи, визиты
-    utils/
-      route_utils.py             # валидация args/json, универсальный error handler
-      db_utils.py                # session_scope(), агрегаты по пользователю
-      cache_utils.py             # кэш параметров/доставки в Redis
-      product_serializer.py      # сериализация товаров и ссылок на медиа
-      google_sheets.py           # парсинг и валидация строк, маппинги категорий/подкатегорий
-      validators.py              # набор строгих валидаторов
-      storage_utils.py           # работа с MinIO (upload/cleanup/sync), ZIP/CSV
-      logging_utils.py           # ChangeLog writer
-      redis_utils.py             # счётчики посещений (total/unique)
-frontend/                        # Vue 3 + Vite SPA
-  vite.config.mjs
-  index.html
-  src/
-    main.js
-    App.vue
-    assets/                      # иконки, изображения
-    styles/                      # SCSS-модули, переменные
-    components/                  # Header, Footer, Cart, Auth, Search ...
-    views/                       # Home, Catalog, Product, Checkout, Profile, Admin, ...
-    store/
-      apiRoutes.js               # маршруты API
-      *.js                       # pinia-модули: user/cart/product/admin/global
-    services/
-      api.js                     # axios + silent refresh
-nginx/
-  Dockerfile
-  nginx.conf                     # reverse proxy, security headers, SPA routing
-bot/
-  bot.py                         # aiogram: /start и базовые сценарии
-  Dockerfile
-scripts/                         # эксплуатационные утилиты
-  backup_all.sh
-  restore_all.sh
-.github/workflows/
-  deploy.yml                     # CI/CD деплой (секреты: secrets.*)
-docker-compose.yml               # все сервисы
-.env.example                     # пример env (без секретов)
-LICENSE
-README.md
-```
 
 ---
