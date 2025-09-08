@@ -55,7 +55,7 @@
                 <transition name="slide-down">
                   <ul v-if="addrOpen" ref="addrList" class="sort-list">
                     <li v-for="a in store.userStore.addresses" :key="a.id" @click="selectAddress(a.id)" :class="{ active: form.address_id === a.id }">
-                      {{ a.label }} ({{ a.city }}, {{ a.street }} {{ a.house }})
+                      {{ a.full }} || {{ a.label }}
                     </li>
                   </ul>
                 </transition>
@@ -235,8 +235,9 @@ const canSubmit = computed(() =>
 )
 
 const currentAddressLabel = computed(() => {
-  const a = store.userStore.addresses.find(x => x.id === form.address_id)
-  return a ? a.label : 'Выберите адрес'
+  const a = store.userStore.addresses?.find(x => String(x.id)===String(form.address_id))
+  if (!a) return 'Выберите адрес'
+  return a.full || a.label || 'Выберите адрес'
 })
 
 function selectAddress(id) {
@@ -355,7 +356,7 @@ function loadYMapScript() {
   return new Promise((res, rej) => {
     if (window.ymaps) return window.ymaps.ready(res)
     const s = document.createElement('script')
-    s.src = 'https://api-maps.yandex.ru/2.1/?lang=ru_RU' // ключ не требуется для 2.1 в простом режиме
+    s.src = 'https://api-maps.yandex.ru/2.1/?lang=ru_RU'
     s.onload = () => window.ymaps.ready(res)
     s.onerror = rej
     document.head.appendChild(s)
@@ -374,7 +375,7 @@ async function loadPvzOnBounds() {
     longitude: { from: b[0][1], to: b[1][1] },
     payment_methods: ['already_paid','card_on_receipt'],
   }
-  const { data } = await api.post(API.general.listPickupPoints, body)
+  const { data } = await api.post(store.apiStore.listPickupPoints, body)
   renderPvz(data.points || [])
 }
 
@@ -478,6 +479,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
     }
     .address-select {
       position: relative;
+      margin-bottom: 16px;
       z-index: 30;
       .sort-btn {
         display: flex;

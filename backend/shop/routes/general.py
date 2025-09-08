@@ -573,6 +573,7 @@ def list_addresses() -> Tuple[Response, int]:
         qs = session.query(Addresses).filter_by(user_id=user_id).all()
         out: List[Dict[str, Any]] = []
         for a in qs:
+            full = f'{a.label} ({a.city}, {a.street} {a.house})'
             out.append({
                 "id":        a.id,
                 "label":     a.label,
@@ -585,6 +586,7 @@ def list_addresses() -> Tuple[Response, int]:
                 "floor":     a.floor,
                 "comment":   a.comment,
                 "selected":  a.select,
+                "full":      full,
             })
 
     logger.debug("list_addresses: returned %d addresses", len(out))
