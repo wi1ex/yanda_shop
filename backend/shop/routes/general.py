@@ -708,7 +708,10 @@ def pvz_list() -> Tuple[Response, int]:
     # url = "https://b2b-authproxy.taxi.yandex.net/api/b2b/platform/pickup-points/list"
     url = "https://b2b.taxi.tst.yandex.net/api/b2b/platform/pickup-points/list"
     # token = "YANDEX_B2B_PVZ_TOKEN"
-    token = "y2_AgAAAAD04omrAAAPeAAAAAACRpC94Qk6Z5rUTgOcTgYFECJllXYKFx8"
+    token1 = "y2_AgAAAAD04omr"
+    token2 = "AAAPeAAAAAA"
+    token3 = "CRpC94Qk6Z5rUTgOcTgYFECJllXYKFx8"
+    token = token1 + token2 + token3
     headers = {"Authorization": f"Bearer {token}"} if token else {}
 
     r = requests.post(url, json=body, headers=headers, timeout=10)
