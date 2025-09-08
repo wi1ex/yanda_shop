@@ -965,8 +965,8 @@ onBeforeUnmount(() => {
         margin-bottom: 15px;
         padding: 21px 10px 8px;
         width: calc(100% - 20px);
-        outline: none;
         box-shadow: none;
+        outline: none;
         border: none;
         border-bottom: 1px solid $grey-20;
         color: $grey-20;
@@ -1077,7 +1077,6 @@ onBeforeUnmount(() => {
         }
       }
     }
-    /* Плавное раскрытие вверх-вниз */
     .slide-down-enter-active,
     .slide-down-leave-active {
       transition: max-height 0.25s ease-in-out, opacity 0.25s ease-in-out;

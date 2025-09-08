@@ -19,50 +19,61 @@
             <input class="info" v-model="form.email" placeholder="Почта*" type="email" />
             <input class="info" v-model="form.phone" placeholder="Телефон*" @input="onPhoneInput" />
           </div>
+
           <!-- 2. Способ доставки -->
           <div class="card">
             <label class="card-label">2. Способ доставки</label>
             <label class="radio-button">
-              <div>
+              <div class="radio-button-div">
                 <input type="radio" value="courier_in_mkad" v-model="form.delivery" />
                 Курьером по Москве (в пределах МКАД)
               </div>
             </label>
             <label class="radio-button">
-              <div>
+              <div class="radio-button-div">
                 <input type="radio" value="courier_out_mkad" v-model="form.delivery" />
                 Курьером по Москве (за МКАД)
               </div>
             </label>
             <label class="radio-button">
-              <div>
+              <div class="radio-button-div">
                 <input type="radio" value="courier_to_pvz" v-model="form.delivery" />
                 Доставка до ПВЗ
               </div>
             </label>
           </div>
+
           <!-- 3. Адрес доставки -->
           <div class="card">
             <label class="card-label">3. Адрес доставки</label>
-            <select v-if="store.userStore.addresses.length" class="info" v-model="form.address_id">
-              <option v-for="a in store.userStore.addresses" :key="a.id" :value="a.id">
-                {{ a.label }}
-              </option>
-            </select>
+            <div class="address-select" v-if="store.userStore.addresses.length">
+              <button type="button" ref="addrBtn" class="sort-btn" @click="addrOpen = !addrOpen" :style="{ borderRadius: addrOpen ? '4px 4px 0 0' : '4px' }">
+                <span>{{ currentAddressLabel }}</span>
+                <img :src="icon_arrow_red" alt="toggle" :style="{ transform: addrOpen ? 'rotate(90deg)' : 'rotate(-90deg)' }"/>
+              </button>
+              <transition name="slide-down">
+                <ul v-if="addrOpen" ref="addrList" class="sort-list">
+                  <li v-for="a in store.userStore.addresses" :key="a.id" @click="selectAddress(a.id)" :class="{ active: form.address_id === a.id }">
+                    {{ a.label }}
+                  </li>
+                </ul>
+              </transition>
+            </div>
             <button type="button" class="address-button" @click="goAddAddress">Добавить адрес</button>
           </div>
+
           <!-- 4. Способ оплаты -->
           <div class="card">
             <label class="card-label">4. Способ оплаты</label>
             <label class="radio-button">
-              <div>
+              <div class="radio-button-div">
                 <input type="radio" value="card" v-model="form.payment" />
                 Банковская карта
               </div>
               <img :src="icon_pay_card" alt="pay_card" />
             </label>
             <label class="radio-button">
-              <div>
+              <div class="radio-button-div">
                 <input type="radio" value="sbp" v-model="form.payment" />
                 СБП
               </div>
@@ -70,6 +81,7 @@
             </label>
           </div>
         </div>
+
         <!-- Правая колонка -->
         <div class="right">
           <div class="card">
@@ -129,6 +141,7 @@
         </button>
       </div>
     </div>
+
     <!-- SUCCESS -->
     <div v-else class="content">
       <div class="card success-card">
@@ -149,23 +162,27 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, onMounted } from 'vue'
+import { computed, reactive, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from '@/store'
 
 import icon_pay_sbp from '@/assets/images/pay_sbp.svg'
 import icon_pay_card from '@/assets/images/pay_card.svg'
+import icon_arrow_red from '@/assets/images/arrow_red.svg'
 import icon_arrow_grey from '@/assets/images/arrow_grey.svg'
 import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
 
 const router = useRouter()
 const store = useStore()
 
+const addrOpen = ref(false)
+const addrBtn = ref(null)
+const addrList = ref(null)
+
 const mode = ref('form') // 'form' | 'success'
 const createdOrderId = ref(null)
 const loading = ref(false)
 const items = computed(() => store.cartStore.groupedCartItems)
-
 
 const form = reactive({
   first_name: store.userStore.user.first_name || '',
@@ -181,9 +198,9 @@ const form = reactive({
 
 // цена доставки и отображаемое имя
 const deliveryPriceMap = {
-  courier_in_mkad: store.globalStore.parameters.courier_in_mkad,
-  courier_out_mkad: store.globalStore.parameters.courier_out_mkad,
-  courier_to_pvz: store.globalStore.parameters.courier_to_pvz,
+  courier_in_mkad: Number(store.globalStore.parameters.courier_in_mkad) || 400,
+  courier_out_mkad: Number(store.globalStore.parameters.courier_out_mkad) || 600,
+  courier_to_pvz: Number(store.globalStore.parameters.courier_to_pvz) || 0,
 }
 const deliveryTypeMap  = {
   courier_in_mkad: 'Курьер по Москве (в пределах МКАД)',
@@ -200,6 +217,22 @@ const canSubmit = computed(() =>
   form.first_name && form.last_name && form.email && form.phone &&
   form.payment && (form.delivery === 'courier_to_pvz' || form.address_id) && form.agree
 )
+
+const currentAddressLabel = computed(() => {
+  const a = store.userStore.addresses.find(x => x.id === form.address_id)
+  return a ? a.label : 'Выберите адрес'
+})
+
+function selectAddress(id) {
+  form.address_id = id
+  addrOpen.value = false
+}
+
+function onDocClick(e) {
+  if (!addrOpen.value) return
+  if (addrBtn.value?.contains(e.target) || addrList.value?.contains(e.target)) return
+  addrOpen.value = false
+}
 
 function formatPrice(v) {
   return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
@@ -276,10 +309,13 @@ function goBack() {
 }
 
 onMounted(async () => {
+  document.addEventListener('click', onDocClick)
   if (!store.userStore.addresses.length) await store.userStore.fetchAddresses()
   const primary = store.userStore.addresses.find(a => a.selected)
   form.address_id = primary ? primary.id : null
 })
+
+onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 
 </script>
 
@@ -351,6 +387,82 @@ onMounted(async () => {
       line-height: 80%;
       letter-spacing: -1.2px;
     }
+    .address-select {
+      position: relative;
+      z-index: 30;
+      .sort-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 8px;
+        width: 100%;
+        border: none;
+        background-color: $grey-95;
+        cursor: pointer;
+        span {
+          color: $grey-20;
+          font-family: Bounded;
+          font-size: 14px;
+          font-weight: 350;
+          line-height: 120%;
+          letter-spacing: -0.7px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        img {
+          width: 16px;
+          height: 16px;
+          object-fit: cover;
+          transition: all 0.25s ease-in-out;
+        }
+      }
+      .sort-list {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: 0;
+        border-radius: 0 0 4px 4px;
+        background-color: $grey-95;
+        list-style: none;
+        z-index: 200;
+        li {
+          padding: 12px 10px;
+          border-top: 1px solid $white-100;
+          background-color: $grey-95;
+          color: $grey-20;
+          font-size: 15px;
+          line-height: 110%;
+          letter-spacing: -0.6px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          cursor: pointer;
+          &.active {
+            background: $black-100;
+            color: $white-100;
+          }
+        }
+      }
+    }
+    .slide-down-enter-active,
+    .slide-down-leave-active {
+      transition: max-height 0.25s ease-in-out, opacity 0.25s ease-in-out;
+    }
+    .slide-down-enter-from,
+    .slide-down-leave-to {
+      max-height: 0;
+      opacity: 0;
+    }
+    .slide-down-enter-to,
+    .slide-down-leave-from {
+      max-height: 500px;
+      opacity: 1;
+    }
     .address-button {
       display: flex;
       align-items: center;
@@ -370,6 +482,8 @@ onMounted(async () => {
       margin-bottom: 15px;
       padding: 21px 10px 8px;
       width: calc(100% - 20px);
+      box-shadow: none;
+      outline: none;
       border: none;
       border-bottom: 1px solid $grey-20;
       color: $grey-20;
@@ -397,20 +511,25 @@ onMounted(async () => {
     &:last-child {
       margin-bottom: 0;
     }
-    input[type="radio"] {
-      margin: 0;
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      border: 1px solid $black-40;
-      border-radius: 50%;
-      background: none;
-      cursor: pointer;
-    }
-    input[type="radio"]:checked {
-      border-color: $black-100;
-      background-color: $black-100;
-      box-shadow: inset 0 0 0 4px $white-100;
+    .radio-button-div {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      input[type="radio"] {
+        margin: 0;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 1px solid $black-40;
+        border-radius: 50%;
+        background: none;
+        cursor: pointer;
+      }
+      input[type="radio"]:checked {
+        border-color: $black-100;
+        background-color: $black-100;
+        box-shadow: inset 0 0 0 4px $white-100;
+      }
     }
     img {
       height: 20px;
@@ -475,15 +594,24 @@ onMounted(async () => {
           letter-spacing: -0.6px;
         }
       }
-      .item-info-row .item-info {
-        margin: 0;
-        color: $black-40;
-        font-size: 15px;
-        line-height: 100%;
-        letter-spacing: -0.6px;
-      }
-      .item-info-value {
-        color: $grey-20;
+      .item-info-row {
+        display: flex;
+        width: 100%;
+        .item-info-div {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          .item-info {
+            margin: 0;
+            color: $black-40;
+            font-size: 15px;
+            line-height: 100%;
+            letter-spacing: -0.6px;
+            .item-info-value {
+              color: $grey-20;
+            }
+          }
+        }
       }
     }
   }
