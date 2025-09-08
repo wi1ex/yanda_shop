@@ -1,6 +1,10 @@
 <template>
   <div class="checkout-page">
     <div class="line-vert"></div>
+    <button type="button" class="back-button" @click="goBack">
+      <img :src="icon_arrow_grey" alt="arrow back" />
+      Назад
+    </button>
     <div class="line-hor"></div>
     <!-- FORM -->
     <div v-if="mode==='form'" class="content">
@@ -34,12 +38,12 @@
           <!-- 3. Адрес доставки -->
           <div class="card">
             <label class="card-label">3. Адрес доставки</label>
-            <select class="info" v-model="form.address_id">
+            <select v-if="store.userStore.addresses.length" class="info" v-model="form.address_id">
               <option v-for="a in store.userStore.addresses" :key="a.id" :value="a.id">
                 {{ a.label }}
               </option>
             </select>
-            <button type="button" class="action-button" @click="goAddAddress">Добавить адрес</button>
+            <button type="button" class="address-button" @click="goAddAddress">Добавить адрес</button>
           </div>
           <!-- 4. Способ оплаты -->
           <div class="card">
@@ -47,10 +51,12 @@
             <label class="radio-button">
               <input type="radio" value="card" v-model="form.payment" />
               Банковская карта
+              <img :src="icon_pay_card" alt="pay_card" />
             </label>
             <label class="radio-button">
               <input type="radio" value="sbp" v-model="form.payment" />
               СБП
+              <img :src="icon_pay_sbp" alt="pay_sbp" />
             </label>
           </div>
         </div>
@@ -94,7 +100,7 @@
                 <p class="info-block-text">{{ formatPrice(subtotal) }} ₽</p>
               </div>
               <div class="row">
-                <p class="info-block-text">Доставка:</p>
+                <p class="info-block-text">{{ deliveryTypeMap[form.delivery] }}:</p>
                 <p class="info-block-text">{{ formatPrice(shipping) }} ₽</p>
               </div>
               <div class="row total">
@@ -104,13 +110,13 @@
             </div>
             <label class="agree">
               <input type="checkbox" v-model="form.agree" />
-              Я согласен на обработку персональных данных
+              <span>Я согласен на обработку персональных данных</span>
             </label>
-            <button type="button" class="action-button" :disabled="!canSubmit || loading" @click="submit">
-              {{ loading ? 'Отправка...' : 'Перейти к оплате' }}
-            </button>
           </div>
         </div>
+        <button type="button" class="action-button" :disabled="!canSubmit || loading" @click="submit">
+          {{ loading ? 'Отправка...' : 'Перейти к оплате' }}
+        </button>
       </div>
     </div>
     <!-- SUCCESS -->
@@ -118,18 +124,18 @@
       <div class="card success-card">
         <p class="success-title">Поздравляем!</p>
         <p class="success-text">
-          Твой заказ оформлен, мы выкупим его в ближайшее время.
-          За статусом заказа можешь следить в личном кабинете.
+          Твой заказ оформлен, мы выкупим его в ближайшее время. За статусом заказа можешь следить в личном кабинете.
         </p>
         <div class="success-illustration">
           <img :src="icon_default_avatar_grey" alt="bag" />
         </div>
         <button type="button" class="action-button" @click="goOrders">
-          Перейти к оплате
+          Посмотреть заказ
         </button>
       </div>
     </div>
   </div>
+  <div class="line-hor"></div>
 </template>
 
 <script setup>
@@ -137,6 +143,8 @@ import { computed, reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from '@/store'
 
+import icon_pay_sbp from '@/assets/images/pay_sbp.svg'
+import icon_pay_card from '@/assets/images/pay_card.svg'
 import icon_arrow_grey from '@/assets/images/arrow_grey.svg'
 import icon_default_avatar_grey from '@/assets/images/default_avatar_grey.svg'
 
@@ -243,6 +251,16 @@ function goAddAddress() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+// ← Назад
+function goBack() {
+  if (window.history.length > 1) {
+    router.back()
+  } else {
+    router.push({ name: 'Home' })
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 onMounted(async () => {
   if (!store.userStore.addresses.length) await store.userStore.fetchAddresses()
   const primary = store.userStore.addresses.find(a => a.selected)
@@ -271,6 +289,26 @@ onMounted(async () => {
 
 .checkout-page {
   margin-top: 120px;
+  .back-button {
+    display: flex;
+    align-items: center;
+    margin: 0 10px 10px;
+    padding: 0;
+    width: fit-content;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: $black-100;
+    font-size: 16px;
+    line-height: 100%;
+    letter-spacing: -0.64px;
+    cursor: pointer;
+    img {
+      width: 24px;
+      height: 24px;
+      object-fit: cover;
+    }
+  }
   .content {
     display: flex;
     flex-direction: column;
@@ -278,7 +316,7 @@ onMounted(async () => {
   .grid {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 40px;
   }
   .card {
     display: flex;
@@ -298,6 +336,21 @@ onMounted(async () => {
       line-height: 80%;
       letter-spacing: -1.2px;
     }
+    .address-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 24px;
+      width: 100%;
+      height: 40px;
+      border: none;
+      border-radius: 4px;
+      background-color: $grey-20;
+      color: $white-100;
+      font-size: 16px;
+      letter-spacing: -0.64px;
+      cursor: pointer;
+    }
     .info {
       margin-bottom: 15px;
       padding: 21px 10px 8px;
@@ -316,11 +369,18 @@ onMounted(async () => {
   .radio-button {
     display: flex;
     align-items: center;
+    padding: 16px 10px;
     gap: 8px;
+    border-radius: 4px;
+    background-color: $grey-95;
     color: $black-100;
     font-size: 15px;
     line-height: 100%;
     letter-spacing: -0.6px;
+    margin-bottom: 16px;
+    &:last-child {
+      margin-bottom: 0;
+    }
     input[type="radio"] {
       margin: 0;
       appearance: none;
@@ -335,6 +395,10 @@ onMounted(async () => {
       border-color: $black-100;
       background-color: $black-100;
       box-shadow: inset 0 0 0 4px $white-100;
+    }
+    img {
+      height: 20px;
+      object-fit: cover;
     }
   }
   .right .card {
@@ -374,6 +438,8 @@ onMounted(async () => {
       .item-details-div {
         display: flex;
         flex-direction: column;
+        justify-content: space-between;
+        height: 188px;
         gap: 12px;
       }
       .item-details {
@@ -408,7 +474,7 @@ onMounted(async () => {
   .price-block {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     margin: 16px 0 12px;
     .row {
       display: flex;
@@ -436,8 +502,11 @@ onMounted(async () => {
         }
       }
     }
-    .total .price {
-      font-size: 18px;
+    .total {
+      margin-top: 16px;
+      .price {
+        font-size: 18px;
+      }
     }
   }
   .agree {
@@ -447,14 +516,48 @@ onMounted(async () => {
     margin: 8px 0 16px;
     color: $black-100;
     font-size: 14px;
+    input[type="checkbox"] {
+      -webkit-appearance: none;
+      appearance: none;
+      min-width: 16px;
+      min-height: 16px;
+      width: 16px;
+      height: 16px;
+      border: 1px solid $black-40;
+      border-radius: 2px;
+      cursor: pointer;
+      vertical-align: middle;
+      background-color: transparent;
+    }
+    input[type="checkbox"]:checked {
+      border-color: $grey-20;
+    }
+    input[type="checkbox"]:checked::after {
+      content: "";
+      position: absolute;
+      top: 5px;
+      left: 9px;
+      width: 5px;
+      height: 8px;
+      border: solid $grey-20;
+      border-width: 0 1px 1px 0;
+      transform: rotate(45deg);
+    }
+    span {
+      color: $grey-20;
+      font-size: 15px;
+      line-height: 110%;
+      letter-spacing: -0.6px;
+    }
   }
   .action-button {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: -56px 0 96px;
     padding: 0 24px;
     width: 100%;
-    height: 56px;
+    height: 72px;
     border: none;
     border-radius: 4px;
     background-color: $grey-20;
@@ -462,8 +565,8 @@ onMounted(async () => {
     font-size: 16px;
     letter-spacing: -0.64px;
     cursor: pointer;
+    z-index: 50;
     &:disabled {
-      opacity: 0.6;
       cursor: default;
     }
   }
